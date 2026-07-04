@@ -27,8 +27,8 @@
 	--surface: #f7f1de; /* bone, card elevado */
 	--fg: #15140f; /* ink, texto/CTA forte */
 	--fg-soft: #2a2620;
-	--fg-mute: #5a5448;
-	--fg-faint: #5c574b;
+	--fg-mute: #3a352a;
+	--fg-faint: #4a4438;
 	--accent: #ed6f5c; /* coral, ÚNICO acento quente */
 	--coral-soft: #f08e7c;
 	--mustard: #e9b94a; /* jewelry: estrela nav, dot */
@@ -184,3 +184,48 @@ a[role="button"] {
 	}
 }
 
+
+/* ---------------------------------------------------------------
+ * Phase 2 (T04 / BUG-103): sticky-nav coral CTA oculto em mobile.
+ * ADR-004 — IntersectionObserver faz o hide-on-scroll no desktop.
+ * Em ≤767px o hero já é o CTA dominante; sticky vira ruído.
+ * --------------------------------------------------------------- */
+@media (max-width: 767px) {
+	.cta-sticky-nav {
+		display: none !important;
+	}
+}
+
+/* ---------------------------------------------------------------
+ * Phase 3 (T05 / BUG-203 / ADR-005): deck é scroll horizontal no
+ * mobile (<sm). Esconde scrollbar webkit pra peek ser o único
+ * affordance. Firefox usa `scrollbar-width: none`. Mantém
+ * acessibilidade de scroll (foco via teclado, screen reader).
+ * --------------------------------------------------------------- */
+.fib-deck {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+.fib-deck::-webkit-scrollbar {
+	display: none;
+}
+
+/* Peek gradients — esquerda/direita no mobile indicam "tem mais". */
+.fib-deck-peek {
+	pointer-events: none;
+	z-index: 1;
+}
+.fib-deck-peek-left {
+	background: linear-gradient(
+		to right,
+		var(--paper-warm) 0%,
+		rgba(236, 228, 207, 0) 100%
+	);
+}
+.fib-deck-peek-right {
+	background: linear-gradient(
+		to left,
+		var(--paper-warm) 0%,
+		rgba(236, 228, 207, 0) 100%
+	);
+}

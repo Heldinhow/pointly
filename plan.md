@@ -72,8 +72,8 @@ Todos os tokens, famílias tipográficas e regras de postura estão em `design-s
 --surface:   #f7f1de  (bone, card elevado)
 --fg:        #15140f  (ink, texto/CTA forte)
 --fg-soft:   #2a2620
---fg-mute:   #5a5448
---fg-faint:  #8b8676
+--fg-mute:   #3a352a
+--fg-faint:  #4a4438
 --accent:    #ed6f5c  (coral, ÚNICO acento quente)
 --coral-soft:#f08e7c
 --mustard:   #e9b94a  (jewelry: estrela nav, dot)
@@ -146,6 +146,8 @@ Não é produto. Sumariza o Pointly em 4 cards (Criar sala / Entrar / Bots votam
 
 ### 6.2 `landing.html` (US-5 — Criar sala)
 
+> **[DEFERRED TO v2: side rails — ver ADR-003]** Implementação atual não inclui os 36px rails com metadata vertical. Mantidos no spec para rastreabilidade; v2 decide.
+
 - Metadata strip: `Vol. 01 · Issue Nº 26 · Pointly · PT-BR` + pulse dot coral
 - Sticky nav: brandmark `Ø Pointly` + nav 3 itens (`Como funciona`, `Para times`, `GitHub` com ★ mostarda) + CTA coral `Criar sala ↗`
 - Hero (Roman I): headline mistura sans-bold + italic-serif com coral dot final — `'Vote com *ritmo*, *confiança*, e zero cadastro.'` · lead · CTA primário `Criar sala` + CTA ghost `Entrar com código` · 3 stat rings (0 cadastros / 12 assentos / 60s para decisão) · index card `01–04` na borda direita
@@ -179,7 +181,8 @@ Não é produto. Sumariza o Pointly em 4 cards (Criar sala / Entrar / Bots votam
 
 **Deck Fibonacci (dock inferior):**
 
-- 9 cartas bone-fill 72×100, radius 18px, numeral em **Playfair Italic** 32px (o único flourish editorial dentro da arena)
+- 9 cartas bone-fill **48×68** (implementação consolidada em `apps/web/src/components/deck.tsx` — divergia do spec 72×100; **atualizado em 2026-07-04, BUG-308**), radius 12px, numeral em **Playfair Italic 20px**
+- v2 pode reintroduzir 72×100 desktop com variante mobile 48×68
 - Ordem: `0  ½  1  2  3  5  8  13  ☕`
 - Estado default: ink stroke 1px, surface bone, label ink-faint
 - Hover: translateY(-3px), stroke coral
