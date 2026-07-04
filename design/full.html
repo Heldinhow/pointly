@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1440">
+<title>Pointly · Sala cheia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;700;800;900&family=Inter:wght@300;400;500&family=Playfair+Display:ital@1;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#efe7d2;--paper-warm:#ece4cf;--paper-dark:#ddd2b6;--ink:#15140f;--ink-soft:#2a2620;--ink-mute:#5a5448;--ink-faint:#8b8676;--coral:#ed6f5c;--coral-soft:#f08e7c;--mustard:#e9b94a;--olive:#6e7448;--bone:#f7f1de;--line:rgba(21,20,15,0.16);--line-soft:rgba(21,20,15,0.08);--line-faint:rgba(21,20,15,0.05);--shadow:0 30px 60px -30px rgba(21,20,15,0.18);--serif:'Playfair Display',serif;--sans:'Inter Tight','Inter',-apple-system,system-ui,sans-serif;--body:'Inter',-apple-system,system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--paper);color:var(--ink)}
+  body{font-family:var(--body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;position:relative;min-height:100vh;display:flex;flex-direction:column}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:radial-gradient(circle at 12% 18%,rgba(106,92,56,0.07) 0,transparent 28%),radial-gradient(circle at 88% 72%,rgba(106,92,56,0.06) 0,transparent 32%),url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.18  0 0 0 0 0.16  0 0 0 0 0.12  0 0 0 0.06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");background-size:auto,auto,240px 240px;mix-blend-mode:multiply;opacity:0.92}
+  .shell{position:relative;z-index:2;flex:1;display:flex;flex-direction:column}
+  .topbar{border-bottom:1px solid var(--line);padding:10px 0}
+  .topbar-inner{max-width:1360px;padding:0 64px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:10px;letter-spacing:0.06em;color:var(--ink-faint);text-transform:uppercase}
+  .topbar-left{display:flex;gap:18px;align-items:center}
+  .topbar-left .brand{font-family:var(--sans);font-weight:800;font-size:15px;letter-spacing:-0.02em;color:var(--ink);text-transform:none;display:flex;gap:6px;align-items:baseline}
+  .brand-mark{font-family:var(--serif);font-style:italic;color:var(--coral);font-size:18px}
+  .topbar-fig{font-family:var(--mono);font-size:10px;letter-spacing:0.06em;color:var(--ink-faint);text-transform:uppercase;padding:18px 64px;display:flex;justify-content:space-between;max-width:1360px;margin:0 auto;width:100%}
+  .pulse{width:6px;height:6px;border-radius:50%;background:var(--coral);animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+  @media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+  .dot{color:var(--coral)}
+  .stage{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 64px}
+  .card{background:var(--bone);border-radius:18px;padding:48px 56px;width:560px;box-shadow:inset 0 0 0 1px var(--line-soft),var(--shadow);display:flex;flex-direction:column;gap:20px;align-items:flex-start}
+  .card-mark{font-family:var(--serif);font-style:italic;font-size:36px;color:var(--coral);line-height:1}
+  .card h1{font-family:var(--sans);font-weight:800;font-size:34px;letter-spacing:-0.03em;line-height:1.05}
+  .card p{font-family:var(--body);font-size:14.5px;color:var(--ink-mute);line-height:1.6;max-width:42ch}
+  .count{display:flex;align-items:baseline;gap:12px;padding:14px 0;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);width:100%}
+  .count .n{font-family:var(--serif);font-style:italic;font-size:42px;color:var(--coral);line-height:1}
+  .count .over{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;color:var(--ink-faint);text-transform:uppercase}
+  .row{display:flex;gap:14px;margin-top:6px;align-items:center}
+  .btn{font-family:var(--sans);font-weight:600;font-size:14px;border-radius:999px;padding:14px 22px;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:transform 0.18s,background 0.18s}
+  .btn-primary{background:var(--coral);color:#fff;box-shadow:0 14px 26px -16px rgba(237,111,92,0.5)}
+  .btn-primary:hover{transform:translateY(-1px);background:var(--coral-soft)}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  .btn-ghost:hover{transform:translateY(-1px)}
+  .wireframe-tag{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:0.1em;color:var(--ink-faint);border:1px solid var(--line-soft);padding:1px 7px;border-radius:999px;text-transform:uppercase;margin-left:8px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-left">
+        <span class="pulse"></span>
+        <span class="brand"><span class="brand-mark">Ø</span> Pointly</span>
+        <span>Sala <span id="codeLabel" style="color:var(--ink);font-weight:500">—</span></span>
+      </div>
+      <div>FIG. 04 · STATUS<span class="wireframe-tag">wireframe</span></div>
+    </div>
+  </header>
+
+  <div class="topbar-fig">
+    <span>FIG. 04 · ENTRADA NEGADA</span>
+    <span>Código <span style="color:var(--ink)" id="codeLabel2">—</span></span>
+  </div>
+
+  <main class="stage">
+    <div class="card" data-od-id="full-card">
+      <div class="card-mark">Ø</div>
+      <h1>Sala cheia<span class="dot">.</span></h1>
+      <div class="count">
+        <span class="n">8</span>
+        <span class="over">/ 8 · máximo atingido</span>
+      </div>
+      <p>Esta sala já tem 8 jogadores. O Pointly limita a mesa a 8 assentos para manter a votação síncrona e o reveal legível. Crie outra sala ou tente um código diferente.</p>
+      <div class="row">
+        <a href="landing.html" class="btn btn-primary">Criar nova sala <span aria-hidden="true">↗</span></a>
+        <button class="btn btn-ghost" onclick="history.back()">Voltar</button>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+  const params = new URLSearchParams(location.search);
+  const code = (params.get('code') || '').toUpperCase() || 'DEMO';
+  document.getElementById('codeLabel').textContent = code;
+  document.getElementById('codeLabel2').textContent = code;
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# Bun workspace + runtime config for Pointly
+
+[install]
+# Lockfile for reproducibility
+exact = false
+
+# Auto-install peer dependencies
+auto = "auto"
+
+[install.scopes]
+
+[run]
+# Default to ESM (workspace is type=module in root package.json)
+bun = true

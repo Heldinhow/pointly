@@ -1,0 +1,3 @@
+# State + Schemas: Zustand + Zod
+
+Client state via Zustand (store flat, sem boilerplate de actions/reducers; selectors granulares evitam re-render). Schemas compartilhados via Zod em `packages/shared`, com tipos TS inferidos automaticamente (`z.infer<typeof X>`). Mesma fonte de verdade pro client e server: payload WebSocket validado no boundary usando o mesmo schema. Alternativas: Redux (muito boilerplate), Context API (re-render em cascata), Yup (sem inferência de tipos), TypeBox (mais ceremony). Trade-off: Zustand é menos opinativo que Redux — disciplina de slice organization fica por conta do time. Zod adiciona ~30KB ao bundle do client mas paga o custo na validação.

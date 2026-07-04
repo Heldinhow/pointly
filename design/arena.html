@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1440">
+<title>Pointly · Arena</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;700;800;900&family=Inter:wght@300;400;500&family=Playfair+Display:ital@1;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#efe7d2;--paper-warm:#ece4cf;--paper-dark:#ddd2b6;--ink:#15140f;--ink-soft:#2a2620;--ink-mute:#5a5448;--ink-faint:#8b8676;--coral:#ed6f5c;--coral-soft:#f08e7c;--mustard:#e9b94a;--olive:#6e7448;--bone:#f7f1de;--gold:#e9b94a;--line:rgba(21,20,15,0.16);--line-soft:rgba(21,20,15,0.08);--line-faint:rgba(21,20,15,0.05);--shadow:0 30px 60px -30px rgba(21,20,15,0.18);--serif:'Playfair Display',serif;--sans:'Inter Tight','Inter',-apple-system,system-ui,sans-serif;--body:'Inter',-apple-system,system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--paper);color:var(--ink);height:100%}
+  body{font-family:var(--body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow:hidden;position:relative}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:radial-gradient(circle at 12% 18%,rgba(106,92,56,0.07) 0,transparent 28%),radial-gradient(circle at 88% 72%,rgba(106,92,56,0.06) 0,transparent 32%),url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.18  0 0 0 0 0.16  0 0 0 0 0.12  0 0 0 0.06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");background-size:auto,auto,240px 240px;mix-blend-mode:multiply;opacity:0.92}
+  .shell{position:relative;z-index:2;height:100vh;display:flex;flex-direction:column}
+
+  .topbar{border-bottom:1px solid var(--line);padding:10px 0;flex-shrink:0}
+  .topbar-inner{max-width:1480px;padding:0 48px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:10px;letter-spacing:0.06em;color:var(--ink-faint);text-transform:uppercase}
+  .topbar-left{display:flex;gap:18px;align-items:center}
+  .topbar-left .brand{font-family:var(--sans);font-weight:800;font-size:15px;letter-spacing:-0.02em;color:var(--ink);text-transform:none;display:flex;gap:6px;align-items:baseline}
+  .brand-mark{font-family:var(--serif);font-style:italic;color:var(--coral);font-size:18px}
+  .pulse{width:6px;height:6px;border-radius:50%;background:var(--coral);animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+  @media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+  .dot{color:var(--coral)}
+
+  .arena-head{max-width:1480px;padding:14px 48px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+  .arena-fig{font-family:var(--mono);font-size:10px;letter-spacing:0.06em;color:var(--ink-faint);text-transform:uppercase}
+  .arena-fig .code{color:var(--ink);font-weight:500}
+  .arena-fig .round{color:var(--coral)}
+
+  .stage{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 48px;overflow:hidden}
+
+  /* Stats pill — top-left of stage */
+  .stats{position:absolute;top:14px;left:48px;background:var(--bone);border:1px solid var(--line-soft);border-radius:999px;padding:10px 18px;font-family:var(--mono);font-size:11px;letter-spacing:0.06em;color:var(--ink-faint);text-transform:uppercase;display:flex;gap:14px;align-items:center;opacity:0;transition:opacity 0.3s}
+  .stats.show{opacity:1}
+  .stats .lab{color:var(--ink-faint)}
+  .stats .val{color:var(--ink);font-weight:500}
+  .stats .gold{color:var(--gold);font-weight:500}
+
+  /* Timer pill — top-right of stage */
+  .timer{position:absolute;top:14px;right:48px;background:var(--bone);border:1px solid var(--line-soft);border-radius:999px;padding:10px 18px;font-family:var(--mono);font-size:11px;letter-spacing:0.06em;color:var(--ink-faint);text-transform:uppercase;display:flex;gap:14px;align-items:center;transition:background 0.3s,color 0.3s,border-color 0.3s}
+  .timer.critical{background:rgba(237,111,92,0.12);border-color:var(--coral);color:var(--coral)}
+  .timer .v{font-variant-numeric:tabular-nums;color:var(--ink)}
+  .timer.critical .v{color:var(--coral)}
+
+  /* Ring table */
+  .table{position:relative;width:960px;height:560px;margin-top:40px}
+  .ellipse{position:absolute;inset:0;border:1px dashed var(--line-soft);border-radius:50%;background:radial-gradient(ellipse at center,var(--paper-warm) 0,transparent 70%)}
+  .ellipse::after{content:'';position:absolute;inset:90px;border:1px solid var(--line-faint);border-radius:50%}
+
+  .seat{position:absolute;width:96px;height:128px;background:var(--bone);border:1px solid var(--line-soft);border-radius:14px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:inset 0 0 0 1px var(--line-faint),0 8px 20px -12px rgba(21,20,15,0.18);transform:translate(-50%,-50%);transition:transform 0.18s,border-color 0.18s,box-shadow 0.18s}
+  .seat.you{border:2px solid var(--coral);box-shadow:inset 0 0 0 1px var(--coral-soft),0 14px 28px -16px rgba(237,111,92,0.4)}
+  .seat.host .host-star{color:var(--mustard);font-size:13px;position:absolute;top:-10px;right:-6px;background:var(--paper);padding:0 4px}
+  .seat.median{border:2px solid var(--gold);box-shadow:inset 0 0 0 1px rgba(233,185,74,0.3),0 14px 28px -16px rgba(233,185,74,0.4)}
+  .seat .avatar{width:36px;height:36px;border-radius:50%;background:var(--paper-dark);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-style:italic;font-size:18px;color:var(--ink-soft);flex-shrink:0}
+  .seat.you .avatar{background:rgba(237,111,92,0.18);color:var(--coral)}
+  .seat .nick{font-family:var(--sans);font-weight:600;font-size:11.5px;color:var(--ink);max-width:80px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;letter-spacing:-0.01em}
+  .seat .badge{font-family:var(--mono);font-size:8.5px;letter-spacing:0.1em;color:var(--coral);text-transform:uppercase;padding:2px 6px;border:1px solid var(--coral);border-radius:4px}
+  .seat .state{font-family:var(--mono);font-size:9.5px;letter-spacing:0.06em;color:var(--ink-faint);text-transform:uppercase;padding:3px 8px;border:1px solid var(--line-soft);border-radius:999px;background:var(--paper)}
+  .seat .state.voted{color:var(--ink);border-color:var(--line)}
+  .seat .state.revealed{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:500}
+  .seat.median .face-num{font-family:var(--serif);font-style:italic;font-size:22px;color:var(--ink);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+  .seat .face-num{font-family:var(--serif);font-style:italic;font-size:22px;color:var(--ink);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0;transition:opacity 0.4s}
+  .seat.face-up .face-num{opacity:1}
+  .seat.face-up .avatar,.seat.face-up .nick,.seat.face-up .state{opacity:0.18}
+  .seat.face-up.median .face-num{color:var(--gold)}
+
+  /* Center host button */
+  .center-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--paper-dark);border:1px solid var(--line);color:var(--ink-faint);font-family:var(--sans);font-weight:600;font-size:13px;letter-spacing:0.01em;border-radius:999px;padding:14px 28px;cursor:not-allowed;display:flex;flex-direction:column;gap:3px;align-items:center;transition:background 0.25s,color 0.25s,border-color 0.25s,box-shadow 0.25s;width:200px}
+  .center-btn .hint{font-family:var(--mono);font-size:9.5px;letter-spacing:0.06em;color:var(--ink-faint);text-transform:uppercase;font-weight:400}
+  .center-btn.ready{background:var(--coral);color:#fff;border-color:var(--coral);cursor:pointer;box-shadow:0 14px 26px -16px rgba(237,111,92,0.5)}
+  .center-btn.ready .hint{color:rgba(255,255,255,0.85)}
+  .center-btn.ready:hover{transform:translate(-50%,-50%) translateY(-1px);background:var(--coral-soft)}
+  .center-btn.post-reveal{background:var(--paper);color:var(--ink);border-color:var(--line);cursor:pointer}
+  .center-btn.post-reveal:hover{transform:translate(-50%,-50%) translateY(-1px)}
+
+  /* Deck dock — bottom */
+  .deck{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;gap:12px;background:var(--bone);border:1px solid var(--line-soft);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow)}
+  .card-fb{width:72px;height:100px;background:var(--bone);border:1px solid var(--line);border-radius:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-style:italic;font-size:30px;color:var(--ink);transition:transform 0.18s,border-color 0.18s,background 0.18s,opacity 0.18s;user-select:none}
+  .card-fb:hover{transform:translateY(-3px);border-color:var(--coral)}
+  .card-fb.selected{border:2px solid var(--coral);background:rgba(237,111,92,0.08);color:var(--coral)}
+  .card-fb.coffee{font-style:normal;font-family:var(--sans);font-size:22px}
+  .deck.disabled .card-fb{opacity:0.4;cursor:not-allowed;pointer-events:none}
+
+  /* Share/empty overlay */
+  .overlay{position:absolute;inset:0;background:rgba(239,231,210,0.92);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:20;transition:opacity 0.25s}
+  .overlay.hide{opacity:0;pointer-events:none}
+  .overlay .card{background:var(--bone);border:1px solid var(--line-soft);border-radius:18px;padding:48px 56px;width:560px;box-shadow:inset 0 0 0 1px var(--line-soft),var(--shadow);display:flex;flex-direction:column;gap:20px;align-items:flex-start}
+  .overlay .card-mark{font-family:var(--serif);font-style:italic;font-size:36px;color:var(--coral);line-height:1}
+  .overlay h2{font-family:var(--sans);font-weight:800;font-size:28px;letter-spacing:-0.025em}
+  .overlay p{font-family:var(--body);font-size:14px;color:var(--ink-mute);line-height:1.55}
+  .share-pill{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:999px;background:var(--paper);overflow:hidden;width:100%}
+  .share-pill input{flex:1;border:0;background:transparent;padding:14px 18px;font-family:var(--mono);font-size:12px;color:var(--ink);outline:none;letter-spacing:0.02em}
+  .share-pill button{border:0;background:var(--coral);color:#fff;font-family:var(--sans);font-weight:600;font-size:13px;padding:14px 22px;cursor:pointer}
+  .share-pill button:hover{background:var(--coral-soft)}
+  .dismiss{align-self:flex-end;font-family:var(--mono);font-size:11px;letter-spacing:0.06em;color:var(--ink-faint);text-transform:uppercase;text-decoration:none;background:transparent;border:1px solid var(--line);border-radius:999px;padding:10px 18px;cursor:pointer}
+  .dismiss:hover{color:var(--coral);border-color:var(--coral)}
+
+  /* Toast */
+  .toast-stack{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:50;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+  .toast{background:var(--bone);border:1px solid var(--line-soft);border-radius:999px;padding:10px 22px;font-family:var(--body);font-size:13.5px;color:var(--ink-soft);box-shadow:var(--shadow);opacity:0;transform:translateY(-8px);transition:opacity 0.3s,transform 0.3s}
+  .toast.show{opacity:1;transform:none}
+
+  .wireframe-tag{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:0.1em;color:var(--ink-faint);border:1px solid var(--line-soft);padding:1px 7px;border-radius:999px;text-transform:uppercase;margin-left:8px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-left">
+        <span class="pulse"></span>
+        <span class="brand"><span class="brand-mark">Ø</span> Pointly</span>
+        <span>Sala <span id="codeLabel" style="color:var(--ink);font-weight:500">—</span></span>
+      </div>
+      <div>FIG. 03 · ARENA<span class="wireframe-tag">wireframe</span></div>
+    </div>
+  </header>
+
+  <div class="arena-head">
+    <span class="arena-fig">FIG. 03 · <span class="round" id="roundLabel">ROUND 01</span></span>
+    <span class="arena-fig">Você · <span id="selfNick" style="color:var(--ink)">Você</span></span>
+  </div>
+
+  <main class="stage" id="stage">
+    <div class="stats" id="stats" data-od-id="stats-pill">
+      <span><span class="lab">Média</span> <span class="val" id="meanVal">—</span></span>
+      <span><span class="lab gold">Mediana</span> <span class="val gold" id="medianVal">—</span></span>
+      <span><span class="lab">Intervalo</span> <span class="val" id="rangeVal">—</span></span>
+    </div>
+
+    <div class="timer" id="timer" data-od-id="timer-pill">
+      <span><span class="v" id="timerVal">00:60</span></span>
+      <span id="timerRound">ROUND 01</span>
+    </div>
+
+    <div class="table" id="table">
+      <div class="ellipse"></div>
+      <!-- Seats injected by JS -->
+      <button class="center-btn" id="centerBtn" data-od-id="reveal-button" disabled>
+        <span id="centerLabel">Revelar votos<span class="dot">.</span></span>
+        <span class="hint" id="centerHint">Aguardando 7 jogadores…</span>
+      </button>
+    </div>
+
+    <div class="deck" id="deck" data-od-id="deck-dock"></div>
+
+    <!-- Empty overlay -->
+    <div class="overlay" id="emptyOverlay" data-od-id="empty-overlay">
+      <div class="card">
+        <div class="card-mark">Ø</div>
+        <h2>Convide outros<span class="dot">.</span></h2>
+        <p>Você é o único na sala agora. Compartilhe o link abaixo — quando alguém entrar, o mock simula até 7 bots votando junto com você.</p>
+        <div class="share-pill">
+          <input id="shareUrl" readonly aria-label="URL de compartilhamento">
+          <button id="copyBtn">Copiar link</button>
+        </div>
+        <button class="dismiss" id="dismissOverlay">Entrar na mesa mesmo assim →</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const code = (params.get('code') || '').toUpperCase() || 'DEMO';
+  let nick = 'Você';
+  try { nick = localStorage.getItem('pointly_nick') || 'Você'; } catch(_) {}
+  const isHost = (()=>{ try { return localStorage.getItem('pointly_host') === code; } catch(_) { return false; } })();
+  document.getElementById('codeLabel').textContent = code;
+  document.getElementById('selfNick').textContent = nick;
+
+  // Player roster — VOCÊ at seat 6 (bottom-center, "6 o'clock"), 7 bots in arc above
+  const BOTS = [
+    {name:'Maya',  seatAngle:30},
+    {name:'Rui',   seatAngle:75},
+    {name:'Aria',  seatAngle:120},
+    {name:'Theo',  seatAngle:165},
+    {name:'Lia',   seatAngle:210},
+    {name:'Ivo',   seatAngle:255},
+    {name:'Nora',  seatAngle:300},
+  ];
+  // Curated votes for the 7 bots + you (you choose your own). Cluster around median 5 with one outlier 13.
+  const CURATED = [5, 5, 8, 8, 5, 13, 3];
+  const FIB = ['0','½','1','2','3','5','8','13','☕'];
+
+  let state = {
+    round: 1,
+    phase: 'idle',       // idle | voting | revealed
+    timer: 60,
+    timerInt: null,
+    myVote: null,
+    players: [
+      {you:true,  name:nick, voted:false, value:null, seatAngle:0},  // 6 o'clock → set below through transform
+    ].concat(BOTS.map((b,i)=>({you:false, name:b.name, voted:false, value:null, seatAngle:b.seatAngle, idx:i}))),
+  };
+  // Place you at angle 90deg (bottom of ellipse). Angles measured from +X axis CCW; we convert to top-of-viewport coords below.
+  state.players[0].seatAngle = 90;
+
+  // Render table seats
+  const tableEl = document.getElementById('table');
+  const centerBtn = document.getElementById('centerBtn');
+  // Ellipse radii
+  const RX = 420, RY = 240;
+  function renderSeats() {
+    // remove old seats except center button
+    [...tableEl.querySelectorAll('.seat')].forEach(s=>s.remove());
+    state.players.forEach((p, i) => {
+      const ang = p.seatAngle * Math.PI/180;
+      // angle 0 → right, 90 → bottom (CSS Y down), we treat Y positive downward
+      const x = Math.cos(ang) * RX;
+      const y = Math.sin(ang) * RY; // sin(90)=1 → bottom → that's 6h. Good.
+      const seat = document.createElement('div');
+      seat.className = 'seat' + (p.you ? ' you' : '') + ((isHost && p.you) ? ' host' : '');
+      seat.dataset.id = i;
+      seat.style.left = `calc(50% + ${x}px)`;
+      seat.style.top  = `calc(50% + ${y}px)`;
+      seat.innerHTML = `
+        ${isHost && p.you ? '<span class="host-star">★</span>' : ''}
+        <div class="avatar">${p.name.charAt(0)}</div>
+        <div class="nick">${p.name}${p.you ? '' : ''}</div>
+        ${p.you ? '<div class="badge">VOCÊ</div>' : ''}
+        <div class="state">${p.voted ? 'VOTED' : 'IDLE'}</div>
+        <div class="face-num"></div>
+      `;
+      tableEl.appendChild(seat);
+    });
+  }
+  renderSeats();
+
+  // Render deck
+  const deckEl = document.getElementById('deck');
+  FIB.forEach((v,i) => {
+    const c = document.createElement('div');
+    c.className = 'card-fb' + (v === '☕' ? ' coffee' : '');
+    c.dataset.value = v;
+    c.textContent = v;
+    c.setAttribute('role','button');
+    c.setAttribute('tabindex','0');
+    c.setAttribute('aria-label','Carta '+v);
+    c.addEventListener('click', () => selectCard(v, c));
+    c.addEventListener('keypress', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); selectCard(v,c);} });
+    deckEl.appendChild(c);
+  });
+
+  function selectCard(v, el) {
+    if (state.phase === 'revealed') return;
+    state.myVote = v;
+    state.players[0].voted = true;
+    state.players[0].value = v;
+    [...deckEl.children].forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+    updateSeat(0);
+    if (state.phase === 'idle') startVoting();
+    toast(`Você escolheu uma carta.`);
+  }
+
+  function startVoting() {
+    state.phase = 'voting';
+    startTimer();
+    // schedule bot votes
+    state.players.slice(1).forEach((p, i) => {
+      const delay = 400 + Math.random() * 1800; // 400–2200ms
+      setTimeout(() => {
+        if (state.phase === 'revealed') return;
+        p.voted = true;
+        updateSeat(p.idx + 1);
+        toast(`${p.name} escolheu uma carta.`);
+        if (allVoted()) onAllVoted();
+      }, delay);
+    });
+  }
+
+  function allVoted() {
+    return state.players.every(p => p.voted);
+  }
+
+  function onAllVoted() {
+    centerBtn.classList.add('ready');
+    centerBtn.disabled = false;
+    document.getElementById('centerLabel').innerHTML = 'Revelar votos<span class="dot">.</span>';
+    document.getElementById('centerHint').textContent = 'Todos votaram — hora do reveal.';
+    toast('Todos votaram — hora do reveal.');
+  }
+
+  centerBtn.addEventListener('click', () => {
+    if (state.phase === 'revealed') {
+      newRound();
+    } else if (state.phase === 'voting' && allVoted()) {
+      reveal();
+    }
+  });
+
+  function reveal() {
+    state.phase = 'revealed';
+    stopTimer();
+    // assign curated votes
+    state.players.slice(1).forEach((p,i) => { p.value = String(CURATED[i]); });
+    // compute median & mean (numeric; treat ☕ as null and ½ as 0.5)
+    const num = (v) => v === '½' ? 0.5 : (v === '☕' ? null : Number(v));
+    const vals = state.players.map(p => num(p.value)).filter(v => v !== null);
+    vals.sort((a,b)=>a-b);
+    const mean = (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
+    const median = vals.length % 2 ? vals[(vals.length-1)/2] : ((vals[vals.length/2-1]+vals[vals.length/2])/2);
+    const minv = vals[0], maxv = vals[vals.length-1];
+    document.getElementById('meanVal').textContent = mean;
+    document.getElementById('medianVal').textContent = median;
+    document.getElementById('rangeVal').textContent = `${minv}–${maxv}`;
+    document.getElementById('stats').classList.add('show');
+
+    // flip cards face-up
+    state.players.forEach((p,i) => {
+      const seat = tableEl.querySelector(`.seat[data-id="${i}"]`);
+      seat.classList.add('face-up');
+      const faceNum = seat.querySelector('.face-num');
+      faceNum.textContent = p.value;
+      const stateEl = seat.querySelector('.state');
+      if (stateEl) stateEl.remove();
+      // highlight median
+      if (num(p.value) === median) {
+        seat.classList.add('median');
+      }
+    });
+
+    deckEl.classList.add('disabled');
+    centerBtn.classList.remove('ready');
+    centerBtn.classList.add('post-reveal');
+    document.getElementById('centerLabel').textContent = 'Nova rodada';
+    document.getElementById('centerHint').textContent = 'Limpa votos · reinicia timer.';
+    toast(`Mediana: ${median}`);
+  }
+
+  function newRound() {
+    state.round += 1;
+    state.phase = 'idle';
+    state.myVote = null;
+    state.timer = 60;
+    state.players.forEach(p => { p.voted = false; p.value = null; });
+    document.getElementById('stats').classList.remove('show');
+    document.getElementById('roundLabel').textContent = `ROUND ${String(state.round).padStart(2,'0')}`;
+    document.getElementById('timerRound').textContent = `ROUND ${String(state.round).padStart(2,'0')}`;
+    document.getElementById('timerVal').textContent = '00:60';
+    [...deckEl.children].forEach(c=>c.classList.remove('selected'));
+    deckEl.classList.remove('disabled');
+    renderSeats();
+    centerBtn.classList.remove('ready','post-reveal');
+    centerBtn.disabled = true;
+    document.getElementById('centerLabel').innerHTML = 'Revelar votos<span class="dot">.</span>';
+    document.getElementById('centerHint').textContent = 'Aguardando 7 jogadores…';
+  }
+
+  function startTimer() {
+    if (state.timerInt) clearInterval(state.timerInt);
+    state.timer = 60;
+    state.timerInt = setInterval(() => {
+      state.timer -= 1;
+      const t = String(state.timer).padStart(2,'0');
+      document.getElementById('timerVal').textContent = `00:${t}`;
+      const tEl = document.getElementById('timer');
+      if (state.timer <= 30) tEl.classList.add('critical'); else tEl.classList.remove('critical');
+      if (state.timer <= 0) {
+        clearInterval(state.timerInt);
+        if (state.phase === 'voting') {
+          // auto-reveal: force everyone voted, then reveal
+          state.players.forEach(p => { p.voted = true; });
+          state.players.slice(1).forEach((pp,i) => { if (!pp.value) pp.value = String(CURATED[i]); });
+          toast('Tempo esgotado — reveal automático.');
+          reveal();
+        }
+      }
+    }, 1000);
+  }
+  function stopTimer(){ if (state.timerInt) { clearInterval(state.timerInt); state.timerInt=null; } }
+
+  function updateSeat(i) {
+    const seat = tableEl.querySelector(`.seat[data-id="${i}"]`);
+    if (!seat) return;
+    const st = seat.querySelector('.state');
+    if (st) { st.classList.add('voted'); st.textContent = 'VOTED'; }
+  }
+
+  // Toast
+  let toastQueue = [];
+  function toast(msg) {
+    const stack = document.getElementById('toastStack');
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    stack.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(() => { t.classList.remove('show'); setTimeout(()=>t.remove(), 320); }, 2400);
+  }
+
+  // Empty overlay — show if you're alone (mock: pretend you are)
+  const emptyOv = document.getElementById('emptyOverlay');
+  const shareUrlEl = document.getElementById('shareUrl');
+  const shareUrl = `${location.origin}${location.pathname.replace(/[^/]+$/,'')}join.html?code=${code}`;
+  shareUrlEl.value = shareUrl;
+  // Show overlay on first round only
+  if (!sessionStorage.getItem('pointly_dismissed_empty')) {
+    emptyOv.classList.remove('hide');
+    centerBtn.disabled = true;
+    document.getElementById('centerHint').textContent = 'Convide outros para começar.';
+  } else {
+    emptyOv.classList.add('hide');
+  }
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    shareUrlEl.select();
+    try { navigator.clipboard.writeText(shareUrl); } catch(_) {}
+    document.getElementById('copyBtn').textContent = 'Copiado ✓';
+    setTimeout(()=>document.getElementById('copyBtn').textContent='Copiar link', 1800);
+  });
+  document.getElementById('dismissOverlay').addEventListener('click', () => {
+    emptyOv.classList.add('hide');
+    try { sessionStorage.setItem('pointly_dismissed_empty','1'); } catch(_) {}
+    document.getElementById('centerHint').textContent = 'Aguardando você escolher uma carta.';
+  });
+
+  // If 8 players already in mock (we always assume 8 here in the wireframe), simulate "full" by NOT redirecting.
+  // full.html is reached only from join.html when this client knows roster is full — out of scope here.
+</script>
+</body>
+</html>

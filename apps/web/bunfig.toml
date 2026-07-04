@@ -1,0 +1,7 @@
+# Bun config for apps/web (Phase 5 — T26)
+# Preload garante jsdom DOM globals ANTES de qualquer test-file ser importado.
+# @testing-library/dom cacheia `document.body` na primeira chamada; se rodar
+# antes do jsdom, falha com "global document has to be available".
+
+[test]
+preload = ["./src/test-jsdom.ts", "./src/components/ui/test-helpers.tsx"]

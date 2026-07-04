@@ -1,0 +1,110 @@
+/**
+ * EmptyOverlay tests — T36 verify (≥2 of 5 minimum required).
+ */
+import { describe, expect, mock, test } from "bun:test";
+import { fireEvent, render, screen } from "./ui/test-helpers";
+import { EmptyOverlay, buildShareUrl } from "./empty-overlay";
+
+describe("buildShareUrl — T36 pure", () => {
+	test("buildShareUrl('http://localhost:5173', '9B9F') → '.../join.html?code=9B9F'", () => {
+		expect(buildShareUrl("http://localhost:5173", "9B9F")).toBe(
+			"http://localhost:5173/join.html?code=9B9F",
+		);
+	});
+});
+
+describe("EmptyOverlay — render", () => {
+	test("renderiza headline 'Convide outros' + share URL readonly", () => {
+		render(<EmptyOverlay code="9B9F" onDismiss={() => {}} />);
+		expect(
+			screen.getByRole("heading", { level: 2, name: /convide outros/i }),
+		).toBeInTheDocument();
+		const input = screen.getByTestId("empty-overlay-share-url");
+		expect(input).toBeInTheDocument();
+		expect(input).toHaveAttribute("readonly");
+		expect((input as HTMLInputElement).value).toMatch(/code=9B9F/);
+	});
+
+	test("role='dialog' + aria-modal='true' (a11y)", () => {
+		render(<EmptyOverlay code="9B9F" onDismiss={() => {}} />);
+		const dialog = screen.getByTestId("empty-overlay");
+		expect(dialog.getAttribute("role")).toBe("dialog");
+		expect(dialog.getAttribute("aria-modal")).toBe("true");
+	});
+
+	test("click em 'Copiar link' chama navigator.clipboard.writeText", async () => {
+		// Mock clipboard
+		const writeText = mock(async (_s: string) => {});
+		const origClipboard = navigator.clipboard;
+		Object.defineProperty(navigator, "clipboard", {
+			configurable: true,
+			value: { writeText },
+		});
+
+		try {
+			render(<EmptyOverlay code="ABCD" onDismiss={() => {}} />);
+			fireEvent.click(screen.getByTestId("empty-overlay-copy"));
+			// writeText é async; aguardamos microtask
+			await new Promise((r) => setTimeout(r, 0));
+			expect(writeText).toHaveBeenCalledTimes(1);
+			const lastArg =
+				writeText.mock.calls[writeText.mock.calls.length - 1]?.[0];
+			expect(lastArg).toMatch(/code=ABCD/);
+		} finally {
+			Object.defineProperty(navigator, "clipboard", {
+				configurable: true,
+				value: origClipboard,
+			});
+		}
+	});
+
+	test("click em 'Entrar na mesa mesmo assim' chama onDismiss", () => {
+		const onDismiss = mock(() => {});
+		render(<EmptyOverlay code="9B9F" onDismiss={onDismiss} />);
+		fireEvent.click(screen.getByTestId("empty-overlay-dismiss"));
+		expect(onDismiss).toHaveBeenCalledTimes(1);
+	});
+
+	test("Esc fecha o overlay (chama onDismiss)", () => {
+		const onDismiss = mock(() => {});
+		render(<EmptyOverlay code="9B9F" onDismiss={onDismiss} />);
+		fireEvent.keyDown(window, { key: "Escape" });
+		expect(onDismiss).toHaveBeenCalledTimes(1);
+	});
+
+	test("sessionStorage dismissed → NÃO renderiza overlay", () => {
+		// Verifica que o lazy initializer do useState lê sessionStorage
+		// antes do primeiro render (evita flicker do overlay).
+		// Limpamos o storage e setamos o valor antes do render.
+		try {
+			sessionStorage.clear();
+			sessionStorage.setItem("pointly.dismissedEmpty", "1");
+		} catch {
+			// ignore — se storage não existe, este teste é skip
+			return;
+		}
+		const { container } = render(
+			<EmptyOverlay code="9B9F" onDismiss={() => {}} />,
+		);
+		expect(container.firstChild).toBeNull();
+		// Cleanup
+		try {
+			sessionStorage.clear();
+		} catch {
+			// ignore
+		}
+	});
+
+	test("shareUrl override é usado quando fornecido", () => {
+		render(
+			<EmptyOverlay
+				code="9B9F"
+				onDismiss={() => {}}
+				shareUrl="https://example.com/custom?code=9B9F"
+			/>,
+		);
+		expect(screen.getByTestId("empty-overlay-share-url")).toHaveValue(
+			"https://example.com/custom?code=9B9F",
+		);
+	});
+});

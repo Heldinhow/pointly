@@ -1,0 +1,62 @@
+{
+  "task": "T23 — WebSocket client wrapper (Phase 5)",
+  "status": "complete",
+  "gate": "quick",
+  "changedFiles": [
+    "apps/web/src/lib/ws-client.ts",
+    "apps/web/src/lib/ws-client.test.ts"
+  ],
+  "testsAdded": {
+    "file": "apps/web/src/lib/ws-client.test.ts",
+    "count": 18,
+    "groups": [
+      "connect lifecycle (2)",
+      "message dispatch (2)",
+      "malformed events (4)",
+      "send validation (3)",
+      "reconnect on close (3)",
+      "heartbeat (3)",
+      "env defaults (1)"
+    ]
+  },
+  "webTestsTotal": 49,
+  "webTestsPass": 49,
+  "webTestsFail": 0,
+  "typecheck": {
+    "command": "bun run typecheck",
+    "result": "all 4 workspaces exit 0 (server, web, shared, e2e)"
+  },
+  "commandsRun": [
+    {
+      "command": "bun run test:web",
+      "result": "passed",
+      "summary": "49 pass, 0 fail, 118 expect() calls, 3 files"
+    },
+    {
+      "command": "bun run typecheck",
+      "result": "passed",
+      "summary": "all 4 workspaces exit 0"
+    }
+  ],
+  "validationOutput": [
+    "ws-client.test.ts: 18/18 pass (≥5 required)",
+    "useSalaStore tests: 29/29 pass (regressão zero)",
+    "smoke.test.ts: 2/2 pass (regressão zero)"
+  ],
+  "implementationHighlights": [
+    "Factory createWSClient({ url?, onEvent, setTimeoutFn?, clearTimeoutFn?, WebSocketCtor?, maxReconnectRetries?, heartbeatIntervalMs?, heartbeatTimeoutMs? })",
+    "URL default: import.meta.env.VITE_WS_URL ?? 'ws://localhost:3001/ws'",
+    "Validação Zod em send (ClientToServerEventSchema) e receive (ServerToClientEventSchema) — malformed → console.warn + drop, sem throw",
+    "Auto-reconnect com backoff exponencial: 1s, 2s, 4s, 8s, 16s, 30s (cap RECONNECT_MAX_MS)",
+    "Heartbeat: ping a cada 30s, espera pong em 5s, fecha+reconnect se não chegar",
+    "close() explícito: para heartbeat, fecha WS, marca explicitlyClosed (impede reconnect)",
+    "Status observável: 'idle' | 'connecting' | 'open' | 'closed' | 'error'",
+    "Injeção de setTimeoutFn/clearTimeoutFn/WebSocketCtor permite testes determinísticos sem fake timers globais"
+  ],
+  "residualRisks": [
+    "Multi-tab: spec menciona 'primeiro connect ganha; segundo vê sala_ended { reason: replaced }' — não implementado (decision deferida ou fora do escopo T23)",
+    "Em produção, setTimeout real é usado; testes cobrem 100% dos fluxos com mocks injetáveis"
+  ],
+  "noStagedFiles": true,
+  "diffSummary": "Novo módulo ws-client (factory de WebSocket com Zod validation, auto-reconnect exponencial, heartbeat ping/pong) + 18 testes cobrindo lifecycle, dispatch, malformed handling, send validation, reconnect, heartbeat. Zero modificação em outros arquivos."
+}

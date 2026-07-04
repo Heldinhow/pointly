@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1440">
+<title>Pointly · Launcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;700;800;900&family=Inter:wght@300;400;500&family=Playfair+Display:ital@1;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:#efe7d2; --paper-warm:#ece4cf; --paper-dark:#ddd2b6;
+    --ink:#15140f; --ink-soft:#2a2620; --ink-mute:#5a5448; --ink-faint:#8b8676;
+    --coral:#ed6f5c; --coral-soft:#f08e7c; --mustard:#e9b94a; --olive:#6e7448;
+    --bone:#f7f1de;
+    --line:rgba(21,20,15,0.16); --line-soft:rgba(21,20,15,0.08); --line-faint:rgba(21,20,15,0.05);
+    --shadow:0 30px 60px -30px rgba(21,20,15,0.18);
+    --serif:'Playfair Display','Times New Roman',serif;
+    --sans:'Inter Tight','Inter',-apple-system,system-ui,sans-serif;
+    --body:'Inter',-apple-system,system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--paper);color:var(--ink)}
+  body{font-family:var(--body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;position:relative;min-height:100vh}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:radial-gradient(circle at 12% 18%,rgba(106,92,56,0.07) 0,transparent 28%),radial-gradient(circle at 88% 72%,rgba(106,92,56,0.06) 0,transparent 32%),url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.18  0 0 0 0 0.16  0 0 0 0 0.12  0 0 0 0.06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");background-size:auto,auto,240px 240px;mix-blend-mode:multiply;opacity:0.92}
+  .shell{position:relative;z-index:2}
+  .container{max-width:1360px;padding:0 64px;margin:0 auto;position:relative}
+  .topbar{border-bottom:1px solid var(--line);padding:10px 0}
+  .topbar-inner{display:flex;justify-content:space-between;align-items:center;font-family:var(--sans);font-size:10.5px;letter-spacing:0.04em;color:var(--ink-faint);text-transform:uppercase}
+  .topbar-left{display:flex;gap:18px;align-items:center}
+  .pulse{width:6px;height:6px;border-radius:50%;background:var(--coral);animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+  @media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+  .dot{color:var(--coral)}
+  .mark{font-family:var(--serif);font-style:italic;font-size:22px;color:var(--ink);letter-spacing:-0.02em}
+  .mark .slash{color:var(--coral)}
+  .head{padding:22px 0 4px;display:flex;justify-content:space-between;align-items:baseline}
+  .brand{font-family:var(--sans);font-weight:800;font-size:22px;letter-spacing:-0.03em;display:flex;align-items:baseline;gap:10px}
+  .brand-mark{font-family:var(--serif);font-style:italic;font-weight:500;color:var(--coral);font-size:26px;line-height:1}
+  .sec-rule{display:flex;align-items:center;gap:18px;padding:18px 0;border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;letter-spacing:0.04em;color:var(--ink-faint);text-transform:uppercase}
+  .sec-rule .roman{font-family:var(--serif);font-style:italic;color:var(--coral);font-size:14px;letter-spacing:0;text-transform:none}
+  .sec-rule .meta{flex:1;text-align:center}
+  .sec-rule .page{font-family:var(--sans);letter-spacing:0.22em}
+  .hero{padding:40px 0 60px;display:grid;grid-template-columns:0.78fr 1.22fr;gap:64px;align-items:start}
+  .hero h1{font-family:var(--sans);font-weight:800;font-size:clamp(38px,4.6vw,66px);line-height:1.04;letter-spacing:-0.035em;color:var(--ink)}
+  .hero h1 em{font-family:var(--serif);font-style:italic;font-weight:500;color:var(--ink-soft)}
+  .hero .lead{font-family:var(--body);font-size:17px;line-height:1.6;color:var(--ink-mute);margin-top:24px;max-width:34ch}
+  .eyebrow{font-family:var(--sans);font-weight:600;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:var(--coral);margin-bottom:18px;display:flex;align-items:center;gap:10px}
+  .eyebrow::before{content:'';width:18px;height:1px;background:var(--coral)}
+  .card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:10px}
+  .card{background:var(--bone);border-radius:18px;padding:26px 28px;box-shadow:inset 0 0 0 1px var(--line-soft),var(--shadow);text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:10px;transition:transform 0.18s ease,box-shadow 0.18s ease}
+  .card:hover{transform:translateY(-3px)}
+  .card-head{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:10.5px;letter-spacing:0.06em;color:var(--ink-faint);text-transform:uppercase}
+  .card-num{font-family:var(--serif);font-style:italic;font-size:18px;color:var(--coral);letter-spacing:0;text-transform:none}
+  .card h3{font-family:var(--sans);font-weight:800;font-size:22px;letter-spacing:-0.02em}
+  .card p{font-family:var(--body);font-size:14px;line-height:1.55;color:var(--ink-mute)}
+  .card .arrow{align-self:flex-end;font-family:var(--sans);font-size:14px;color:var(--ink-faint);transition:color 0.18s}
+  .card:hover .arrow{color:var(--coral)}
+  .foot{padding:60px 0 40px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-end;margin-top:40px}
+  .foot .mega{font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(70px,13vw,180px);line-height:0.85;letter-spacing:-0.04em;color:var(--ink)}
+  .foot .mega .dot{color:var(--coral)}
+  .foot-meta{font-family:var(--mono);font-size:10.5px;letter-spacing:0.04em;color:var(--ink-faint);text-transform:uppercase;text-align:right;line-height:1.8}
+  .wireframe-tag{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:0.1em;color:var(--ink-faint);border:1px solid var(--line-soft);padding:2px 8px;border-radius:999px;text-transform:uppercase;margin-left:10px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="topbar-left">
+        <span class="pulse"></span>
+        <span>Vol. 01 · Issue Nº 26 · Pointly</span>
+      </div>
+      <div>PT-BR · MMXXVI · Wireframe</div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="head">
+      <div class="brand"><span class="brand-mark">Ø</span> Pointly</div>
+      <div style="font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);letter-spacing:0.06em;text-transform:uppercase">Launcher · 5 telas<span class="wireframe-tag">wireframe</span></div>
+    </div>
+
+    <section class="hero" data-reveal>
+      <div>
+        <div class="eyebrow">Plataforma de Planning Poker</div>
+        <h1>Vote com <em>ritmo</em>, <em>confiança</em>, e zero cadastro<span class="dot">.</span></h1>
+        <p class="lead">Protótipo wireframe de um app de Planning Poker grátis para times ágeis. Sala instantânea via código curto, deck Fibonacci, revelação coletiva, timer com estado crítico. Sem backend — mock client-side simula 7 outros jogadores.</p>
+      </div>
+      <div class="card-grid">
+        <a class="card" href="landing.html" data-od-id="launcher-card-landing">
+          <div class="card-head"><span class="card-num">01</span><span>Criar sala</span></div>
+          <h3>Landing</h3>
+          <p>Hero editorial, CTA "Criar sala", Trust Badge, rota para o nick prompt.</p>
+          <span class="arrow">↗</span>
+        </a>
+        <a class="card" href="join.html?code=DEMO" data-od-id="launcher-card-join">
+          <div class="card-head"><span class="card-num">02</span><span>Nickname</span></div>
+          <h3>Entrar</h3>
+          <p>Apelido 2–20 chars, sem espaços duplos. Recebe código via querystring.</p>
+          <span class="arrow">↗</span>
+        </a>
+        <a class="card" href="arena.html?code=DEMO" data-od-id="launcher-card-arena">
+          <div class="card-head"><span class="card-num">03</span><span>A mesa</span></div>
+          <h3>Arena</h3>
+          <p>Ring/elipse 8 assentos, deck Fibonacci, reveal coletivo, timer 60s, mock reativo.</p>
+          <span class="arrow">↗</span>
+        </a>
+        <a class="card" href="full.html" data-od-id="launcher-card-full">
+          <div class="card-head"><span class="card-num">04</span><span>Sala cheia</span></div>
+          <h3>8 / 8</h3>
+          <p>Edge case: entrada negada quando a sala já tem 8 jogadores.</p>
+          <span class="arrow">↗</span>
+        </a>
+      </div>
+    </section>
+
+    <div class="sec-rule"><span class="roman">I.</span><span class="meta">Filed under: Prototype · Wireframe · Atelier Zero</span><span class="page">001 / 001</span></div>
+
+    <footer class="foot">
+      <div class="mega">Pointly<span class="dot">.</span></div>
+      <div class="foot-meta">
+        <div>Ø Pointly · 2026</div>
+        <div>Protótipo — sem backend</div>
+        <div>100% grátis · sem cadastro</div>
+      </div>
+    </footer>
+  </main>
+</div>
+<script>
+  // Reveal on scroll (Atelier Zero contract)
+  const io = new IntersectionObserver((es) => es.forEach(e => { if (e.isIntersecting) { e.target.style.opacity = 1; e.target.style.transform = 'none'; } }), { threshold: 0.12 });
+  document.querySelectorAll('[data-reveal]').forEach(el => { el.style.opacity = 0; el.style.transform = 'translateY(12px)'; el.style.transition = 'opacity 0.6s ease, transform 0.6s ease'; io.observe(el); });
+</script>
+</body>
+</html>

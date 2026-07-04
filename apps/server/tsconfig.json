@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": ["bun"],
+    "paths": {
+      "@planning-poker/shared": ["../../packages/shared/src/index.ts"],
+      "@planning-poker/shared/*": ["../../packages/shared/src/*"]
+    }
+  },
+  "include": ["src/**/*", "../../packages/shared/src/**/*"],
+  "exclude": ["node_modules", "dist", "../../packages/shared/src/**/*.test.ts"]
+}

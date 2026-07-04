@@ -1,0 +1,40 @@
+{
+  "name": "pointly",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Planning Poker web app — Pointly",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "tests/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n web,server -c cyan,magenta \"bun run --filter web dev\" \"bun run --filter server dev\"",
+    "dev:web": "bun run --filter web dev",
+    "dev:server": "bun run --filter server dev",
+    "build": "bun run --filter web build && bun run --filter server build",
+    "preview": "concurrently -n web,server -c cyan,magenta \"bun run --filter web preview\" \"bun run --filter server dev\"",
+    "typecheck": "bun run --filter '*' typecheck",
+    "test:server": "bun run --filter server test",
+    "test:web": "bun run --filter web test",
+    "test:shared": "bun run --filter '@planning-poker/shared' test",
+    "test:e2e": "bun run --filter e2e test",
+    "test:all": "bun run test:shared && bun run test:server && bun run test:web && bun run test:e2e",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules tests/*/node_modules"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/bun": "^1.1.14",
+    "concurrently": "^9.1.0",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "bun": ">=1.1.0"
+  },
+  "dependencies": {
+    "react-router-dom": "6.28.0"
+  }
+}

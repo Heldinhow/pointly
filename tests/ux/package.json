@@ -1,0 +1,28 @@
+{
+	"name": "ux",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"description": "UX/design audit + feature tests for Pointly",
+	"scripts": {
+		"test": "playwright test",
+		"test:ui": "playwright test --ui",
+		"test:headed": "playwright test --headed",
+		"test:list": "playwright test --list",
+		"test:smoke": "playwright test 01-smoke",
+		"test:visual": "playwright test 02-visual",
+		"test:flows": "playwright test 03-flows",
+		"test:join": "playwright test 04-join",
+		"test:arena": "playwright test 05-arena",
+		"test:responsive": "playwright test 06-responsive",
+		"test:a11y": "playwright test 07-a11y",
+		"typecheck": "tsc --noEmit",
+		"install-browsers": "playwright install chromium"
+	},
+	"devDependencies": {
+		"@axe-core/playwright": "^4.12.1",
+		"@playwright/test": "^1.49.1",
+		"@types/node": "^22.10.5",
+		"typescript": "^5.7.2"
+	}
+}

@@ -1,0 +1,3 @@
+# Reconnect strategy: client UUID + sala reidrata
+
+Cada cliente gera UUID ao conectar (client-side, via `crypto.randomUUID()`), envia no `hello` WebSocket event. Servidor indexa players por UUID dentro da sala. Se cliente desconecta e reconecta com mesmo UUID, servidor reidrata o assento (mantém voto já feito, mantém posição na mesa). Se servidor reinicia, sala some do Map e cliente recebe novo UUID ao reconectar — sala precisa ser recriada. v1 não persiste reconnect state entre restarts de servidor. Trade-off: simple state machine, sem "ghost players" órfãos, sem necessidade de session store persistente. Quando v2 quiser recovery entre restarts, vai precisar de Redis ou Postgres pra persistir o `Map<codigo, Sala>`.
