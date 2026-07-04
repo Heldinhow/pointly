@@ -57,7 +57,6 @@ export class SalaError extends Error {
 
 const SEAT_COUNT = 12;
 const TIMER_SECONDS = 60;
-const TIMER_TICK_MS = 1000;
 const DISCONNECT_GRACE_MS = 60_000;
 
 export type RevealOutcome = {
@@ -410,12 +409,15 @@ export class Sala {
 	 * Decrementa 1s do timer. Se chegar a 0, dispara auto-reveal.
 	 * Público — chamado pelo hub a cada 1s do heartbeat.
 	 *
+	 * @param now timestamp epoch ms (mantido para compatibilidade de assinatura
+	 *   com o hub e com testes que controlam tempo).
 	 * @returns TickResult:
 	 *   - `'idle'` se timer não está ativo OU decrementou mas phase !== 'voting'
 	 *   - `'ticking'` se decrementou e phase === 'voting'
 	 *   - `'fired'` se decrementou para 0 e auto-reveal disparou
 	 */
 	tick(now: number = Date.now()): TickResult {
+		void now;
 		if (!this.timerActive) return "idle";
 		this.timer = Math.max(0, this.timer - 1);
 		if (this.timer <= 0) {

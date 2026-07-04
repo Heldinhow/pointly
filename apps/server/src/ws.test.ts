@@ -378,7 +378,7 @@ describe("WSService — tick reconciliation cadence (10s)", () => {
 	});
 
 	test("timestamps de broadcast são independentes por sala", () => {
-		// sala A: hello + cast_vote
+		// sala A: host (Ana) + player (Cris). Cris não vota → phase 'voting'
 		const wsA = new MockBunWS("127.0.0.1");
 		service.onOpen(wsA);
 		service.onMessage(
@@ -388,15 +388,29 @@ describe("WSService — tick reconciliation cadence (10s)", () => {
 				payload: { uuid: "00000000-0000-4000-8000-000000000002", nick: "Ana" },
 			}),
 		);
+		const codeA = wsA.data.code!;
+		const wsA2 = new MockBunWS("127.0.0.3");
+		service.onOpen(wsA2);
+		service.onMessage(
+			wsA2,
+			JSON.stringify({
+				type: "hello",
+				payload: {
+					uuid: "00000000-0000-8000-0000-000000000004",
+					nick: "Cris",
+					code: codeA,
+				},
+			}),
+		);
 		service.onMessage(
 			wsA,
 			JSON.stringify({ type: "cast_vote", payload: { value: "5" } }),
 		);
-		const codeA = wsA.data.code!;
 		const salaA = hub.getSala(codeA)!;
+		expect(salaA.phase).toBe("voting");
 		salaA.timer = 50;
 
-		// sala B: hello + cast_vote (em outra conexão)
+		// sala B: host (Bob) + player (Diana). Diana não vota → phase 'voting'
 		const wsB = new MockBunWS("127.0.0.2");
 		service.onOpen(wsB);
 		service.onMessage(
@@ -406,12 +420,26 @@ describe("WSService — tick reconciliation cadence (10s)", () => {
 				payload: { uuid: "00000000-0000-4000-8000-000000000003", nick: "Bob" },
 			}),
 		);
+		const codeB = wsB.data.code!;
+		const wsB2 = new MockBunWS("127.0.0.4");
+		service.onOpen(wsB2);
+		service.onMessage(
+			wsB2,
+			JSON.stringify({
+				type: "hello",
+				payload: {
+					uuid: "00000000-0000-8000-0000-000000000005",
+					nick: "Diana",
+					code: codeB,
+				},
+			}),
+		);
 		service.onMessage(
 			wsB,
 			JSON.stringify({ type: "cast_vote", payload: { value: "8" } }),
 		);
-		const codeB = wsB.data.code!;
 		const salaB = hub.getSala(codeB)!;
+		expect(salaB.phase).toBe("voting");
 		salaB.timer = 50;
 
 		// t=10000: ambos broadcastam (lastBroadcastAt=0 para ambos)

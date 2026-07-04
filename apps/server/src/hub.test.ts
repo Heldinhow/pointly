@@ -8,7 +8,6 @@
  */
 import { beforeEach, describe, expect, test } from "bun:test";
 import { Hub } from "./hub";
-import { Sala } from "./sala";
 import type { Player } from "@planning-poker/shared";
 
 // ---------------------------------------------------------------------------

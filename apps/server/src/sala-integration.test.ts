@@ -159,11 +159,11 @@ describe("T19 — timer expira → auto-reveal", () => {
 		expect(sala.phase).toBe("voting");
 
 		// Avança o timer tick a tick — em algum momento deve auto-revelar
-		// O sala.tick() retorna true quando o último tick dispara auto-reveal.
+		// O sala.tick() retorna 'fired' quando o último tick dispara auto-reveal.
 		let autoRevealed = false;
 		// Budget: 60 ticks (timer começa em 60)
 		for (let i = 0; i < 65 && !autoRevealed; i++) {
-			if (sala.tick()) {
+			if (sala.tick() === "fired") {
 				autoRevealed = true;
 			}
 		}
