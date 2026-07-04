@@ -13,6 +13,13 @@ test("C1: Host solo vota 5 → reveal", async ({ browser }) => {
 		const code = await suite.createRoom(0);
 		expect(code).toMatch(/^[A-Z0-9]{4}$/);
 
+		// EmptyOverlay aparece quando sozinho — dismissa
+		const overlay = suite.clients[0]!.page.locator('[data-testid="empty-overlay"]');
+		if (await overlay.isVisible({ timeout: 3000 }).catch(() => false)) {
+			await suite.clients[0]!.page.getByTestId("empty-overlay-dismiss").click();
+			await suite.clients[0]!.page.waitForTimeout(400);
+		}
+
 		// Estado inicial: awaiting
 		const initial = await suite.clients[0]!.page
 			.getByTestId("reveal-button")
@@ -140,7 +147,8 @@ test("C6: Empty overlay aparece quando sozinho", async ({ browser }) => {
 			(await suite.clients[0]!.page
 				.getByTestId("empty-overlay-share-url")
 				.inputValue()) ?? "";
-		expect(shareUrl).toMatch(/join\?code=[A-Z0-9]{4}/);
+		// Aceita tanto `/join?code=XXXX` (SPA) quanto `join.html?code=XXXX` (legacy wireframe)
+		expect(shareUrl).toMatch(/(\/join|join\.html)\?code=[A-Z0-9]{4}/);
 
 		// Botão "Entrar mesmo assim" (ou similar) presente
 		const dismissCount = await suite.clients[0]!.page

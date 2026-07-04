@@ -2,9 +2,8 @@
  * Landing page tests — T27 verify (≥3 of 5 minimum required).
  *
  * Cobre:
- *  - Render: headline com itálico + Trust Badge
+ *  - Render: headline com itálico
  *  - CTAs: 'Criar sala' navega para /join?host=1
- *  - Form 'Entrar com código': validação inline + redirect com code
  *  - A11y: heading hierárquico + CTAs focáveis
  */
 import { describe, expect, test } from "bun:test";
@@ -21,14 +20,11 @@ function renderLanding() {
 }
 
 describe("Landing — T27", () => {
-	test("renderiza headline + Trust Badge", () => {
+	test("renderiza headline", () => {
 		renderLanding();
 		expect(screen.getByTestId("hero-headline")).toBeInTheDocument();
 		expect(screen.getByTestId("hero-headline")).toHaveTextContent(/ritmo/i);
 		expect(screen.getByTestId("hero-headline")).toHaveTextContent(/confiança/i);
-		expect(screen.getByTestId("trust-badge")).toHaveTextContent(
-			/0 cadastros · 4 chars no código/i,
-		);
 	});
 
 	test("CTA 'Criar sala' tem variant coral (≤1 CTA coral por viewport)", () => {
@@ -50,29 +46,11 @@ describe("Landing — T27", () => {
 		expect(cta).toBeInTheDocument();
 	});
 
-	test("Form 'Entrar com código' valida code < 4 chars com erro inline", () => {
-		renderLanding();
-		const input = screen.getByTestId("code-input");
-		const submitBtn = screen.getByTestId("cta-join-with-code");
-		// input com 2 chars
-		fireEvent.change(input, { target: { value: "AB" } });
-		fireEvent.click(submitBtn);
-		expect(screen.getByRole("alert")).toHaveTextContent(/4 caracteres/i);
-	});
-
-	test("Form 'Entrar com código' aceita code 4 chars e dispara navegação", () => {
-		renderLanding();
-		const input = screen.getByTestId("code-input");
-		fireEvent.change(input, { target: { value: "9b9f" } });
-		// input é uppercased — verificamos via atributo value do DOM
-		expect(input).toHaveValue("9B9F");
-	});
-
 	test("headings hierárquicos (h1 + h2)", () => {
 		renderLanding();
 		expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
 		const h2s = screen.getAllByRole("heading", { level: 2 });
-		expect(h2s.length).toBeGreaterThanOrEqual(2);
+		expect(h2s.length).toBeGreaterThanOrEqual(1);
 	});
 
 	test("renderiza 4 capability cards numerados", () => {
@@ -83,22 +61,33 @@ describe("Landing — T27", () => {
 		expect(screen.getByTestId("cap-card-04")).toBeInTheDocument();
 	});
 
-	test("renderiza 4 method steps", () => {
-		renderLanding();
-		expect(screen.getByTestId("method-step-01")).toBeInTheDocument();
-		expect(screen.getByTestId("method-step-04")).toBeInTheDocument();
-	});
-
-	test("mega footer 'Pointly.' presente", () => {
-		renderLanding();
-		// aria-hidden no footer word; verificamos via queryAllByText
-		const all = screen.queryAllByText(/Pointly\./);
-		expect(all.length).toBeGreaterThanOrEqual(1);
-	});
-
 	test("CTA ribbon 'Criar sala' também presente", () => {
 		renderLanding();
 		const ctas = screen.getAllByTestId("cta-ribbon-create");
 		expect(ctas.length).toBe(1);
+	});
+
+	test("campo 'Entrar com Código' inline e botão 'Entrar'", () => {
+		renderLanding();
+		const input = screen.getByTestId("landing-code-input") as HTMLInputElement;
+		const submitBtn = screen.getByTestId("landing-code-submit");
+		expect(input).toBeInTheDocument();
+		expect(submitBtn).toBeInTheDocument();
+		expect(submitBtn).toBeDisabled();
+
+		// Digita um código incompleto
+		fireEvent.change(input, { target: { value: "AB" } });
+		expect(input.value).toBe("AB");
+		expect(submitBtn).toBeDisabled();
+
+		// Digita caracteres inválidos e testa que filtra + uppercase
+		fireEvent.change(input, { target: { value: "ab-3" } });
+		expect(input.value).toBe("AB3"); // hifen removido, convertido pra maiúsculas
+		expect(submitBtn).toBeDisabled();
+
+		// Código completo
+		fireEvent.change(input, { target: { value: "a1b2" } });
+		expect(input.value).toBe("A1B2");
+		expect(submitBtn).toBeEnabled();
 	});
 });

@@ -24,7 +24,7 @@
  * @see .specs/features/planning-poker-v1/spec.md F-001, F-002, F-008
  */
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { ConnectionStatus } from "../components/ui/connection-status";
@@ -190,25 +190,28 @@ export function Join() {
 			data-testid="page-join"
 			className="surface-noise min-h-screen bg-bg text-ink flex flex-col"
 		>
-			{/* Metadata strip top */}
-			<header className="border-b border-ink/10 py-2.5 flex-shrink-0">
+			{/* Header topbar */}
+			<header className="border-b border-ink/10 py-4 flex-shrink-0 bg-bg/95 backdrop-blur-sm sticky top-0 z-10">
 				<div className="max-w-[1360px] mx-auto px-16 flex items-center justify-between">
-					<div className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-wider text-ink-faint">
-						<span
-							aria-hidden="true"
-							className="inline-block w-1.5 h-1.5 rounded-full bg-coral animate-pulse"
-						/>
-						<span>Vol. 01 · Issue Nº 26 · Pointly</span>
-					</div>
+					<Link
+						to="/"
+						className="font-display font-extrabold text-[18px] tracking-[-0.02em] flex items-baseline gap-2 hover:text-coral transition-colors"
+						aria-label="Pointly — página inicial"
+					>
+						<span className="font-italic italic text-coral text-[22px] leading-none">
+							Ø
+						</span>
+						Pointly
+					</Link>
 					<div className="font-mono text-[10px] uppercase tracking-wider text-ink-faint">
-						Fig. 02 · Entrar
+						Entrar
 					</div>
 				</div>
 			</header>
 
-			{/* FIG strip */}
+			{/* Header strip */}
 			<div className="max-w-[1360px] mx-auto px-16 w-full py-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-ink-faint">
-				<span>Fig. 02 · Entrar</span>
+				<span>Entrar</span>
 				<span>
 					Sala:{" "}
 					<span className="text-ink font-medium" data-testid="join-code-label">
@@ -320,12 +323,12 @@ export function Join() {
 							>
 								Voltar
 							</Button>
-							<a
-								href="/"
+							<Link
+								to="/"
 								className="font-mono text-[11px] tracking-[0.06em] uppercase text-ink-faint hover:text-coral transition-colors ml-auto"
 							>
 								← criar outra sala
-							</a>
+							</Link>
 						</div>
 					</form>
 				</Card>

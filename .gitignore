@@ -42,3 +42,14 @@ yarn-error.log*
 # playwright screenshots generated locally (not committed)
 test-results/
 playwright-report/
+
+# agent / tooling artifacts
+.compozy/
+.playwright-mcp/
+.pi/
+.pi-subagents/
+.specs/
+
+# screenshots & audit
+*.png
+audit/

@@ -75,7 +75,7 @@ describe("RevealButton — render", () => {
 		const btn = screen.getByTestId("reveal-button");
 		expect(btn.getAttribute("data-reveal-state")).toBe("post-reveal");
 		expect(btn).toBeEnabled();
-		expect(btn.className).toContain("bg-paper");
+		expect(btn.className).toContain("bg-coral");
 		expect(btn).toHaveTextContent(/Nova rodada/i);
 	});
 

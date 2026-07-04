@@ -26,13 +26,10 @@
  * @see .specs/features/planning-poker-v1/tasks.md T27
  * @see .specs/features/planning-poker-v1/spec.md F-031 (F-ID US-5)
  */
-import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
-
-/** Trust Badge — spec US-5 AC2. */
-const TRUST_BADGE = "0 cadastros · 4 chars no código";
 
 /** Stat rings — números reais (vide plan.md 6.2). */
 const STATS = [
@@ -65,34 +62,9 @@ const CAPABILITIES = [
 	},
 ];
 
-/** Method — 4 steps numerados. */
-const METHOD_STEPS = [
-	{
-		n: "01",
-		title: "Criar sala",
-		body: "Code de 4 chars gerado on-the-fly. Vire host sem perder voto — todos revelam.",
-	},
-	{
-		n: "02",
-		title: "Compartilhar",
-		body: "Manda o link no Slack. Cada um entra com apelido, vê seu assento em < 200ms.",
-	},
-	{
-		n: "03",
-		title: "Votar",
-		body: "Deck Fibonacci embaixo. Voto é idempotente — muda sem expor o valor pros outros.",
-	},
-	{
-		n: "04",
-		title: "Revelar",
-		body: "1 clique vira a mesa. Mediana gold, stats no topo. Nova rodada limpa tudo.",
-	},
-];
-
 export function Landing() {
 	const navigate = useNavigate();
-	const [code, setCode] = useState("");
-	const [codeError, setCodeError] = useState("");
+	const [joinCode, setJoinCode] = useState("");
 
 	function handleCreateRoom(): void {
 		// Server gera code no `hello` (vide ADR-0009). Navega sem code,
@@ -100,16 +72,12 @@ export function Landing() {
 		navigate("/join?host=1");
 	}
 
-	function handleJoinWithCode(e: FormEvent<HTMLFormElement>): void {
+	function handleJoinWithCode(e: React.FormEvent): void {
 		e.preventDefault();
-		const trimmed = code.trim().toUpperCase();
-		// Validação: 4 chars alfanuméricos (consistente com RoomCodeSchema).
-		if (!/^[A-Z0-9]{4}$/.test(trimmed)) {
-			setCodeError("Use 4 caracteres [A-Z0-9].");
-			return;
+		const cleanCode = joinCode.trim().toUpperCase();
+		if (cleanCode.length === 4) {
+			navigate(`/join?code=${cleanCode}`);
 		}
-		setCodeError("");
-		navigate(`/join?code=${trimmed}`);
 	}
 
 	return (
@@ -117,123 +85,27 @@ export function Landing() {
 			data-testid="page-landing"
 			className="surface-noise min-h-screen bg-bg text-ink"
 		>
-			{/* Side rails (apenas na landing — bifurcação editorial) */}
-			<aside
-				aria-hidden="true"
-				className="side-rail left"
-				style={{
-					position: "fixed",
-					top: 0,
-					bottom: 0,
-					left: 0,
-					width: "36px",
-					zIndex: 3,
-					pointerEvents: "none",
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "center",
-					borderRight: "1px solid rgba(21, 20, 15, 0.05)",
-				}}
-			>
-				<span
-					style={{
-						fontFamily: '"Inter Tight", system-ui, sans-serif',
-						fontSize: "10px",
-						fontWeight: 600,
-						letterSpacing: "0.42em",
-						textTransform: "uppercase",
-						color: "var(--fg-faint)",
-						writingMode: "vertical-rl",
-					}}
-				>
-					POINTLY · MMXXVI
-				</span>
-			</aside>
-			<aside
-				aria-hidden="true"
-				style={{
-					position: "fixed",
-					top: 0,
-					bottom: 0,
-					right: 0,
-					width: "36px",
-					zIndex: 3,
-					pointerEvents: "none",
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "center",
-					borderLeft: "1px solid rgba(21, 20, 15, 0.05)",
-				}}
-			>
-				<span
-					style={{
-						fontFamily: '"Inter Tight", system-ui, sans-serif',
-						fontSize: "10px",
-						fontWeight: 600,
-						letterSpacing: "0.42em",
-						textTransform: "uppercase",
-						color: "var(--fg-faint)",
-						writingMode: "vertical-rl",
-						transform: "rotate(180deg)",
-					}}
-				>
-					PLAN · VOTE · REVEAL
-				</span>
-			</aside>
-
-			{/* Topbar — metadata strip */}
-			<header className="border-b border-ink/10 py-2.5 sticky top-0 z-10 bg-bg/95 backdrop-blur-sm">
-				<div className="max-w-[1360px] mx-auto px-16 flex items-center justify-between">
-					<div className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-wider text-ink-faint">
-						<span
-							aria-hidden="true"
-							className="inline-block w-1.5 h-1.5 rounded-full bg-coral animate-pulse"
-						/>
-						<span>Vol. 01 · Issue Nº 26 · Pointly</span>
-					</div>
-					<div className="font-mono text-[10px] uppercase tracking-wider text-ink-faint">
-						PT-BR · MMXXVI
-					</div>
-				</div>
-			</header>
-
 			{/* Sticky nav */}
-			<nav className="py-4 px-16 max-w-[1360px] mx-auto flex justify-between items-baseline border-b border-ink/5">
-				<a
-					href="/"
-					className="font-display font-extrabold text-[22px] tracking-[-0.03em] flex items-baseline gap-2.5"
+			<nav className="py-4 px-16 max-w-[1360px] mx-auto flex justify-between items-center border-b border-ink/5 sticky top-0 z-10 bg-bg/95 backdrop-blur-sm">
+				<Link
+					to="/"
+					className="font-display font-extrabold text-[22px] tracking-[-0.03em] flex items-baseline gap-2.5 hover:text-coral transition-colors"
 					aria-label="Pointly — página inicial"
 				>
 					<span className="font-italic italic text-coral text-[26px] leading-none">
 						Ø
 					</span>
 					Pointly
-				</a>
-				<div className="flex items-baseline gap-7 font-display text-[13px] text-ink-soft">
-					<a
-						href="#como-funciona"
-						className="hover:text-coral transition-colors"
-					>
-						Como funciona
-					</a>
-					<a
-						href="#para-times"
-						className="hover:text-coral transition-colors"
-					>
-						Para times
-					</a>
-					<a
-						href="https://github.com"
-						target="_blank"
-						rel="noreferrer"
-						className="inline-flex items-baseline gap-1.5 hover:text-coral transition-colors"
-					>
-						GitHub
-						<span className="text-mustard text-[14px]" aria-hidden="true">
-							★
-						</span>
-					</a>
-				</div>
+				</Link>
+				<Button
+					variant="coral"
+					size="sm"
+					onClick={handleCreateRoom}
+					data-testid="cta-nav-create-room"
+				>
+					Criar sala
+					<span aria-hidden="true">↗</span>
+				</Button>
 			</nav>
 
 			{/* HERO — Roman I */}
@@ -241,16 +113,6 @@ export function Landing() {
 				id="como-funciona"
 				className="max-w-[1360px] mx-auto px-16 pt-16 pb-12 relative"
 			>
-				{/* sec-rule Roman I */}
-				<div className="flex items-center gap-4 pb-4 border-b border-ink/10 font-mono text-[10.5px] tracking-wider uppercase text-ink-faint">
-					<span className="font-italic italic text-coral text-[14px] tracking-normal normal-case">
-						I.
-					</span>
-					<span>Hero</span>
-					<span className="flex-1 text-center">Filed under: Planning Poker</span>
-					<span className="font-display tracking-[0.22em]">001 / 005</span>
-				</div>
-
 				<div className="grid grid-cols-[0.78fr_1.22fr] gap-16 items-start pt-12">
 					<div>
 						<div className="font-display font-semibold text-[11px] tracking-[0.22em] uppercase text-coral mb-4 flex items-center gap-2.5">
@@ -264,16 +126,22 @@ export function Landing() {
 							data-testid="hero-headline"
 							className="font-display font-extrabold text-[clamp(48px,5.6vw,90px)] leading-[1.02] tracking-[-0.04em] max-w-[18ch]"
 						>
-							Vote com <em className="font-italic italic font-normal text-ink-soft">ritmo</em>,{" "}
-							<em className="font-italic italic font-normal text-ink-soft">confiança</em>, e
-							zero cadastro<span className="text-coral">.</span>
+							Vote com{" "}
+							<em className="font-italic italic font-normal text-ink-soft">
+								ritmo
+							</em>
+							,{" "}
+							<em className="font-italic italic font-normal text-ink-soft">
+								confiança
+							</em>
+							, e zero cadastro<span className="text-coral">.</span>
 						</h1>
 						<p className="font-sans text-[17px] leading-[1.6] text-ink-mute mt-6 max-w-[52ch]">
 							Planning Poker gratuito, sem email, sem plano pago. Sincronize a
 							estimativa do seu time em menos de 60 segundos.
 						</p>
 
-						<div className="flex items-center gap-3.5 mt-9">
+						<div className="flex flex-wrap items-center gap-4 mt-9">
 							<Button
 								variant="coral"
 								size="lg"
@@ -283,68 +151,41 @@ export function Landing() {
 								Criar sala
 								<span aria-hidden="true">↗</span>
 							</Button>
-						</div>
 
-						{/* Ghost CTA: Entrar com código */}
-						<form
-							onSubmit={handleJoinWithCode}
-							className="mt-5 flex items-center gap-3"
-						>
-							<label
-								htmlFor="code-input"
-								className="font-mono text-[11px] tracking-[0.06em] uppercase text-ink-faint"
-							>
-								ou
-							</label>
-							<input
-								id="code-input"
-								type="text"
-								inputMode="text"
-								maxLength={4}
-								placeholder="XXXX"
-								value={code}
-								onChange={(e) => {
-									setCode(e.target.value.toUpperCase());
-									setCodeError("");
-								}}
-								aria-label="Código de 4 caracteres da sala"
-								aria-invalid={Boolean(codeError)}
-								aria-describedby={codeError ? "code-error" : undefined}
-								className="w-20 h-10 px-3 bg-paper border border-ink/10 rounded-full text-center font-mono tracking-[0.2em] uppercase text-ink placeholder:text-ink-faint focus:border-coral focus:outline-none transition-colors"
-								data-testid="code-input"
-							/>
-							<Button
-								type="submit"
-								variant="ghost"
-								size="md"
-								data-testid="cta-join-with-code"
-							>
-								Entrar com código
-								<span aria-hidden="true">→</span>
-							</Button>
-							{codeError && (
-								<span
-									id="code-error"
-									role="alert"
-									className="font-mono text-[11px] text-coral"
-								>
-									{codeError}
-								</span>
-							)}
-						</form>
+							<div className="h-10 w-px bg-ink/10 hidden sm:block" />
 
-						{/* Trust Badge */}
-						<div className="mt-8">
-							<span
-								data-testid="trust-badge"
-								className="font-mono text-[11px] tracking-[0.04em] text-ink-mute inline-flex items-center gap-2 px-3.5 py-2 border border-ink/10 rounded-full uppercase"
+							<form
+								onSubmit={handleJoinWithCode}
+								className="flex items-center gap-2"
+								data-testid="join-code-form"
 							>
-								<span
-									aria-hidden="true"
-									className="inline-block w-1.5 h-1.5 rounded-full bg-coral animate-pulse"
+								<input
+									type="text"
+									maxLength={4}
+									placeholder="Código"
+									value={joinCode}
+									onChange={(e) =>
+										setJoinCode(
+											e.target.value
+												.toUpperCase()
+												.replace(/[^A-Z0-9]/g, ""),
+										)
+									}
+									className="font-mono text-[14px] uppercase py-2.5 px-3 w-32 border border-ink/10 rounded-lg bg-surface text-ink placeholder:text-ink-faint focus:border-coral focus:outline-none transition-colors"
+									aria-label="Código da sala de 4 caracteres"
+									data-testid="landing-code-input"
 								/>
-								{TRUST_BADGE}
-							</span>
+								<Button
+									type="submit"
+									variant="default"
+									size="md"
+									disabled={joinCode.length !== 4}
+									data-testid="landing-code-submit"
+								>
+									Entrar
+									<span aria-hidden="true">↗</span>
+								</Button>
+							</form>
 						</div>
 
 						{/* Stat rings */}
@@ -365,118 +206,92 @@ export function Landing() {
 						</div>
 					</div>
 
-					{/* Hero image placeholder */}
-					<div className="relative min-h-[520px] bg-paper-dark rounded-lg flex items-center justify-center">
-						<span
-							aria-hidden="true"
-							className="absolute top-4 left-4 w-[22px] h-[22px] border-l border-t border-ink-faint opacity-50"
-						/>
-						<span
-							aria-hidden="true"
-							className="absolute top-4 right-4 w-[22px] h-[22px] border-r border-t border-ink-faint opacity-50"
-						/>
-						<span
-							aria-hidden="true"
-							className="absolute bottom-4 left-4 w-[22px] h-[22px] border-l border-b border-ink-faint opacity-50"
-						/>
-						<span
-							aria-hidden="true"
-							className="absolute bottom-4 right-4 w-[22px] h-[22px] border-r border-b border-ink-faint opacity-50"
-						/>
-						<span className="font-mono text-[11px] tracking-[0.06em] uppercase text-ink-faint">
-							placeholder · 16 slots
-						</span>
+					{/* Stylized Cards Illustration */}
+					<div className="relative min-h-[520px] bg-paper-warm border border-ink/5 rounded-2xl flex items-center justify-center overflow-hidden">
+						<div className="relative w-80 h-80 flex items-center justify-center">
+							{/* Card 1: '3' */}
+							<div className="absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[-16deg] -translate-x-32 translate-y-3 transition-all duration-300 hover:rotate-[-6deg] hover:-translate-y-6 hover:-translate-x-34 hover:scale-105 hover:z-20 z-0">
+								<span className="font-italic italic text-[56px] text-ink select-none">
+									3
+								</span>
+							</div>
+							{/* Card 2: '☕' */}
+							<div className="absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[16deg] translate-x-32 translate-y-5 transition-all duration-300 hover:rotate-[6deg] hover:-translate-y-6 hover:translate-x-34 hover:scale-105 hover:z-20 z-0">
+								<div className="flex flex-col items-center justify-center select-none pt-4">
+									<svg
+										viewBox="0 0 100 100"
+										className="w-20 h-20 text-ink relative overflow-visible"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="3.5"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										aria-hidden="true"
+									>
+										{/* Linhas de vapor animadas */}
+										<path
+											d="M42,28 Q39,18 43,10 T41,-4"
+											className="animate-steam-1 stroke-ink/40"
+										/>
+										<path
+											d="M50,28 Q53,16 47,8 T51,-8"
+											className="animate-steam-2 stroke-ink/40"
+										/>
+										<path
+											d="M58,28 Q55,18 59,10 T57,-4"
+											className="animate-steam-3 stroke-ink/40"
+										/>
 
-						{/* Index card */}
-						<aside
-							className="absolute top-6 right-6 bg-surface border border-ink/10 rounded-md py-3.5 px-4 font-mono text-[10px] tracking-[0.06em] text-ink-faint uppercase w-[180px]"
-							aria-label="Sumário editorial"
-						>
-							{[
-								{ n: "01", label: "Hero" },
-								{ n: "02", label: "Sobre" },
-								{ n: "03", label: "Capacidades" },
-								{ n: "04", label: "Método" },
-								{ n: "05", label: "CTA" },
-							].map((row, i) => (
-								<div
-									key={row.n}
-									className={`flex justify-between py-1.5 ${
-										i === 0 ? "text-ink font-semibold" : ""
-									} ${i < 4 ? "border-b border-ink/5" : ""}`}
-								>
-									<span className={i === 0 ? "text-ink" : "text-coral"}>
-										{row.n}
-									</span>
-									<span className={i === 0 ? "text-ink" : ""}>{row.label}</span>
+										{/* Corpo da Xícara */}
+										<path
+											d="M28,35 L72,35 L68,70 C67,76 61,82 54,82 L46,82 C39,82 33,76 32,70 Z"
+											fill="currentColor"
+											fillOpacity="0.05"
+										/>
+										{/* Alça */}
+										<path d="M72,45 C78,45 82,50 81,56 C80,62 73,63 72,63" />
+										{/* Prato */}
+										<path d="M20,88 L80,88" strokeWidth="4" />
+									</svg>
 								</div>
-							))}
-						</aside>
+							</div>
+							{/* Card 3: '5' (Destaque Central) */}
+							<div className="absolute w-44 h-60 bg-surface border-2 border-coral rounded-2xl shadow-xl flex flex-col items-center justify-center transition-all duration-300 z-10 hover:-translate-y-6 hover:scale-105 hover:z-20">
+								<span className="font-italic italic text-[68px] leading-none text-coral select-none">
+									5
+								</span>
+								<span className="font-mono text-[11px] tracking-[0.2em] uppercase text-coral/80 mt-2">
+									Mediana
+								</span>
+							</div>
+						</div>
 					</div>
 				</div>
 			</section>
 
-			{/* ABOUT — Roman II */}
-			<section className="max-w-[1360px] mx-auto px-16 py-32 relative">
-				<div className="flex items-center gap-4 pb-4 border-b border-ink/10 font-mono text-[10.5px] tracking-wider uppercase text-ink-faint">
-					<span className="font-italic italic text-coral text-[14px] tracking-normal normal-case">
-						II.
-					</span>
-					<span>Sobre</span>
-					<span className="flex-1 text-center">Filed under: Manifesto</span>
-					<span className="font-display tracking-[0.22em]">002 / 005</span>
-				</div>
-
-				<div className="grid grid-cols-[1fr_2fr] gap-12 items-start pt-10">
-					<aside className="font-mono text-[11px] tracking-[0.06em] text-ink-faint uppercase leading-[2]">
-						<div>Filed under: Planning Poker</div>
-						<div>Author: Helder</div>
-						<div>Issue: Nº 26</div>
-						<div>Status: Open beta</div>
-					</aside>
-					<div>
-						<h2 className="font-display font-extrabold text-[clamp(38px,4.2vw,66px)] leading-[1.04] tracking-[-0.035em] max-w-[18ch]">
-							Times ágeis estimam{" "}
-							<em className="font-italic italic font-normal text-ink-soft">
-								conversando
-							</em>
-							, não preenchendo planilha.
-						</h2>
-						<p
-							id="para-times"
-							className="font-sans text-[16px] leading-[1.7] text-ink-mute mt-7 max-w-[60ch]"
-						>
-							O Pointly é um protótipo gratuito de Planning Poker pra times
-							que querem estimar trabalho em calls de planning sem fricção.
-							Zero cadastro, zero email, zero plano pago.{" "}
-							<strong className="font-semibold text-ink-soft">
-								0 contas
-							</strong>
-							, código de{" "}
-							<strong className="font-semibold text-ink-soft">4 chars</strong>
-							, deck com{" "}
-							<strong className="font-semibold text-ink-soft">9 cartas</strong>
-							, mesa com até{" "}
-							<strong className="font-semibold text-ink-soft">
-								12 jogadores
-							</strong>
-							. Sem bots, sem histórico, sem integrações.
-						</p>
-					</div>
+			{/* ABOUT */}
+			<section className="max-w-[1360px] mx-auto px-16 py-24 relative border-t border-ink/5">
+				<div className="max-w-[800px] mx-auto text-center flex flex-col items-center">
+					<h2 className="font-display font-extrabold text-[clamp(38px,4.2vw,66px)] leading-[1.04] tracking-[-0.035em]">
+						Times ágeis estimam{" "}
+						<em className="font-italic italic font-normal text-ink-soft">
+							conversando
+						</em>
+						, não preenchendo planilha.
+					</h2>
+					<p
+						id="para-times"
+						className="font-sans text-[17px] leading-[1.7] text-ink-mute mt-7 max-w-[60ch]"
+					>
+						O Pointly é um protótipo gratuito de Planning Poker pra times que
+						querem estimar trabalho em calls de planning sem fricção. Zero
+						cadastro, zero email, zero plano pago.
+					</p>
 				</div>
 			</section>
 
-			{/* CAPABILITIES — Roman III */}
-			<section className="max-w-[1360px] mx-auto px-16 py-32 relative">
-				<div className="flex items-center gap-4 pb-4 border-b border-ink/10 font-mono text-[10.5px] tracking-wider uppercase text-ink-faint">
-					<span className="font-italic italic text-coral text-[14px] tracking-normal normal-case">
-						III.
-					</span>
-					<span>Capacidades</span>
-					<span className="flex-1 text-center">4 features · bone-fill</span>
-					<span className="font-display tracking-[0.22em]">003 / 005</span>
-				</div>
-
+			{/* CAPABILITIES */}
+			<section className="max-w-[1360px] mx-auto px-16 py-24 relative border-t border-ink/5">
 				<div className="grid grid-cols-4 gap-4 mt-12">
 					{CAPABILITIES.map((cap) => (
 						<Card
@@ -502,68 +317,8 @@ export function Landing() {
 				</div>
 			</section>
 
-			{/* METHOD — Roman IV */}
-			<section className="max-w-[1360px] mx-auto px-16 py-32 relative">
-				<div className="flex items-center gap-4 pb-4 border-b border-ink/10 font-mono text-[10.5px] tracking-wider uppercase text-ink-faint">
-					<span className="font-italic italic text-coral text-[14px] tracking-normal normal-case">
-						IV.
-					</span>
-					<span>Método</span>
-					<span className="flex-1 text-center">4 passos · 60s</span>
-					<span className="font-display tracking-[0.22em]">004 / 005</span>
-				</div>
-
-				<div className="grid grid-cols-4 gap-4 pb-3.5 border-b border-ink/10 mt-10">
-					{METHOD_STEPS.map((step) => (
-						<div
-							key={step.n}
-							className="font-display font-bold text-[14px] tracking-[-0.01em] flex items-center gap-1.5"
-						>
-							<span className="font-italic italic text-coral text-[16px]">
-								{step.n}
-							</span>
-							<span>{step.title}</span>
-							<span
-								aria-hidden="true"
-								className="text-ink-faint text-[12px] ml-auto"
-							>
-								→
-							</span>
-						</div>
-					))}
-				</div>
-
-				<div className="grid grid-cols-4 gap-4 mt-9">
-					{METHOD_STEPS.map((step) => (
-						<div
-							key={step.n}
-							className="flex flex-col gap-3"
-							data-testid={`method-step-${step.n}`}
-						>
-							<div className="relative bg-paper-dark aspect-square rounded-md flex items-center justify-center overflow-hidden">
-								<span className="font-mono text-[9.5px] tracking-[0.06em] uppercase text-ink-faint">
-									placeholder
-								</span>
-							</div>
-							<p className="font-sans text-[13.5px] leading-[1.55] text-ink-mute">
-								{step.body}
-							</p>
-						</div>
-					))}
-				</div>
-			</section>
-
-			{/* CTA RIBBON — Roman V */}
-			<section className="max-w-[1360px] mx-auto px-16 py-32 relative">
-				<div className="flex items-center gap-4 pb-4 border-b border-ink/10 font-mono text-[10.5px] tracking-wider uppercase text-ink-faint">
-					<span className="font-italic italic text-coral text-[14px] tracking-normal normal-case">
-						V.
-					</span>
-					<span>CTA</span>
-					<span className="flex-1 text-center">Crie sua sala agora</span>
-					<span className="font-display tracking-[0.22em]">005 / 005</span>
-				</div>
-
+			{/* CTA RIBBON */}
+			<section className="max-w-[1360px] mx-auto px-16 py-24 relative border-t border-ink/5">
 				<div className="bg-paper-dark rounded-3xl px-16 py-16 text-center mt-9 relative overflow-hidden">
 					<h2 className="font-display font-extrabold text-[clamp(38px,4.2vw,66px)] leading-[1.04] tracking-[-0.035em] max-w-[24ch] mx-auto">
 						Pronto pra começar<span className="text-coral">?</span>
@@ -593,13 +348,22 @@ export function Landing() {
 						<h4 className="font-display font-bold text-[13px] tracking-[-0.02em] uppercase">
 							Pointly
 						</h4>
-						<a href="/" className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors">
+						<Link
+							to="/"
+							className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors"
+						>
 							Página inicial
-						</a>
-						<a href="#como-funciona" className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors">
+						</Link>
+						<a
+							href="#como-funciona"
+							className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors"
+						>
 							Como funciona
 						</a>
-						<a href="#para-times" className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors">
+						<a
+							href="#para-times"
+							className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors"
+						>
 							Para times
 						</a>
 					</div>
@@ -607,10 +371,16 @@ export function Landing() {
 						<h4 className="font-display font-bold text-[13px] tracking-[-0.02em] uppercase">
 							Produto
 						</h4>
-						<a href="https://github.com" className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors">
+						<a
+							href="https://github.com"
+							className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors"
+						>
 							GitHub
 						</a>
-						<a href="/changelog" className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors">
+						<a
+							href="/changelog"
+							className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors"
+						>
 							Changelog
 						</a>
 					</div>
@@ -618,10 +388,16 @@ export function Landing() {
 						<h4 className="font-display font-bold text-[13px] tracking-[-0.02em] uppercase">
 							Recursos
 						</h4>
-						<a href="/docs" className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors">
+						<a
+							href="/docs"
+							className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors"
+						>
 							Documentação
 						</a>
-						<a href="/privacy" className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors">
+						<a
+							href="/privacy"
+							className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors"
+						>
 							Privacidade
 						</a>
 					</div>
@@ -629,17 +405,13 @@ export function Landing() {
 						<h4 className="font-display font-bold text-[13px] tracking-[-0.02em] uppercase">
 							Contato
 						</h4>
-						<a href="mailto:hello@pointly.dev" className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors">
+						<a
+							href="mailto:hello@pointly.dev"
+							className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors"
+						>
 							hello@pointly.dev
 						</a>
 					</div>
-				</div>
-
-				<div
-					className="font-italic italic text-ink text-display-xl mt-16 text-center select-none"
-					aria-hidden="true"
-				>
-					Pointly.
 				</div>
 			</footer>
 		</div>

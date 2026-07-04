@@ -104,7 +104,7 @@ describe("handleCastVote — rejeições", () => {
 		if (!result.ok) expect(result.code).toBe("invalid_vote");
 	});
 
-	test("rejeita vote em fase revealed (invalid_phase)", () => {
+	test("permite vote em fase revealed e atualiza o voto", () => {
 		const { id, code } = addPlayer(
 			"00000000-0000-4000-8000-000000000001",
 			"Ana",
@@ -116,8 +116,8 @@ describe("handleCastVote — rejeições", () => {
 		expect(sala.phase).toBe("revealed");
 		// tentar votar pós-reveal
 		const result = handleCastVote(hub, id, { value: "8" });
-		expect(result.ok).toBe(false);
-		if (!result.ok) expect(result.code).toBe("invalid_phase");
+		expect(result.ok).toBe(true);
+		expect(sala.getPlayer(id)!.value).toBe("8");
 	});
 
 	test("rejeita vote de player não em sala alguma (invalid_vote)", () => {

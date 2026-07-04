@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1440">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pointly · Criar sala</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;700;800;900&family=Inter:wght@300;400;500&family=Playfair+Display:ital@1;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;700;800;900&family=Inter:wght@300;400;500&family=Playfair+Display:ital@1;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"></noscript>
 <style>
-  :root{--paper:#efe7d2;--paper-warm:#ece4cf;--paper-dark:#ddd2b6;--ink:#15140f;--ink-soft:#2a2620;--ink-mute:#5a5448;--ink-faint:#8b8676;--coral:#ed6f5c;--coral-soft:#f08e7c;--mustard:#e9b94a;--olive:#6e7448;--bone:#f7f1de;--line:rgba(21,20,15,0.16);--line-soft:rgba(21,20,15,0.08);--line-faint:rgba(21,20,15,0.05);--shadow:0 30px 60px -30px rgba(21,20,15,0.18);--serif:'Playfair Display','Times New Roman',serif;--sans:'Inter Tight','Inter',-apple-system,system-ui,sans-serif;--body:'Inter',-apple-system,system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace}
+  :root{--paper:#efe7d2;--paper-warm:#ece4cf;--paper-dark:#ddd2b6;--ink:#15140f;--ink-soft:#2a2620;--ink-mute:#5a5448;--ink-faint:#5c574b;--coral:#ed6f5c;--coral-soft:#f08e7c;--mustard:#e9b94a;--olive:#6e7448;--bone:#f7f1de;--line:rgba(21,20,15,0.16);--line-soft:rgba(21,20,15,0.08);--line-faint:rgba(21,20,15,0.05);--shadow:0 30px 60px -30px rgba(21,20,15,0.18);--serif:'Playfair Display','Times New Roman',serif;--sans:'Inter Tight','Inter',-apple-system,system-ui,sans-serif;--body:'Inter',-apple-system,system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace}
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{background:var(--paper);color:var(--ink)}
   body{font-family:var(--body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;position:relative;min-height:100vh}
@@ -118,19 +118,7 @@
 </head>
 <body>
 <div class="shell">
-  <div class="side-rail left"><div class="rail-text">Pointly · Planning Poker</div></div>
-  <div class="side-rail right"><div class="rail-text">Vol. 01 · Issue Nº 26 · MMXXVI</div></div>
 
-  <header class="topbar">
-    <div class="container topbar-inner">
-      <div class="topbar-left">
-        <span class="pulse"></span>
-        <span>Vol. 01 · Issue Nº 26 · Pointly</span>
-        <span>Filed under: Planning Poker</span>
-      </div>
-      <div>PT-BR · MMXXVI<span class="wireframe-tag">wireframe</span></div>
-    </div>
-  </header>
 
   <nav class="container nav">
     <div class="brand"><span class="brand-mark">Ø</span> Pointly</div>
@@ -138,14 +126,13 @@
       <a href="#how">Como funciona</a>
       <a href="#teams">Para times</a>
       <a href="#"><span class="star">★</span> GitHub</a>
-      <a href="join.html?code=DEMO" class="btn btn-ghost">Entrar com código</a>
       <button id="createBtn" class="btn btn-primary">Criar sala <span aria-hidden="true">↗</span></button>
     </div>
   </nav>
 
   <main class="container">
     <!-- HERO (Roman I) -->
-    <div class="sec-rule"><span class="roman">I.</span><span class="meta">Section · Hero · Pointly</span><span class="page">001 / 005</span></div>
+
     <section class="section" data-reveal id="hero">
       <div class="hero-grid">
         <div>
@@ -154,7 +141,6 @@
           <p class="lead">Pointly é uma mesa de Planning Poker que abre com um código curto, recebe até 8 jogadores, e some quando todos saem. Sem conta, sem email, sem limite de rodadas — só estimar.</p>
           <div class="cta-row">
             <button id="heroCreate" class="btn btn-primary">Criar sala <span aria-hidden="true">↗</span></button>
-            <span class="trust-badge"><span class="pulse"></span> 0 cadastros · 4 chars no código</span>
           </div>
           <div class="stat-rings">
             <div class="ring coral"><div class="num">0</div><div class="label">Cadastros</div></div>
@@ -162,42 +148,38 @@
             <div class="ring"><div class="num">60</div><div class="label">Segundos/round</div></div>
           </div>
         </div>
-        <div class="hero-image">
-          <span class="ph-bracket tl"></span><span class="ph-bracket tr"></span><span class="ph-bracket bl"></span><span class="ph-bracket br"></span>
-          <span class="ph-tag">Plate Nº 01 · 16:9 · Hero</span>
-          <div>placeholder<br>colagem editorial<br>plaster + arch + coral</div>
-          <div class="index-card">
-            <div class="row cur"><span><span class="num">01</span> Hero</span><span>·</span></div>
-            <div class="row"><span><span class="num">02</span> About</span><span>·</span></div>
-            <div class="row"><span><span class="num">03</span> Features</span><span>·</span></div>
-            <div class="row"><span><span class="num">04</span> Método</span><span>·</span></div>
+        <div class="hero-image" style="background:var(--paper-warm);border:1px solid var(--line-soft);border-radius:24px;min-height:480px;">
+          <div style="position:relative;width:240px;height:240px;display:flex;align-items:center;justify-content:center;">
+            <!-- Card 1: 3 -->
+            <div style="position:absolute;width:112px;height:160px;background:var(--bone);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;transform:rotate(-12deg) translateX(-48px) translateY(8px);">
+              <span style="font-family:var(--serif);font-style:italic;font-size:44px;color:var(--ink);">3</span>
+            </div>
+            <!-- Card 2: Coffee -->
+            <div style="position:absolute;width:112px;height:160px;background:var(--bone);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;transform:rotate(15deg) translateX(48px) translateY(16px);">
+              <span style="font-family:var(--sans);font-size:36px;color:var(--ink);">☕</span>
+            </div>
+            <!-- Card 3: 5 -->
+            <div style="position:absolute;width:120px;height:176px;background:var(--bone);border:2px solid var(--coral);border-radius:18px;box-shadow:0 14px 28px -16px rgba(237,111,92,0.4);display:flex;flex-direction:column;align-items:center;justify-content:center;">
+              <span style="font-family:var(--serif);font-style:italic;font-size:52px;color:var(--coral);">5</span>
+              <span style="font-family:var(--mono);font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:var(--coral);margin-top:4px;">Mediana</span>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ABOUT (Roman II) -->
-    <div class="sec-rule"><span class="roman">II.</span><span class="meta">Section · About · Filed under</span><span class="page">002 / 005</span></div>
+
     <section class="section tight" data-reveal id="about">
-      <div class="about-grid">
-        <div class="about-meta">
-          <div>Filed under:</div>
-          <div>Planning Poker</div>
-          <div>Agile · Estimativas</div>
-          <div>——</div>
-          <div>Implementação:</div>
-          <div>Web · desktop 1440px</div>
-        </div>
-        <div>
-          <div class="eyebrow">Sobre</div>
-          <h2 class="display">Uma <em>mesa</em> onde estimativas viram <em>conversa</em><span class="dot">.</span></h2>
-          <p class="lead">Números honestos do protótipo: zero contas criadas, 4 caracteres no código da sala, 9 cartas no deck (0, ½, 1, 2, 3, 5, 8, 13 + ☕), 8 assentos no máximo. Sala efêmera — some quando todos saem. Votação síncrona; sem async, sem histórico.</p>
-        </div>
+      <div style="max-width:800px;margin:0 auto;text-align:center;">
+        <div class="eyebrow" style="justify-content:center;">Sobre</div>
+        <h2 class="display" style="max-width:none;margin:0 auto;">Uma <em>mesa</em> onde estimativas viram <em>conversa</em><span class="dot">.</span></h2>
+        <p class="lead" style="max-width:none;margin-top:24px;">Pointly é uma mesa de Planning Poker gratuita pra times que querem estimar trabalho sem fricção. Sem conta, sem email, sem plano pago.</p>
       </div>
     </section>
 
     <!-- CAPABILITIES (Roman III) -->
-    <div class="sec-rule"><span class="roman">III.</span><span class="meta">Section · Capabilities · Quatro features</span><span class="page">003 / 005</span></div>
+
     <section class="section" data-reveal id="how">
       <div class="eyebrow">Features</div>
       <h2 class="display">Quatro <em>decisões</em>. Nenhuma delas <em>opcional</em><span class="dot">.</span></h2>
@@ -225,39 +207,10 @@
       </div>
     </section>
 
-    <!-- METHOD (Roman IV) -->
-    <div class="sec-rule"><span class="roman">IV.</span><span class="meta">Section · Method · Quatro passos</span><span class="page">004 / 005</span></div>
-    <section class="section tight" data-reveal id="teams">
-      <div class="eyebrow">Como funciona</div>
-      <h2 class="display">Quatro <em>passos</em>. Do criador ao <em>reveal</em><span class="dot">.</span></h2>
-      <div class="method-heads">
-        <div class="method-head"><span class="step-num">01</span> Criar <span class="arrow">→</span></div>
-        <div class="method-head"><span class="step-num">02</span> Entrar <span class="arrow">→</span></div>
-        <div class="method-head"><span class="step-num">03</span> Votar <span class="arrow">→</span></div>
-        <div class="method-head"><span class="step-num">04</span> Revelar</div>
-      </div>
-      <div class="method-grid">
-        <div class="method-step">
-          <div class="method-thumb"><span class="ph-bracket tl"></span><span class="ph-bracket tr"></span><span class="ph-bracket bl"></span><span class="ph-bracket br"></span>Plate 04 · 1:1</div>
-          <p>Host clica "Criar sala". Código de 4 chars é gerado no cliente.</p>
-        </div>
-        <div class="method-step">
-          <div class="method-thumb"><span class="ph-bracket tl"></span><span class="ph-bracket tr"></span><span class="ph-bracket bl"></span><span class="ph-bracket br"></span>Plate 05 · 1:1</div>
-          <p>Compartilhar URL. Cada jogador entra com apelido (2–20 chars).</p>
-        </div>
-        <div class="method-step">
-          <div class="method-thumb"><span class="ph-bracket tl"></span><span class="ph-bracket tr"></span><span class="ph-bracket bl"></span><span class="ph-bracket br"></span>Plate 06 · 1:1</div>
-          <p>8 assentos em anel. Escolha uma carta do deck Fibonacci.</p>
-        </div>
-        <div class="method-step">
-          <div class="method-thumb"><span class="ph-bracket tl"></span><span class="ph-bracket tr"></span><span class="ph-bracket bl"></span><span class="ph-bracket br"></span>Plate 07 · 1:1</div>
-          <p>Host revela. Mediana destacada gold. Nova rodada ou encerrar.</p>
-        </div>
-      </div>
-    </section>
+
 
     <!-- CTA (Roman V) -->
-    <div class="sec-rule"><span class="roman">V.</span><span class="meta">Section · CTA · Avise quando lançar</span><span class="page">005 / 005</span></div>
+
     <section class="section tight" data-reveal>
       <div class="cta-ribbon">
         <h2 class="display">Comece uma <em>mesa</em> em <em>60 segundos</em><span class="dot">.</span></h2>
@@ -276,7 +229,7 @@
         <div class="foot-col"><h4>Open source</h4><a href="#"><span style="color:var(--mustard)">★</span> GitHub</a><a href="#">Issues</a><a href="#">Licença Apache-2.0</a></div>
         <div class="foot-col"><h4>Legal</h4><a href="#">Privacidade</a><a href="#">Termos</a></div>
       </div>
-      <div class="mega">Pointly<span class="dot">.</span></div>
+
     </footer>
   </main>
 </div>

@@ -17,6 +17,8 @@ import {
 	type ServerToClientEvent,
 	type SalaState,
 	type Vote,
+	computeConsensus,
+	isUnanimous,
 } from "@planning-poker/shared";
 import type { Hub } from "./hub";
 import { handleCastVote } from "./handlers/cast-vote";
@@ -55,6 +57,7 @@ export type BunWS = {
 };
 
 const HEARTBEAT_TIMEOUT_MS = 60_000;
+const RECONCILE_INTERVAL_MS = 10_000;
 
 /**
  * Service entry — processa uma mensagem recebida do cliente.
@@ -66,6 +69,11 @@ export class WSService {
 	private readonly rateLimiter: RateLimiter;
 	private readonly connections: Set<BunWS> = new Set();
 	private readonly byIP: Map<BunWS, string> = new Map();
+	/**
+	 * Per-room timestamp (epoch ms) da última broadcastRoomState durante voting.
+	 * Usado para cadência de reconciliação (10s por sala) — T01.
+	 */
+	private readonly lastBroadcastAt: Map<string, number> = new Map();
 
 	constructor(
 		hub: Hub,
@@ -172,30 +180,40 @@ export class WSService {
 				ws.close(1011, "heartbeat_timeout");
 			}
 		}
-		// 2. Sala timers (auto-reveal)
-		const fired = this.hub.tickAllTimers();
-		for (const { code, sala } of fired) {
-			const salaState = sala.toState();
-			const votesValues = Array.from(sala.votes.values());
-			this.broadcast(code, {
-				type: "votes_revealed",
-				payload: {
-					votes: Object.fromEntries(sala.votes),
-					median: null,
-					mean: null,
-					range: null,
-					unanimous:
-						votesValues.length > 0 &&
-						votesValues.every((v) => v === votesValues[0]),
-				},
-			});
-			const event: ServerToClientEvent = salaState.critical
-				? {
-						type: "room_state",
-						payload: { sala: stripCritical(salaState), critical: true },
-					}
-				: { type: "room_state", payload: { sala: stripCritical(salaState) } };
-			this.broadcast(code, event);
+		// 2. Sala timers (auto-reveal + reconciliation cadence)
+		const results = this.hub.tickAllTimers(now);
+		for (const { code, tick, sala } of results) {
+			if (tick === "fired") {
+				const salaState = sala.toState();
+				const votesValues = Array.from(sala.votes.values());
+				this.broadcast(code, {
+					type: "votes_revealed",
+					payload: {
+						votes: Object.fromEntries(sala.votes),
+						median: null,
+						mean: null,
+						range: null,
+						unanimous:
+							votesValues.length > 0 &&
+							votesValues.every((v) => v === votesValues[0]),
+					},
+				});
+				const event: ServerToClientEvent = salaState.critical
+					? {
+							type: "room_state",
+							payload: { sala: stripCritical(salaState), critical: true },
+						}
+					: { type: "room_state", payload: { sala: stripCritical(salaState) } };
+				this.broadcast(code, event);
+				this.lastBroadcastAt.set(code, now);
+			} else if (tick === "ticking") {
+				const last = this.lastBroadcastAt.get(code) ?? 0;
+				if (now - last >= RECONCILE_INTERVAL_MS) {
+					this.broadcastRoomState(code);
+					this.lastBroadcastAt.set(code, now);
+				}
+			}
+			// tick === 'idle' → sem broadcast
 		}
 		// 3. Grace period cleanup (T18)
 		const removed = this.hub.tickGracePeriod(now);
@@ -307,27 +325,44 @@ export class WSService {
 		const code = ws.data.code!;
 		const sala = this.hub.getSala(code);
 		if (!sala) return;
-		// Vote cast event: individual se primeiro da rodada, aggregate se seguinte
-		const isFirst = outcome.isFirstVoteOfRound;
-		if (isFirst) {
-			const player = sala.getPlayer(playerId);
+
+		if (sala.phase === "revealed") {
+			const voteList = Array.from(sala.votes.values());
+			const stats = computeConsensus(voteList);
+			const unanimous = isUnanimous(voteList);
 			this.broadcast(code, {
-				type: "vote_cast",
+				type: "votes_revealed",
 				payload: {
-					kind: "individual",
-					playerId,
-					playerName: player?.nick ?? "",
+					votes: Object.fromEntries(sala.votes),
+					median: stats.median,
+					mean: stats.mean,
+					range: stats.range,
+					unanimous,
 				},
 			});
 		} else {
-			// aggregate: count voters since last broadcast
-			const totalVoted = Array.from(sala.players.values()).filter(
-				(p) => p.hasVoted,
-			).length;
-			this.broadcast(code, {
-				type: "vote_cast",
-				payload: { kind: "aggregate", count: totalVoted },
-			});
+			// Vote cast event: individual se primeiro da rodada, aggregate se seguinte
+			const isFirst = outcome.isFirstVoteOfRound;
+			if (isFirst) {
+				const player = sala.getPlayer(playerId);
+				this.broadcast(code, {
+					type: "vote_cast",
+					payload: {
+						kind: "individual",
+						playerId,
+						playerName: player?.nick ?? "",
+					},
+				});
+			} else {
+				// aggregate: count voters since last broadcast
+				const totalVoted = Array.from(sala.players.values()).filter(
+					(p) => p.hasVoted,
+				).length;
+				this.broadcast(code, {
+					type: "vote_cast",
+					payload: { kind: "aggregate", count: totalVoted },
+				});
+			}
 		}
 		// O sender TAMBÉM precisa do room_state — o vote_cast não carrega
 		// o value (privacidade pré-reveal), então o cliente que votou só

@@ -36,8 +36,10 @@
  * @see .specs/features/planning-poker-v1/tasks.md T30
  * @see .specs/features/planning-poker-v1/spec.md F-007, F-053
  */
-import { useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useCallback, useMemo, useState, useEffect } from "react";
+import { useSearchParams, Link, useBlocker } from "react-router-dom";
+import { buildShareUrl } from "../components/empty-overlay";
+import { cn } from "../components/ui/utils";
 import { Deck } from "../components/deck";
 import { EmptyOverlay } from "../components/empty-overlay";
 import { Ellipse } from "../components/ui/ellipse";
@@ -50,10 +52,69 @@ import { useSalaStore } from "../store/sala";
 
 /** Raio da mesa em pixels (vide arena.html R_x=420 R_y=240). */
 const TABLE_RX = 420;
-const TABLE_RY = 240;
+const TABLE_RY = 210;
 /** Centro do Ellipse SVG (960×560). */
 const TABLE_CX = 480;
-const TABLE_CY = 280;
+const TABLE_CY = 250;
+
+/** Share pill — copia link da sala e mostra feedback destacado. */
+function SharePill({ code }: { code: string }) {
+	const [copied, setCopied] = useState(false);
+
+	const handleCopy = useCallback(async () => {
+		const url = buildShareUrl(window.location.origin, code);
+		try {
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				await navigator.clipboard.writeText(url);
+				setCopied(true);
+				setTimeout(() => setCopied(false), 1800);
+				return;
+			}
+		} catch (e) {
+			// ignore and proceed to fallback
+		}
+
+		// Fallback para navegadores sem Clipboard API / HTTP inseguro
+		try {
+			const textArea = document.createElement("textarea");
+			textArea.value = url;
+			textArea.style.position = "fixed";
+			textArea.style.opacity = "0";
+			document.body.appendChild(textArea);
+			textArea.select();
+			document.execCommand("copy");
+			document.body.removeChild(textArea);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 1800);
+		} catch (err) {
+			console.error("Cópia falhou", err);
+		}
+	}, [code]);
+
+	return (
+		<button
+			type="button"
+			onClick={handleCopy}
+			data-testid="share-pill"
+			className={cn(
+				"inline-flex items-center gap-2 rounded-full px-4 py-2 font-mono text-[10px] tracking-[0.06em] uppercase border transition-all duration-200 cursor-pointer shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral",
+				copied
+					? "bg-olive border-transparent text-white"
+					: "bg-surface border-coral text-coral hover:bg-coral hover:text-white",
+			)}
+			aria-label={
+				copied
+					? "Link copiado com sucesso"
+					: "Copiar link de compartilhamento da sala"
+			}
+		>
+			<span className="font-sans text-[11px] leading-none" aria-hidden="true">
+				{copied ? "✓" : "📋"}
+			</span>
+			<span>{copied ? "Link Copiado!" : `Compartilhar: ${code || "—"}`}</span>
+		</button>
+	);
+}
 
 /** Calcula posição (left, top) para um assento dado seu ângulo (graus, 0=right, 90=bottom). */
 export function seatPosition(angleDeg: number): { left: number; top: number } {
@@ -113,6 +174,39 @@ export function Arena() {
 		return players.length === 1 && players[0]?.id === s.currentPlayerId;
 	});
 
+	// Intercepta navegações internas da SPA quando o usuário está em uma sala ativa
+	const blocker = useBlocker(
+		({ currentValue, nextLocation }) =>
+			sala !== null && currentValue.pathname !== nextLocation.pathname,
+	);
+
+	useEffect(() => {
+		if (blocker.state === "blocked") {
+			const confirmExit = window.confirm(
+				"Deseja mesmo sair da sala? Seu voto e participação serão perdidos.",
+			);
+			if (confirmExit) {
+				blocker.proceed();
+			} else {
+				blocker.reset();
+			}
+		}
+	}, [blocker]);
+
+	// Intercepta recarregamento ou fechamento de aba/janela do navegador
+	useEffect(() => {
+		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+			if (sala !== null) {
+				e.preventDefault();
+				e.returnValue = "";
+			}
+		};
+		window.addEventListener("beforeunload", handleBeforeUnload);
+		return () => {
+			window.removeEventListener("beforeunload", handleBeforeUnload);
+		};
+	}, [sala]);
+
 	// Code exibido no topbar: prioriza o do store (server-created sala),
 	// cai pro da URL (join flow). Ambos devem ser idênticos após welcome.
 	const code = sala?.code ?? urlCode;
@@ -164,36 +258,40 @@ export function Arena() {
 		>
 			{/* Topbar metadata strip */}
 			<header className="border-b border-ink/10 py-2.5 flex-shrink-0">
-				<div className="max-w-[1480px] mx-auto px-12 flex items-center justify-between font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint">
+				<div className="w-full px-8 flex items-center justify-between font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint">
 					<div className="flex items-center gap-4">
 						<span
 							aria-hidden="true"
 							className="inline-block w-1.5 h-1.5 rounded-full bg-coral animate-pulse"
 						/>
-						<span className="font-display font-extrabold text-[15px] tracking-[-0.02em] text-ink normal-case flex items-baseline gap-1.5">
+						<Link
+							to="/"
+							className="font-display font-extrabold text-[15px] tracking-[-0.02em] text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors"
+							aria-label="Sair da sala e voltar para a página inicial"
+						>
 							<span className="font-italic italic text-coral text-[18px] leading-none">
 								Ø
 							</span>
 							Pointly
-						</span>
-						<span>
+						</Link>
+						<span className="hidden">
 							Sala{" "}
 							<span className="text-ink font-medium" data-testid="arena-code">
 								{code || "—"}
 							</span>
 						</span>
 					</div>
-					<div>Fig. 03 · Arena</div>
+					<SharePill code={code} />
 				</div>
 			</header>
 
 			{/* Arena head: round + nick */}
-			<div className="max-w-[1480px] mx-auto px-12 w-full py-3.5 flex items-center justify-between flex-shrink-0">
+			<div className="max-w-[1480px] mx-auto px-12 w-full py-3.5 flex items-center justify-between flex-shrink-0 hidden">
 				<span
 					className="font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint"
 					data-testid="arena-round"
 				>
-					Fig. 03 · Round {String(sala?.round ?? 1).padStart(2, "0")}
+					Rodada {String(sala?.round ?? 1).padStart(2, "0")}
 				</span>
 				<span
 					className="font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint"
@@ -220,50 +318,50 @@ export function Arena() {
 
 				{/* Mesa: Ellipse + 12 Seats + RevealButton central */}
 				<div
-					className="relative w-[960px] h-[560px] mt-10"
+					className="relative w-[960px] h-[500px] mt-6"
 					data-testid="arena-table"
 				>
-					<Ellipse>
-						{/* Seats posicionados via trigonometria */}
-						{sala?.players.map((p) => {
-							const angle = seatAngles.get(p.id) ?? 0;
-							const pos = seatPosition(angle);
-							const isYou = p.id === currentPlayerId;
-							const isMedianVote =
-								faceUp &&
-								median !== null &&
-								p.value !== null &&
-								(() => {
-									const numericValue =
-										p.value === "½"
-											? 0.5
-											: p.value === "☕"
-												? null
-												: Number(p.value);
-									return numericValue === median;
-								})();
-							return (
-								<div
-									key={p.id}
-									className="absolute"
-									style={{
-										left: `${pos.left}px`,
-										top: `${pos.top}px`,
-										transform: "translate(-50%, -50%)",
-									}}
-									data-seat-angle={angle}
-								>
-									<Seat
-										player={p}
-										isYou={isYou}
-										faceUp={faceUp}
-										votedMedian={Boolean(isMedianVote)}
-										unanimous={unanimous}
-									/>
-								</div>
-							);
-						})}
-					</Ellipse>
+					<Ellipse height={500} />
+
+					{/* Seats posicionados via trigonometria */}
+					{sala?.players.map((p) => {
+						const angle = seatAngles.get(p.id) ?? 0;
+						const pos = seatPosition(angle);
+						const isYou = p.id === currentPlayerId;
+						const isMedianVote =
+							faceUp &&
+							median !== null &&
+							p.value !== null &&
+							(() => {
+								const numericValue =
+									p.value === "½"
+										? 0.5
+										: p.value === "☕"
+											? null
+											: Number(p.value);
+								return numericValue === median;
+							})();
+						return (
+							<div
+								key={p.id}
+								className="absolute"
+								style={{
+									left: `${pos.left}px`,
+									top: `${pos.top}px`,
+									transform: "translate(-50%, -50%)",
+								}}
+								data-seat-angle={angle}
+							>
+								<Seat
+									player={p}
+									isYou={isYou}
+									faceUp={faceUp}
+									votedMedian={Boolean(isMedianVote)}
+									unanimous={unanimous}
+								/>
+							</div>
+						);
+					})}
 
 					{/* RevealButton central */}
 					<RevealButton
@@ -282,7 +380,7 @@ export function Arena() {
 				>
 					<Deck
 						currentVote={myVote}
-						disabled={faceUp}
+						disabled={false}
 						onSelect={handleCardSelect}
 					/>
 				</div>

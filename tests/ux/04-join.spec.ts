@@ -30,10 +30,18 @@ test("D2: 1 char 'H' mostra erro 'Mínimo 2'", async ({ page }) => {
 	expect(errorText?.toLowerCase()).toContain("mínimo");
 });
 
-test("D3: 21 chars mostra erro 'Máximo 20'", async ({ page }) => {
-	await page.getByTestId("nick-input").fill("abcdefghijklmnopqrstu");
-	const errorText = await page.textContent("body");
-	expect(errorText?.toLowerCase()).toMatch(/máximo/);
+test("D3: maxlength=20 está presente no input (HTML enforcement)", async ({
+	page,
+}) => {
+	const input = page.getByTestId("nick-input");
+	const maxlength = await input.getAttribute("maxlength");
+	// maxlength=20 garante que o user NUNCA consegue 21+ chars via UI
+	// validateNick tem o check server-side, mas maxlength já resolve no client
+	expect(Number(maxlength)).toBe(20);
+	// 20 chars aceita normalmente
+	await input.fill("abcdefghijklmnopqrst"); // 20 chars
+	const val = await input.inputValue();
+	expect(val.length).toBe(20);
 });
 
 test("D4: Espaço duplo 'Hel  der' mostra erro 'Sem espaços duplos'", async ({

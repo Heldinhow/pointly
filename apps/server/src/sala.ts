@@ -27,6 +27,7 @@ import {
 	computeConsensus,
 	isUnanimous,
 } from "@planning-poker/shared";
+import type { TickResult } from "./types";
 
 // ---------------------------------------------------------------------------
 // Errors
@@ -84,10 +85,9 @@ export class Sala {
 	/**
 	 * Indica se timer está rodando. True entre primeiro voto da rodada
 	 * e reveal (manual ou auto). Após revelar, para. Reset em startNewRound.
+	 * Tick driver é o heartbeat em `index.ts` — Sala não agenda seu próprio interval.
 	 */
 	private timerActive: boolean = false;
-	/** Handler de setInterval — usado para parar o timer em reveal/newRound. */
-	private timerHandle: ReturnType<typeof setInterval> | null = null;
 
 	/**
 	 * Server-internal: timestamp (epoch ms) de quando cada player
@@ -286,7 +286,8 @@ export class Sala {
 		if (
 			this.phase !== "idle" &&
 			this.phase !== "voting" &&
-			this.phase !== "revealable"
+			this.phase !== "revealable" &&
+			this.phase !== "revealed"
 		) {
 			throw new SalaError(
 				"invalid_phase",
@@ -387,50 +388,42 @@ export class Sala {
 	// -----------------------------------------------------------------------
 
 	/**
-	 * Inicia timer regressivo de 60s. Tickado externamente via `tick()`.
-	 * Idempotente — se já ativo, no-op.
+	 * Inicia timer regressivo de 60s. Tickado externamente pelo heartbeat
+	 * em `index.ts` via `hub.tickAllTimers()`. Idempotente — se já ativo, no-op.
 	 */
 	private startTimer(): void {
 		if (this.timerActive) return;
 		this.timer = TIMER_SECONDS;
 		this.timerActive = true;
-		this.timerHandle = setInterval(() => this.tick(), TIMER_TICK_MS);
-		// Permite que o processo termine mesmo com timer ativo (Bun).
-		if (
-			this.timerHandle &&
-			typeof (this.timerHandle as { unref?: () => void }).unref === "function"
-		) {
-			(this.timerHandle as { unref: () => void }).unref();
-		}
 	}
 
 	/**
-	 * Para o timer. Limpa interval. Não reseta `timer` (deixa o último valor
-	 * para UI mostrar).
+	 * Para o timer. Não reseta `timer` (deixa o último valor para UI mostrar).
+	 * O heartbeat driver continua rodando — `tick()` apenas vê `timerActive=false`
+	 * e retorna `'idle'`.
 	 */
 	private stopTimer(): void {
-		if (this.timerHandle !== null) {
-			clearInterval(this.timerHandle);
-			this.timerHandle = null;
-		}
 		this.timerActive = false;
 	}
 
 	/**
 	 * Decrementa 1s do timer. Se chegar a 0, dispara auto-reveal.
-	 * Público — chamado pelo hub ou diretamente em testes.
+	 * Público — chamado pelo hub a cada 1s do heartbeat.
 	 *
-	 * @returns verdade se auto-reveal foi disparado neste tick
+	 * @returns TickResult:
+	 *   - `'idle'` se timer não está ativo OU decrementou mas phase !== 'voting'
+	 *   - `'ticking'` se decrementou e phase === 'voting'
+	 *   - `'fired'` se decrementou para 0 e auto-reveal disparou
 	 */
-	tick(): boolean {
-		if (!this.timerActive) return false;
+	tick(now: number = Date.now()): TickResult {
+		if (!this.timerActive) return "idle";
 		this.timer = Math.max(0, this.timer - 1);
 		if (this.timer <= 0) {
 			// Auto-reveal (F-015)
 			this.reveal("__auto_reveal__");
-			return true;
+			return "fired";
 		}
-		return false;
+		return this.phase === "voting" ? "ticking" : "idle";
 	}
 
 	/**

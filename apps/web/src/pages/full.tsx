@@ -17,7 +17,7 @@
  * @see .specs/features/planning-poker-v1/tasks.md T29
  * @see .specs/features/planning-poker-v1/spec.md F-007 (F-ID US-1)
  */
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Pill } from "../components/ui/pill";
@@ -54,22 +54,26 @@ export function Full() {
 							aria-hidden="true"
 							className="inline-block w-1.5 h-1.5 rounded-full bg-coral animate-pulse"
 						/>
-						<span className="font-display font-bold text-[15px] tracking-tight text-ink normal-case flex items-baseline gap-1.5">
+						<Link
+							to="/"
+							className="font-display font-bold text-[15px] tracking-tight text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors"
+							aria-label="Pointly — página inicial"
+						>
 							<span className="font-italic italic text-coral text-[18px] leading-none">
 								Ø
 							</span>
 							Pointly
-						</span>
+						</Link>
 					</div>
 					<div className="font-mono text-[10px] uppercase tracking-wider text-ink-faint">
-						Fig. 04 · Status
+						Sala cheia
 					</div>
 				</div>
 			</header>
 
-			{/* FIG strip */}
+			{/* Header strip */}
 			<div className="max-w-[1360px] mx-auto px-16 w-full py-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-ink-faint">
-				<span>Fig. 04 · Entrada negada</span>
+				<span>Entrada negada</span>
 				<span>
 					Código <span className="text-ink font-medium">—</span>
 				</span>

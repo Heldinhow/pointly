@@ -288,3 +288,172 @@ describe("WSService — wire format validation", () => {
 		}
 	});
 });
+
+// ---------------------------------------------------------------------------
+// T01: reconciliation cadence (10s) per ADR-002
+// ---------------------------------------------------------------------------
+
+describe("WSService — tick reconciliation cadence (10s)", () => {
+	function setupVotingSala(): string {
+		service.onOpen(ws);
+		service.onMessage(
+			ws,
+			JSON.stringify({
+				type: "hello",
+				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+			}),
+		);
+		// 2º player para que phase fique 'voting' (1 só player → revealable)
+		const ws2 = new MockBunWS("127.0.0.2");
+		service.onOpen(ws2);
+		service.onMessage(
+			ws2,
+			JSON.stringify({
+				type: "hello",
+				payload: {
+					uuid: "00000000-0000-4000-8000-000000000002",
+					nick: "Bob",
+					code: ws.data.code,
+				},
+			}),
+		);
+		service.onMessage(
+			ws,
+			JSON.stringify({ type: "cast_vote", payload: { value: "5" } }),
+		);
+		// só Ana votou → phase permanece 'voting' (Bob ainda não votou)
+		const sala = hub.getSalaForPlayer(ws.data.playerId!)!;
+		expect(sala.phase).toBe("voting");
+		sala.timer = 50; // impede auto-reveal durante o teste
+		return sala.code;
+	}
+
+	test("broadcasta room_state imediatamente quando timer 'fired' (auto-reveal)", () => {
+		const code = setupVotingSala();
+		const sala = hub.getSala(code)!;
+		sala.timer = 1; // próximo tick → fired
+
+		const before = ws.eventsOfType("room_state").length;
+		service.tick(Date.now());
+		const after = ws.eventsOfType("room_state").length;
+
+		// 'fired' deve gerar pelo menos um room_state extra
+		expect(after).toBeGreaterThan(before);
+		expect(sala.phase).toBe("revealed");
+	});
+
+	test("broadcasta room_state para sala 'ticking' quando >= 10s se passaram", () => {
+		const code = setupVotingSala();
+		const sala = hub.getSala(code)!;
+		sala.timer = 50;
+
+		const t1 = 1_000_000;
+		service.tick(t1); // primeiro tick: lastBroadcastAt=0, então now-0 >= 10000 → broadcast
+		const baseline = ws.eventsOfType("room_state").length;
+
+		// avança 9s: ainda não deve broadcastar (9 < 10)
+		service.tick(t1 + 9_000);
+		expect(ws.eventsOfType("room_state").length).toBe(baseline);
+
+		// avança mais 2s (total 11s): deve broadcastar
+		service.tick(t1 + 11_000);
+		expect(ws.eventsOfType("room_state").length).toBeGreaterThan(baseline);
+	});
+
+	test("NÃO broadcasta room_state para sala 'ticking' quando < 10s se passaram", () => {
+		const code = setupVotingSala();
+		const sala = hub.getSala(code)!;
+		sala.timer = 50;
+
+		const t1 = 2_000_000;
+		service.tick(t1); // primeiro tick: broadcast (lastBroadcastAt era 0)
+		const after1 = ws.eventsOfType("room_state").length;
+
+		// 5 ticks de 1s cada — todos < 10s desde t1
+		for (let i = 1; i <= 5; i++) {
+			service.tick(t1 + i * 1000);
+		}
+		const after5 = ws.eventsOfType("room_state").length;
+		expect(after5).toBe(after1); // sem broadcasts extras
+	});
+
+	test("timestamps de broadcast são independentes por sala", () => {
+		// sala A: hello + cast_vote
+		const wsA = new MockBunWS("127.0.0.1");
+		service.onOpen(wsA);
+		service.onMessage(
+			wsA,
+			JSON.stringify({
+				type: "hello",
+				payload: { uuid: "00000000-0000-4000-8000-000000000002", nick: "Ana" },
+			}),
+		);
+		service.onMessage(
+			wsA,
+			JSON.stringify({ type: "cast_vote", payload: { value: "5" } }),
+		);
+		const codeA = wsA.data.code!;
+		const salaA = hub.getSala(codeA)!;
+		salaA.timer = 50;
+
+		// sala B: hello + cast_vote (em outra conexão)
+		const wsB = new MockBunWS("127.0.0.2");
+		service.onOpen(wsB);
+		service.onMessage(
+			wsB,
+			JSON.stringify({
+				type: "hello",
+				payload: { uuid: "00000000-0000-4000-8000-000000000003", nick: "Bob" },
+			}),
+		);
+		service.onMessage(
+			wsB,
+			JSON.stringify({ type: "cast_vote", payload: { value: "8" } }),
+		);
+		const codeB = wsB.data.code!;
+		const salaB = hub.getSala(codeB)!;
+		salaB.timer = 50;
+
+		// t=10000: ambos broadcastam (lastBroadcastAt=0 para ambos)
+		service.tick(10_000);
+		const a1 = wsA.eventsOfType("room_state").length;
+		const b1 = wsB.eventsOfType("room_state").length;
+		expect(a1).toBeGreaterThan(0);
+		expect(b1).toBeGreaterThan(0);
+
+		// t=15000 (5s depois): nenhum deve broadcastar
+		service.tick(15_000);
+		expect(wsA.eventsOfType("room_state").length).toBe(a1);
+		expect(wsB.eventsOfType("room_state").length).toBe(b1);
+
+		// t=21000 (11s após último broadcast da A, 11s após último da B):
+		// ambos devem broadcastar
+		service.tick(21_000);
+		expect(wsA.eventsOfType("room_state").length).toBeGreaterThan(a1);
+		expect(wsB.eventsOfType("room_state").length).toBeGreaterThan(b1);
+	});
+
+	test("NÃO broadcasta para sala em fase 'idle' (sem voting)", () => {
+		service.onOpen(ws);
+		service.onMessage(
+			ws,
+			JSON.stringify({
+				type: "hello",
+				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+			}),
+		);
+		// sem cast_vote — sala em idle; hello não broadcasta room_state pro sender
+		const baseline = ws.eventsOfType("room_state").length;
+		const code = ws.data.code!;
+		const sala = hub.getSala(code)!;
+		expect(sala.phase).toBe("idle");
+
+		const t = 5_000_000;
+		service.tick(t);
+		expect(ws.eventsOfType("room_state").length).toBe(baseline);
+
+		// mesmo após 10s, idle continua sem broadcastar via tick
+		service.tick(t + 10_000);
+		expect(ws.eventsOfType("room_state").length).toBe(baseline);
+	});
+});

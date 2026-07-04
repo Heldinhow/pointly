@@ -58,7 +58,7 @@ export function Deck({ currentVote, disabled, onSelect }: DeckProps) {
 			data-testid="deck"
 			data-od-id="deck-dock"
 			className={cn(
-				"flex gap-3 bg-surface border border-ink/5 rounded-card py-3.5 px-4 shadow-bone",
+				"flex gap-2 bg-paper-warm border border-ink/5 rounded-2xl py-2 px-2.5 shadow-bone",
 				"transition-opacity",
 				disabled && "opacity-40",
 			)}
@@ -86,7 +86,7 @@ export function Deck({ currentVote, disabled, onSelect }: DeckProps) {
 						data-deck-selected={selected ? "true" : "false"}
 						className={cn(
 							// base
-							"w-[72px] h-[100px] bg-surface rounded-card",
+							"w-[48px] h-[68px] bg-surface rounded-xl",
 							"flex items-center justify-center select-none",
 							"transition-all duration-150 cursor-pointer",
 							"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
@@ -102,14 +102,14 @@ export function Deck({ currentVote, disabled, onSelect }: DeckProps) {
 					>
 						{isCoffee ? (
 							<span
-								className="font-display text-[22px] text-ink"
+								className="font-display text-[16px] text-ink"
 								aria-hidden="true"
 							>
 								☕
 							</span>
 						) : (
 							<span
-								className="font-italic italic text-[30px] text-ink leading-none"
+								className="font-italic italic text-[20px] text-ink leading-none"
 								aria-hidden="true"
 							>
 								{value}

@@ -44,7 +44,14 @@ test.describe("Track E — Arena UX", () => {
 		try {
 			await suite.createRoom(0);
 			await suite.waitForSala(0, (s) => s.players.length >= 1, 10_000);
-			await suite.clients[0]!.page.waitForSelector('[data-testid="deck"]');
+			await suite.clients[0]!.page.waitForSelector('[data-testid="page-arena"]');
+
+			// EmptyOverlay aparece quando sozinho — dismissa primeiro
+			const overlay = suite.clients[0]!.page.locator('[data-testid="empty-overlay"]');
+			if (await overlay.isVisible({ timeout: 2000 }).catch(() => false)) {
+				await suite.clients[0]!.page.getByTestId("empty-overlay-dismiss").click();
+				await suite.clients[0]!.page.waitForTimeout(400);
+			}
 
 			// Hover na carta 5
 			const card5 = suite.clients[0]!.page.getByTestId("deck-card-5");
@@ -74,7 +81,14 @@ test.describe("Track E — Arena UX", () => {
 		try {
 			await suite.createRoom(0);
 			await suite.waitForSala(0, (s) => s.players.length >= 1, 10_000);
-			await suite.clients[0]!.page.waitForSelector('[data-testid="deck"]');
+			await suite.clients[0]!.page.waitForSelector('[data-testid="page-arena"]');
+
+			// Dismissa overlay se presente
+			const overlay = suite.clients[0]!.page.locator('[data-testid="empty-overlay"]');
+			if (await overlay.isVisible({ timeout: 2000 }).catch(() => false)) {
+				await suite.clients[0]!.page.getByTestId("empty-overlay-dismiss").click();
+				await suite.clients[0]!.page.waitForTimeout(400);
+			}
 
 			// Foca a primeira carta
 			await suite.clients[0]!.page.getByTestId("deck-card-0").focus();
@@ -126,6 +140,15 @@ test.describe("Track E — Arena UX", () => {
 		try {
 			await suite.createRoom(0);
 			await suite.waitForSala(0, (s) => s.players.length >= 1, 10_000);
+			await suite.clients[0]!.page.waitForSelector('[data-testid="page-arena"]');
+
+			// Dismissa overlay se presente
+			const overlay = suite.clients[0]!.page.locator('[data-testid="empty-overlay"]');
+			if (await overlay.isVisible({ timeout: 2000 }).catch(() => false)) {
+				await suite.clients[0]!.page.getByTestId("empty-overlay-dismiss").click();
+				await suite.clients[0]!.page.waitForTimeout(400);
+			}
+
 			await suite.clients[0]!.page.waitForSelector('[data-testid="timer-pill"]');
 			const text =
 				(await suite.clients[0]!.page.getByTestId("timer-pill").textContent()) ??
@@ -143,6 +166,15 @@ test.describe("Track E — Arena UX", () => {
 		try {
 			await suite.createRoom(0);
 			await suite.waitForSala(0, (s) => s.players.length >= 1, 10_000);
+			await suite.clients[0]!.page.waitForSelector('[data-testid="page-arena"]');
+
+			// Dismissa overlay se presente
+			const overlay = suite.clients[0]!.page.locator('[data-testid="empty-overlay"]');
+			if (await overlay.isVisible({ timeout: 2000 }).catch(() => false)) {
+				await suite.clients[0]!.page.getByTestId("empty-overlay-dismiss").click();
+				await suite.clients[0]!.page.waitForTimeout(400);
+			}
+
 			await suite.clients[0]!.page.waitForSelector('[data-testid="deck-card-5"]');
 
 			const styles = await suite.clients[0]!.page.evaluate(() => {

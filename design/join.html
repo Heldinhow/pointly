@@ -2,13 +2,13 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1440">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pointly · Entrar na sala</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;700;800;900&family=Inter:wght@300;400;500&family=Playfair+Display:ital@1;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root{--paper:#efe7d2;--paper-warm:#ece4cf;--paper-dark:#ddd2b6;--ink:#15140f;--ink-soft:#2a2620;--ink-mute:#5a5448;--ink-faint:#8b8676;--coral:#ed6f5c;--coral-soft:#f08e7c;--mustard:#e9b94a;--olive:#6e7448;--bone:#f7f1de;--line:rgba(21,20,15,0.16);--line-soft:rgba(21,20,15,0.08);--line-faint:rgba(21,20,15,0.05);--shadow:0 30px 60px -30px rgba(21,20,15,0.18);--serif:'Playfair Display',serif;--sans:'Inter Tight','Inter',-apple-system,system-ui,sans-serif;--body:'Inter',-apple-system,system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace}
+  :root{--paper:#efe7d2;--paper-warm:#ece4cf;--paper-dark:#ddd2b6;--ink:#15140f;--ink-soft:#2a2620;--ink-mute:#5a5448;--ink-faint:#5c574b;--coral:#ed6f5c;--coral-soft:#f08e7c;--mustard:#e9b94a;--olive:#6e7448;--bone:#f7f1de;--line:rgba(21,20,15,0.16);--line-soft:rgba(21,20,15,0.08);--line-faint:rgba(21,20,15,0.05);--shadow:0 30px 60px -30px rgba(21,20,15,0.18);--serif:'Playfair Display',serif;--sans:'Inter Tight','Inter',-apple-system,system-ui,sans-serif;--body:'Inter',-apple-system,system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace}
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{background:var(--paper);color:var(--ink)}
   body{font-family:var(--body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;position:relative;min-height:100vh;display:flex;flex-direction:column}
@@ -50,18 +50,17 @@
 </head>
 <body>
 <div class="shell">
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="topbar-left">
-        <span class="pulse"></span>
-        <span>Vol. 01 · Issue Nº 26 · Pointly</span>
-      </div>
-      <div>PT-BR · MMXXVI<span class="wireframe-tag">wireframe</span></div>
+  <header class="topbar" style="padding: 15px 0;">
+    <div class="topbar-inner" style="max-width:1360px;padding:0 64px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;">
+      <a href="index.html" style="font-family:var(--sans);font-weight:800;font-size:18px;letter-spacing:-0.02em;color:var(--ink);text-decoration:none;display:flex;gap:8px;align-items:baseline;">
+        <span style="font-family:var(--serif);font-style:italic;color:var(--coral);font-size:22px;line-height:1">Ø</span> Pointly
+      </a>
+      <div style="font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-faint);">Entrar</div>
     </div>
   </header>
 
   <div class="topbar-fig">
-    <span>FIG. 02 · ENTRAR</span>
+    <span>Entrar</span>
     <span>Sala: <span class="code" id="codeLabel">—</span></span>
   </div>
 

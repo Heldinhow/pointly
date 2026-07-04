@@ -132,10 +132,10 @@ describe("Sala — castVote", () => {
 		);
 	});
 
-	test("rejeita cast_vote em fase errada (invalid_phase)", () => {
+	test("permite cast_vote em fase revealed", () => {
 		// simulando fase revealed
 		sala["phase"] = "revealed"; // acesso de teste
-		expect(() => sala.castVote("p1", "5")).toThrow(/invalid_phase/);
+		expect(() => sala.castVote("p1", "5")).not.toThrow();
 	});
 
 	test("rejeita player que não está na sala", () => {
@@ -227,12 +227,11 @@ describe("Sala — tick + auto-reveal", () => {
 		expect(["voting", "revealable"]).toContain(sala.phase);
 		// avança manualmente para reduzir duração do teste
 		sala.timer = 2;
-		let autoFired = sala.tick();
-		expect(autoFired).toBe(false);
+		// phase='revealable' → tick retorna 'idle' (mas ainda decrementa o timer)
+		expect(sala.tick()).toBe("idle");
 		expect(["voting", "revealable"]).toContain(sala.phase);
 		expect(sala.timer).toBe(1);
-		autoFired = sala.tick();
-		expect(autoFired).toBe(true);
+		expect(sala.tick()).toBe("fired");
 		expect(sala.phase).toBe("revealed");
 	});
 
@@ -249,6 +248,56 @@ describe("Sala — tick + auto-reveal", () => {
 	test("isCritical: false quando timer parado (idle)", () => {
 		// sem cast_vote, timer não está ativo
 		expect(sala.isCritical()).toBe(false);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// TickResult enum (T01)
+// ---------------------------------------------------------------------------
+
+describe("Sala — tick returns TickResult", () => {
+	test("retorna 'ticking' quando phase='voting' e timer entre 0 e 60", () => {
+		// 2 players: p1 vota, p2 não vota → phase fica em 'voting'
+		sala.addPlayer(makePlayer("p2", "Bob", "player", 1_001));
+		sala.castVote("p1", "5");
+		expect(sala.phase).toBe("voting");
+		expect(sala.tick()).toBe("ticking");
+		expect(sala.timer).toBe(59);
+		expect(sala.tick()).toBe("ticking");
+		expect(sala.timer).toBe(58);
+	});
+
+	test("retorna 'fired' quando timer decrementa de 1 para 0", () => {
+		// 2 players: p1 vota, p2 não vota → phase 'voting'
+		sala.addPlayer(makePlayer("p2", "Bob", "player", 1_001));
+		sala.castVote("p1", "5");
+		expect(sala.phase).toBe("voting");
+		sala.timer = 1;
+		expect(sala.tick()).toBe("fired");
+		expect(sala.phase).toBe("revealed");
+		expect(sala.timer).toBe(0);
+	});
+
+	test("retorna 'idle' quando phase='revealable'", () => {
+		// 1 player: phase vai direto voting → revealable
+		sala.castVote("p1", "5");
+		expect(sala.phase).toBe("revealable");
+		sala.timer = 30;
+		expect(sala.tick()).toBe("idle");
+		expect(sala.timer).toBe(29);
+	});
+
+	test("retorna 'idle' quando phase='revealed'", () => {
+		sala.castVote("p1", "5");
+		sala.reveal("p1");
+		expect(sala.phase).toBe("revealed");
+		expect(sala.tick()).toBe("idle");
+	});
+
+	test("retorna 'idle' quando phase='idle' (sem voto)", () => {
+		expect(sala.phase).toBe("idle");
+		expect(sala.tick()).toBe("idle");
+		expect(sala.timer).toBe(60);
 	});
 });
 

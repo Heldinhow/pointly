@@ -23,6 +23,9 @@ import {
 	type Player,
 } from "@planning-poker/shared";
 import { computeFirstFreeSeat, Sala, SALA_SEAT_COUNT } from "./sala";
+import type { TickResult } from "./types";
+
+export type { TickResult } from "./types";
 
 // ---------------------------------------------------------------------------
 // Hub — connection tracking
@@ -241,16 +244,20 @@ export class Hub {
 
 	/**
 	 * Timer tick: cada Sala roda seu próprio decrement. Hub chama tick() em cada.
-	 * @returns lista de (code, sala) que auto-revelaram neste tick
+	 * @returns per-room tick result para a WS layer decidir cadência de broadcast.
+	 * Lista vazia quando nenhuma sala existe.
 	 */
-	tickAllTimers(): { code: string; sala: Sala }[] {
-		const fired: { code: string; sala: Sala }[] = [];
+	tickAllTimers(now: number = Date.now()): {
+		code: string;
+		tick: TickResult;
+		sala: Sala;
+	}[] {
+		const out: { code: string; tick: TickResult; sala: Sala }[] = [];
 		for (const [code, sala] of this.salas) {
-			if (sala.tick()) {
-				fired.push({ code, sala });
-			}
+			const tick = sala.tick(now);
+			out.push({ code, tick, sala });
 		}
-		return fired;
+		return out;
 	}
 
 	/**

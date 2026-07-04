@@ -90,9 +90,9 @@ export function StatsPill({ consensus }: StatsPillProps) {
 				</span>
 			) : (
 				<span data-testid="stats-median">
-					<span className="text-mustard">Mediana</span>{" "}
+					<span className="text-ink-faint">Mediana</span>{" "}
 					<span
-						className="text-mustard font-medium"
+						className="text-ink font-semibold border-b border-mustard"
 						data-testid="stats-median-value"
 					>
 						{formatMedian(consensus.median)}

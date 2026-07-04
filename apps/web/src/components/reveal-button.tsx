@@ -104,7 +104,7 @@ export function RevealButton({
 			className={cn(
 				"absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
 				"flex flex-col gap-[3px] items-center justify-center",
-				"w-[200px] py-3.5 px-7 rounded-full",
+				"w-auto min-w-[230px] px-6 py-3.5 rounded-full whitespace-nowrap",
 				"font-display font-semibold text-[13px] tracking-[0.01em]",
 				"transition-all duration-200 select-none",
 				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
@@ -114,9 +114,9 @@ export function RevealButton({
 				// ready (coral pill, enabled)
 				state === "ready" &&
 					"bg-coral border border-coral text-white cursor-pointer shadow-coral hover:-translate-x-1/2 hover:-translate-y-[calc(50%+1px)] hover:bg-coral-soft",
-				// post-reveal (ghost, enabled)
+				// post-reveal (primary coral, enabled)
 				state === "post-reveal" &&
-					"bg-paper border border-ink/15 text-ink cursor-pointer hover:-translate-x-1/2 hover:-translate-y-[calc(50%+1px)] hover:bg-surface",
+					"bg-coral border border-coral text-white cursor-pointer shadow-coral hover:-translate-x-1/2 hover:-translate-y-[calc(50%+1px)] hover:bg-coral-soft shadow-md",
 			)}
 		>
 			<span className="inline-flex items-center gap-2">

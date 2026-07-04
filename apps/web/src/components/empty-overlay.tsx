@@ -29,11 +29,9 @@ import { Card } from "./ui/card";
 
 const DISMISSED_KEY = "pointly.dismissedEmpty";
 
-/** Hook utilitário pra construir a share URL. */
+/** Hook utilitário pra construir a share URL (SPA router). */
 export function buildShareUrl(origin: string, code: string): string {
-	// Resolve path: arena.html → join.html?code=XXXX
-	// Assume que arena.html e join.html estão no mesmo diretório.
-	const joinPath = "/join.html";
+	const joinPath = "/join";
 	return `${origin}${joinPath}?code=${code}`;
 }
 
@@ -73,7 +71,8 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 		try {
 			await navigator.clipboard.writeText(url);
 			setCopied(true);
-			setTimeout(() => setCopied(false), 1800);
+			// Auto-dismiss após copiar: UX — user copiou o link, overlay não precisa mais
+			setTimeout(() => handleDismiss(), 1200);
 		} catch {
 			// Fallback: select text
 			const input = document.getElementById(
@@ -83,7 +82,7 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 				input.select();
 			}
 		}
-	}, [code, shareUrl]);
+	}, [code, shareUrl, handleDismiss]);
 
 	// Esc fecha
 	useEffect(() => {

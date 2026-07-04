@@ -2,7 +2,7 @@
  * Arena page tests — T30 verify (≥3 of 5 minimum required).
  */
 import { describe, expect, test } from "bun:test";
-import { MemoryRouter } from "react-router-dom";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { render, screen } from "../components/ui/test-helpers";
 import { ToastProvider } from "../components/ui/toast";
 import { Arena, seatPosition } from "./arena";
@@ -47,11 +47,11 @@ function makeSala(overrides: Partial<SalaState> = {}): SalaState {
 }
 
 function renderArena(initialEntry = "/arena?code=9B9F") {
+	const routes = [{ path: "/arena", element: <Arena /> }];
+	const router = createMemoryRouter(routes, { initialEntries: [initialEntry] });
 	return render(
 		<ToastProvider>
-			<MemoryRouter initialEntries={[initialEntry]}>
-				<Arena />
-			</MemoryRouter>
+			<RouterProvider router={router} />
 		</ToastProvider>,
 	);
 }
@@ -60,22 +60,22 @@ describe("seatPosition — T30 pure", () => {
 	test("angle=90 (VOCÊ) → bottom-center", () => {
 		const pos = seatPosition(90);
 		// 480 + cos(90)*420 = 480 + 0 = 480
-		// 280 + sin(90)*240 = 280 + 240 = 520
+		// 250 + sin(90)*210 = 250 + 210 = 460
 		expect(pos.left).toBeCloseTo(480);
-		expect(pos.top).toBeCloseTo(520);
+		expect(pos.top).toBeCloseTo(460);
 	});
 
 	test("angle=0 (right) → right edge", () => {
 		const pos = seatPosition(0);
-		// 480 + 1*420 = 900, 280 + 0 = 280
+		// 480 + 1*420 = 900, 250 + 0 = 250
 		expect(pos.left).toBeCloseTo(900);
-		expect(pos.top).toBeCloseTo(280);
+		expect(pos.top).toBeCloseTo(250);
 	});
 
 	test("angle=180 (left) → left edge", () => {
 		const pos = seatPosition(180);
 		expect(pos.left).toBeCloseTo(60);
-		expect(pos.top).toBeCloseTo(280);
+		expect(pos.top).toBeCloseTo(250);
 	});
 });
 
@@ -96,7 +96,7 @@ describe("Arena shell — T30", () => {
 
 	test("round label atualiza conforme store.round", () => {
 		renderArena();
-		expect(screen.getByTestId("arena-round")).toHaveTextContent(/Round 01/i);
+		expect(screen.getByTestId("arena-round")).toHaveTextContent(/Rodada 01/i);
 	});
 
 	test("renderiza Seat para cada player do store", () => {

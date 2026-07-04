@@ -6,9 +6,9 @@ import { fireEvent, render, screen } from "./ui/test-helpers";
 import { EmptyOverlay, buildShareUrl } from "./empty-overlay";
 
 describe("buildShareUrl — T36 pure", () => {
-	test("buildShareUrl('http://localhost:5173', '9B9F') → '.../join.html?code=9B9F'", () => {
+	test("buildShareUrl('http://localhost:5173', '9B9F') → '.../join?code=9B9F'", () => {
 		expect(buildShareUrl("http://localhost:5173", "9B9F")).toBe(
-			"http://localhost:5173/join.html?code=9B9F",
+			"http://localhost:5173/join?code=9B9F",
 		);
 	});
 });

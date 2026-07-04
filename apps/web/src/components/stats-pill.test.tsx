@@ -84,7 +84,7 @@ describe("StatsPill — render", () => {
 		).toBe("true");
 	});
 
-	test("unanimous=false: mediana em gold (text-mustard)", () => {
+	test("unanimous=false: mediana em gold (border-mustard)", () => {
 		const { container } = render(
 			<StatsPill
 				consensus={{
@@ -96,8 +96,8 @@ describe("StatsPill — render", () => {
 			/>,
 		);
 		const medianLabel = container.querySelector('[data-testid="stats-median"]');
-		// O primeiro span "Mediana" deve ter text-mustard
-		expect(medianLabel?.querySelector(".text-mustard")).toBeInTheDocument();
+		// O span do valor da mediana deve ter border-mustard
+		expect(medianLabel?.querySelector(".border-mustard")).toBeInTheDocument();
 	});
 
 	test("role='status' + aria-live='polite' (a11y)", () => {
