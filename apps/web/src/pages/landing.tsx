@@ -494,11 +494,11 @@ export function Landing() {
 						<Card
 							key={cap.n}
 							padding="md"
-							className="flex flex-col gap-3 bg-surface border border-ink/10 rounded-2xl shadow-bone hover:border-coral transition-colors duration-300"
+							className="flex flex-col gap-3 bg-surface border border-ink/10 rounded-2xl shadow-bone hover:border-coral hover:-translate-y-1 hover:shadow-md transition-all duration-200"
 							data-testid={`cap-card-${cap.n}`}
 						>
 							<div className="flex justify-between items-baseline font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint">
-								<span className="font-italic italic text-coral text-[18px] tracking-normal normal-case font-medium">
+								<span className="font-serif italic text-coral text-[28px] tracking-normal normal-case font-normal leading-none">
 									{cap.n}
 								</span>
 								<span>Feature</span>
