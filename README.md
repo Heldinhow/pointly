@@ -197,3 +197,4 @@ Os ADRs detalham as escolhas técnicas:
 ## Licença
 
 Projeto privado.
+# auto-deploy test Sat Jul  4 23:40:48 -03 2026
