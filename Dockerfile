@@ -9,12 +9,14 @@ FROM oven/bun:${BUN_VERSION}-alpine AS deps
 WORKDIR /app
 ENV NODE_ENV=development
 # Copy the full workspace tree so bun can resolve all workspaces during install.
-# Selective COPY of only manifests + lockfile fails because bun's --frozen-lockfile
-# needs to scan the actual workspace layout (apps/, packages/) to validate.
+# The bun.lockb was generated with ALL workspaces present (including tests/*);
+# Bun's --frozen-lockfile compares the workspace snapshot against the lockfile,
+# so missing workspaces → phantom drift → "lockfile had changes".
 COPY package.json bun.lockb bunfig.toml ./
 COPY tsconfig.base.json ./
 COPY apps ./apps
 COPY packages ./packages
+COPY tests ./tests
 COPY scripts ./scripts
 RUN bun install --frozen-lockfile
 
