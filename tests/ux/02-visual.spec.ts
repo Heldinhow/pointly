@@ -10,7 +10,8 @@ import { expect, test } from "@playwright/test";
 const ATELIER_TOKENS = {
 	bg: "rgb(239, 231, 210)", // #efe7d2
 	surface: "rgb(247, 241, 222)", // #f7f1de
-	coral: "rgb(237, 111, 92)", // #ed6f5c
+	// UX-014: terracotta (referência Open Design) — antes #ed6f5c (salmon-coral)
+	coral: "rgb(210, 74, 42)", // #d24a2a
 	mustard: "rgb(233, 185, 74)", // #e9b94a
 	olive: "rgb(110, 116, 72)", // #6e7448
 	ink: "rgb(21, 20, 15)", // #15140f
@@ -62,7 +63,9 @@ test("B3: Surface noise pseudo-element presente", async ({ page }) => {
 	}
 });
 
-test("B4: h1 da Landing usa Inter Tight / display font", async ({ page }) => {
+test("B4: h1 da Landing usa Instrument Serif (display role iter-4)", async ({
+	page,
+}) => {
 	await page.goto("/");
 	const h1Style = await page.evaluate(() => {
 		const h1 = document.querySelector("h1");
@@ -76,24 +79,27 @@ test("B4: h1 da Landing usa Inter Tight / display font", async ({ page }) => {
 	});
 	expect(h1Style).not.toBeNull();
 	console.log("[B4] h1 style:", h1Style);
-	// Verifica que NÃO usa serif (Playfair) — h1 do hero deve ser sans
-	expect(h1Style?.fontFamily.toLowerCase()).not.toContain("playfair");
+	// UX-012: h1 do hero deve usar Instrument Serif (serif display role).
+	// Stack é "Instrument Serif", "Playfair Display", Georgia, serif — Playfair
+	// aparece como fallback, mas a primeira opção (que será usada) é Instrument Serif.
+	expect(h1Style?.fontFamily).toContain("Instrument Serif");
 });
 
-test("B6: ≤ 1 CTA coral por viewport na Landing", async ({ page }) => {
+test("B6: ≤ 1 CTA terracota por viewport na Landing", async ({ page }) => {
 	await page.goto("/");
 	const coralButtons = await page.evaluate(() => {
-		const CORAL = "rgb(237, 111, 92)";
+		// UX-014: token --accent agora é terracota #d24a2a (rgb 210,74,42)
+		const TERRACOTA = "rgb(210, 74, 42)";
 		const buttons = Array.from(document.querySelectorAll('button, a'));
 		return buttons
-			.filter((b) => window.getComputedStyle(b).backgroundColor === CORAL)
+			.filter((b) => window.getComputedStyle(b).backgroundColor === TERRACOTA)
 			.map((b) => ({
 				text: (b.textContent || "").trim().slice(0, 40),
 				testId: b.getAttribute("data-testid"),
 			}));
 	});
-	console.log(`[B6] botões coral na Landing:`, coralButtons);
-	// Plan.md 4: "Coral ≤1 CTA por viewport" — tolerância: nav + hero + footer até 3
+	console.log(`[B6] botoes terracota na Landing:`, coralButtons);
+	// Plan.md 4: "Coral <=1 CTA por viewport" — tolerancia: nav + hero + footer até 3
 	expect(coralButtons.length).toBeLessThanOrEqual(3);
 });
 
@@ -105,16 +111,17 @@ test("B8: Mega footer 'Pointly' presente na Landing", async ({ page }) => {
 	expect(text.toLowerCase()).toContain("pointly");
 });
 
-test("B10: Sec-rules Roman aparecem na Landing (I., II., III., IV., V.)", async ({
-	page,
-}) => {
+test("B10: Sec-rules arabic aparecem na Landing (01..05)", async ({ page }) => {
 	await page.goto("/");
-	// JSX adiciona whitespace entre tags: "I ." → normalizar
+	// UX-013: section markers migraram de Roman (I., II., ...) para arabic
+	// italic serif (01, 02, ..., 05) — 5 ocorrências em 5 SectionRule.
 	const bodyText = ((await page.textContent("body")) ?? "").replace(/\s+/g, " ");
-	const romanMatches = bodyText.match(/\b(I{1,3}|IV|V)\s*\./g) ?? [];
-	console.log(`[B10] Roman numerals found:`, romanMatches);
-	// Landing declara 5 seções (I–V); aceita >= 4
-	expect(romanMatches.length).toBeGreaterThanOrEqual(4);
+	// Matchea "01" até "05" como word boundary (evita match em "013" ou "100")
+	const arabicMatches =
+		bodyText.match(/\b(0[1-5])(?!\d)/g)?.map((m) => m.trim()) ?? [];
+	console.log(`[B10] arabic section markers found:`, arabicMatches);
+	// Landing declara 5 seções; aceita >= 4 (tolerância para partial render)
+	expect(arabicMatches.length).toBeGreaterThanOrEqual(4);
 });
 
 test("B11: Metadata strip mono aparece em todas as 4 telas", async ({ page }) => {
@@ -170,14 +177,19 @@ test("B12b: Screenshot baseline de todas as 4 telas", async ({ page }) => {
 	}
 });
 
-test("B13: Cor do CTA coral confere com token", async ({ page }) => {
+test("B13: Cor do CTA terracota confere com token iter-4", async ({ page }) => {
 	await page.goto("/");
 	const ctaBg = await page.evaluate(() => {
 		const btn = document.querySelector('[data-testid="cta-create-room"]');
 		if (!btn) return null;
 		return window.getComputedStyle(btn).backgroundColor;
 	});
-	console.log(`[B13] CTA coral bg: ${ctaBg}`);
-	// Aceita #ed6f5c (rgb 237,111,92) ou variantes de hover
-	expect(ctaBg).not.toBe("rgba(0, 0, 0, 0)");
+	console.log(`[B13] CTA terracota bg: ${ctaBg}`);
+	// UX-014: CTA agora renderiza em rgb(210,74,42) — terracota (alinhado com
+	// referência Open Design). Aceita também o hover state --coral-soft
+	// rgb(227,103,71) em caso de hover programático.
+	expect(
+		ctaBg === "rgb(210, 74, 42)" || ctaBg === "rgb(227, 103, 71)",
+		`CTA bg esperado rgb(210, 74, 42) ou rgb(227, 103, 71); recebido ${ctaBg}`,
+	).toBe(true);
 });
