@@ -36,7 +36,7 @@
  * @see .specs/features/planning-poker-v1/tasks.md T30
  * @see .specs/features/planning-poker-v1/spec.md F-007, F-053
  */
-import { useCallback, useMemo, useState, useEffect, useRef } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { useSearchParams, Link, useBlocker } from "react-router-dom";
 import { buildShareUrl } from "../components/empty-overlay";
 import { cn } from "../components/ui/utils";
@@ -50,7 +50,7 @@ import { useKeyboardShortcuts } from "../lib/use-keyboard-shortcuts";
 import { StatsPill } from "../components/stats-pill";
 import { TimerPill } from "../components/timer-pill";
 import { useArenaLoop, getStoredUUID } from "../lib/use-arena-loop";
-import { getNick, resetDismissedEmpty } from "../lib/storage";
+import { getNick } from "../lib/storage";
 import { useSalaStore } from "../store/sala";
 import { ProjectileAnimator } from "../components/projectile-animator";
 

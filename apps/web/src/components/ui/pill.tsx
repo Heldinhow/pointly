@@ -22,7 +22,7 @@ const pillVariants = cva(
 		variants: {
 			variant: {
 				default: "bg-surface text-ink-faint border border-ink/5",
-				critical: "bg-coral-soft text-coral border border-coral/20",
+				critical: "bg-coral-soft text-ink border border-coral/20",
 				gold: "bg-mustard/15 text-ink border border-mustard/40",
 				ghost: "bg-transparent text-ink border border-ink/20",
 			},

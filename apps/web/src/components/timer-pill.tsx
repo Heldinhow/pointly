@@ -72,14 +72,14 @@ export function TimerPill(props: TimerPillProps = {}) {
 				"border transition-colors duration-200",
 				"font-mono text-[11px] tracking-[0.06em] uppercase",
 				isCritical
-					? "bg-coral-soft border-coral/40 text-coral"
+					? "bg-coral-soft border-coral/40 text-ink"
 					: "bg-surface border-ink/5 text-ink-faint",
 			)}
 		>
 			<span
 				className={cn(
 					"font-variant-numeric",
-					isCritical ? "text-coral" : "text-ink",
+					isCritical ? "text-ink" : "text-ink",
 				)}
 				data-testid="timer-value"
 			>

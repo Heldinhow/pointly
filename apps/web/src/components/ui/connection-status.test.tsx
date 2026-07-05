@@ -21,7 +21,7 @@ describe("ConnectionStatus", () => {
 		const status = screen.getByRole("status");
 		expect(status).toHaveTextContent("Conexão perdida");
 		expect(status.className).toContain("bg-coral-soft");
-		expect(status.className).toContain("text-coral");
+		expect(status.className).toContain("text-ink");
 	});
 
 	test("variant connected mostra 'Conectado' com dot olive", () => {

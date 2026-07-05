@@ -10,7 +10,7 @@ describe("Pill — variants", () => {
 		render(<Pill variant="critical">00:42 · ROUND 03</Pill>);
 		const pill = screen.getByText("00:42 · ROUND 03");
 		expect(pill.className).toContain("bg-coral-soft");
-		expect(pill.className).toContain("text-coral");
+		expect(pill.className).toContain("text-ink");
 	});
 
 	test("variant gold aplica bg mustard/15", () => {

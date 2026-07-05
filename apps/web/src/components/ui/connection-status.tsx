@@ -20,7 +20,7 @@ const statusVariants = cva(
 		variants: {
 			variant: {
 				loading: "bg-surface text-ink-soft border-ink/10",
-				error: "bg-coral-soft text-coral border-coral/30",
+				error: "bg-coral-soft text-ink border-coral/30",
 				connected: "bg-surface text-olive border-olive/30",
 			},
 		},
