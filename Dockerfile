@@ -8,12 +8,15 @@ ARG BUN_VERSION=1.2.19
 FROM oven/bun:${BUN_VERSION}-alpine AS deps
 WORKDIR /app
 ENV NODE_ENV=development
+# Copy the full workspace tree so bun can resolve all workspaces during install.
+# Selective COPY of only manifests + lockfile fails because bun's --frozen-lockfile
+# needs to scan the actual workspace layout (apps/, packages/) to validate.
 COPY package.json bun.lock bunfig.toml ./
-COPY apps/web/package.json ./apps/web/
-COPY apps/server/package.json ./apps/server/
-COPY packages/shared/package.json ./packages/shared/
-RUN --mount=type=cache,target=/root/.bun/install/cache \
-    bun install --frozen-lockfile
+COPY tsconfig.base.json ./
+COPY apps ./apps
+COPY packages ./packages
+COPY scripts ./scripts
+RUN bun install --frozen-lockfile
 
 # ----------------------------------------------------------------------------
 # web-build: build the React/Vite SPA, output to apps/web/dist
