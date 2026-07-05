@@ -88,9 +88,8 @@ evidência (before screenshot path), solução proposta, critério de aceite.
 - **Descrição**: Os headlines display do Pointly usam `font-display font-extrabold` que mapeia para `Inter Tight 900` — uma sans extrabold geométrica. A imagem de referência usa uma **serif de alto contraste** (didone/transitional, provavelmente "PP Editorial New" ou similar) com transições grossas-finas dramáticas. O resultado da referência lê como "editorial atelier / portfólio de estúdio de design"; o resultado atual lê como "tech product moderno". Essa é a maior diferença de **brand voice** entre as duas peças.
 - **Impacto**: O switch tipográfico é a alavanca de maior impacto perceptual — uma única mudança de typeface no h1 muda toda a primeira impressão da Landing. Alavanca o voice Pointly de "tech utility" para "editorial atelier", alinhando com a personalidade "Planning Poker efêmero" / "Atelier Zero" já prometida no UX_REVIEW §3 UX-001.
 - **Evidência (before)**:
-  - `docs/ux-review/screenshots/before/audit-landing-vp-1440-full.png` (Landing hero, Inter Tight 800)
-  - `docs/ux-review/screenshots/before/audit-landing-vp-1440-viewport.png` (acima do fold)
-  - `docs/ux-review/screenshots/before/audit-not-found-vp-1440-full.png` (NotFound — usa Playfair italic p/ 404 mas Inter Tight p/ h2)
+  - `docs/ux-review/screenshots/before/UX-012-before-landing-pre-iter-4.png` (Landing vp-1440 full, Inter Tight 800)
+  - `docs/ux-review/screenshots/before/UX-017-before-not-found-pre-iter-4.png` (NotFound vp-1440 full, Inter Tight no h2)
 - **Solução proposta**:
   1. Em `apps/web/src/index.css`, importar uma **serif display de alto contraste**. Opção 1: `Instrument Serif` (Google Fonts, já presente em vários projetos); opção 2: `DM Serif Display` (mais pesada); opção 3: `EB Garamond` (clássica). Recomendo **Instrument Serif** (peso 400, italic 400) — moderno, geométrico, alto contraste, peso de arquivo pequeno.
   2. Adicionar variable `--font-display-serif` que mapeia para `"Instrument Serif", "Playfair Display", Georgia, serif`.
@@ -111,7 +110,7 @@ evidência (before screenshot path), solução proposta, critério de aceite.
 - **Descrição**: Os divisores de seção no Landing usam **Roman numerals** (I., II., III., IV., V.) em Playfair Italic 14px. A referência usa **Arabic numerals** (01, 02, 03, 04) em display serif italic com tamanho muito maior (28-48px). Roman numerals têm conotação acadêmica/livro-texto; arabic italic serif têm conotação editorial contemporânea (revista, jornal moderno).
 - **Impacto**: Os section markers são o principal elemento de "ritmo editorial" da Landing. Aumentá-los e converter para arabic muda a percepção de "artigo acadêmico" para "capítulo de revista". Pequena alavanca visual com grande mudança de voice.
 - **Evidência (before)**:
-  - `docs/ux-review/screenshots/before/audit-landing-vp-1440-full.png` (ver topo de cada seção)
+  - `docs/ux-review/screenshots/before/UX-013-before-landing-pre-iter-4.png` (Landing vp-1440 full, 5 SectionRule visíveis com Roman numerals no topo de cada seção)
 - **Solução proposta**:
   1. Trocar `.sec-rule .roman` de `font-family: "Playfair Display"` p/ `--font-display-serif` (Instrument Serif) com weight 400 italic.
   2. Aumentar `font-size: 14px` p/ `clamp(20px, 2.5vw, 36px)`.
@@ -130,8 +129,8 @@ evidência (before screenshot path), solução proposta, critério de aceite.
 - **Descrição**: O `--accent` Pointly é `#ed6f5c` — coral pinkish-red. A referência usa terracota orange-red (~`#d24a2a`). Diferença de hue: Pointly tem mais rosa/salmão; referência é mais laranja. Ambos transmitem "warm editorial", mas a referência é mais saturada e menos pinkish — visualmente mais "grounded".
 - **Impacto**: Pequena alavanca de cor. Quando combinada com UX-012 (serif display), o shift de hue reforça o "editorial" voice sem quebrar a regra "coral ≤1 CTA/viewport". `--coral-soft` (hover state) também precisa ajustar.
 - **Evidência (before)**:
-  - `docs/ux-review/screenshots/before/audit-landing-vp-1440-full.png` (ver CTA "Criar sala")
-  - `docs/ux-review/screenshots/before/UX-001-not-found-no-cta.png` (NotFound CTA)
+  - `docs/ux-review/screenshots/before/UX-014-before-landing-pre-iter-4.png` (Landing vp-1440 full, CTA "Criar sala" em salmon-coral #ed6f5c no hero + sticky nav)
+  - `docs/ux-review/screenshots/before/UX-017-before-not-found-pre-iter-4.png` (NotFound CTA em salmon-coral)
 - **Solução proposta**:
   1. Em `:root`, trocar `--accent: #ed6f5c` → `--accent: #d24a2a` (terracota).
   2. Trocar `--coral-soft: #f08e7c` → `--coral-soft: #e36747` (hover ligeiramente mais claro).
@@ -152,8 +151,7 @@ evidência (before screenshot path), solução proposta, critério de aceite.
 - **Descrição**: O hero da Landing usa 3 cartas (3, ☕, 5) em fan rotation como ilustração. A imagem de referência usa **composição editorial** (sculpture + botanical terracotta overlay) como peça central do hero. A solução atual é funcional mas lê como "poker tool" (literal); a referência evoca "atelier de design" (metafórico). Sem mudar copy, é possível adicionar **peso visual** ao hero com uma composição CSS/SVG-only que evoque o "collage on paper" — círculo terracota grande atrás de uma serif glyph monumental + dotted outline circle + pequenas folhas/botanical SVG inline.
 - **Impacto**: Sem alterar copy ou hierarquia, adiciona uma "obra visual" ao hero que ancora a personalidade editorial. É o elemento que mais diferencia uma "tech landing" de uma "editorial landing" — a referência ganha 30% mais presença visual por causa dessa composição.
 - **Evidência (before)**:
-  - `docs/ux-review/screenshots/before/audit-landing-vp-1440-viewport.png` (hero above-the-fold)
-  - `docs/ux-review/screenshots/before/audit-landing-vp-1440-full.png` (full page)
+  - `docs/ux-review/screenshots/before/UX-015-before-landing-pre-iter-4.png` (Landing vp-1440 full — hero acima do fold mostra 3 cards em fan rotation)
 - **Solução proposta**:
   1. Manter o frame `bg-paper-warm border border-ink/5 rounded-3xl ... shadow-bone` (já alinhado).
   2. Substituir os 3 cards internos por uma composição editorial:
@@ -182,7 +180,7 @@ evidência (before screenshot path), solução proposta, critério de aceite.
   A referência usa numerais italic serif muito maiores (28-32px) + hover lift (`translate-y` + shadow grow). Os cards de Pointly parecem "feature grid SaaS"; a referência parece "card editorial numerado".
 - **Impacto**: Pequena alavanca visual mas de alta recorrência (4 cards por viewport, primeira seção após hero). Aumenta o peso editorial sem mudar copy ou hierarquia.
 - **Evidência (before)**:
-  - `docs/ux-review/screenshots/before/audit-landing-vp-1440-full.png` (seção III — CAPABILIDADES)
+  - `docs/ux-review/screenshots/before/UX-016-before-landing-pre-iter-4.png` (Landing vp-1440 full, seção III — CAPABILIDADES com numeral 18px Playfair italic coral)
 - **Solução proposta**:
   1. Trocar numeral de `text-[18px]` para `text-[28px]`.
   2. Trocar `font-italic italic text-coral` para `font-serif italic text-coral` (usa Instrument Serif italic).
@@ -202,8 +200,8 @@ evidência (before screenshot path), solução proposta, critério de aceite.
 - **Descrição**: NotFound (UX-001 fix do iter-1) já tem voz editorial Atelier Zero — paper bg, Ø mark, 404 coral italic Playfair, h2 Inter Tight, CTAs coral/ghost, surface-noise. Mas está desalinhado com a nova linguagem visual do Landing (UX-012..UX-016): usa Inter Tight p/ h2 (não serif display Instrument Serif), não tem composição editorial ao lado do card, e o metadata strip é mais simples que o do Landing. Após o upgrade do Landing, NotFound precisa de **parity visual** — não precisa ser idêntico, mas precisa compartilhar a mesma linguagem.
 - **Impacto**: Sem parity, o usuário que cai no 404 depois de navegar pela Landing percebe um "downgrade" de qualidade visual — quebra a promessa de "Planning Poker efêmero" / "Atelier Zero". A 404 é também a primeira impressão de quem chega via link quebrado (deep-link stale, share URL expirado) — é a página mais importante para reter.
 - **Evidência (before)**:
-  - `docs/ux-review/screenshots/before/audit-not-found-vp-1440-full.png` (current state)
-  - `docs/ux-review/screenshots/after/UX-001-after-not-found-editorial.png` (UX-001 já aplicado)
+  - `docs/ux-review/screenshots/before/UX-017-before-not-found-pre-iter-4.png` (NotFound vp-1440 full pré-iter-4: pós-iter-1 fix com 404 editorial + Inter Tight h2 'Voto perdido no vazio', sem metadata strip estilo Landing, sem sticky nav, sem 2-column stage)
+  - `docs/ux-review/screenshots/after/UX-001-after-not-found-editorial.png` (UX-001 já aplicado — referência ao estado baseline desta iter)
 - **Solução proposta**:
   1. Trocar h2 (`font-display font-extrabold text-[28px]`) p/ `font-serif italic font-normal text-[clamp(28px,3vw,44px)]` (Instrument Serif italic).
   2. Adicionar metadata strip top **igual ao do Landing** (pulse dot coral + "POINTLY · VOTO PERDIDO · PT-BR" + roman marker "404 / 404 / 404").

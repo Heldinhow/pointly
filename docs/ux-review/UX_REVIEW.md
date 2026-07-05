@@ -68,12 +68,12 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
 | [UX-008](#ux-008) | Baixa | Responsividade · UI | Deck mobile: card "0" off-screen sem peek affordance óbvio | `screenshots/before/UX-008-deck-mobile-peek.png` | (—) | [#9](https://github.com/Heldinhow/pointly/issues/9) | `pending-validation` |
 | [UX-011](#ux-011) | Alta | UX / fluxo | EmptyOverlay (modal) bloqueia clicks do deck em sala solo | (evidência programática) | `screenshots/after/UX-011-after-vote-with-banner-visible.png` | [#11](https://github.com/Heldinhow/pointly/issues/11) | `fix-validated` (iter-3 hotfix) |
 | [UX-010](#ux-010) | Baixa | A11y | (positivo) axe-core WCAG 2 AA — 0 violações em 4 rotas | `screenshots/before/UX-010-a11y-*.png` (4 rotas) | n/a | (n/a — positivo) | `fix-validated` (positivo) |
-| [UX-012](#ux-012) | Alta | Identidade visual · Tipografia | Display headline: Inter Tight 800 → high-contrast serif (editorial voice lift) | `screenshots/before/audit-landing-vp-1440-full.png` | `screenshots/after/UX-012-after-landing-hero-serif.png` · `screenshots/after/UX-012-after-not-found-serif.png` | [#12](https://github.com/Heldinhow/pointly/issues/12) | `fix-validated` (iter-4) |
-| [UX-013](#ux-013) | Média | Identidade visual · Marcadores | Section markers: Roman numerals → italic Arabic + larger (editorial rhythm) | `screenshots/before/audit-landing-vp-1440-full.png` | `screenshots/after/UX-013-after-section-markers-arabic.png` | [#13](https://github.com/Heldinhow/pointly/issues/13) | `fix-validated` (iter-4) |
-| [UX-014](#ux-014) | Baixa | Identidade visual · Cor | Pill button: salmon-coral → terracotta (palette alignment) | `screenshots/before/audit-landing-vp-1440-full.png` | `screenshots/after/UX-014-after-terracotta-cta.png` | [#14](https://github.com/Heldinhow/pointly/issues/14) | `fix-validated` (iter-4) |
-| [UX-015](#ux-015) | Média | Identidade visual · Composição | Hero illustration: 3 cards → sculptural SVG collage (editorial weight) | `screenshots/before/audit-landing-vp-1440-viewport.png` | `screenshots/after/UX-015-after-hero-collage.png` | [#15](https://github.com/Heldinhow/pointly/issues/15) | `fix-validated` (iter-4) |
-| [UX-016](#ux-016) | Média | UI · Consistência | Capability cards: numeral 18px → 28px serif + hover lift (editorial weight) | `screenshots/before/audit-landing-vp-1440-full.png` | `screenshots/after/UX-016-after-capability-cards-serif-numeral.png` | [#16](https://github.com/Heldinhow/pointly/issues/16) | `fix-validated` (iter-4) |
-| [UX-017](#ux-017) | Alta | Identidade · Parity entre rotas | NotFound: editorial parity com Landing (display serif + visual treatment) | `screenshots/before/audit-not-found-vp-1440-full.png` | `screenshots/after/UX-017-after-not-found-parity.png` | [#17](https://github.com/Heldinhow/pointly/issues/17) | `fix-validated` (iter-4) |
+| [UX-012](#ux-012) | Alta | Identidade visual · Tipografia | Display headline: Inter Tight 800 → high-contrast serif (editorial voice lift) | `screenshots/before/UX-012-before-landing-pre-iter-4.png` · `screenshots/before/UX-017-before-not-found-pre-iter-4.png` | `screenshots/after/UX-012-after-landing-hero-serif.png` · `screenshots/after/UX-012-after-not-found-serif.png` | [#12](https://github.com/Heldinhow/pointly/issues/12) | `fix-validated` (iter-4) |
+| [UX-013](#ux-013) | Média | Identidade visual · Marcadores | Section markers: Roman numerals → italic Arabic + larger (editorial rhythm) | `screenshots/before/UX-013-before-landing-pre-iter-4.png` | `screenshots/after/UX-013-after-section-markers-arabic.png` | [#13](https://github.com/Heldinhow/pointly/issues/13) | `fix-validated` (iter-4) |
+| [UX-014](#ux-014) | Baixa | Identidade visual · Cor | Pill button: salmon-coral → terracotta (palette alignment) | `screenshots/before/UX-014-before-landing-pre-iter-4.png` | `screenshots/after/UX-014-after-terracotta-cta.png` | [#14](https://github.com/Heldinhow/pointly/issues/14) | `fix-validated` (iter-4) |
+| [UX-015](#ux-015) | Média | Identidade visual · Composição | Hero illustration: 3 cards → sculptural SVG collage (editorial weight) | `screenshots/before/UX-015-before-landing-pre-iter-4.png` | `screenshots/after/UX-015-after-hero-collage.png` | [#15](https://github.com/Heldinhow/pointly/issues/15) | `fix-validated` (iter-4) |
+| [UX-016](#ux-016) | Média | UI · Consistência | Capability cards: numeral 18px → 28px serif + hover lift (editorial weight) | `screenshots/before/UX-016-before-landing-pre-iter-4.png` | `screenshots/after/UX-016-after-capability-cards-serif-numeral.png` | [#16](https://github.com/Heldinhow/pointly/issues/16) | `fix-validated` (iter-4) |
+| [UX-017](#ux-017) | Alta | Identidade · Parity entre rotas | NotFound: editorial parity com Landing (display serif + visual treatment) | `screenshots/before/UX-017-before-not-found-pre-iter-4.png` | `screenshots/after/UX-017-after-not-found-parity.png` · `screenshots/after/UX-017-a11y-{landing,notfound}-vp-{360,768,1440}.png` | [#17](https://github.com/Heldinhow/pointly/issues/17) | `fix-validated` (iter-4) |
 
 ---
 
@@ -301,8 +301,8 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
 - **Descrição**: Os headlines display do Pointly (h1 do hero, h2 de About/Dark Showcase/CTA Ribbon, h2 do NotFound) usavam `font-display font-extrabold` = **Inter Tight 900** — sans extrabold geométrica. A imagem de referência usa uma **serif de alto contraste** (didone/transitional, provável "PP Editorial New" / "Söhne Breit Semi"). A diferença é a maior alavanca de brand voice entre as duas peças: sans extrabold lê como "tech product moderno"; high-contrast serif lê como "editorial atelier".
 - **Impacto**: Single switch de typeface no h1 muda toda a primeira impressão da Landing — alinha o voice "Atelier Zero" prometido no UX-001 com a execução visual. Inline `<em>` (ritmo, confiança, conversando, consenso memorável) mantém Playfair Italic para emphasis — o mix Instrument Serif upright + Playfair Italic é o sweet spot editorial.
 - **Evidência**:
-  - `screenshots/before/audit-landing-vp-1440-full.png` (Landing Inter Tight 800)
-  - `screenshots/before/audit-not-found-vp-1440-full.png` (NotFound Inter Tight no h2)
+  - `screenshots/before/UX-012-before-landing-pre-iter-4.png` (Landing vp-1440 full, Inter Tight 800 nos headlines)
+  - `screenshots/before/UX-017-before-not-found-pre-iter-4.png` (NotFound vp-1440 full, Inter Tight no h2)
 - **Solução proposta**:
   1. Adicionar `@import Instrument+Serif:ital@0;1` ao Google Fonts em `apps/web/src/index.css`.
   2. Adicionar CSS variable `--font-display-serif: "Instrument Serif", "Playfair Display", Georgia, serif`.
@@ -332,7 +332,7 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
 - **Categoria**: Identidade visual · Marcadores
 - **Descrição**: Os 5 divisores de seção da Landing usavam **Roman numerals** (I., II., III., IV., V.) em Playfair Italic 14px. A referência usa **Arabic numerals** (01, 02, 03, 04) em display serif italic com tamanho muito maior (28-48px). Roman numerals têm conotação acadêmica/livro-texto; arabic italic serif têm conotação editorial contemporânea (revista, jornal moderno).
 - **Impacto**: Pequena alavanca visual com grande mudança de voice — os section markers são o principal elemento de "ritmo editorial" da Landing. Aumentá-los e converter para arabic muda a percepção de "artigo acadêmico" para "capítulo de revista".
-- **Evidência**: `screenshots/before/audit-landing-vp-1440-full.png` (5 SectionRule visíveis no topo de cada seção)
+- **Evidência**: `screenshots/before/UX-013-before-landing-pre-iter-4.png` (Landing vp-1440 full, 5 SectionRule visíveis com Roman numerals no topo de cada seção)
 - **Solução proposta**:
   1. Atualizar `.sec-rule .roman` em `apps/web/src/index.css`:
      - `font-family: Playfair Display` → `var(--font-display-serif)` (Instrument Serif)
@@ -358,7 +358,7 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
 - **Categoria**: Identidade visual · Cor
 - **Descrição**: O `--accent` Pointly era `#ed6f5c` (coral pinkish-red). A referência usa terracota orange-red (~`#d24a2a`). Diferença de hue: Pointly tem mais rosa/salmão; referência é mais laranja. Ambos transmitem "warm editorial", mas a referência é mais saturada e menos pinkish.
 - **Impacto**: Pequena alavanca de cor. Quando combinada com UX-012 (serif display), reforça o voice editorial sem quebrar a regra "coral ≤1 CTA/viewport". `--coral-soft` (hover state) ajustado proporcionalmente.
-- **Evidência**: `screenshots/before/audit-landing-vp-1440-full.png` (CTA "Criar sala" no hero + sticky nav, antes da correção)
+- **Evidência**: `screenshots/before/UX-014-before-landing-pre-iter-4.png` (Landing vp-1440 full, CTA "Criar sala" em salmon-coral #ed6f5c no hero + sticky nav, antes da correção)
 - **Solução proposta**:
   1. Em `:root` em `apps/web/src/index.css`:
      - `--accent: #ed6f5c` → `#d24a2a` (terracota — referência Open Design)
@@ -381,7 +381,7 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
 - **Categoria**: Identidade visual · Composição
 - **Descrição**: O hero da Landing usava 3 cartas (3, ☕, 5) em fan rotation como ilustração. A imagem de referência usa **composição editorial** (sculpture + botanical terracotta overlay) como peça central do hero. A solução atual é funcional mas lê como "poker tool" (literal); a referência evoca "atelier de design" (metafórico).
 - **Impacto**: Sem alterar copy ou hierarquia, adiciona uma "obra visual" ao hero que ancora a personalidade editorial. É o elemento que mais diferencia uma "tech landing" de uma "editorial landing".
-- **Evidência**: `screenshots/before/audit-landing-vp-1440-viewport.png` (hero above-the-fold, 3 cards visíveis)
+- **Evidência**: `screenshots/before/UX-015-before-landing-pre-iter-4.png` (Landing vp-1440 full, hero above-the-fold mostra 3 cards em fan rotation)
 - **Solução proposta**: Manter o frame container (paper-warm bg, ink/5 border, rounded-3xl, shadow-bone, min-h-[480px]). Substituir o conteúdo interno por composição editorial CSS/SVG-only:
   - Círculo terracota sólido (260×260, bg-coral) — back layer
   - Círculo dashed outline (300×300, border-dashed coral/45) — offset 30px
@@ -407,7 +407,7 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
 - **Categoria**: UI · Consistência
 - **Descrição**: Os capability cards (4 cards: Sala instantânea, Deck Fibonacci, Reveal coletivo, Timer crítico) tinham numeral "01"..."04" em `font-italic italic text-coral text-[18px]` e hover que mudava apenas border-color. A referência usa numerais italic serif muito maiores (28-32px) + hover lift (`translate-y` + shadow grow).
 - **Impacto**: Pequena alavanca visual mas de alta recorrência (4 cards visíveis por viewport, primeira seção após hero). Os cards deixam de parecer "feature grid SaaS" e ganham peso editorial de "card numerado".
-- **Evidência**: `screenshots/before/audit-landing-vp-1440-full.png` (seção III — CAPABILIDADES, numeral 18px coral italic)
+- **Evidência**: `screenshots/before/UX-016-before-landing-pre-iter-4.png` (Landing vp-1440 full, seção III — CAPABILIDADES com numeral 18px Playfair italic)
 - **Solução proposta**:
   1. Numeral: `font-italic italic text-coral text-[18px]` → `font-serif italic text-coral text-[28px]` (Instrument Serif). Adicionar `leading-none`.
   2. Card wrapper: adicionar `hover:-translate-y-1 hover:shadow-md transition-all duration-200`.
@@ -428,7 +428,7 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
 - **Categoria**: Identidade · Parity entre rotas
 - **Descrição**: NotFound (UX-001 fix do iter-1) já tem voz editorial Atelier Zero, mas está desalinhado com a nova linguagem visual do Landing (UX-012..UX-016): usa Inter Tight p/ h2 (não serif display Instrument Serif), não tem composição editorial ao lado do card, metadata strip é mais simples. Após o upgrade do Landing, NotFound precisa de **parity visual**.
 - **Impacto**: Sem parity, o usuário que cai no 404 depois de navegar pela Landing percebe um "downgrade" de qualidade visual — quebra a promessa "Atelier Zero". A 404 é a página mais importante para reter quem chega via deep-link stale ou share URL expirado.
-- **Evidência**: `screenshots/before/audit-not-found-vp-1440-full.png` (current state, antes da parity)
+- **Evidência**: `screenshots/before/UX-017-before-not-found-pre-iter-4.png` (NotFound vp-1440 full, current state pré-iter-4: pós-iter-1 fix com 404 editorial + Inter Tight h2 'Voto perdido no vazio', sem metadata strip estilo Landing, sem sticky nav, sem 2-column stage)
 - **Solução proposta**:
   1. Metadata strip top reescrito para seguir o padrão Landing (pulse dot coral + 'Vol. 01 · Issue Nº 26 · Pointly · PT-BR' esquerda + 'Voto perdido · Status 404' direita).
   2. Sticky nav adicionado — brand link Ø Pointly + label 'Rota não encontrada' (parity com o nav sticky do Landing).
@@ -489,7 +489,7 @@ Auditoria foi gerada em 2026-07-05 a partir de:
 - Branch: `ux-review-main`
 - HEAD inicial: `78caef2` (origin/main)
 - HEAD atual: ver `git log -1`
-- Specs: `tests/ux/12-audit-routes.spec.ts`, `tests/ux/13-audit-elements.spec.ts`, `tests/ux/14-audit-after.spec.ts`, `tests/ux/15-ux-011-regression.spec.ts`, `tests/ux/16-iter-4-after.spec.ts` (iter-4: UX-012..UX-017)
+- Specs: `tests/ux/12-audit-routes.spec.ts`, `tests/ux/13-audit-elements.spec.ts`, `tests/ux/14-audit-after.spec.ts`, `tests/ux/15-ux-011-regression.spec.ts`, `tests/ux/16-iter-4-after.spec.ts` (iter-4: UX-012..UX-017), `tests/ux/17-a11y-iter-4-multi-vp.spec.ts` (axe-core em vp-360/768/1440 para Landing + NotFound)
 - Raw: `docs/ux-review/raw-observations.md`, `docs/ux-review/iter-4-audit.md` (análise visual Pointly × Open Design reference)
 - Mudanças de código: `apps/web/src/index.css` (tokens + Instrument Serif import + .sec-rule .roman), `apps/web/tailwind.config.ts` (fontFamily.serif + boxShadow.coral), `apps/web/src/routes.tsx`, `apps/web/src/lib/ws-client.ts`, `apps/web/src/lib/use-arena-loop.ts`, `apps/web/src/pages/{not-found.tsx (reescrito em iter-4),arena.tsx,landing.tsx (hero + capabilities em iter-4)}`, `apps/web/src/components/empty-overlay.tsx`, `apps/web/src/components/ui/button.tsx` (inalterado — tokens cascateiam).
 
@@ -497,5 +497,5 @@ Para reproduzir:
 
 ```bash
 git checkout ux-review-main
-cd tests/ux && bunx playwright test 12-audit-routes 13-audit-elements 14-audit-after 15-ux-011-regression 16-iter-4-after --project=desktop
+cd tests/ux && bunx playwright test 12-audit-routes 13-audit-elements 14-audit-after 15-ux-011-regression 16-iter-4-after 17-a11y-iter-4-multi-vp --project=desktop
 ```
