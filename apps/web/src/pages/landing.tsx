@@ -303,7 +303,7 @@ export function Landing() {
 			</nav>
 
 			{/* Section Rule I - Hero */}
-			<SectionRule roman="I." title="INTRODUÇÃO · VOTAÇÃO EFÊMERA" page="PAGE 001" />
+			<SectionRule roman="01" title="INTRODUÇÃO · VOTAÇÃO EFÊMERA" page="PAGE 001" />
 
 			{/* HERO — Roman I */}
 			<section
@@ -321,7 +321,7 @@ export function Landing() {
 						</div>
 						<h1
 							data-testid="hero-headline"
-							className="font-display font-extrabold text-[clamp(40px,5vw,80px)] leading-[1.02] tracking-[-0.04em]"
+							className="font-serif font-normal text-[clamp(40px,5vw,80px)] leading-[1.02] tracking-[-0.03em]"
 						>
 							Vote com{" "}
 							<em className="font-italic italic font-normal text-ink-soft">
@@ -405,77 +405,66 @@ export function Landing() {
 						</div>
 					</div>
 
-					{/* Stylized Cards Illustration (Hero) */}
-					<div className="w-full relative min-h-[480px] bg-paper-warm border border-ink/5 rounded-3xl flex items-center justify-center overflow-hidden shadow-bone">
-						<div className="relative w-80 h-80 flex items-center justify-center">
-							{/* Card 1: '3' */}
-							<div className="absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[-16deg] -translate-x-28 translate-y-3 transition-all duration-300 hover:rotate-[-6deg] hover:-translate-y-6 hover:-translate-x-[8.5rem] hover:scale-105 hover:z-20 z-0">
-								<span className="font-italic italic text-[56px] text-ink select-none">
-									3
-								</span>
-							</div>
-							{/* Card 2: '☕' */}
-							<div className="absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[16deg] translate-x-28 translate-y-5 transition-all duration-300 hover:rotate-[6deg] hover:-translate-y-6 hover:translate-x-[8.5rem] hover:scale-105 hover:z-20 z-0">
-								<div className="flex flex-col items-center justify-center select-none pt-4">
-									<svg
-										viewBox="0 0 100 100"
-										className="w-20 h-20 text-ink relative overflow-visible"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="3.5"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										aria-hidden="true"
-									>
-										{/* Linhas de vapor animadas */}
-										<path
-											d="M42,28 Q39,18 43,10 T41,-4"
-											className="animate-steam-1 stroke-ink/40"
-										/>
-										<path
-											d="M50,28 Q53,16 47,8 T51,-8"
-											className="animate-steam-2 stroke-ink/40"
-										/>
-										<path
-											d="M58,28 Q55,18 59,10 T57,-4"
-											className="animate-steam-3 stroke-ink/40"
-										/>
+					{/* Hero editorial collage (UX-015) */}
+					<div
+						className="w-full relative min-h-[480px] bg-paper-warm border border-ink/5 rounded-3xl overflow-hidden shadow-bone flex items-center justify-center"
+						aria-hidden="true"
+					>
+						<div className="relative w-[340px] h-[340px]">
+							{/* Terracota solid circle (back layer) */}
+							<div className="absolute inset-x-0 top-2 mx-auto w-[260px] h-[260px] rounded-full bg-coral" />
 
-										{/* Corpo da Xícara */}
-										<path
-											d="M28,35 L72,35 L68,70 C67,76 61,82 54,82 L46,82 C39,82 33,76 32,70 Z"
-											fill="currentColor"
-											fillOpacity="0.05"
-										/>
-										{/* Alça */}
-										<path d="M72,45 C78,45 82,50 81,56 C80,62 73,63 72,63" />
-										{/* Prato */}
-										<path d="M20,88 L80,88" strokeWidth="4" />
-									</svg>
-								</div>
-							</div>
-							{/* Card 3: '5' (Destaque Central) */}
-							<div className="absolute w-44 h-60 bg-surface border-2 border-coral rounded-2xl shadow-xl flex flex-col items-center justify-center transition-all duration-300 z-10 hover:-translate-y-6 hover:scale-105 hover:z-20">
-								<span className="font-italic italic text-[68px] leading-none text-coral select-none">
-									5
-								</span>
-								<span className="font-mono text-[11px] tracking-[0.2em] uppercase text-coral/80 mt-2">
-									Mediana
-								</span>
-							</div>
+							{/* Dotted outline circle (offset 30px right/down) */}
+							<div className="absolute inset-0 m-auto w-[300px] h-[300px] rounded-full border-2 border-dashed border-coral/45" />
+
+							{/* Monumental serif glyph */}
+							<span className="absolute inset-0 flex items-center justify-center font-serif italic text-[220px] leading-none text-paper-warm select-none">
+								<span className="-translate-y-3">Ø</span>
+							</span>
+
+							{/* Botanical SVG accents — 3 folhas */}
+							<svg
+								viewBox="0 0 60 60"
+								className="absolute top-3 left-4 w-12 h-12 text-coral-soft"
+								fill="currentColor"
+								aria-hidden="true"
+							>
+								<path d="M30 6 C 16 14, 12 32, 30 54 C 48 32, 44 14, 30 6 Z M30 12 L30 50" stroke="currentColor" strokeWidth="1" fill="none" />
+							</svg>
+							<svg
+								viewBox="0 0 60 60"
+								className="absolute bottom-6 right-3 w-10 h-10 text-coral-soft rotate-45"
+								fill="currentColor"
+								aria-hidden="true"
+							>
+								<path d="M30 6 C 16 14, 12 32, 30 54 C 48 32, 44 14, 30 6 Z M30 12 L30 50" stroke="currentColor" strokeWidth="1" fill="none" />
+							</svg>
+							<svg
+								viewBox="0 0 60 60"
+								className="absolute bottom-12 left-10 w-8 h-8 text-coral-soft -rotate-12"
+								fill="currentColor"
+								aria-hidden="true"
+							>
+								<path d="M30 6 C 16 14, 12 32, 30 54 C 48 32, 44 14, 30 6 Z M30 12 L30 50" stroke="currentColor" strokeWidth="1" fill="none" />
+							</svg>
+
+							{/* Mono plate label (bottom-right) */}
+							<span className="absolute bottom-4 right-4 font-mono text-[9px] tracking-[0.18em] uppercase text-coral-soft/90">
+								Fig. 01 · Atelier
+							</span>
 						</div>
 					</div>
 				</div>
 			</section>
 
 			{/* Section Rule II - About */}
-			<SectionRule roman="II." title="CONVERSAÇÃO · FOCO EM TIMES" page="PAGE 002" />
+			<SectionRule roman="02" title="CONVERSAÇÃO · FOCO EM TIMES" page="PAGE 002" />
 
 			{/* ABOUT */}
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-20 relative">
 				<div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-16 items-center">
 					<div className="flex flex-col items-start">
-						<h2 className="font-display font-extrabold text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.035em]">
+						<h2 className="font-serif font-normal text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.03em]">
 							Times ágeis estimam{" "}
 							<em className="font-italic italic font-normal text-ink-soft">
 								conversando
@@ -496,7 +485,7 @@ export function Landing() {
 			</section>
 
 			{/* Section Rule III - Capabilities */}
-			<SectionRule roman="III." title="CAPABILIDADES · FUNCIONALIDADES" page="PAGE 003" />
+			<SectionRule roman="03" title="CAPABILIDADES · FUNCIONALIDADES" page="PAGE 003" />
 
 			{/* CAPABILITIES */}
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative">
@@ -505,11 +494,11 @@ export function Landing() {
 						<Card
 							key={cap.n}
 							padding="md"
-							className="flex flex-col gap-3 bg-surface border border-ink/10 rounded-2xl shadow-bone hover:border-coral transition-colors duration-300"
+							className="flex flex-col gap-3 bg-surface border border-ink/10 rounded-2xl shadow-bone hover:border-coral hover:-translate-y-1 hover:shadow-md transition-all duration-200"
 							data-testid={`cap-card-${cap.n}`}
 						>
 							<div className="flex justify-between items-baseline font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint">
-								<span className="font-italic italic text-coral text-[18px] tracking-normal normal-case font-medium">
+								<span className="font-serif italic text-coral text-[28px] tracking-normal normal-case font-normal leading-none">
 									{cap.n}
 								</span>
 								<span>Feature</span>
@@ -526,7 +515,7 @@ export function Landing() {
 			</section>
 
 			{/* Section Rule IV - Dark Showcase */}
-			<SectionRule roman="IV." title="DEMONSTRAÇÃO · FLUXO DE VOTO" page="PAGE 004" />
+			<SectionRule roman="04" title="DEMONSTRAÇÃO · FLUXO DE VOTO" page="PAGE 004" />
 
 			{/* DARK SHOWCASE CONTAINER (Section 6 Style) */}
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-12">
@@ -536,7 +525,7 @@ export function Landing() {
 						<div className="font-mono text-[10px] tracking-[0.2em] text-coral uppercase mb-4">
 							ESTADO DE VOTAÇÃO
 						</div>
-						<h2 className="font-display font-extrabold text-[clamp(28px,3.5vw,52px)] leading-[1.05] tracking-[-0.03em]">
+						<h2 className="font-serif font-normal text-[clamp(28px,3.5vw,52px)] leading-[1.05] tracking-[-0.03em]">
 							Escolhas secretas que viram{" "}
 							<em className="font-italic italic font-normal text-coral-soft">
 								consenso memorável
@@ -569,12 +558,12 @@ export function Landing() {
 			</section>
 
 			{/* Section Rule V - Call to Action */}
-			<SectionRule roman="V." title="RECOMENDAÇÃO · COMEÇAR JÁ" page="PAGE 005" />
+			<SectionRule roman="05" title="RECOMENDAÇÃO · COMEÇAR JÁ" page="PAGE 005" />
 
 			{/* CTA RIBBON */}
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative">
 				<div className="bg-paper-dark rounded-3xl px-8 lg:px-16 py-16 text-center relative overflow-hidden border border-ink/5 shadow-bone">
-					<h2 className="font-display font-extrabold text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.035em] max-w-[24ch] mx-auto">
+					<h2 className="font-serif font-normal text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.03em] max-w-[24ch] mx-auto">
 						Pronto pra começar<span className="text-coral">?</span>
 					</h2>
 					<p className="font-sans text-[15px] lg:text-[16px] leading-[1.7] text-ink-mute max-w-[50ch] mx-auto mt-4">

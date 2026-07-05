@@ -159,11 +159,12 @@ export function Arena() {
 	const uuid = getStoredUUID();
 
 	// Conecta ao WS server via composition hook (T38-T41)
-	const { castVote, requestReveal, requestNewRound, throwProjectile } = useArenaLoop({
-		nick,
-		code: urlCode,
-		uuid,
-	});
+	const { castVote, requestReveal, requestNewRound, throwProjectile } =
+		useArenaLoop({
+			nick,
+			code: urlCode,
+			uuid,
+		});
 
 	const sala = useSalaStore((s) => s.sala);
 	const currentPlayerId = useSalaStore((s) => s.currentPlayerId);
@@ -280,43 +281,38 @@ export function Arena() {
 		>
 			{/* Topbar metadata strip */}
 			<header className="border-b border-ink/10 py-2.5 flex-shrink-0">
-				<div className="w-full px-8 flex items-center justify-between font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint">
-					<div className="flex items-center gap-4">
-						<span
-							aria-hidden="true"
-							className="inline-block w-1.5 h-1.5 rounded-full bg-coral animate-pulse"
-						/>
+				<div className="max-w-[1360px] mx-auto px-6 flex items-center justify-between">
+					<div className="flex items-center gap-4 flex-wrap">
 						<Link
 							to="/"
-							className="font-display font-extrabold text-[15px] tracking-[-0.02em] text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors"
-							aria-label="Sair da sala e voltar para a página inicial"
+							className="font-display font-extrabold text-[18px] tracking-[-0.03em] flex items-baseline gap-1.5 hover:text-coral transition-colors flex-shrink-0"
 						>
-							<span className="font-italic italic text-coral text-[18px] leading-none">
+							<span className="font-italic italic text-coral text-[20px] leading-none">
 								Ø
 							</span>
 							Pointly
 						</Link>
-						<span className="hidden">
-							Sala{" "}
-							<span className="text-ink font-medium" data-testid="arena-code">
-								{code || "—"}
+						<span className="font-mono text-[9px] text-ink-faint uppercase tracking-wider flex items-center gap-1.5 flex-wrap">
+							<span>
+								Sala{" "}
+								<span className="text-ink font-medium" data-testid="arena-code">
+									{code || "—"}
+								</span>
+							</span>
+							<span>·</span>
+							<span data-testid="arena-round">
+								Rodada {String(sala?.round ?? 1).padStart(2, "0")}
+							</span>
+							<span>·</span>
+							<span data-testid="arena-self-nick">
+								Você ·{" "}
+								<span className="text-ink font-medium">{me?.nick ?? "—"}</span>
 							</span>
 						</span>
 					</div>
 					<SharePill code={code} />
 				</div>
 			</header>
-
-			{/* Arena head: rodape removido — info já vive no Topbar (timer/stats pills).
-			 * Strip "Rodada NN" e "Você · {nick}" ficaram ruidosos sem info nova. */}
-			<div className="hidden">
-				<span data-testid="arena-round-hidden-stub">
-					Rodada {String(sala?.round ?? 1).padStart(2, "0")}
-				</span>
-				<span data-testid="arena-self-nick-hidden-stub">
-					Você · <span className="text-ink">{me?.nick ?? "—"}</span>
-				</span>
-			</div>
 
 			{/* Stage */}
 			<main
@@ -332,6 +328,13 @@ export function Arena() {
 				<div className="hidden md:block absolute top-3.5 right-12 z-10">
 					<TimerPill />
 				</div>
+
+				{/* Empty overlay (sala solo): banner NÃO-bloqueante acima da mesa.
+				   Renderizado antes da mesa para não competir com o deck no
+				   bottom-8. Substitui o modal antigo (UX-011 / iter-3 hotfix). */}
+				{isOnlyPlayer && code && (
+					<EmptyOverlay key={emptyOverlayNonce} code={code} />
+				)}
 
 				{/* Mesa: Ellipse + 12 Seats + RevealButton central */}
 				<div
@@ -381,14 +384,18 @@ export function Arena() {
 						);
 					})}
 
-					{/* RevealButton central */}
-					<RevealButton
-						phase={phase}
-						votedCount={votedCount}
-						totalPlayers={sala?.players.length ?? 0}
-						onReveal={handleReveal}
-						onNewRound={handleNewRound}
-					/>
+					{/* UX-005: esconde RevealButton enquanto não há jogadores
+					   conectados. Sem isso o botão "AGUARDANDO 0 JOGADORES…"
+					   compete por atenção com o CTA de invite. */}
+					{sala !== null && sala.players.length > 0 && (
+						<RevealButton
+							phase={phase}
+							votedCount={votedCount}
+							totalPlayers={sala.players.length}
+							onReveal={handleReveal}
+							onNewRound={handleNewRound}
+						/>
+					)}
 
 					{/* Animações de arremessos */}
 					<ProjectileAnimator />
@@ -396,7 +403,7 @@ export function Arena() {
 
 				{/* Deck dock (bottom center) */}
 				<div
-					className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
+					className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 fib-deck-responsive-wrapper sm:w-auto sm:max-w-none"
 					data-testid="arena-deck-wrapper"
 				>
 					<Deck
@@ -405,14 +412,6 @@ export function Arena() {
 						onSelect={handleCardSelect}
 					/>
 				</div>
-
-				{/* Empty overlay (condicional: sala só com você) */}
-				{isOnlyPlayer && code && (
-					<EmptyOverlay
-						key={emptyOverlayNonce}
-						code={code}
-					/>
-				)}
 
 				{/* Help modal (atalhos de teclado) — abre com ? */}
 				<HelpModal open={openHelp} onClose={() => setOpenHelp(false)} />

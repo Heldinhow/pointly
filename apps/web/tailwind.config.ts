@@ -44,10 +44,13 @@ const config: Config = {
 			// ---------------------------------------------------------
 			// Font families — Inter Tight, Playfair, Inter, JetBrains Mono
 			// ---------------------------------------------------------
-			fontFamily: {
-				// Display / sans: headlines
+fontFamily: {
+				// Display / sans: h3, h4 e UI labels
 				display: ['"Inter Tight"', "system-ui", "sans-serif"],
-				// Italic emphasis / serif (numerais Fibonacci, brand Ø)
+				// Display / serif: h1, h2 editorial headlines (UX-012)
+				// High-contrast didone-inspired — alinhado com referência Open Design
+				serif: ['"Instrument Serif"', '"Playfair Display"', "Georgia", "serif"],
+				// Italic emphasis / serif (numerais Fibonacci, brand Ø, mega wordmark)
 				italic: ['"Playfair Display"', "Georgia", "serif"],
 				// Body
 				sans: ['"Inter"', "system-ui", "sans-serif"],
@@ -81,8 +84,8 @@ const config: Config = {
 			// ---------------------------------------------------------
 			boxShadow: {
 				bone: "0 30px 60px -30px rgba(21, 20, 15, 0.15)",
-				// CTA coral — shadow coral 0,14,26,-16 (do plan.md)
-				coral: "0 14px 26px -16px rgba(237, 111, 92, 0.6)",
+				// CTA terracota — shadow atualizado para novo hue (UX-014)
+				coral: "0 14px 26px -16px rgba(210, 74, 42, 0.6)",
 			},
 		},
 	},

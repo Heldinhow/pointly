@@ -53,3 +53,7 @@ playwright-report/
 # screenshots & audit
 *.png
 audit/
+
+# exceptions — evidence PNGs from the UX audit (docs/ux-review/screenshots/{before,after}/)
+!docs/ux-review/screenshots/**/*.png
+!docs/ux-review/screenshots/**/.gitkeep
