@@ -17,7 +17,11 @@ services:
       PORT: "3001"
       NODE_ENV: "production"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3001/health >/dev/null 2>&1 || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:3001/health >/dev/null 2>&1 || exit 1",
+        ]
       interval: 30s
       timeout: 5s
       start_period: 15s
@@ -87,7 +91,11 @@ services:
       server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1",
+        ]
       interval: 30s
       timeout: 5s
       start_period: 10s
