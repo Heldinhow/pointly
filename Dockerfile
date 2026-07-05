@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 # Pointly — Bun monorepo (apps/web + apps/server + packages/shared)
-ARG BUN_VERSION=1.1.42
+ARG BUN_VERSION=1.2.19
 
 # ----------------------------------------------------------------------------
 # deps: install all workspace deps (dev + prod) so build stages can use Vite/etc.
