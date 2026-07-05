@@ -321,7 +321,7 @@ export function Landing() {
 						</div>
 						<h1
 							data-testid="hero-headline"
-							className="font-display font-extrabold text-[clamp(40px,5vw,80px)] leading-[1.02] tracking-[-0.04em]"
+							className="font-serif font-normal text-[clamp(40px,5vw,80px)] leading-[1.02] tracking-[-0.03em]"
 						>
 							Vote com{" "}
 							<em className="font-italic italic font-normal text-ink-soft">
@@ -475,7 +475,7 @@ export function Landing() {
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-20 relative">
 				<div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-16 items-center">
 					<div className="flex flex-col items-start">
-						<h2 className="font-display font-extrabold text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.035em]">
+						<h2 className="font-serif font-normal text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.03em]">
 							Times ágeis estimam{" "}
 							<em className="font-italic italic font-normal text-ink-soft">
 								conversando
@@ -536,7 +536,7 @@ export function Landing() {
 						<div className="font-mono text-[10px] tracking-[0.2em] text-coral uppercase mb-4">
 							ESTADO DE VOTAÇÃO
 						</div>
-						<h2 className="font-display font-extrabold text-[clamp(28px,3.5vw,52px)] leading-[1.05] tracking-[-0.03em]">
+						<h2 className="font-serif font-normal text-[clamp(28px,3.5vw,52px)] leading-[1.05] tracking-[-0.03em]">
 							Escolhas secretas que viram{" "}
 							<em className="font-italic italic font-normal text-coral-soft">
 								consenso memorável
@@ -574,7 +574,7 @@ export function Landing() {
 			{/* CTA RIBBON */}
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative">
 				<div className="bg-paper-dark rounded-3xl px-8 lg:px-16 py-16 text-center relative overflow-hidden border border-ink/5 shadow-bone">
-					<h2 className="font-display font-extrabold text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.035em] max-w-[24ch] mx-auto">
+					<h2 className="font-serif font-normal text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.03em] max-w-[24ch] mx-auto">
 						Pronto pra começar<span className="text-coral">?</span>
 					</h2>
 					<p className="font-sans text-[15px] lg:text-[16px] leading-[1.7] text-ink-mute max-w-[50ch] mx-auto mt-4">

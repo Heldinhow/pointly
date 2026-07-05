@@ -44,10 +44,13 @@ const config: Config = {
 			// ---------------------------------------------------------
 			// Font families — Inter Tight, Playfair, Inter, JetBrains Mono
 			// ---------------------------------------------------------
-			fontFamily: {
-				// Display / sans: headlines
+fontFamily: {
+				// Display / sans: h3, h4 e UI labels
 				display: ['"Inter Tight"', "system-ui", "sans-serif"],
-				// Italic emphasis / serif (numerais Fibonacci, brand Ø)
+				// Display / serif: h1, h2 editorial headlines (UX-012)
+				// High-contrast didone-inspired — alinhado com referência Open Design
+				serif: ['"Instrument Serif"', '"Playfair Display"', "Georgia", "serif"],
+				// Italic emphasis / serif (numerais Fibonacci, brand Ø, mega wordmark)
 				italic: ['"Playfair Display"', "Georgia", "serif"],
 				// Body
 				sans: ['"Inter"', "system-ui", "sans-serif"],

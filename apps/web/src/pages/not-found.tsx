@@ -91,7 +91,7 @@ export function NotFound() {
 						404<span className="text-coral">.</span>
 					</h1>
 
-					<h2 className="font-display font-extrabold text-[28px] leading-[1.1] tracking-tight">
+					<h2 className="font-serif italic font-normal text-[clamp(28px,3vw,44px)] leading-[1.05] tracking-[-0.03em]">
 						Voto perdido no vazio
 						<span className="text-coral">.</span>
 					</h2>
