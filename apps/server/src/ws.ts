@@ -25,6 +25,7 @@ import { handleCastVote } from "./handlers/cast-vote";
 import { handleHello } from "./handlers/hello";
 import { handleRevealVotes } from "./handlers/reveal-votes";
 import { handleStartNewRound } from "./handlers/start-new-round";
+import { handleThrowProjectile } from "./handlers/throw-projectile";
 import { Logger } from "./ws-logger";
 import { RateLimiter } from "./ws-rate-limit";
 
@@ -278,6 +279,8 @@ export class WSService {
 				return this.handleLeaveRoomEvent(ws);
 			case "ping":
 				return this.handlePingEvent(ws);
+			case "throw_projectile":
+				return this.handleThrowProjectileEvent(ws, event.payload);
 		}
 	}
 
@@ -444,6 +447,33 @@ export class WSService {
 		ws.data.lastPongAt = Date.now();
 		this.sendEvent(ws, { type: "pong", payload: {} });
 	}
+
+	private handleThrowProjectileEvent(
+		ws: BunWS,
+		payload: import("@planning-poker/shared").ThrowProjectilePayload,
+	): void {
+		const playerId = ws.data.playerId;
+		if (!playerId) {
+			this.sendError(ws, "invalid_phase", "Sala desconhecida.");
+			return;
+		}
+		const outcome = handleThrowProjectile(this.hub, playerId, payload);
+		if (!outcome.ok) {
+			this.sendError(ws, outcome.code, outcome.message);
+			return;
+		}
+		const code = ws.data.code!;
+		this.broadcast(code, {
+			type: "projectile_thrown",
+			payload: {
+				senderPlayerId: playerId,
+				targetPlayerId: payload.targetPlayerId,
+				projectileType: payload.projectileType,
+				outcome: outcome.outcome,
+			},
+		});
+	}
+
 
 	// -----------------------------------------------------------------------
 	// Broadcast helpers

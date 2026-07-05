@@ -60,6 +60,23 @@ export type LeaveRoomPayload = z.infer<typeof LeaveRoomPayloadSchema>;
 export const PingPayloadSchema = z.object({}).strict();
 export type PingPayload = z.infer<typeof PingPayloadSchema>;
 
+export const ProjectileTypeSchema = z.enum([
+	"paper_ball",
+	"tomato",
+	"coffee",
+	"rubber_duck",
+	"star",
+	"heart",
+	"claps",
+]);
+export type ProjectileType = z.infer<typeof ProjectileTypeSchema>;
+
+export const ThrowProjectilePayloadSchema = z.object({
+	targetPlayerId: z.string().min(1),
+	projectileType: ProjectileTypeSchema,
+}).strict();
+export type ThrowProjectilePayload = z.infer<typeof ThrowProjectilePayloadSchema>;
+
 /**
  * Discriminated union de todos os eventos C→S.
  * Server dispatcha por `event.type` (T17).
@@ -77,8 +94,10 @@ export const ClientToServerEventSchema = z.discriminatedUnion("type", [
 	}),
 	z.object({ type: z.literal("leave_room"), payload: LeaveRoomPayloadSchema }),
 	z.object({ type: z.literal("ping"), payload: PingPayloadSchema }),
+	z.object({ type: z.literal("throw_projectile"), payload: ThrowProjectilePayloadSchema }),
 ]);
 export type ClientToServerEvent = z.infer<typeof ClientToServerEventSchema>;
+
 
 // ---------------------------------------------------------------------------
 // Server → Client events
@@ -222,6 +241,17 @@ export type ErrorEvent = z.infer<typeof ErrorEventSchema>;
 export const PongPayloadSchema = z.object({}).strict();
 export type PongPayload = z.infer<typeof PongPayloadSchema>;
 
+export const ProjectileOutcomeSchema = z.enum(["hit", "dodge", "deflect"]);
+export type ProjectileOutcome = z.infer<typeof ProjectileOutcomeSchema>;
+
+export const ProjectileThrownEventSchema = z.object({
+	senderPlayerId: z.string().min(1),
+	targetPlayerId: z.string().min(1),
+	projectileType: ProjectileTypeSchema,
+	outcome: ProjectileOutcomeSchema,
+}).strict();
+export type ProjectileThrownEvent = z.infer<typeof ProjectileThrownEventSchema>;
+
 /**
  * Discriminated union de todos os eventos S→C.
  * Client dispatcha por `event.type` (T23).
@@ -246,5 +276,7 @@ export const ServerToClientEventSchema = z.discriminatedUnion("type", [
 	z.object({ type: z.literal("sala_ended"), payload: SalaEndedEventSchema }),
 	z.object({ type: z.literal("error"), payload: ErrorEventSchema }),
 	z.object({ type: z.literal("pong"), payload: PongPayloadSchema }),
+	z.object({ type: z.literal("projectile_thrown"), payload: ProjectileThrownEventSchema }),
 ]);
 export type ServerToClientEvent = z.infer<typeof ServerToClientEventSchema>;
+

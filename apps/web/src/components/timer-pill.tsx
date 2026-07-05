@@ -21,13 +21,14 @@ import { cn } from "./ui/utils";
 /** Threshold crítico (segundos). Match com store CRITICAL_THRESHOLD_SECONDS. */
 const CRITICAL_THRESHOLD = 30;
 
-/** Formata segundos em MM:SS. */
+/** Formata segundos em MM:SS (legacy) ou `Ns` (0..60). */
 export function formatTimer(seconds: number): string {
 	const clamped = Math.max(0, Math.min(99, Math.floor(seconds)));
-	// Timer da arena vai de 0..60 — mostramos como "00:SS" pra combinar
-	// com o wireframe legado (vide design/arena.html `00:${t}`).
+	// Timer da arena vai de 0..60. Para ≤60 (incl. 60) mostramos só o numeral
+	// em segundos (BUG-201): "60", "30", "0". Acima de 60 usamos MM:SS legado
+	// (defesa em profundidade — fora do range normal do timer).
 	if (clamped <= 60) {
-		return `00:${String(clamped).padStart(2, "0")}`;
+		return String(clamped);
 	}
 	const mm = Math.floor(clamped / 60);
 	const ss = clamped % 60;

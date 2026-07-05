@@ -229,3 +229,55 @@ a[role="button"] {
 		rgba(236, 228, 207, 0) 100%
 	);
 }
+
+/* ---------------------------------------------------------------
+ * Projectile throwing and reaction animations
+ * --------------------------------------------------------------- */
+@keyframes projectile-x {
+  from { left: var(--from-x); }
+  to { left: var(--to-x); }
+}
+@keyframes projectile-y {
+  from { top: var(--from-y); }
+  to { top: var(--to-y); }
+}
+@keyframes projectile-arc {
+  0% { transform: translateY(0) scale(0.6); }
+  50% { transform: translateY(-120px) scale(1.5); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+.animate-proj-x {
+  animation: projectile-x var(--duration, 0.7s) linear forwards;
+}
+.animate-proj-y {
+  animation: projectile-y var(--duration, 0.7s) linear forwards, projectile-arc var(--duration, 0.7s) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes hit-shake {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  15%, 45%, 75% { transform: scale(0.92) rotate(-4deg); }
+  30%, 60% { transform: scale(1.08) rotate(4deg); }
+}
+.animate-hit-shake {
+  animation: hit-shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes dodge-slide {
+  0%, 100% { transform: translate(0, 0); }
+  25%, 75% { transform: translate(var(--dodge-x, 40px), var(--dodge-y, -10px)); }
+}
+.animate-dodge-slide {
+  animation: dodge-slide 0.7s cubic-bezier(0.25, 0.8, 0.25, 1) both;
+}
+
+@keyframes reaction-fade-up {
+  0% { transform: translateY(10px) scale(0.5); opacity: 0; }
+  15% { transform: translateY(-10px) scale(1.3); opacity: 1; }
+  85% { transform: translateY(-25px) scale(1); opacity: 1; }
+  100% { transform: translateY(-35px) scale(0.8); opacity: 0; }
+}
+.animate-reaction-fade-up {
+  animation: reaction-fade-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+

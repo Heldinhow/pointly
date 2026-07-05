@@ -1,5 +1,5 @@
 /**
- * Empty sala overlay — T36 (Phase 6).
+ * Empty sala overlay — T36 (Phase 6) / T06 (Phase 4 fix).
  *
  * Overlay "Convide outros" mostrado quando a sala tem apenas o player local
  * (`selectIsOnlyPlayer` = sala.players.length === 1 && players[0].id === currentPlayerId).
@@ -13,6 +13,15 @@
  * **Persistência**:
  *  - sessionStorage key 'pointly.dismissedEmpty' para não mostrar de novo
  *  - na mesma sessão (dismissado uma vez)
+ *  - T06/BUG-102: o pai (`arena.tsx`) **reseta** essa flag quando
+ *    `phase === 'voting' && players.length === 1` numa nova transição,
+ *    forçando re-show após reveal→nova rodada em sala solo.
+ *    O re-show é feito via `<EmptyOverlay key={nonce} />` — cada key
+ *    novo reinicia o `useState` interno (leitura fresca do sessionStorage).
+ *
+ * **Auto-dismiss removido (BUG-305)**: clicar "Copiar link" NÃO fecha mais
+ * o overlay. O usuário decide quando fechar via "Entrar na mesa" ou Esc.
+ * Feedback continua com `Copiado ✓` durante o ciclo de vida do componente.
  *
  * **A11y**:
  *  - role="dialog" + aria-modal="true"
@@ -22,12 +31,15 @@
  *
  * @see .specs/features/planning-poker-v1/tasks.md T36
  * @see .specs/features/planning-poker-v1/spec.md F-033
+ * @see .compozy/tasks/pointly-ux-hardening/task_06.md
  */
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-
-const DISMISSED_KEY = "pointly.dismissedEmpty";
+import {
+	getDismissedEmpty,
+	setDismissedEmpty,
+} from "../lib/storage";
 
 /** Hook utilitário pra construir a share URL (SPA router). */
 export function buildShareUrl(origin: string, code: string): string {
@@ -38,32 +50,29 @@ export function buildShareUrl(origin: string, code: string): string {
 export interface EmptyOverlayProps {
 	/** Código da sala ativo (exibido na URL). */
 	code: string;
-	/** Callback quando user clica 'Entrar na mesa mesmo assim'. */
-	onDismiss: () => void;
+	/**
+	 * Callback quando user clica 'Entrar na mesa mesmo assim' ou pressiona
+	 * Esc. **Opcional** desde T06/BUG-304. A dismissal é controlada
+	 * inteiramente por sessionStorage interno — passar `undefined`
+	 * significa "não me importo com o evento". Útil pra analytics futura.
+	 */
+	onDismiss?: () => void;
 	/** Override opcional pra URL absoluta (default: window.location.origin). */
 	shareUrl?: string;
 }
 
 export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 	const [copied, setCopied] = useState(false);
-	// Inicializa direto do sessionStorage pra evitar flicker
+	// Inicializa direto do sessionStorage (via helper) pra evitar flicker
 	// (overlay aparece → useEffect roda → some = CLS ruim).
-	const [dismissed, setDismissed] = useState<boolean>(() => {
-		try {
-			return sessionStorage.getItem(DISMISSED_KEY) === "1";
-		} catch {
-			return false;
-		}
-	});
+	const [dismissed, setDismissed] = useState<boolean>(() =>
+		getDismissedEmpty(),
+	);
 
 	const handleDismiss = useCallback(() => {
 		setDismissed(true);
-		try {
-			sessionStorage.setItem(DISMISSED_KEY, "1");
-		} catch {
-			// ignore
-		}
-		onDismiss();
+		setDismissedEmpty();
+		onDismiss?.();
 	}, [onDismiss]);
 
 	const handleCopy = useCallback(async () => {
@@ -71,8 +80,6 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 		try {
 			await navigator.clipboard.writeText(url);
 			setCopied(true);
-			// Auto-dismiss após copiar: UX — user copiou o link, overlay não precisa mais
-			setTimeout(() => handleDismiss(), 1200);
 		} catch {
 			// Fallback: select text
 			const input = document.getElementById(
@@ -82,7 +89,7 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 				input.select();
 			}
 		}
-	}, [code, shareUrl, handleDismiss]);
+	}, [code, shareUrl]);
 
 	// Esc fecha
 	useEffect(() => {

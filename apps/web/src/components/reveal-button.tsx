@@ -97,6 +97,13 @@ export function RevealButton({
 			disabled={disabled}
 			aria-label={ariaLabel}
 			aria-disabled={disabled}
+			aria-keyshortcuts={
+				state === "ready"
+					? "R"
+					: state === "post-reveal"
+						? "N"
+						: undefined
+			}
 			onClick={handleClick}
 			data-testid="reveal-button"
 			data-od-id="reveal-button"

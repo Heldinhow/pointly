@@ -20,7 +20,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
-import { Pill } from "../components/ui/pill";
 
 /** Máximo de jogadores por sala (consistente com SalaState.players.max). */
 const MAX_PLAYERS = 12;
@@ -132,13 +131,6 @@ export function Full() {
 						>
 							Voltar
 						</Button>
-					</div>
-
-					{/* Pill decorativa: código de status */}
-					<div className="mt-2 flex">
-						<Pill variant="critical" size="sm">
-							<span aria-hidden="true">●</span> error · sala_cheia
-						</Pill>
 					</div>
 				</Card>
 			</main>

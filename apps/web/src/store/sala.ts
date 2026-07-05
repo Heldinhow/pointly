@@ -95,6 +95,13 @@ export type SalaStoreActions = {
 	dismissToast: () => void;
 	/** Reset completo (logout / reconnect novo). */
 	reset: () => void;
+	/**
+	 * Decrementa `sala.timer` em 1 e recomputa `critical` (timer > 0 && timer ≤ 30).
+	 * No-op quando `phase !== 'voting'` ou `timer <= 0` (server enviará `phase: 'revealed'`).
+	 * Mutação puramente client-side: o servidor reconcilia via `room_state` broadcasts
+	 * a cada 10s (T01). Ver ADR-002.
+	 */
+	tickTimer: () => void;
 };
 
 export type SalaStore = SalaStoreState & SalaStoreActions;
@@ -237,6 +244,19 @@ export const useSalaStore = create<SalaStore>()((set) => ({
 	pushToast: (text, kind = "info") => set({ ui: { toast: { kind, text } } }),
 
 	dismissToast: () => set((s) => ({ ui: { ...s.ui, toast: null } })),
+
+	tickTimer: () =>
+		set((s) => {
+			if (!s.sala) return s;
+			if (s.sala.phase !== "voting") return s;
+			const nextTimer = Math.max(0, s.sala.timer - 1);
+			if (nextTimer === s.sala.timer) return s;
+			const critical = nextTimer > 0 && nextTimer <= CRITICAL_THRESHOLD_SECONDS;
+			return {
+				sala: { ...s.sala, timer: nextTimer },
+				critical,
+			};
+		}),
 
 	reset: () => set({ ...INITIAL_STATE }),
 }));

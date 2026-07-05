@@ -26,7 +26,7 @@
  * @see .specs/features/planning-poker-v1/tasks.md T27
  * @see .specs/features/planning-poker-v1/spec.md F-031 (F-ID US-5)
  */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -65,6 +65,22 @@ const CAPABILITIES = [
 export function Landing() {
 	const navigate = useNavigate();
 	const [joinCode, setJoinCode] = useState("");
+	// BUG-103 / ADR-004: hide-on-scroll do CTA coral do sticky-nav quando o
+	// CTA coral do hero entra no viewport. Em ≤767px o CTA sticky é excluído
+	// via CSS (hero domina). IntersectionObserver monitora o hero CTA.
+	const heroCtaRef = useRef<HTMLButtonElement | null>(null);
+	const [heroVisible, setHeroVisible] = useState(false);
+
+	useEffect(() => {
+		const el = heroCtaRef.current;
+		if (!el) return;
+		const obs = new IntersectionObserver(
+			(entries) => setHeroVisible(entries[0]?.isIntersecting ?? false),
+			{ threshold: 0.1, rootMargin: "0px 0px -10% 0px" },
+		);
+		obs.observe(el);
+		return () => obs.disconnect();
+	}, []);
 
 	function handleCreateRoom(): void {
 		// Server gera code no `hello` (vide ADR-0009). Navega sem code,
@@ -102,6 +118,14 @@ export function Landing() {
 					size="sm"
 					onClick={handleCreateRoom}
 					data-testid="cta-nav-create-room"
+					className="cta-sticky-nav"
+					aria-hidden={heroVisible}
+					tabIndex={heroVisible ? -1 : 0}
+					style={{
+						opacity: heroVisible ? 0 : 1,
+						pointerEvents: heroVisible ? "none" : "auto",
+						transition: "opacity 200ms ease",
+					}}
 				>
 					Criar sala
 					<span aria-hidden="true">↗</span>
@@ -147,6 +171,8 @@ export function Landing() {
 								size="lg"
 								onClick={handleCreateRoom}
 								data-testid="cta-create-room"
+								ref={heroCtaRef}
+								id="hero-create-room-cta"
 							>
 								Criar sala
 								<span aria-hidden="true">↗</span>
@@ -292,7 +318,7 @@ export function Landing() {
 
 			{/* CAPABILITIES */}
 			<section className="max-w-[1360px] mx-auto px-16 py-24 relative border-t border-ink/5">
-				<div className="grid grid-cols-4 gap-4 mt-12">
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-12">
 					{CAPABILITIES.map((cap) => (
 						<Card
 							key={cap.n}
@@ -372,44 +398,10 @@ export function Landing() {
 							Produto
 						</h4>
 						<a
-							href="https://github.com"
-							className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors"
-						>
-							GitHub
-						</a>
-						<a
-							href="/changelog"
-							className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors"
-						>
-							Changelog
-						</a>
-					</div>
-					<div className="flex flex-col gap-3">
-						<h4 className="font-display font-bold text-[13px] tracking-[-0.02em] uppercase">
-							Recursos
-						</h4>
-						<a
-							href="/docs"
-							className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors"
-						>
-							Documentação
-						</a>
-						<a
-							href="/privacy"
-							className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors"
-						>
-							Privacidade
-						</a>
-					</div>
-					<div className="flex flex-col gap-3">
-						<h4 className="font-display font-bold text-[13px] tracking-[-0.02em] uppercase">
-							Contato
-						</h4>
-						<a
 							href="mailto:hello@pointly.dev"
 							className="font-mono text-[12px] text-ink-mute hover:text-coral transition-colors"
 						>
-							hello@pointly.dev
+							Contato
 						</a>
 					</div>
 				</div>

@@ -36,7 +36,7 @@
  * @see .specs/features/planning-poker-v1/tasks.md T30
  * @see .specs/features/planning-poker-v1/spec.md F-007, F-053
  */
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import { useSearchParams, Link, useBlocker } from "react-router-dom";
 import { buildShareUrl } from "../components/empty-overlay";
 import { cn } from "../components/ui/utils";
@@ -45,10 +45,14 @@ import { EmptyOverlay } from "../components/empty-overlay";
 import { Ellipse } from "../components/ui/ellipse";
 import { RevealButton } from "../components/reveal-button";
 import { Seat } from "../components/seat";
+import { HelpModal } from "../components/help-modal";
+import { useKeyboardShortcuts } from "../lib/use-keyboard-shortcuts";
 import { StatsPill } from "../components/stats-pill";
 import { TimerPill } from "../components/timer-pill";
 import { useArenaLoop, getStoredUUID } from "../lib/use-arena-loop";
+import { getNick, resetDismissedEmpty } from "../lib/storage";
 import { useSalaStore } from "../store/sala";
+import { ProjectileAnimator } from "../components/projectile-animator";
 
 /** Raio da mesa em pixels (vide arena.html R_x=420 R_y=240). */
 const TABLE_RX = 420;
@@ -148,19 +152,14 @@ export function Arena() {
 	const [searchParams] = useSearchParams();
 	const urlCode = (searchParams.get("code") || "").toUpperCase();
 
-	// Lê nick pré-preenchido do localStorage (UX: se user voltou, preenche)
-	const [nick] = useState<string>(() => {
-		try {
-			return localStorage.getItem("pointly.nick") ?? "";
-		} catch {
-			return "";
-		}
-	});
+	// Lê nick pré-preenchido do sessionStorage (T08 / ADR-006).
+	// Tab-close apaga; preenche se voltou na mesma aba.
+	const [nick] = useState<string>(() => getNick() ?? "");
 	// UUID persistente (ADR-0009)
 	const uuid = getStoredUUID();
 
 	// Conecta ao WS server via composition hook (T38-T41)
-	const { castVote, requestReveal, requestNewRound } = useArenaLoop({
+	const { castVote, requestReveal, requestNewRound, throwProjectile } = useArenaLoop({
 		nick,
 		code: urlCode,
 		uuid,
@@ -174,10 +173,29 @@ export function Arena() {
 		return players.length === 1 && players[0]?.id === s.currentPlayerId;
 	});
 
+	// T06/BUG-102 — re-show EmptyOverlay em sala solo após reveal→nova rodada.
+	// Quando `phase === 'voting'` E `players.length === 1` numa nova transição
+	// (incluindo o primeiro mount), resetamos o flag de sessionStorage e
+	// incrementamos um nonce pra forçar `<EmptyOverlay key={nonce} />` a
+	// re-montar e re-ler o storage do zero. `phase` é declarado mais
+	// abaixo no componente (linha ~246) — usamos `sala?.phase` direto
+	// aqui pra evitar shadowing.
+	const [emptyOverlayNonce, setEmptyOverlayNonce] = useState(0);
+	const isSoloVoting = isOnlyPlayer && (sala?.phase ?? "idle") === "voting";
+	const prevSoloVotingRef = useRef(false);
+	useEffect(() => {
+		const was = prevSoloVotingRef.current;
+		prevSoloVotingRef.current = isSoloVoting;
+		if (isSoloVoting && !was) {
+			resetDismissedEmpty();
+			setEmptyOverlayNonce((n) => n + 1);
+		}
+	}, [isSoloVoting]);
+
 	// Intercepta navegações internas da SPA quando o usuário está em uma sala ativa
 	const blocker = useBlocker(
-		({ currentValue, nextLocation }) =>
-			sala !== null && currentValue.pathname !== nextLocation.pathname,
+		({ currentLocation, nextLocation }) =>
+			sala !== null && currentLocation.pathname !== nextLocation.pathname,
 	);
 
 	useEffect(() => {
@@ -251,6 +269,26 @@ export function Arena() {
 		requestNewRound();
 	}
 
+	// T09 / BUG-306 / ADR-007 — atalhos de teclado.
+	// `R` revela (qualquer player, fase voting, ≥1 voto),
+	// `N` inicia nova rodada (qualquer player, fase revealed),
+	// `?` / `/` abre help modal, `Esc` fecha modais/overlays.
+	// Sem host-gate: ADR-0002 diz que reveal/new-round são ações de
+	// qualquer player (regra democratizada).
+	const [openHelp, setOpenHelp] = useState(false);
+	useKeyboardShortcuts({
+		helpKey: "?",
+		shortcuts: {
+			R: () => {
+				if (phase === "voting" && votedCount > 0) handleReveal();
+			},
+			N: () => {
+				if (phase === "revealed") handleNewRound();
+			},
+			"?": () => setOpenHelp(true),
+		},
+	});
+
 	return (
 		<div
 			data-testid="page-arena"
@@ -285,18 +323,13 @@ export function Arena() {
 				</div>
 			</header>
 
-			{/* Arena head: round + nick */}
-			<div className="max-w-[1480px] mx-auto px-12 w-full py-3.5 flex items-center justify-between flex-shrink-0 hidden">
-				<span
-					className="font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint"
-					data-testid="arena-round"
-				>
+			{/* Arena head: rodape removido — info já vive no Topbar (timer/stats pills).
+			 * Strip "Rodada NN" e "Você · {nick}" ficaram ruidosos sem info nova. */}
+			<div className="hidden">
+				<span data-testid="arena-round-hidden-stub">
 					Rodada {String(sala?.round ?? 1).padStart(2, "0")}
 				</span>
-				<span
-					className="font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint"
-					data-testid="arena-self-nick"
-				>
+				<span data-testid="arena-self-nick-hidden-stub">
 					Você · <span className="text-ink">{me?.nick ?? "—"}</span>
 				</span>
 			</div>
@@ -358,6 +391,7 @@ export function Arena() {
 									faceUp={faceUp}
 									votedMedian={Boolean(isMedianVote)}
 									unanimous={unanimous}
+									onThrow={throwProjectile}
 								/>
 							</div>
 						);
@@ -371,6 +405,9 @@ export function Arena() {
 						onReveal={handleReveal}
 						onNewRound={handleNewRound}
 					/>
+
+					{/* Animações de arremessos */}
+					<ProjectileAnimator />
 				</div>
 
 				{/* Deck dock (bottom center) */}
@@ -388,12 +425,13 @@ export function Arena() {
 				{/* Empty overlay (condicional: sala só com você) */}
 				{isOnlyPlayer && code && (
 					<EmptyOverlay
+						key={emptyOverlayNonce}
 						code={code}
-						onDismiss={() => {
-							/* já é dismissado; sessão local */
-						}}
 					/>
 				)}
+
+				{/* Help modal (atalhos de teclado) — abre com ? */}
+				<HelpModal open={openHelp} onClose={() => setOpenHelp(false)} />
 			</main>
 		</div>
 	);

@@ -21,4 +21,12 @@ if (typeof globalThis.document === "undefined") {
 	g.Node = dom.window.Node;
 	g.Text = dom.window.Text;
 	g.getComputedStyle = dom.window.getComputedStyle;
+	// T08 — storage helper tests precisam de sessionStorage global.
+	// jsdom expõe a Session Storage API no window; copia pra globalThis.
+	if (dom.window.sessionStorage) {
+		g.sessionStorage = dom.window.sessionStorage;
+	}
+	if (dom.window.localStorage) {
+		g.localStorage = dom.window.localStorage;
+	}
 }

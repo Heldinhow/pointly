@@ -51,3 +51,19 @@ _Avoid_: baralho, cards, conjunto
 **Timer**:
 Contador regressivo de 60 segundos por rodada. Entra em estado crítico (coral) quando ≤30s; auto-reveal ao chegar a zero.
 _Avoid_: cronômetro, contagem
+
+**Projétil**:
+Objeto virtual arremessável (ex: tomate, café, patinho de borracha) que possui animação e efeitos visuais próprios.
+_Avoid_: munição, bola, objeto
+
+**Arremesso**:
+O ato de lançar um Projétil de um Assento de origem para um Assento de destino, sujeito a um Cooldown.
+_Avoid_: lance, tiro, jogada
+
+**Desfecho**:
+O resultado físico/visual de um Arremesso determinado pelo servidor (ex: acerto, desvio, rebote).
+_Avoid_: resultado, fim
+
+**Cooldown**:
+O intervalo obrigatório de 5 segundos que um Player precisa aguardar entre Arremessos.
+_Avoid_: tempo de recarga, espera, delay

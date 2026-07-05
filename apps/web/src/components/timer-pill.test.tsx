@@ -6,20 +6,44 @@ import { render, screen } from "./ui/test-helpers";
 import { TimerPill, formatRound, formatTimer } from "./timer-pill";
 
 describe("formatTimer / formatRound — T34 pure helpers", () => {
-	test("formatTimer(60) → '00:60'", () => {
-		expect(formatTimer(60)).toBe("00:60");
+	test("formatTimer(60) → '60' (BUG-201: nunca '00:60')", () => {
+		expect(formatTimer(60)).toBe("60");
 	});
 
-	test("formatTimer(42) → '00:42'", () => {
-		expect(formatTimer(42)).toBe("00:42");
+	test("formatTimer(42) → '42'", () => {
+		expect(formatTimer(42)).toBe("42");
 	});
 
-	test("formatTimer(0) → '00:00'", () => {
-		expect(formatTimer(0)).toBe("00:00");
+	test("formatTimer(30) → '30' (limite crítico)", () => {
+		expect(formatTimer(30)).toBe("30");
 	});
 
-	test("formatTimer(-5) clampa para '00:00'", () => {
-		expect(formatTimer(-5)).toBe("00:00");
+	test("formatTimer(1) → '1'", () => {
+		expect(formatTimer(1)).toBe("1");
+	});
+
+	test("formatTimer(0) → '0' (auto-reveal imminent)", () => {
+		expect(formatTimer(0)).toBe("0");
+	});
+
+	test("formatTimer(-5) clampa para '0'", () => {
+		expect(formatTimer(-5)).toBe("0");
+	});
+
+	test("formatTimer(99) → '01:39' (clamp a 99 — formato MM:SS legado)", () => {
+		// Clamp interno em 99. 99/60 = 1min 39s.
+		expect(formatTimer(99)).toBe("01:39");
+	});
+
+	test("formatTimer(125) → '01:39' (clamp a 99 antes do MM:SS)", () => {
+		// 125 é clamped a 99 → mesmo resultado de formatTimer(99).
+		expect(formatTimer(125)).toBe("01:39");
+	});
+
+	test("formatTimer nunca retorna '00:60' (BUG-201 regression)", () => {
+		[0, 1, 15, 30, 45, 60, 75, 99].forEach((s) => {
+			expect(formatTimer(s)).not.toBe("00:60");
+		});
 	});
 
 	test("formatRound(1) → 'ROUND 01'", () => {
@@ -32,10 +56,16 @@ describe("formatTimer / formatRound — T34 pure helpers", () => {
 });
 
 describe("TimerPill — render (com props diretas, sem store)", () => {
-	test("renderiza '00:42 · ROUND 03' para timer=42 round=3", () => {
+	test("renderiza '42 · ROUND 03' para timer=42 round=3 (BUG-201)", () => {
 		render(<TimerPill timer={42} round={3} />);
-		expect(screen.getByTestId("timer-value")).toHaveTextContent("00:42");
+		expect(screen.getByTestId("timer-value")).toHaveTextContent("42");
 		expect(screen.getByTestId("timer-round")).toHaveTextContent("ROUND 03");
+	});
+
+	test("renderiza '60' para timer=60 (nunca '00:60')", () => {
+		render(<TimerPill timer={60} round={1} />);
+		expect(screen.getByTestId("timer-value")).toHaveTextContent("60");
+		expect(screen.getByTestId("timer-value").textContent).not.toContain("00:60");
 	});
 
 	test("critical=true (timer ≤30) aplica bg-coral-soft + border coral", () => {

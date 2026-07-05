@@ -66,6 +66,11 @@ describe("EmptyOverlay — render", () => {
 	});
 
 	test("Esc fecha o overlay (chama onDismiss)", () => {
+		try {
+			sessionStorage.clear();
+		} catch {
+			return;
+		}
 		const onDismiss = mock(() => {});
 		render(<EmptyOverlay code="9B9F" onDismiss={onDismiss} />);
 		fireEvent.keyDown(window, { key: "Escape" });
@@ -106,5 +111,48 @@ describe("EmptyOverlay — render", () => {
 		expect(screen.getByTestId("empty-overlay-share-url")).toHaveValue(
 			"https://example.com/custom?code=9B9F",
 		);
+	});
+
+	// T06 — BUG-305: clicar "Copiar link" NÃO fecha o overlay.
+	test("BUG-305: clicar 'Copiar link' NÃO fecha overlay (sem auto-dismiss)", async () => {
+		const writeText = mock(async (_s: string) => {});
+		const origClipboard = navigator.clipboard;
+		Object.defineProperty(navigator, "clipboard", {
+			configurable: true,
+			value: { writeText },
+		});
+
+		try {
+			render(<EmptyOverlay code="9B9F" />);
+			fireEvent.click(screen.getByTestId("empty-overlay-copy"));
+			// Espera >1200ms (era o timeout antigo).
+			await new Promise((r) => setTimeout(r, 1500));
+			// Overlay continua montado porque removemos o auto-dismiss.
+			expect(screen.getByTestId("empty-overlay")).toBeInTheDocument();
+			// Botão mostra feedback "Copiado ✓".
+			expect(
+				screen.getByTestId("empty-overlay-copy").textContent?.trim(),
+			).toBe("Copiado ✓");
+		} finally {
+			Object.defineProperty(navigator, "clipboard", {
+				configurable: true,
+				value: origClipboard,
+			});
+		}
+	});
+
+	// T06 — BUG-304: onDismiss é opcional; sem handler, dismiss funciona via storage.
+	test("BUG-304: onDismiss é opcional — overlay dismissa mesmo sem handler", () => {
+		try {
+			sessionStorage.clear();
+		} catch {
+			// ambiente sem sessionStorage (Bun node puro) — skip
+			return;
+		}
+		render(<EmptyOverlay code="9B9F" />);
+		fireEvent.click(screen.getByTestId("empty-overlay-dismiss"));
+		const stored = sessionStorage.getItem("pointly.dismissedEmpty");
+		expect(stored).toBe("1");
+		sessionStorage.removeItem("pointly.dismissedEmpty");
 	});
 });

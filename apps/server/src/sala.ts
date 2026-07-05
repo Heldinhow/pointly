@@ -95,6 +95,13 @@ export class Sala {
 	 */
 	private readonly disconnectedAt: Map<string, number> = new Map();
 
+	/**
+	 * Server-internal: timestamp (epoch ms) do último arremesso de cada player.
+	 * NÃO vai no wire format. Usado para validar o cooldown de 5 segundos.
+	 */
+	private readonly lastThrownAt: Map<string, number> = new Map();
+
+
 	constructor(code: string, firstPlayer: Player, now: number = Date.now()) {
 		if (firstPlayer.role !== "host") {
 			throw new Error("first player must have role: 'host'");
@@ -354,6 +361,22 @@ export class Sala {
 			unanimous,
 		};
 	}
+
+	/**
+	 * Valida e registra o arremesso de um projétil de um player.
+	 * Valida o cooldown de 5 segundos.
+	 */
+	throwProjectile(senderId: string, now: number = Date.now()): void {
+		const last = this.lastThrownAt.get(senderId) ?? 0;
+		if (now - last < 5000) {
+			throw new SalaError(
+				"invalid_phase",
+				"Aguarde o cooldown para arremessar novamente."
+			);
+		}
+		this.lastThrownAt.set(senderId, now);
+	}
+
 
 	/**
 	 * Qualquer player pode iniciar nova rodada (sem role check — ADR-0002).

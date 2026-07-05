@@ -30,16 +30,15 @@ import { Card } from "../components/ui/card";
 import { ConnectionStatus } from "../components/ui/connection-status";
 import { useToast } from "../components/ui/toast";
 import { useSalaStore } from "../store/sala";
+import {
+	getNick,
+	getUUID,
+	setCode,
+	setNick,
+} from "../lib/storage";
 
 const NICK_MIN = 2;
 const NICK_MAX = 20;
-
-/** LocalStorage key pro UUID persistente (ADR-0009). */
-const UUID_KEY = "pointly.uuid";
-/** LocalStorage key pro nick pré-preenchido. */
-const NICK_KEY = "pointly.nick";
-/** LocalStorage key pro code ativo. */
-const CODE_KEY = "pointly.code";
 
 /** Resultado de validação do apelido. */
 export type NickValidation =
@@ -67,28 +66,6 @@ export function validateNick(input: string): NickValidation {
 	return { ok: true, value: v };
 }
 
-/** Lê ou gera UUID persistente (browser-only). */
-function getOrCreateUUID(): string {
-	try {
-		const stored = localStorage.getItem(UUID_KEY);
-		if (stored && /^[0-9a-f-]{36}$/i.test(stored)) return stored;
-		const uuid =
-			typeof crypto !== "undefined" && crypto.randomUUID
-				? crypto.randomUUID()
-				: // Fallback para ambientes sem crypto.randomUUID (testes jsdom).
-					"00000000-0000-4000-8000-000000000000".replace(/[018]/g, (c) => {
-						const r = Math.random() * 16;
-						const v = c === "0" ? r : (r & 0x3) | 0x8;
-						return v.toString(16);
-					});
-		localStorage.setItem(UUID_KEY, uuid);
-		return uuid;
-	} catch {
-		// localStorage indisponível (teste ssr / modo anônimo)
-		return "00000000-0000-4000-8000-000000000000";
-	}
-}
-
 export function Join() {
 	const [searchParams] = useSearchParams();
 	const navigate = useNavigate();
@@ -102,12 +79,9 @@ export function Join() {
 	// -------------------------------------------------------------------------
 	// State local
 	// -------------------------------------------------------------------------
-	const [nick, setNick] = useState<string>(() => {
-		try {
-			return localStorage.getItem(NICK_KEY) ?? "";
-		} catch {
-			return "";
-		}
+	const [nick, setNickState] = useState<string>(() => {
+		// T08: nick pré-preenchido vem de sessionStorage (privacidade-by-default).
+		return getNick() ?? "";
 	});
 	const [validation, setValidation] = useState<NickValidation>({
 		ok: false,
@@ -133,7 +107,7 @@ export function Join() {
 	// Handlers
 	// -------------------------------------------------------------------------
 	const handleNickChange = useCallback((value: string) => {
-		setNick(value);
+		setNickState(value);
 		setValidation(validateNick(value));
 	}, []);
 
@@ -147,17 +121,14 @@ export function Join() {
 			setIsConnecting(true);
 			setConnectionState("connecting");
 
-			// Gera/recupera UUID persistente (ADR-0009). Será usado em T38
-			// quando integrarmos com ws-client real. Por ora o stub não envia.
-			getOrCreateUUID();
+			// Gera/recupera UUID persistente (ADR-0009). T08: sessionStorage.
+			// Será usado em T38 quando integrarmos com ws-client real.
+			getUUID();
 
-			// Persist nick + code localmente (UX: preenche se voltar)
-			try {
-				localStorage.setItem(NICK_KEY, result.value);
-				if (code) localStorage.setItem(CODE_KEY, code);
-			} catch {
-				// ignore — localStorage indisponível
-			}
+			// Persiste nick + code na sessionStorage (UX: preenche se voltou
+			// na mesma aba). Tab-close apaga automaticamente (ADR-006).
+			setNick(result.value);
+			if (code) setCode(code);
 
 			toast.push(`Bem-vindo, ${result.value}.`, "success");
 
@@ -211,11 +182,10 @@ export function Join() {
 
 			{/* Header strip */}
 			<div className="max-w-[1360px] mx-auto px-16 w-full py-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-ink-faint">
-				<span>Entrar</span>
 				<span>
 					Sala:{" "}
 					<span className="text-ink font-medium" data-testid="join-code-label">
-						{codeLabel}
+						{isHost && !code ? "será gerada ao entrar" : codeLabel}
 					</span>
 				</span>
 			</div>
@@ -284,9 +254,7 @@ export function Join() {
 							value={nick}
 							onChange={(e) => handleNickChange(e.target.value)}
 							aria-label="Seu nome na sala"
-							aria-invalid={
-								!validation.ok && !validation.ok && validation.error !== ""
-							}
+							aria-invalid={!validation.ok && validation.error !== ""}
 							aria-describedby={
 								!validation.ok && validation.error ? "nick-error" : undefined
 							}
@@ -323,12 +291,6 @@ export function Join() {
 							>
 								Voltar
 							</Button>
-							<Link
-								to="/"
-								className="font-mono text-[11px] tracking-[0.06em] uppercase text-ink-faint hover:text-coral transition-colors ml-auto"
-							>
-								← criar outra sala
-							</Link>
 						</div>
 					</form>
 				</Card>

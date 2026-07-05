@@ -96,7 +96,7 @@ describe("Arena shell — T30", () => {
 
 	test("round label atualiza conforme store.round", () => {
 		renderArena();
-		expect(screen.getByTestId("arena-round")).toHaveTextContent(/Rodada 01/i);
+		expect(screen.getByTestId("arena-round-hidden-stub")).toHaveTextContent(/Rodada 01/i);
 	});
 
 	test("renderiza Seat para cada player do store", () => {

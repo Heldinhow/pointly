@@ -34,7 +34,9 @@ import { createNewRoundLoop } from "./new-round-loop";
 import { createRevealLoop } from "./reveal-loop";
 import { createSalaEndLoop, type SalaEndHooks } from "./sala-end-loop";
 import { createVoteLoop } from "./vote-loop";
+import { createProjectileLoop } from "./projectile-loop";
 import { createWSClient, type WSClient } from "./ws-client";
+import { getUUID } from "./storage";
 
 /** Parâmetros do hook. */
 export interface UseArenaLoopParams {
@@ -42,31 +44,17 @@ export interface UseArenaLoopParams {
 	nick: string;
 	/** Código da sala (opcional — vazio = cria nova). */
 	code: string;
-	/** UUID persistente do player (ADR-0009). */
+	/** UUID persistente do player (ADR-0009 / T08 → sessionStorage). */
 	uuid: string;
 	/** Override da URL WS (default: import.meta.env.VITE_WS_URL ou ws://localhost:3001/ws). */
 	wsUrl?: string;
 }
 
-/** Lê UUID de localStorage (helper exportado pra testes). */
-export function getStoredUUID(): string {
-	try {
-		const stored = localStorage.getItem("pointly.uuid");
-		if (stored && /^[0-9a-f-]{36}$/i.test(stored)) return stored;
-	} catch {
-		// ignore
-	}
-	const uuid =
-		typeof crypto !== "undefined" && crypto.randomUUID
-			? crypto.randomUUID()
-			: "00000000-0000-4000-8000-000000000000";
-	try {
-		localStorage.setItem("pointly.uuid", uuid);
-	} catch {
-		// ignore
-	}
-	return uuid;
-}
+// `getStoredUUID` agora é re-exportado de `./storage` (T08 / ADR-006).
+// Antes lia de `localStorage`; agora via `sessionStorage` (tab-close apaga).
+// O nome é preservado pra não quebrar call-sites existentes.
+/** Re-export: nome legado `getStoredUUID` agora aponta para storage.getUUID. */
+export const getStoredUUID = getUUID;
 
 /** Hook principal. */
 export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
@@ -80,6 +68,7 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 		reveal: ReturnType<typeof createRevealLoop>;
 		newRound: ReturnType<typeof createNewRoundLoop>;
 		salaEnd: ReturnType<typeof createSalaEndLoop>;
+		projectile: ReturnType<typeof createProjectileLoop>;
 	} | null>(null);
 	const nickRef = useRef(nick);
 	const codeRef = useRef(code);
@@ -153,11 +142,12 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 					store.getState().removePlayerById(event.payload.playerId);
 					return;
 				}
-				// Delega para os 4 loops
+				// Delega para os loops
 				voteLoop.dispatch(event);
 				revealLoop.dispatch(event);
 				newRoundLoop.dispatch(event);
 				salaEndLoop.dispatch(event);
+				projectileLoop.dispatch(event);
 			},
 		});
 
@@ -167,6 +157,7 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 		const revealLoop = createRevealLoop(wsClient, store.getState());
 		const newRoundLoop = createNewRoundLoop(wsClient, store.getState());
 		const salaEndLoop = createSalaEndLoop(store.getState(), hooks);
+		const projectileLoop = createProjectileLoop(wsClient);
 
 		// Wrapper pra monitorar abertura
 		// (criar wrapper porque createWSClient não tem onOpen callback —
@@ -187,6 +178,7 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 			reveal: revealLoop,
 			newRound: newRoundLoop,
 			salaEnd: salaEndLoop,
+			projectile: projectileLoop,
 		};
 
 		// Phase 8 (T42): expõe `sala` e `consensus` no `window` para E2E
@@ -228,6 +220,24 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 		};
 	}, [navigate, toast, wsUrl, sendHello]);
 
+	// Phase 1 (T02 — BUG-101): ticker cliente para o timer visual.
+	// Decrementa `sala.timer` a cada 1s enquanto `phase === 'voting'`.
+	// Servidor é a fonte da verdade — `room_state` broadcasts a cada 10s
+	// reconciliam qualquer drift (ADR-002). Server não tem `fired` aqui:
+	// quando o server dispara auto-reveal, ele manda `phase: 'revealed'`
+	// via `room_state` e o `setSala` faz o ticker parar naturalmente.
+	const phase = useSalaStore((s) => s.sala?.phase ?? "idle");
+	useEffect(() => {
+		if (phase !== "voting") return;
+		const id = setInterval(() => {
+			const current = useSalaStore.getState().sala;
+			if (!current || current.phase !== "voting") return;
+			if (current.timer <= 0) return; // server will send 'revealed' shortly
+			useSalaStore.getState().tickTimer();
+		}, 1000);
+		return () => clearInterval(id);
+	}, [phase]);
+
 	// Helpers expostos (estáveis via useCallback)
 	const castVote = useCallback((value: Vote) => {
 		loopsRef.current?.vote.castVote(value);
@@ -241,9 +251,14 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 		loopsRef.current?.newRound.requestNewRound();
 	}, []);
 
+	const throwProjectile = useCallback((targetPlayerId: string, projectileType: import("@planning-poker/shared").ProjectileType) => {
+		loopsRef.current?.projectile.throwProjectile(targetPlayerId, projectileType);
+	}, []);
+
 	return {
 		castVote,
 		requestReveal,
 		requestNewRound,
+		throwProjectile,
 	};
 }
