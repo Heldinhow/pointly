@@ -12,7 +12,6 @@ COPY package.json bun.lock bunfig.toml ./
 COPY apps/web/package.json ./apps/web/
 COPY apps/server/package.json ./apps/server/
 COPY packages/shared/package.json ./packages/shared/
-COPY tests/e2e/package.json ./tests/e2e/ 2>/dev/null || true
 RUN --mount=type=cache,target=/root/.bun/install/cache \
     bun install --frozen-lockfile
 
