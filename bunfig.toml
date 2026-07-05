@@ -12,6 +12,7 @@
 exact = false
 auto = "auto"
 saveTextLockfile = false
+linker = "hoisted"
 
 [run]
 bun = true
