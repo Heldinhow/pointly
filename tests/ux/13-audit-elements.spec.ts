@@ -120,12 +120,10 @@ test("UX-002 — landing side rails overlap hero @ 390px", async ({ page }) => {
 		return { hasHero: true, rails: out };
 	});
 
-	test
-		.info()
-		.annotations.push({
-			type: "ux-002-evidence",
-			description: JSON.stringify(collision),
-		});
+	test.info().annotations.push({
+		type: "ux-002-evidence",
+		description: JSON.stringify(collision),
+	});
 	expect(collision.hasHero, "hero h1 exists").toBe(true);
 	await shot(page, "UX-002-landing-rail-collision-390", false);
 });
@@ -158,25 +156,38 @@ test("UX-003 — empty arena has prominent share/invite affordance (post-fix)", 
 	await enterBtn.click();
 	await page.waitForURL(/\/arena/, { timeout: 8000 });
 	// Aguarda WS handshake + welcome do servidor para o sala se popular.
-	await page.waitForFunction(
-		() => document.querySelector("[data-testid='arena-code']")?.textContent !== "—",
-		{ timeout: 8000 },
-	).catch(() => {/* pode demorar pra popular */});
+	await page
+		.waitForFunction(
+			() =>
+				document.querySelector("[data-testid='arena-code']")?.textContent !==
+				"—",
+			{ timeout: 8000 },
+		)
+		.catch(() => {
+			/* pode demorar pra popular */
+		});
 	await page.waitForTimeout(1_500);
 
 	const probe = await page.evaluate(() => {
 		// UX-003 / UX-011 consolidados (iter-3): EmptyOverlay virou banner não-bloqueante.
 		const overlay = document.querySelector("[data-testid='empty-overlay']");
-		const copyBtn = document.querySelector("[data-testid='empty-overlay-copy']");
-		const dismissBtn = document.querySelector("[data-testid='empty-overlay-dismiss']");
+		const copyBtn = document.querySelector(
+			"[data-testid='empty-overlay-copy']",
+		);
+		const dismissBtn = document.querySelector(
+			"[data-testid='empty-overlay-dismiss']",
+		);
 		const overlayText = overlay?.textContent ?? "";
-		const hasBlockingClass = overlay?.className?.includes("absolute inset-0") ?? false;
+		const hasBlockingClass =
+			overlay?.className?.includes("absolute inset-0") ?? false;
 		return {
 			hasOverlayBlock: !!overlay,
 			hasCopyBtn: !!copyBtn,
 			hasDismissBtn: !!dismissBtn,
 			hasCodeReference: /[A-Z0-9]{4}/.test(overlayText),
-			hasConviteWords: /convide|compartilh|primeiro jogador|jogador/i.test(overlayText),
+			hasConviteWords: /convide|compartilh|primeiro jogador|jogador/i.test(
+				overlayText,
+			),
 			notBlocking: !hasBlockingClass,
 			overlayTextSample: overlayText.slice(0, 160),
 		};
@@ -191,7 +202,10 @@ test("UX-003 — empty arena has prominent share/invite affordance (post-fix)", 
 	expect(probe.hasOverlayBlock, "EmptyOverlay banner presente").toBe(true);
 	expect(probe.hasCopyBtn, "EmptyOverlay tem botão Copiar link").toBe(true);
 	expect(probe.hasCodeReference, "EmptyOverlay cita código 'ABCD'").toBe(true);
-	expect(probe.notBlocking, "EmptyOverlay NÃO tem absolute inset-0 (não-bloqueante)").toBe(true);
+	expect(
+		probe.notBlocking,
+		"EmptyOverlay NÃO tem absolute inset-0 (não-bloqueante)",
+	).toBe(true);
 });
 
 // =========================================================================
@@ -219,12 +233,10 @@ test("UX-004 — join-host primary CTA looks disabled when empty", async ({
 	});
 
 	await shot(page, "UX-004-join-host-empty-cta");
-	test
-		.info()
-		.annotations.push({
-			type: "ux-004-evidence",
-			description: JSON.stringify(ctaState),
-		});
+	test.info().annotations.push({
+		type: "ux-004-evidence",
+		description: JSON.stringify(ctaState),
+	});
 });
 
 // =========================================================================
@@ -353,12 +365,10 @@ test("UX-008 — deck mobile hides 0 and ☕ cards without clear peek", async ({
 		};
 	});
 
-	test
-		.info()
-		.annotations.push({
-			type: "ux-008-evidence",
-			description: JSON.stringify(cards),
-		});
+	test.info().annotations.push({
+		type: "ux-008-evidence",
+		description: JSON.stringify(cards),
+	});
 	await shot(page, "UX-008-deck-mobile-peek", false);
 	expect(cards.found).toBe(true);
 });
@@ -429,6 +439,7 @@ for (const path of [
 	"/join?host=1&code=ABCD",
 	"/arena?code=ABCD&host=1",
 	"/full?code=ZZZZ",
+	"/rota-inexistente",
 ]) {
 	test(`UX-010 — axe-core a11y @ ${path}`, async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 900 });
@@ -494,15 +505,13 @@ test("UX-011 — prefers-reduced-motion honored on landing", async ({
 		return moving;
 	});
 
-	test
-		.info()
-		.annotations.push({
-			type: "ux-011-evidence",
-			description: JSON.stringify({
-				movingCount: animations.length,
-				sample: animations.slice(0, 10),
-			}),
-		});
+	test.info().annotations.push({
+		type: "ux-011-evidence",
+		description: JSON.stringify({
+			movingCount: animations.length,
+			sample: animations.slice(0, 10),
+		}),
+	});
 	await shot(page, "UX-011-reduced-motion");
 	await context.close();
 });
