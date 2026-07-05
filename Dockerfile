@@ -29,7 +29,7 @@ COPY package.json bun.lock bunfig.toml ./
 COPY tsconfig.base.json ./
 COPY apps ./apps
 COPY packages ./packages
-RUN cd apps/web && bun run build
+RUN cd apps/web && bun x vite build
 
 # ----------------------------------------------------------------------------
 # base: shared runtime layer with source + node_modules (hoisted to /app)
