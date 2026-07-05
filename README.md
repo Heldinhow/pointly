@@ -198,3 +198,4 @@ Os ADRs detalham as escolhas técnicas:
 
 Projeto privado.
 # auto-deploy test Sat Jul  4 23:40:48 -03 2026
+<!-- last test: Sat Jul  4 23:41:44 -03 2026 -->
