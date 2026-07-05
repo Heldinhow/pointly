@@ -11,7 +11,7 @@ ENV NODE_ENV=development
 # Copy the full workspace tree so bun can resolve all workspaces during install.
 # Selective COPY of only manifests + lockfile fails because bun's --frozen-lockfile
 # needs to scan the actual workspace layout (apps/, packages/) to validate.
-COPY package.json bun.lock bunfig.toml ./
+COPY package.json bun.lockb bunfig.toml ./
 COPY tsconfig.base.json ./
 COPY apps ./apps
 COPY packages ./packages
@@ -25,7 +25,7 @@ FROM oven/bun:${BUN_VERSION}-alpine AS web-build
 WORKDIR /app
 ENV NODE_ENV=development
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json bun.lock bunfig.toml ./
+COPY package.json bun.lockb bunfig.toml ./
 COPY tsconfig.base.json ./
 COPY apps ./apps
 COPY packages ./packages
@@ -39,7 +39,7 @@ WORKDIR /app
 RUN apk add --no-cache tini
 ENV NODE_ENV=production BUN_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json bun.lock bunfig.toml ./
+COPY package.json bun.lockb bunfig.toml ./
 COPY tsconfig.base.json ./
 COPY apps ./apps
 COPY packages ./packages

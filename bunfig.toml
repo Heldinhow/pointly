@@ -1,14 +1,17 @@
 # Bun workspace + runtime config for Pointly
+#
+# saveTextLockfile = false: use binary bun.lockb instead of text bun.lock.
+# The text bun.lock format has known bugs with --frozen-lockfile validation
+# in monorepos (issues oven-sh/bun#19088, #20913, #26973, #28402) — Bun
+# detects phantom drift on re-resolve and refuses with "lockfile had
+# changes, but lockfile is frozen" even when no real changes occurred.
+# The binary bun.lockb format dodges the comparison entirely.
+# Requires Bun >= 1.3.0 to read bun.lockb.
 
 [install]
-# Lockfile for reproducibility
 exact = false
-
-# Auto-install peer dependencies
 auto = "auto"
-
-[install.scopes]
+saveTextLockfile = false
 
 [run]
-# Default to ESM (workspace is type=module in root package.json)
 bun = true
