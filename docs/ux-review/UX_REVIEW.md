@@ -45,20 +45,21 @@ Screenshot baseline antes das correções: **60 PNGs** em `screenshots/before/au
 ## 3. Findings
 
 Tabela principal (sort por sev → ID). Coluna **Evidência (before)** aponta
-sempre para um screenshot em `screenshots/before/`.
+sempre para um screenshot em `screenshots/before/`. Coluna **Issue** aponta
+para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
 
-| ID | Sev | Categoria | Título curto | Evidência (before) | Status |
-|----|-----|-----------|---------------|---------------------|--------|
-| [UX-001](#ux-001) | Alta | UX / fluxo · Navegação | 404 sem branding, ilustração ou CTA de retorno | `screenshots/before/UX-001-not-found-no-cta.png` | `pending-validation` |
-| [UX-002](#ux-002) | Alta | Responsividade · UI | Side rails colidem com hero em mobile (390/360) | `screenshots/before/UX-002-landing-rail-collision-390.png` | `pending-validation` |
-| [UX-006](#ux-006) | Alta | Feedback / Console | `ws-client` envia evento inválido em todo load da arena | (n/a — console warning) | `pending-validation` |
-| [UX-003](#ux-003) | Média | UX / fluxo | Arena vazia sem CTA de share/invite proeminente | `screenshots/before/UX-003-arena-empty-no-invite.png` | `pending-validation` |
-| [UX-009](#ux-009) | Média | A11y · Toque | 15 touch targets < 44×44 em mobile (header logo, botões) | (programatic) | `pending-validation` |
-| [UX-005](#ux-005) | Média | UX / fluxo | Reveal button context na arena-vazia precisa explicação | `screenshots/before/UX-005-arena-reveal-empty.png` | `pending-validation` |
-| [UX-004](#ux-004) | Baixa | UI / consistência | CTA "Entrar" disabled fica opacidade 0.4 — contraste enabled↔disabled baixo | `screenshots/before/UX-004-join-host-empty-cta.png` | `pending-validation` |
-| [UX-007](#ux-007) | Baixa | Feedback / Console | 6 React Router future-flag warnings por page load | (n/a — console warning) | `pending-validation` |
-| [UX-008](#ux-008) | Baixa | Responsividade · UI | Deck mobile: card "0" off-screen sem peek affordance óbvio | `screenshots/before/UX-008-deck-mobile-peek.png` | `pending-validation` |
-| [UX-010](#ux-010) | Baixa | A11y | (positivo) axe-core WCAG 2 AA — 0 violações em 4 rotas | `screenshots/before/UX-010-a11y-*.png` (4 rotas) | `fix-validated` (positivo) |
+| ID | Sev | Categoria | Título curto | Evidência (before) | Issue | Status |
+|----|-----|-----------|---------------|---------------------|-------|--------|
+| [UX-001](#ux-001) | Alta | UX / fluxo · Navegação | 404 sem branding, ilustração ou CTA de retorno | `screenshots/before/UX-001-not-found-no-cta.png` | [#1](https://github.com/Heldinhow/pointly/issues/1) | `pending-validation` |
+| [UX-002](#ux-002) | Alta | Responsividade · UI | Side rails colidem com hero em mobile (390/360) | `screenshots/before/UX-002-landing-rail-collision-390.png` | [#2](https://github.com/Heldinhow/pointly/issues/2) | `pending-validation` |
+| [UX-006](#ux-006) | Alta | Feedback / Console | `ws-client` envia evento inválido em todo load da arena | (n/a — console warning) | [#3](https://github.com/Heldinhow/pointly/issues/3) | `pending-validation` |
+| [UX-003](#ux-003) | Média | UX / fluxo | Arena vazia sem CTA de share/invite proeminente | `screenshots/before/UX-003-arena-empty-no-invite.png` | [#4](https://github.com/Heldinhow/pointly/issues/4) | `pending-validation` |
+| [UX-009](#ux-009) | Média | A11y · Toque | 15 touch targets < 44×44 em mobile (header logo, botões) | (programatic) | [#5](https://github.com/Heldinhow/pointly/issues/5) | `pending-validation` |
+| [UX-005](#ux-005) | Média | UX / fluxo | Reveal button context na arena-vazia precisa explicação | `screenshots/before/UX-005-arena-reveal-empty.png` | [#6](https://github.com/Heldinhow/pointly/issues/6) | `pending-validation` |
+| [UX-004](#ux-004) | Baixa | UI / consistência | CTA "Entrar" disabled fica opacidade 0.4 — contraste enabled↔disabled baixo | `screenshots/before/UX-004-join-host-empty-cta.png` | [#7](https://github.com/Heldinhow/pointly/issues/7) | `pending-validation` |
+| [UX-007](#ux-007) | Baixa | Feedback / Console | 6 React Router future-flag warnings por page load | (n/a — console warning) | [#8](https://github.com/Heldinhow/pointly/issues/8) | `pending-validation` |
+| [UX-008](#ux-008) | Baixa | Responsividade · UI | Deck mobile: card "0" off-screen sem peek affordance óbvio | `screenshots/before/UX-008-deck-mobile-peek.png` | [#9](https://github.com/Heldinhow/pointly/issues/9) | `pending-validation` |
+| [UX-010](#ux-010) | Baixa | A11y | (positivo) axe-core WCAG 2 AA — 0 violações em 4 rotas | `screenshots/before/UX-010-a11y-*.png` (4 rotas) | (n/a — positivo) | `fix-validated` (positivo) |
 
 ---
 
@@ -82,7 +83,7 @@ sempre para um screenshot em `screenshots/before/`.
   2. Tratar como rota `errorElement` no `createBrowserRouter` para que erros de runtime também caiam nela (Nielsen #9 — help users recognize errors).
 - **Prioridade**: P2 (impacto alto · esforço médio).
 - **Status**: `pending-validation`
-- **Issue GitHub**: (a abrir em passo 7)
+- **Issue GitHub**: [#1](https://github.com/Heldinhow/pointly/issues/1)
 
 ### UX-002
 
@@ -100,6 +101,7 @@ sempre para um screenshot em `screenshots/before/`.
   3. Confirmar com `vp-390` e `vp-820` que o problema desaparece (probable "tablet" 820 ainda mostra lado a lado — verificar).
 - **Prioridade**: P1 (impacto alto · esforço baixo).
 - **Status**: `pending-validation`
+- **Issue GitHub**: [#2](https://github.com/Heldinhow/pointly/issues/2)
 
 ### UX-006
 
@@ -116,6 +118,7 @@ sempre para um screenshot em `screenshots/before/`.
   3. Adicionar teste de regressão em `apps/web/src/lib/ws-client.test.ts`.
 - **Prioridade**: P2 (impacto alto · esforço médio).
 - **Status**: `pending-validation`
+- **Issue GitHub**: [#3](https://github.com/Heldinhow/pointly/issues/3)
 
 ### UX-003
 
@@ -134,6 +137,7 @@ sempre para um screenshot em `screenshots/before/`.
   2. Manter a `EmptyOverlay` para o estado pós-1-voto (sala solo, host votou mas não convidou).
 - **Prioridade**: P2 (impacto médio · esforço baixo).
 - **Status**: `pending-validation`
+- **Issue GitHub**: [#4](https://github.com/Heldinhow/pointly/issues/4)
 
 ### UX-009
 
@@ -155,6 +159,7 @@ sempre para um screenshot em `screenshots/before/`.
   4. Inputs: garantir `py-3` (12px×2+line) → altura mínima 44-48px.
 - **Prioridade**: P2 (impacto médio · esforço médio).
 - **Status**: `pending-validation`
+- **Issue GitHub**: [#5](https://github.com/Heldinhow/pointly/issues/5)
 
 ### UX-005
 
@@ -171,6 +176,7 @@ sempre para um screenshot em `screenshots/before/`.
   3. Manter `phase === 'revealable'` com disabled state "Aguardando todos votarem" (estado atual já é ok).
 - **Prioridade**: P3 (impacto médio · esforço baixo).
 - **Status**: `pending-validation`
+- **Issue GitHub**: [#6](https://github.com/Heldinhow/pointly/issues/6)
 
 ### UX-004
 
@@ -188,6 +194,7 @@ sempre para um screenshot em `screenshots/before/`.
   2. Adicionar helper text acima do botão explicando o requisito: "Mínimo 2 caracteres".
 - **Prioridade**: P3 (impacto baixo · esforço baixo).
 - **Status**: `pending-validation`
+- **Issue GitHub**: [#7](https://github.com/Heldinhow/pointly/issues/7)
 
 ### UX-007
 
@@ -202,6 +209,7 @@ sempre para um screenshot em `screenshots/before/`.
   2. Sem mudança de comportamento (todas as flags são opt-in para comportamento v7 já suportado).
 - **Prioridade**: P3 (impacto baixo · esforço baixo).
 - **Status**: `pending-validation`
+- **Issue GitHub**: [#8](https://github.com/Heldinhow/pointly/issues/8)
 
 ### UX-008
 
@@ -218,6 +226,7 @@ sempre para um screenshot em `screenshots/before/`.
   3. Considerar tornar o peek gradient mais óbvio (atualmente `paper-warm` → transparent com `pointer-events:none`).
 - **Prioridade**: P3 (impacto médio · esforço médio).
 - **Status**: `pending-validation`
+- **Issue GitHub**: [#9](https://github.com/Heldinhow/pointly/issues/9)
 
 ### UX-010 (positivo)
 
@@ -250,13 +259,15 @@ sempre para um screenshot em `screenshots/before/`.
 ## 5. Próximos passos
 
 1. ~~Criar `docs/ux-review/AUDIT_SCOPE.md`~~ ✅ (`d2fe788`)
-2. ~~Capturar before/ via Playwright~~ ✅ (60 + 8 = 68 PNGs)
-3. **Criar GitHub Issues** (próximo task) para cada finding Crítica + Alta + Média relevante (UX-001..009).
-4. **Iteração 1**: corrigir UX-001 (404 editorial) · UX-002 (rails mobile) · UX-006 (ws-client log) · UX-007 (router flags).
-5. **Iteração 2** (se budget permitir): UX-003 (arena empty guidance) · UX-005 (esconder reveal button) · UX-009 (touch targets).
-6. **Iteração 3** (se budget permitir): UX-004 (CTA disabled contrast) · UX-008 (deck peek).
-7. Re-validar cada fix com Playwright, capturar `screenshots/after/UX-NNN-*.png`, atualizar Status.
+2. ~~Capturar before/ via Playwright~~ ✅ (60 + 11 = 71 PNGs)
+3. ~~Criar GitHub Issues~~ ✅ — 9 issues abertas (#1..#9) em `github.com/Heldinhow/pointly`, labels `ux-review` + `severity:*` + `category:*`. Cada finding é uma issue.
+4. **Iteração 1** (próximo): corrigir Crítica+Alta pendentes (UX-001, UX-002, UX-006) + Baixa prioritária (UX-007 router flags, esforço baixíssimo).
+5. **Iteração 2** (se budget permitir): UX-003 · UX-005 · UX-009.
+6. **Iteração 3** (se budget permitir): UX-004 · UX-008.
+7. Re-validar cada fix com Playwright, capturar `screenshots/after/UX-NNN-*.png`, atualizar Status, comentar nas issues com link do commit.
 8. Mega-PR `ux-review-main → main` ao final.
+
+**Critério de parada**: zero Crít/Alt `pending-validation` E ≤3 iterações completas.
 
 ## 6. Reprodutibilidade
 
