@@ -34,7 +34,6 @@
  * @see .compozy/tasks/pointly-ux-hardening/task_06.md
  */
 import { useCallback, useEffect, useState } from "react";
-import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import {
 	getDismissedEmpty,
@@ -103,63 +102,47 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 
 	if (dismissed) return null;
 
-	const url = shareUrl ?? buildShareUrl(window.location.origin, code);
-
 	return (
 		<div
-			role="dialog"
-			aria-modal="true"
-			aria-label="Convide outros para começar a rodada"
+			role="status"
+			aria-live="polite"
+			aria-label="Convite para outros jogadores"
 			data-testid="empty-overlay"
 			data-od-id="empty-overlay"
-			className="absolute inset-0 bg-bg/92 backdrop-blur-[4px] flex items-center justify-center z-20 transition-opacity duration-200"
+			className="relative z-10 mx-auto mt-2 mb-3 max-w-[560px] w-full"
 		>
-			<Card padding="lg" className="w-[560px] flex flex-col gap-5 items-start">
-				<div className="font-italic italic text-coral text-[36px] leading-none">
-					Ø
+			<Card padding="md" className="flex flex-row items-center gap-4 flex-wrap">
+				<div className="flex items-baseline gap-3 flex-1 min-w-0">
+					<span className="font-mono text-[10px] uppercase tracking-[0.06em] text-coral font-medium whitespace-nowrap">
+						Aguardando primeiro jogador
+					</span>
+					<span className="font-sans text-[12px] leading-[1.4] text-ink-mute">
+						Código{" "}
+						<span className="font-italic italic text-coral text-[14px] leading-none">
+							{code}
+						</span>
+					</span>
 				</div>
-				<h2 className="font-display font-extrabold text-[28px] tracking-[-0.025em]">
-					Convide outros<span className="text-coral">.</span>
-				</h2>
-				<p className="font-sans text-[14px] leading-[1.55] text-ink-mute">
-					Você é o único na sala agora. Compartilhe o link abaixo — quando
-					alguém entrar, vocês podem votar juntos.
-				</p>
 
-				{/* Share pill */}
-				<div
-					className="flex items-stretch w-full border border-ink/15 rounded-full bg-paper overflow-hidden"
-					data-testid="empty-overlay-share"
-				>
-					<input
-						id="empty-overlay-share-url"
-						type="text"
-						readOnly
-						value={url}
-						aria-label="URL de compartilhamento"
-						className="flex-1 border-0 bg-transparent py-3.5 px-4 font-mono text-[12px] text-ink outline-none tracking-[0.02em]"
-						data-testid="empty-overlay-share-url"
-					/>
+				<div className="flex items-center gap-2">
 					<button
 						type="button"
 						onClick={handleCopy}
-						className="border-0 bg-coral text-white font-display font-semibold text-[13px] py-3.5 px-5 cursor-pointer hover:bg-coral-soft transition-colors"
+						className="border border-coral text-coral font-mono text-[10px] uppercase tracking-[0.06em] py-2 px-3.5 rounded-full hover:bg-coral hover:text-white transition-colors"
 						data-testid="empty-overlay-copy"
 						aria-label="Copiar link de compartilhamento"
 					>
 						{copied ? "Copiado ✓" : "Copiar link"}
 					</button>
+					<button
+						type="button"
+						onClick={handleDismiss}
+						className="font-mono text-[10px] uppercase tracking-[0.06em] text-ink-faint hover:text-ink py-2 px-3 underline underline-offset-4"
+						data-testid="empty-overlay-dismiss"
+					>
+						jogue solo
+					</button>
 				</div>
-
-				<Button
-					variant="default"
-					size="md"
-					onClick={handleDismiss}
-					data-testid="empty-overlay-dismiss"
-				>
-					Entrar na mesa mesmo assim
-					<span aria-hidden="true">→</span>
-				</Button>
 			</Card>
 		</div>
 	);

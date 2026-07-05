@@ -40,8 +40,12 @@ test("UX-001 after — 404 editorial Atelier Zero", async ({ page }) => {
 
 	// Probe do fix
 	const probe = await page.evaluate(() => {
-		const code = document.querySelector("[data-testid='not-found-code']")?.textContent ?? "";
-		const createBtn = document.querySelector("[data-testid='not-found-create']");
+		const code =
+			document.querySelector("[data-testid='not-found-code']")?.textContent ??
+			"";
+		const createBtn = document.querySelector(
+			"[data-testid='not-found-create']",
+		);
 		const backBtn = document.querySelector("[data-testid='not-found-back']");
 		const card = document.querySelector("[data-od-id='not-found-card']");
 		const hero = document.querySelector("h1, h2");
@@ -56,7 +60,12 @@ test("UX-001 after — 404 editorial Atelier Zero", async ({ page }) => {
 	});
 
 	await shot(page, "UX-001-after-not-found-editorial");
-	test.info().annotations.push({ type: "ux-001-after", description: JSON.stringify(probe) });
+	test
+		.info()
+		.annotations.push({
+			type: "ux-001-after",
+			description: JSON.stringify(probe),
+		});
 });
 
 // =========================================================================
@@ -81,7 +90,12 @@ test("UX-002 after — side rails escondidos ≤767px", async ({ page }) => {
 	});
 
 	await shot(page, "UX-002-after-rails-hidden-390", false);
-	test.info().annotations.push({ type: "ux-002-after", description: JSON.stringify(probe) });
+	test
+		.info()
+		.annotations.push({
+			type: "ux-002-after",
+			description: JSON.stringify(probe),
+		});
 });
 
 // =========================================================================
@@ -91,7 +105,8 @@ test("UX-006 after — ws-client sem invalid event warning", async ({ page }) =>
 	const warnings: string[] = [];
 	page.on("console", (m) => {
 		const t = m.text();
-		if (t.includes("ws-client") || t.includes("refusing to send")) warnings.push(t);
+		if (t.includes("ws-client") || t.includes("refusing to send"))
+			warnings.push(t);
 	});
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/arena?code=ABCD&host=1", { waitUntil: "networkidle" });
@@ -113,10 +128,15 @@ test("UX-006 after — ws-client sem invalid event warning", async ({ page }) =>
 // =========================================================================
 // UX-007: react-router future-flag warnings ≤ 1
 // =========================================================================
-test("UX-007 after — router v7 flags silenced (≤1 warning)", async ({ page }) => {
+test("UX-007 after — router v7 flags silenced (≤1 warning)", async ({
+	page,
+}) => {
 	const warnings: string[] = [];
 	page.on("console", (m) => {
-		if (m.type() === "warning" && m.text().includes("React Router Future Flag Warning")) {
+		if (
+			m.type() === "warning" &&
+			m.text().includes("React Router Future Flag Warning")
+		) {
 			warnings.push(m.text());
 		}
 	});
@@ -129,13 +149,18 @@ test("UX-007 after — router v7 flags silenced (≤1 warning)", async ({ page }
 		type: "ux-007-after",
 		description: JSON.stringify({ futureFlagWarningCount: warnings.length }),
 	});
-	expect(warnings.length, "≤1 router future-flag warning (v7_startTransition não está em @remix-run/router 1.21)").toBeLessThanOrEqual(1);
+	expect(
+		warnings.length,
+		"≤1 router future-flag warning (v7_startTransition não está em @remix-run/router 1.21)",
+	).toBeLessThanOrEqual(1);
 });
 
 // =========================================================================
 // UX-003: arena empty invite guidance
 // =========================================================================
-test("UX-003 after — arena empty state has invite copy + CTA", async ({ page }) => {
+test("UX-003 after — arena empty state has invite copy + CTA", async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/arena?code=ABCD&host=1", { waitUntil: "networkidle" });
 	await page.waitForTimeout(1_500);
@@ -153,7 +178,12 @@ test("UX-003 after — arena empty state has invite copy + CTA", async ({ page }
 	});
 
 	await shot(page, "UX-003-after-empty-invite");
-	test.info().annotations.push({ type: "ux-003-after", description: JSON.stringify(probe) });
+	test
+		.info()
+		.annotations.push({
+			type: "ux-003-after",
+			description: JSON.stringify(probe),
+		});
 });
 
 // =========================================================================
@@ -173,21 +203,45 @@ test("UX-005 after — reveal button hidden with 0 players", async ({ page }) =>
 	});
 
 	await shot(page, "UX-005-after-reveal-hidden");
-	test.info().annotations.push({ type: "ux-005-after", description: JSON.stringify(probe) });
+	test
+		.info()
+		.annotations.push({
+			type: "ux-005-after",
+			description: JSON.stringify(probe),
+		});
 });
 
 // =========================================================================
 // UX-009: 0 touch targets < 44×44 em mobile
 // =========================================================================
-test("UX-009 after — touch targets all >= 44×44 in mobile", async ({ page }) => {
-	const tiny: { tag: string; text: string; w: number; h: number; selector: string }[] = [];
+test("UX-009 after — touch targets all >= 44×44 in mobile", async ({
+	page,
+}) => {
+	const tiny: {
+		tag: string;
+		text: string;
+		w: number;
+		h: number;
+		selector: string;
+	}[] = [];
 	await page.setViewportSize({ width: 390, height: 844 });
-	for (const path of ["/", "/join?host=1&code=ABCD", "/arena?code=ABCD&host=1", "/full?code=ZZZZ"]) {
+	for (const path of [
+		"/",
+		"/join?host=1&code=ABCD",
+		"/arena?code=ABCD&host=1",
+		"/full?code=ZZZZ",
+	]) {
 		await page.goto(path, { waitUntil: "networkidle" });
 		await page.waitForTimeout(400);
 		const targets = await page.evaluate(() => {
 			const sel = "button, a[href], [role='button'], input, [tabindex='0']";
-			const out: { tag: string; text: string; w: number; h: number; selector: string }[] = [];
+			const out: {
+				tag: string;
+				text: string;
+				w: number;
+				h: number;
+				selector: string;
+			}[] = [];
 			document.querySelectorAll(sel).forEach((el) => {
 				const r = el.getBoundingClientRect();
 				if (r.width === 0 || r.height === 0) return;
@@ -203,7 +257,8 @@ test("UX-009 after — touch targets all >= 44×44 in mobile", async ({ page }) 
 			});
 			return out;
 		});
-		for (const t of targets) tiny.push({ ...t, selector: `${path} → ${t.selector}` });
+		for (const t of targets)
+			tiny.push({ ...t, selector: `${path} → ${t.selector}` });
 	}
 
 	await shot(page, "UX-009-after-touch-targets");
@@ -211,5 +266,7 @@ test("UX-009 after — touch targets all >= 44×44 in mobile", async ({ page }) 
 		type: "ux-009-after",
 		description: JSON.stringify({ total: tiny.length }),
 	});
-	expect(tiny.length, "0 interactive elements < 44×44 em mobile após fix").toBe(0);
+	expect(tiny.length, "0 interactive elements < 44×44 em mobile após fix").toBe(
+		0,
+	);
 });

@@ -44,7 +44,9 @@ function shot(page: Page, name: string, full = true) {
 // =========================================================================
 // UX-001: 404 page editorial Atelier Zero (pós-fix)
 // =========================================================================
-test("UX-001 — 404 page has brand, illustration, return-CTA (post-fix)", async ({ page }) => {
+test("UX-001 — 404 page has brand, illustration, return-CTA (post-fix)", async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/rota-que-nao-existe", { waitUntil: "networkidle" });
 	await page.waitForTimeout(800);
@@ -89,21 +91,41 @@ test("UX-002 — landing side rails overlap hero @ 390px", async ({ page }) => {
 		const hero = document.querySelector("h1");
 		if (!hero) return { hasHero: false };
 		const heroRect = hero.getBoundingClientRect();
-		const out: { rail: string; overlaps: boolean; railRect: DOMRect; heroRect: DOMRect }[] = [];
+		const out: {
+			rail: string;
+			overlaps: boolean;
+			railRect: DOMRect;
+			heroRect: DOMRect;
+		}[] = [];
 		rails.forEach((r, i) => {
 			const rr = r.getBoundingClientRect();
 			const overlap = !(rr.right < heroRect.left || rr.left > heroRect.right);
 			out.push({
 				rail: `${i === 0 ? "left" : "right"}`,
 				overlaps: overlap,
-				railRect: { x: rr.x, y: rr.y, width: rr.width, height: rr.height } as DOMRect,
-				heroRect: { x: heroRect.x, y: heroRect.y, width: heroRect.width, height: heroRect.height } as DOMRect,
+				railRect: {
+					x: rr.x,
+					y: rr.y,
+					width: rr.width,
+					height: rr.height,
+				} as DOMRect,
+				heroRect: {
+					x: heroRect.x,
+					y: heroRect.y,
+					width: heroRect.width,
+					height: heroRect.height,
+				} as DOMRect,
 			});
 		});
 		return { hasHero: true, rails: out };
 	});
 
-	test.info().annotations.push({ type: "ux-002-evidence", description: JSON.stringify(collision) });
+	test
+		.info()
+		.annotations.push({
+			type: "ux-002-evidence",
+			description: JSON.stringify(collision),
+		});
 	expect(collision.hasHero, "hero h1 exists").toBe(true);
 	await shot(page, "UX-002-landing-rail-collision-390", false);
 });
@@ -111,21 +133,52 @@ test("UX-002 — landing side rails overlap hero @ 390px", async ({ page }) => {
 // =========================================================================
 // UX-003: arena vazia com invite copy + CTA após fix
 // =========================================================================
-test("UX-003 — empty arena has prominent share/invite affordance (post-fix)", async ({ page }) => {
+test("UX-003 — empty arena has prominent share/invite affordance (post-fix)", async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
-	await page.goto("/arena?code=ABCD&host=1", { waitUntil: "networkidle" });
+	// Vai pelo /join?host=1 para simular o fluxo real (Criar sala →
+	// nick → /arena). /join popula sessionStorage('pointly.nick')
+	// antes de navegar, então o Arena abre com nick válido.
+	// Sem ?code=ABCD: server cria nova sala no hello com código gerado.
+	await page.goto("/join?host=1", { waitUntil: "networkidle" });
+	await page.waitForTimeout(500);
+	// Tenta achar o input de nick com heurística ampla (pode ter
+	// renomeado data-testid em commits paralelos).
+	const nickInput = page
+		.locator('input[name="nick"], input[data-testid*="nick" i]')
+		.first();
+	await nickInput.waitFor({ state: "visible", timeout: 5000 });
+	await nickInput.fill("TestUser");
+	await page.waitForTimeout(300);
+	// Click no botão Entrar (pode ter renomeado testid, hence heuristic).
+	const enterBtn = page
+		.getByRole("button", { name: /entrar|criar|continuar|go/i })
+		.first();
+	await enterBtn.click();
+	await page.waitForURL(/\/arena/, { timeout: 8000 });
+	// Aguarda WS handshake + welcome do servidor para o sala se popular.
+	await page.waitForFunction(
+		() => document.querySelector("[data-testid='arena-code']")?.textContent !== "—",
+		{ timeout: 8000 },
+	).catch(() => {/* pode demorar pra popular */});
 	await page.waitForTimeout(1_500);
 
 	const probe = await page.evaluate(() => {
-		const invite = document.querySelector("[data-testid='arena-empty-invite']");
-		const copyBtn = document.querySelector("[data-testid='empty-invite-copy']");
-		const inviteText = invite?.textContent ?? "";
+		// UX-003 / UX-011 consolidados (iter-3): EmptyOverlay virou banner não-bloqueante.
+		const overlay = document.querySelector("[data-testid='empty-overlay']");
+		const copyBtn = document.querySelector("[data-testid='empty-overlay-copy']");
+		const dismissBtn = document.querySelector("[data-testid='empty-overlay-dismiss']");
+		const overlayText = overlay?.textContent ?? "";
+		const hasBlockingClass = overlay?.className?.includes("absolute inset-0") ?? false;
 		return {
-			hasInviteBlock: !!invite,
+			hasOverlayBlock: !!overlay,
 			hasCopyBtn: !!copyBtn,
-			hasCodeReference: /\bABCD\b/.test(inviteText),
-			hasConviteWords: /compartilhe|convide|compartilhar/i.test(inviteText),
-			inviteTextSample: inviteText.slice(0, 120),
+			hasDismissBtn: !!dismissBtn,
+			hasCodeReference: /[A-Z0-9]{4}/.test(overlayText),
+			hasConviteWords: /convide|compartilh|primeiro jogador|jogador/i.test(overlayText),
+			notBlocking: !hasBlockingClass,
+			overlayTextSample: overlayText.slice(0, 160),
 		};
 	});
 
@@ -135,15 +188,18 @@ test("UX-003 — empty arena has prominent share/invite affordance (post-fix)", 
 		description: JSON.stringify(probe),
 	});
 
-	expect(probe.hasInviteBlock, "empty invite block presente").toBe(true);
-	expect(probe.hasCopyBtn, "empty invite copy CTA presente").toBe(true);
-	expect(probe.hasCodeReference, "convida cita código 'ABCD'").toBe(true);
+	expect(probe.hasOverlayBlock, "EmptyOverlay banner presente").toBe(true);
+	expect(probe.hasCopyBtn, "EmptyOverlay tem botão Copiar link").toBe(true);
+	expect(probe.hasCodeReference, "EmptyOverlay cita código 'ABCD'").toBe(true);
+	expect(probe.notBlocking, "EmptyOverlay NÃO tem absolute inset-0 (não-bloqueante)").toBe(true);
 });
 
 // =========================================================================
 // UX-004: join-host CTA Entrar parece disabled (cor pálida)
 // =========================================================================
-test("UX-004 — join-host primary CTA looks disabled when empty", async ({ page }) => {
+test("UX-004 — join-host primary CTA looks disabled when empty", async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 390, height: 844 });
 	await page.goto("/join?host=1&code=ABCD", { waitUntil: "networkidle" });
 	await page.waitForTimeout(500);
@@ -163,13 +219,20 @@ test("UX-004 — join-host primary CTA looks disabled when empty", async ({ page
 	});
 
 	await shot(page, "UX-004-join-host-empty-cta");
-	test.info().annotations.push({ type: "ux-004-evidence", description: JSON.stringify(ctaState) });
+	test
+		.info()
+		.annotations.push({
+			type: "ux-004-evidence",
+			description: JSON.stringify(ctaState),
+		});
 });
 
 // =========================================================================
 // UX-005: reveal button escondido quando players.length === 0
 // =========================================================================
-test("UX-005 — reveal button hidden with 0 players (post-fix)", async ({ page }) => {
+test("UX-005 — reveal button hidden with 0 players (post-fix)", async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/arena?code=ABCD&host=1", { waitUntil: "networkidle" });
 	await page.waitForTimeout(1_200);
@@ -187,22 +250,29 @@ test("UX-005 — reveal button hidden with 0 players (post-fix)", async ({ page 
 		type: "ux-005-evidence",
 		description: JSON.stringify(probe),
 	});
-	expect(probe.hidden, "reveal button não está no DOM quando 0 jogadores").toBe(true);
+	expect(probe.hidden, "reveal button não está no DOM quando 0 jogadores").toBe(
+		true,
+	);
 });
 
 // =========================================================================
 // UX-006: ws-client invalid event warning
 // =========================================================================
-test("UX-006 — ws-client warns refusing to send invalid event", async ({ page }) => {
+test("UX-006 — ws-client warns refusing to send invalid event", async ({
+	page,
+}) => {
 	const warnings: string[] = [];
 	page.on("console", (m) => {
 		const t = m.text();
-		if (t.includes("ws-client") || t.includes("refusing to send")) warnings.push(t);
+		if (t.includes("ws-client") || t.includes("refusing to send"))
+			warnings.push(t);
 	});
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/arena?code=ABCD&host=1", { waitUntil: "networkidle" });
 	await page.waitForTimeout(2_000);
-	const invalidEventWarn = warnings.filter((w) => w.includes("refusing to send"));
+	const invalidEventWarn = warnings.filter((w) =>
+		w.includes("refusing to send"),
+	);
 
 	test.info().annotations.push({
 		type: "ux-006-evidence",
@@ -224,10 +294,15 @@ test("UX-006 — ws-client warns refusing to send invalid event", async ({ page 
 // =========================================================================
 // UX-007: react-router v7 future-flag noise
 // =========================================================================
-test("UX-007 — react-router v7 future-flag warnings per page", async ({ page }) => {
+test("UX-007 — react-router v7 future-flag warnings per page", async ({
+	page,
+}) => {
 	const warnings: string[] = [];
 	page.on("console", (m) => {
-		if (m.type() === "warning" && m.text().includes("React Router Future Flag Warning")) {
+		if (
+			m.type() === "warning" &&
+			m.text().includes("React Router Future Flag Warning")
+		) {
 			warnings.push(m.text());
 		}
 	});
@@ -241,13 +316,18 @@ test("UX-007 — react-router v7 future-flag warnings per page", async ({ page }
 	});
 	// After UX-007 fix: 5/6 warnings silenced via future flags.
 	// Only v7_startTransition remains — @remix-run/router 1.21 não expõe a flag.
-	expect(warnings.length, "router warns v7 flags not opted-in").toBeLessThanOrEqual(1);
+	expect(
+		warnings.length,
+		"router warns v7 flags not opted-in",
+	).toBeLessThanOrEqual(1);
 });
 
 // =========================================================================
 // UX-008: deck mobile mostra só 7 de 9 cards (0 e ☕ escondidos)
 // =========================================================================
-test("UX-008 — deck mobile hides 0 and ☕ cards without clear peek", async ({ page }) => {
+test("UX-008 — deck mobile hides 0 and ☕ cards without clear peek", async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 390, height: 844 });
 	await page.goto("/arena?code=ABCD&host=1", { waitUntil: "networkidle" });
 	await page.waitForTimeout(800);
@@ -255,13 +335,17 @@ test("UX-008 — deck mobile hides 0 and ☕ cards without clear peek", async ({
 	const cards = await page.evaluate(() => {
 		const deck = document.querySelector(".fib-deck");
 		if (!deck) return { found: false };
-		const list = Array.from(deck.querySelectorAll("[data-testid='fib-card'], button"));
+		const list = Array.from(
+			deck.querySelectorAll("[data-testid='fib-card'], button"),
+		);
 		return {
 			found: true,
 			total: list.length,
 			items: list.map((el) => ({
 				text: (el.textContent ?? "").trim().slice(0, 8),
-				visible: el.getBoundingClientRect().left >= 0 && el.getBoundingClientRect().right <= window.innerWidth,
+				visible:
+					el.getBoundingClientRect().left >= 0 &&
+					el.getBoundingClientRect().right <= window.innerWidth,
 				rect: el.getBoundingClientRect(),
 			})),
 			scrollWidth: deck.scrollWidth,
@@ -269,7 +353,12 @@ test("UX-008 — deck mobile hides 0 and ☕ cards without clear peek", async ({
 		};
 	});
 
-	test.info().annotations.push({ type: "ux-008-evidence", description: JSON.stringify(cards) });
+	test
+		.info()
+		.annotations.push({
+			type: "ux-008-evidence",
+			description: JSON.stringify(cards),
+		});
 	await shot(page, "UX-008-deck-mobile-peek", false);
 	expect(cards.found).toBe(true);
 });
@@ -279,14 +368,31 @@ test("UX-008 — deck mobile hides 0 and ☕ cards without clear peek", async ({
 // =========================================================================
 test("UX-009 — touch targets < 44x44 in mobile", async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
-	const tinyTargets: { tag: string; text: string; w: number; h: number; selector: string }[] = [];
+	const tinyTargets: {
+		tag: string;
+		text: string;
+		w: number;
+		h: number;
+		selector: string;
+	}[] = [];
 
-	for (const path of ["/", "/join?host=1&code=ABCD", "/arena?code=ABCD&host=1", "/full?code=ZZZZ"]) {
+	for (const path of [
+		"/",
+		"/join?host=1&code=ABCD",
+		"/arena?code=ABCD&host=1",
+		"/full?code=ZZZZ",
+	]) {
 		await page.goto(path, { waitUntil: "networkidle" });
 		await page.waitForTimeout(400);
 		const targets = await page.evaluate(() => {
 			const sel = "button, a[href], [role='button'], input, [tabindex='0']";
-			const out: { tag: string; text: string; w: number; h: number; selector: string }[] = [];
+			const out: {
+				tag: string;
+				text: string;
+				w: number;
+				h: number;
+				selector: string;
+			}[] = [];
 			document.querySelectorAll(sel).forEach((el) => {
 				const r = el.getBoundingClientRect();
 				if (r.width === 0 || r.height === 0) return;
@@ -302,19 +408,28 @@ test("UX-009 — touch targets < 44x44 in mobile", async ({ page }) => {
 			});
 			return out;
 		});
-		for (const t of targets) tinyTargets.push({ ...t, selector: `${path} → ${t.selector}` });
+		for (const t of targets)
+			tinyTargets.push({ ...t, selector: `${path} → ${t.selector}` });
 	}
 
 	test.info().annotations.push({
 		type: "ux-009-evidence",
-		description: JSON.stringify({ total: tinyTargets.length, sample: tinyTargets.slice(0, 15) }),
+		description: JSON.stringify({
+			total: tinyTargets.length,
+			sample: tinyTargets.slice(0, 15),
+		}),
 	});
 });
 
 // =========================================================================
 // UX-010: axe-core a11y scan em cada rota (vp-1440)
 // =========================================================================
-for (const path of ["/", "/join?host=1&code=ABCD", "/arena?code=ABCD&host=1", "/full?code=ZZZZ"]) {
+for (const path of [
+	"/",
+	"/join?host=1&code=ABCD",
+	"/arena?code=ABCD&host=1",
+	"/full?code=ZZZZ",
+]) {
 	test(`UX-010 — axe-core a11y @ ${path}`, async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 900 });
 		await page.goto(path, { waitUntil: "networkidle" });
@@ -338,14 +453,19 @@ for (const path of ["/", "/join?host=1&code=ABCD", "/arena?code=ABCD&host=1", "/
 				})),
 			}),
 		});
-		await shot(page, `UX-010-a11y-${(path === "/" ? "landing" : path).replace(/[?&=/]/g, "_").replace(/^_+/, "")}`);
+		await shot(
+			page,
+			`UX-010-a11y-${(path === "/" ? "landing" : path).replace(/[?&=/]/g, "_").replace(/^_+/, "")}`,
+		);
 	});
 }
 
 // =========================================================================
 // UX-011: prefers-reduced-motion honored
 // =========================================================================
-test("UX-011 — prefers-reduced-motion honored on landing", async ({ browser }) => {
+test("UX-011 — prefers-reduced-motion honored on landing", async ({
+	browser,
+}) => {
 	const context = await browser.newContext({
 		viewport: { width: 1440, height: 900 },
 		reducedMotion: "reduce",
@@ -356,7 +476,8 @@ test("UX-011 — prefers-reduced-motion honored on landing", async ({ browser })
 
 	const animations = await page.evaluate(() => {
 		const all = Array.from(document.querySelectorAll("*"));
-		const moving: { tag: string; cls: string; anim: string; dur: string }[] = [];
+		const moving: { tag: string; cls: string; anim: string; dur: string }[] =
+			[];
 		all.forEach((el) => {
 			const cs = getComputedStyle(el);
 			const dur = cs.animationDuration;
@@ -373,7 +494,15 @@ test("UX-011 — prefers-reduced-motion honored on landing", async ({ browser })
 		return moving;
 	});
 
-	test.info().annotations.push({ type: "ux-011-evidence", description: JSON.stringify({ movingCount: animations.length, sample: animations.slice(0, 10) }) });
+	test
+		.info()
+		.annotations.push({
+			type: "ux-011-evidence",
+			description: JSON.stringify({
+				movingCount: animations.length,
+				sample: animations.slice(0, 10),
+			}),
+		});
 	await shot(page, "UX-011-reduced-motion");
 	await context.close();
 });

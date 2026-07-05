@@ -159,11 +159,12 @@ export function Arena() {
 	const uuid = getStoredUUID();
 
 	// Conecta ao WS server via composition hook (T38-T41)
-	const { castVote, requestReveal, requestNewRound, throwProjectile } = useArenaLoop({
-		nick,
-		code: urlCode,
-		uuid,
-	});
+	const { castVote, requestReveal, requestNewRound, throwProjectile } =
+		useArenaLoop({
+			nick,
+			code: urlCode,
+			uuid,
+		});
 
 	const sala = useSalaStore((s) => s.sala);
 	const currentPlayerId = useSalaStore((s) => s.currentPlayerId);
@@ -292,14 +293,20 @@ export function Arena() {
 							Pointly
 						</Link>
 						<span className="font-mono text-[9px] text-ink-faint uppercase tracking-wider flex items-center gap-1.5 flex-wrap">
-							<span>Sala <span className="text-ink font-medium" data-testid="arena-code">{code || "—"}</span></span>
+							<span>
+								Sala{" "}
+								<span className="text-ink font-medium" data-testid="arena-code">
+									{code || "—"}
+								</span>
+							</span>
 							<span>·</span>
 							<span data-testid="arena-round">
 								Rodada {String(sala?.round ?? 1).padStart(2, "0")}
 							</span>
 							<span>·</span>
 							<span data-testid="arena-self-nick">
-								Você · <span className="text-ink font-medium">{me?.nick ?? "—"}</span>
+								Você ·{" "}
+								<span className="text-ink font-medium">{me?.nick ?? "—"}</span>
 							</span>
 						</span>
 					</div>
@@ -322,41 +329,11 @@ export function Arena() {
 					<TimerPill />
 				</div>
 
-				{/* UX-003: empty-state invite guidance.
-				   Aparece em três estados pré-voto:
-				   (a) sala=null + nick="" — usuário caiu direto em /arena
-				       sem passar por /join (provavelmente deep link);
-				   (b) sala criada mas 0 players — pre-welcome server side;
-				   (c) sala solo com host sem voto (1 player, !hasVoted).
-				   Mostra mono-tag + microcopy + CTA copiar código em
-				   destaque. Não compete com o SharePill do header. */}
-				{(sala === null || (sala !== null && votedCount === 0)) && code && (
-					<div
-						className="relative z-20 mb-4 flex flex-col items-center gap-2.5"
-						data-testid="arena-empty-invite"
-					>
-						<span className="font-mono text-[10px] uppercase tracking-[0.06em] text-coral font-medium">
-							Aguardando primeiro jogador
-						</span>
-						<p className="font-sans text-[14px] leading-[1.55] text-ink-soft text-center max-w-[36ch]">
-							Compartilhe o código{" "}
-							<span className="font-italic italic text-coral text-[16px] leading-none">
-								{code}
-							</span>{" "}
-							para começar a votar.
-						</p>
-						<button
-							type="button"
-							onClick={() => {
-								const url = buildShareUrl(window.location.origin, code);
-								void navigator.clipboard?.writeText(url).catch(() => {});
-							}}
-							className="font-mono text-[10px] uppercase tracking-[0.06em] text-coral hover:text-coral-soft underline underline-offset-4 transition-colors"
-							data-testid="empty-invite-copy"
-						>
-							Copiar código completo ↗
-						</button>
-					</div>
+				{/* Empty overlay (sala solo): banner NÃO-bloqueante acima da mesa.
+				   Renderizado antes da mesa para não competir com o deck no
+				   bottom-8. Substitui o modal antigo (UX-011 / iter-3 hotfix). */}
+				{isOnlyPlayer && code && (
+					<EmptyOverlay key={emptyOverlayNonce} code={code} />
 				)}
 
 				{/* Mesa: Ellipse + 12 Seats + RevealButton central */}
@@ -376,14 +353,14 @@ export function Arena() {
 							median !== null &&
 							p.value !== null &&
 							(() => {
-									const numericValue =
-										p.value === "½"
-											? 0.5
-											: p.value === "☕"
-												? null
-												: Number(p.value);
-									return numericValue === median;
-								})();
+								const numericValue =
+									p.value === "½"
+										? 0.5
+										: p.value === "☕"
+											? null
+											: Number(p.value);
+								return numericValue === median;
+							})();
 						return (
 							<div
 								key={p.id}
@@ -435,14 +412,6 @@ export function Arena() {
 						onSelect={handleCardSelect}
 					/>
 				</div>
-
-				{/* Empty overlay (condicional: sala só com você) */}
-				{isOnlyPlayer && code && (
-					<EmptyOverlay
-						key={emptyOverlayNonce}
-						code={code}
-					/>
-				)}
 
 				{/* Help modal (atalhos de teclado) — abre com ? */}
 				<HelpModal open={openHelp} onClose={() => setOpenHelp(false)} />

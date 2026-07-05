@@ -18,17 +18,19 @@
 
 ## 1. Resumo executivo
 
-| Sev   | Total | Corrigidos (iter-1) | Corrigidos (iter-2) | Pendentes |
-|-------|-------|---------------------|---------------------|-----------|
-| Crítica | 0     | 0                   | 0                   | 0         |
-| Alta    | 3     | 3                   | 0                   | 0         |
-| Média   | 3     | 0                   | 3                   | 0         |
-| Baixa   | 4     | 1                   | 0                   | 3         |
-| Total   | 10    | 4                   | 3                   | 3         |
+| Sev   | Total | Corrigidos (iter-1) | Corrigidos (iter-2) | Corrigidos (iter-3 hotfix) | Pendentes |
+|-------|-------|---------------------|---------------------|-----------------------------|-----------|
+| Crítica | 0     | 0                   | 0                   | 0                           | 0         |
+| Alta    | 4     | 3                   | 0                   | 1                           | 0         |
+| Média   | 3     | 0                   | 3                   | 0                           | 0         |
+| Baixa   | 4     | 1                   | 0                   | 0                           | 3         |
+| Total   | 11    | 4                   | 3                   | 1                           | 3         |
 
 **Iteração 1**: corrigidos UX-001, UX-002, UX-006 (Alta) + UX-007 (Baixa). Baseline 118/127 (93.0%) → 119/127 (93.7%).
 
-**Iteração 2**: corrigidos UX-003, UX-005, UX-009 (Média). Baseline 125/134 (93.3%) — 7 testes novos adicionados ao harness. 0 regressões causadas pelos fixes (2 testes pré-existentes (E7/E11) flipam entre pass/fail com base em timing de WS multi-client; arquivos não foram tocados pelos fixes).
+**Iteração 2**: corrigidos UX-003, UX-005, UX-009 (Média). Baseline 125/134 (93.3%) — 7 testes novos adicionados ao harness. 0 regressões causadas pelos fixes.
+
+**Iteração 3 (hotfix, fora do budget de auditoria original)**: descoberto durante use-test — usuário reportou "voto não funciona em sala solo". Root cause: `<EmptyOverlay>` tinha `absolute inset-0 ... z-20` + `role="dialog" aria-modal="true"`, bloqueando clicks no deck (BUG-001 pré-existente, documentado em `tests/ux/REPORT.md` mas parcialmente corrigido em rodadas anteriores). Aplicada refatoração (EmptyOverlay agora é banner não-bloqueante) + criados 2 testes de regressão (tests/ux/15-ux-011-regression.spec.ts). Vote em sala solo agora funciona sem precisar dismiss nada primeiro.
 
 Positivos confirmados (audit-routes + axe-core):
 
@@ -62,7 +64,8 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
 | [UX-005](#ux-005) | Média | UX / fluxo | Reveal button context na arena-vazia precisa explicação | `screenshots/before/UX-005-arena-reveal-empty.png` | `screenshots/after/UX-005-after-reveal-hidden.png` | [#6](https://github.com/Heldinhow/pointly/issues/6) | `fix-validated` (iter-2) |
 | [UX-004](#ux-004) | Baixa | UI / consistência | CTA "Entrar" disabled fica opacidade 0.4 — contraste enabled↔disabled baixo | `screenshots/before/UX-004-join-host-empty-cta.png` | (iter-3) | [#7](https://github.com/Heldinhow/pointly/issues/7) | `pending-validation` |
 | [UX-007](#ux-007) | Baixa | Feedback / Console | 6 React Router future-flag warnings por page load | (n/a — console warning) | `screenshots/after/UX-007-after-router-flags-optin.png` | [#8](https://github.com/Heldinhow/pointly/issues/8) | `fix-validated` (iter-1) |
-| [UX-008](#ux-008) | Baixa | Responsividade · UI | Deck mobile: card "0" off-screen sem peek affordance óbvio | `screenshots/before/UX-008-deck-mobile-peek.png` | (iter-3) | [#9](https://github.com/Heldinhow/pointly/issues/9) | `pending-validation` |
+| [UX-008](#ux-008) | Baixa | Responsividade · UI | Deck mobile: card "0" off-screen sem peek affordance óbvio | `screenshots/before/UX-008-deck-mobile-peek.png` | (—) | [#9](https://github.com/Heldinhow/pointly/issues/9) | `pending-validation` |
+| [UX-011](#ux-011) | Alta | UX / fluxo | EmptyOverlay (modal) bloqueia clicks do deck em sala solo | (evidência programática) | `screenshots/after/UX-011-after-vote-with-banner-visible.png` | [#11](https://github.com/Heldinhow/pointly/issues/11) | `fix-validated` (iter-3 hotfix) |
 | [UX-010](#ux-010) | Baixa | A11y | (positivo) axe-core WCAG 2 AA — 0 violações em 4 rotas | `screenshots/before/UX-010-a11y-*.png` (4 rotas) | n/a | (n/a — positivo) | `fix-validated` (positivo) |
 
 ---
@@ -242,6 +245,24 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
 - **Status**: `pending-validation`
 - **Issue GitHub**: [#9](https://github.com/Heldinhow/pointly/issues/9)
 
+### UX-011
+
+- **Severidade**: Alta
+- **Categoria**: UX / fluxo
+- **Descrição**: O componente `<EmptyOverlay>` em sala solo tinha `absolute inset-0 ... z-20` + `role="dialog" aria-modal="true"`, cobrindo todo o stage da arena e bloqueando clicks no deck. Host em sala solo precisava clicar **"Entrar na mesa mesmo assim"** (no card do overlay) ou pressionar **Esc** antes de poder votar. Sem essa ação explícita, voto não acontecia — usuário clica no deck e nada ocorre. Bug pré-existente (BUG-001 em `tests/ux/REPORT.md`) marcado como ✓ FIXED em rodadas anteriores, mas o fix era parcial.
+- **Impacto**: Host em sala solo (modo dev / exploration / small team) precisa clicar **"Entrar na mesa mesmo assim"** antes de votar. UX hostil para first-time users que estão testando o produto sozinhos. Descobre o "Entrar na mesa mesmo assim" só por acidente ou documentação.
+- **Evidência**:
+  - Probe repro (`tests/ux/_repro/repro-bug.spec.ts`): sala criada (code YU8T), EmptyOverlay intercepta pointer events → click em deck-card-5 falha 45× com retry, console warning `[ws-client] cannot send — socket not open: cast_vote`.
+  - screenshot before: `/tmp/repro-3-arena.png` (modal cobrindo arena)
+- **Solução aplicada (iter-3 hotfix)**:
+  1. `apps/web/src/components/empty-overlay.tsx`: removido `absolute inset-0 ... z-20` e `role="dialog" aria-modal="true"`. Substituído por banner inline (`max-w-[560px] mx-auto`) com `role="status" aria-live="polite"`. Mostra "AGUARDANDO PRIMEIRO JOGADOR" + "Código {CODE}" + botão "Copiar link" + link sutil "jogue solo".
+  2. `apps/web/src/pages/arena.tsx`: removida versão duplicada do EmptyOverlay (estava após o deck); movida para ANTES da mesa para evitar overlap com deck no `bottom-8`. Removida também a empty-invite block do iter-2 (UX-003) — EmptyOverlay agora consolida as duas mensagens.
+  3. Tests: `tests/ux/15-ux-011-regression.spec.ts` (2 testes) valida que overlay não tem `absolute inset-0`, role=`status` (não `dialog`), `aria-modal` ≠ `true`, e voto funciona com overlay visível.
+- **Prioridade**: P1 (impacto alto · esforço médio).
+- **Status**: `fix-validated` (iter-3 hotfix — commit a fazer)
+- **Issue GitHub**: [#11](https://github.com/Heldinhow/pointly/issues/11)
+- **Evidência (after)**: `screenshots/after/UX-011-after-empty-overlay-banner.png` (banner visível acima da mesa), `screenshots/after/UX-011-after-vote-with-banner-visible.png` (voto funciona com banner ainda visível, revealState="ready")
+
 ### UX-010 (positivo)
 
 - **Severidade**: Baixa (positivo — *finding* = validação)
@@ -277,9 +298,10 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
 3. ~~Criar GitHub Issues~~ ✅ — 9 issues abertas (#1..#9) em `github.com/Heldinhow/pointly`, labels `ux-review` + `severity:*` + `category:*`. Cada finding é uma issue.
 4. ~~**Iteração 1**~~ ✅ — corrigidos UX-001 (404), UX-002 (rails mobile), UX-006 (ws-client log + nick guard), UX-007 (router v7 flags). 0 regressões (118→119 pass). 4 PNGs em `screenshots/after/`.
 5. ~~**Iteração 2**~~ ✅ — corrigidos UX-003 (arena empty invite) · UX-005 (revelar button 0 jogadores) · UX-009 (touch targets <44×44). 7 PNGs em `screenshots/after/`. 0 regressões.
-6. **Iteração 3** (se budget permitir): UX-004 (CTA disabled contrast) · UX-008 (deck peek).
-7. Re-validar cada fix com Playwright, capturar `screenshots/after/UX-NNN-*.png`, atualizar Status, comentar nas issues com link do commit.
-8. Mega-PR `ux-review-main → main` ao final.
+6. ~~**Iteração 3 (hotfix fora do budget)**~~ ✅ — UX-011 (EmptyOverlay modal bloqueando deck). Hotfix disparado por report do user "voto não funciona". 2 testes de regressão adicionados (tests/ux/15-ux-011-regression.spec.ts).
+7. **Iteração 3 (orçamental, opcional)**: UX-004 (CTA disabled contrast) · UX-008 (deck peek).
+8. Re-validar cada fix com Playwright, capturar `screenshots/after/UX-NNN-*.png`, atualizar Status, comentar nas issues com link do commit.
+9. Mega-PR `ux-review-main → main` ao final.
 
 **Critério de parada**: zero Crít/Alt `pending-validation` E ≤3 iterações completas.
 
@@ -292,13 +314,13 @@ Auditoria foi gerada em 2026-07-05 a partir de:
 - Branch: `ux-review-main`
 - HEAD inicial: `78caef2` (origin/main)
 - HEAD atual: ver `git log -1`
-- Specs: `tests/ux/12-audit-routes.spec.ts`, `tests/ux/13-audit-elements.spec.ts`, `tests/ux/14-audit-after.spec.ts`
+- Specs: `tests/ux/12-audit-routes.spec.ts`, `tests/ux/13-audit-elements.spec.ts`, `tests/ux/14-audit-after.spec.ts`, `tests/ux/15-ux-011-regression.spec.ts`
 - Raw: `docs/ux-review/raw-observations.md`
-- Mudanças de código: `apps/web/src/index.css`, `apps/web/src/routes.tsx`, `apps/web/src/lib/ws-client.ts`, `apps/web/src/lib/use-arena-loop.ts`, `apps/web/src/pages/not-found.tsx` (novo).
+- Mudanças de código: `apps/web/src/index.css`, `apps/web/src/routes.tsx`, `apps/web/src/lib/ws-client.ts`, `apps/web/src/lib/use-arena-loop.ts`, `apps/web/src/pages/{not-found.tsx (novo),arena.tsx}`, `apps/web/src/components/empty-overlay.tsx`.
 
 Para reproduzir:
 
 ```bash
 git checkout ux-review-main
-cd tests/ux && bunx playwright test 12-audit-routes 13-audit-elements 14-audit-after --project=desktop
+cd tests/ux && bunx playwright test 12-audit-routes 13-audit-elements 14-audit-after 15-ux-011-regression --project=desktop
 ```
