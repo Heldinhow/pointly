@@ -25,7 +25,14 @@ RUN bun install --frozen-lockfile
 # ----------------------------------------------------------------------------
 FROM oven/bun:${BUN_VERSION}-alpine AS web-build
 WORKDIR /app
-ENV NODE_ENV=development
+# Vite usa NODE_ENV pra computar `import.meta.env.DEV` no client bundle.
+# Manter NODE_ENV=development aqui quebra prod: DEV vira `true` mesmo em
+# `vite build`, e o `ws-client.defaultURL()` retorna `ws://localhost:3001/ws`
+# em vez de `wss://${window.location.host}/ws`. Resultado: o browser aponta
+# o WS pro dev server (que não existe em prod), e nenhuma `hello` chega no
+# server — Sala nunca é criada (`SALA — / COMPARTILHAR: —`).
+# (Bun já traz dev deps resolvidos via bun install no FROM deps.)
+ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json bun.lockb bunfig.toml ./
 COPY tsconfig.base.json ./
