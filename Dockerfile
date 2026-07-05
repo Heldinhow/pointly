@@ -25,8 +25,6 @@ FROM oven/bun:${BUN_VERSION}-alpine AS web-build
 WORKDIR /app
 ENV NODE_ENV=development
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
-COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY package.json bun.lock bunfig.toml ./
 COPY tsconfig.base.json ./
 COPY apps ./apps
@@ -34,15 +32,13 @@ COPY packages ./packages
 RUN cd apps/web && bun run build
 
 # ----------------------------------------------------------------------------
-# base: shared runtime layer with source + node_modules
+# base: shared runtime layer with source + node_modules (hoisted to /app)
 # ----------------------------------------------------------------------------
 FROM oven/bun:${BUN_VERSION}-alpine AS base
 WORKDIR /app
 RUN apk add --no-cache tini
 ENV NODE_ENV=production BUN_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/server/node_modules ./apps/server/node_modules
-COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY package.json bun.lock bunfig.toml ./
 COPY tsconfig.base.json ./
 COPY apps ./apps
@@ -67,7 +63,6 @@ WORKDIR /app
 RUN apk add --no-cache tini
 ENV NODE_ENV=production PORT=8080
 COPY --from=web-build /app/apps/web/dist ./apps/web/dist
-COPY --from=deps /app/packages/shared ./packages/shared
 COPY --from=deps /app/node_modules ./node_modules
 COPY scripts/serve-web.mjs ./scripts/serve-web.mjs
 EXPOSE 8080
