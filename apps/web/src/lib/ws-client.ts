@@ -56,6 +56,13 @@ export type CreateWSClientOptions = {
 	heartbeatIntervalMs?: number;
 	/** Override do timeout pra esperar pong (ms). Default: 5000. */
 	heartbeatTimeoutMs?: number;
+	/**
+	 * Callback invocado toda vez que o WS abre (inclui reconnects).
+	 * Útil para handlers tipo "envia `hello` após WS ficar `open`" que
+	 * precisam disparar tanto no 1º connect quanto após reconnect. Se
+	 * throwar, é engolido com `console.warn` (não derruba o cliente).
+	 */
+	onOpen?: () => void;
 };
 
 export type WSClient = {
@@ -137,6 +144,7 @@ export function createWSClient(options: CreateWSClientOptions): WSClient {
 	const {
 		url: urlOpt,
 		onEvent,
+		onOpen,
 		setTimeoutFn = setTimeout,
 		clearTimeoutFn = clearTimeout,
 		WebSocketCtor,
@@ -233,6 +241,16 @@ export function createWSClient(options: CreateWSClientOptions): WSClient {
 			setStatus("open");
 			reconnectAttempt = 0; // reset backoff on successful connect
 			scheduleHeartbeat();
+			// T42+ — external handlers precisam reagir a CADA 'open'
+			// (inclui reconnects). Caller pode throwar; isolamos para não
+			// quebrar o agendamento de heartbeat.
+			if (onOpen) {
+				try {
+					onOpen();
+				} catch (e) {
+					console.warn("[ws-client] onOpen threw:", e);
+				}
+			}
 		});
 
 		ws.addEventListener("message", (ev: MessageEvent) => {

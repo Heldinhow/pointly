@@ -73,25 +73,23 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 	const nickRef = useRef(nick);
 	const codeRef = useRef(code);
 	const uuidRef = useRef(uuid);
-	const helloSentRef = useRef(false);
 
 	// Atualiza refs
 	nickRef.current = nick;
 	codeRef.current = code;
 	uuidRef.current = uuid;
 
-	// Helper: envia hello após WS abrir
+	// Helper: envia hello se nick válido. Idempotente — o server é responsável
+	// por reidratar (mesmo uuid → reconnect) ou criar sala (uuid novo → create).
+	// Re-chamadas são seguras: cubrem reconnect, refresh e trocas tardias de nick.
 	const sendHello = useCallback((ws: WSClient) => {
-		if (helloSentRef.current) return;
 		// UX-006: só envia hello quando há nick válido (≥2 chars, conforme
-		// schema do shared). Antes enviava mesmo com nick vazio e o Zod
-		// rejeitava silenciosamente — virava 1 warning por page load.
+		// NickSchema no @planning-poker/shared). Antes enviava mesmo com nick
+		// vazio e o Zod rejeitava silenciosamente — virava 1 warning por page
+		// load. Agora silenciosamente espera o effect reativo de `nick` re-
+		// chamar quando o usuário digitar.
 		const effectiveNick = nickRef.current?.trim() ?? "";
-		if (effectiveNick.length < 2) {
-			// Aguarda entrada de nick no /join. Re-tenta quando nick mudar.
-			return;
-		}
-		helloSentRef.current = true;
+		if (effectiveNick.length < 2) return;
 		const effectiveCode = codeRef.current || undefined;
 		ws.send({
 			type: "hello",
@@ -105,9 +103,6 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 
 	// Conecta WS no mount
 	useEffect(() => {
-		// Reseta hello flag quando params mudam significativamente
-		helloSentRef.current = false;
-
 		// Cria hooks do sala-end-loop
 		const hooks: SalaEndHooks = {
 			navigate: (path) => navigate(path),
@@ -117,6 +112,16 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 		// Cria WS PRIMEIRO (loops dependem dele)
 		const wsClient = createWSClient({
 			url: wsUrl,
+			// Regressão prod (2026-07-05): `sendHello` antes dependia de um
+			// `setInterval` que se auto-limpava na 1ª transição para `open`
+			// e nunca mais disparava — se o nick ainda não estava válido nesse
+			// momento (race com sessionStorage), o `hello` nunca chegava no
+			// server e a sala ficava sem código de compartilhamento.
+			// Agora `onOpen` dispara em CADA `open` (inclui reconnects), e o
+			// effect reativo em `nick` (logo abaixo) cobre o caso "WS já
+			// abriu mas nick virou válido depois". O server é idempotente:
+			// mesmo uuid → reconnect; novo → cria sala.
+			onOpen: () => sendHello(wsClient),
 			onEvent: (event) => {
 				// welcome handler: popula currentPlayerId + sala
 				if (event.type === "welcome") {
@@ -167,19 +172,6 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 		const salaEndLoop = createSalaEndLoop(store.getState(), hooks);
 		const projectileLoop = createProjectileLoop(wsClient);
 
-		// Wrapper pra monitorar abertura
-		// (criar wrapper porque createWSClient não tem onOpen callback —
-		// usamos um poll curto no status OU confiamos no re-render via Zustand)
-		// Solução mais simples: usa setTimeout pra checar status e enviar hello
-		// quando ficar 'open'.
-		const checkOpen = setInterval(() => {
-			const status = wsClient.getStatus();
-			if (status === "open") {
-				clearInterval(checkOpen);
-				sendHello(wsClient);
-			}
-		}, 100);
-
 		wsRef.current = wsClient;
 		loopsRef.current = {
 			vote: voteLoop,
@@ -212,7 +204,6 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 
 		// Cleanup no unmount
 		return () => {
-			clearInterval(checkOpen);
 			unsubscribe();
 			try {
 				delete (w as Record<string, unknown>).__POINTLY_SALA__;
@@ -224,9 +215,19 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 			wsClient.close();
 			wsRef.current = null;
 			loopsRef.current = null;
-			helloSentRef.current = false;
 		};
 	}, [navigate, toast, wsUrl, sendHello]);
+
+	// Regressão prod (2026-07-05): cobre o caso "WS abriu antes do nick estar
+	// válido". `onOpen` só dispara na transição → `'open'`; se o usuário
+	// digitar o nick DEPOIS, precisamos re-tentar. Este effect roda quando
+	// `nick` muda e o WS já está conectado.
+	useEffect(() => {
+		const ws = wsRef.current;
+		if (!ws) return;
+		if (ws.getStatus() !== "open") return;
+		sendHello(ws);
+	}, [nick, sendHello]);
 
 	// Phase 1 (T02 — BUG-101): ticker cliente para o timer visual.
 	// Decrementa `sala.timer` a cada 1s enquanto `phase === 'voting'`.
