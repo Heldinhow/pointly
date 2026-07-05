@@ -303,7 +303,7 @@ export function Landing() {
 			</nav>
 
 			{/* Section Rule I - Hero */}
-			<SectionRule roman="I." title="INTRODUÇÃO · VOTAÇÃO EFÊMERA" page="PAGE 001" />
+			<SectionRule roman="01" title="INTRODUÇÃO · VOTAÇÃO EFÊMERA" page="PAGE 001" />
 
 			{/* HERO — Roman I */}
 			<section
@@ -469,7 +469,7 @@ export function Landing() {
 			</section>
 
 			{/* Section Rule II - About */}
-			<SectionRule roman="II." title="CONVERSAÇÃO · FOCO EM TIMES" page="PAGE 002" />
+			<SectionRule roman="02" title="CONVERSAÇÃO · FOCO EM TIMES" page="PAGE 002" />
 
 			{/* ABOUT */}
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-20 relative">
@@ -496,7 +496,7 @@ export function Landing() {
 			</section>
 
 			{/* Section Rule III - Capabilities */}
-			<SectionRule roman="III." title="CAPABILIDADES · FUNCIONALIDADES" page="PAGE 003" />
+			<SectionRule roman="03" title="CAPABILIDADES · FUNCIONALIDADES" page="PAGE 003" />
 
 			{/* CAPABILITIES */}
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative">
@@ -526,7 +526,7 @@ export function Landing() {
 			</section>
 
 			{/* Section Rule IV - Dark Showcase */}
-			<SectionRule roman="IV." title="DEMONSTRAÇÃO · FLUXO DE VOTO" page="PAGE 004" />
+			<SectionRule roman="04" title="DEMONSTRAÇÃO · FLUXO DE VOTO" page="PAGE 004" />
 
 			{/* DARK SHOWCASE CONTAINER (Section 6 Style) */}
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-12">
@@ -569,7 +569,7 @@ export function Landing() {
 			</section>
 
 			{/* Section Rule V - Call to Action */}
-			<SectionRule roman="V." title="RECOMENDAÇÃO · COMEÇAR JÁ" page="PAGE 005" />
+			<SectionRule roman="05" title="RECOMENDAÇÃO · COMEÇAR JÁ" page="PAGE 005" />
 
 			{/* CTA RIBBON */}
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative">

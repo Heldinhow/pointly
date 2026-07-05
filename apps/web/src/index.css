@@ -364,12 +364,14 @@ a[role="button"] {
 	text-transform: uppercase;
 }
 .sec-rule .roman {
-	font-family: "Playfair Display", Georgia, serif;
+	font-family: var(--font-display-serif);
 	font-style: italic;
+	font-weight: 400;
 	color: var(--accent);
-	font-size: 14px;
-	letter-spacing: 0;
+	font-size: clamp(20px, 2.5vw, 36px);
+	letter-spacing: -0.02em;
 	text-transform: none;
+	line-height: 1;
 }
 .sec-rule .meta {
 	flex: 1;
