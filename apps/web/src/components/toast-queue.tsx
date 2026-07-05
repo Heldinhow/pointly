@@ -47,6 +47,7 @@ export function ToastQueue() {
 	const prevVotedCount = useRef<number>(0);
 	const prevConsensus = useRef<typeof consensus>(null);
 	const prevEndedReason = useRef<string | null>(null);
+	const lastConsensusRound = useRef<number | null>(null);
 
 	useEffect(() => {
 		if (!sala) {
@@ -55,6 +56,7 @@ export function ToastQueue() {
 			prevVotedCount.current = 0;
 			prevConsensus.current = null;
 			prevEndedReason.current = null;
+			lastConsensusRound.current = null;
 			return;
 		}
 
@@ -87,7 +89,12 @@ export function ToastQueue() {
 		}
 
 		// 3) Detecta reveal (consensus aparece)
-		if (consensus && consensus !== prevConsensus.current) {
+		if (
+			consensus &&
+			phase === "revealed" &&
+			sala.round !== lastConsensusRound.current
+		) {
+			lastConsensusRound.current = sala.round;
 			if (consensus.unanimous) {
 				toast.push("★ Unanimous!", "success");
 			} else if (consensus.median !== null) {

@@ -54,7 +54,7 @@ describe("Toast", () => {
 		expect(viewport?.getAttribute("aria-atomic")).toBe("true");
 	});
 
-	test("toast success usa kind success (coral-soft bg)", () => {
+	test("toast success usa kind success (surface bg + olive text)", () => {
 		render(
 			<ToastProvider>
 				<Harness text="Operação ok" kind="success" />
@@ -64,7 +64,8 @@ describe("Toast", () => {
 			screen.getByRole("button", { name: "trigger" }).click();
 		});
 		const toast = screen.getByRole("status");
-		expect(toast.className).toContain("bg-coral-soft");
+		expect(toast.className).toContain("bg-surface");
+		expect(toast.className).toContain("text-olive");
 	});
 
 	test("useToast fora do provider throw error", () => {
