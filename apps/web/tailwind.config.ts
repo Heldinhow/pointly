@@ -81,8 +81,8 @@ const config: Config = {
 			// ---------------------------------------------------------
 			boxShadow: {
 				bone: "0 30px 60px -30px rgba(21, 20, 15, 0.15)",
-				// CTA coral — shadow coral 0,14,26,-16 (do plan.md)
-				coral: "0 14px 26px -16px rgba(237, 111, 92, 0.6)",
+				// CTA terracota — shadow atualizado para novo hue (UX-014)
+				coral: "0 14px 26px -16px rgba(210, 74, 42, 0.6)",
 			},
 		},
 	},

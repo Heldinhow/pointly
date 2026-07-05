@@ -29,8 +29,8 @@
 	--fg-soft: #2a2620;
 	--fg-mute: #3a352a;
 	--fg-faint: #4a4438;
-	--accent: #ed6f5c; /* coral, ÚNICO acento quente */
-	--coral-soft: #f08e7c;
+	--accent: #d24a2a; /* terracota (UX-014) — alinhado com referência Open Design */
+	--coral-soft: #e36747; /* hover state, ligeiramente mais claro */
 	--mustard: #e9b94a; /* jewelry: estrela nav, dot */
 	--olive: #6e7448;
 }
