@@ -35,10 +35,7 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import { Card } from "./ui/card";
-import {
-	getDismissedEmpty,
-	setDismissedEmpty,
-} from "../lib/storage";
+import { getDismissedEmpty, setDismissedEmpty } from "../lib/storage";
 
 /** Hook utilitário pra construir a share URL (SPA router). */
 export function buildShareUrl(origin: string, code: string): string {
