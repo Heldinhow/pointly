@@ -281,3 +281,85 @@ a[role="button"] {
   animation: reaction-fade-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* ---------------------------------------------------------------
+ * Side Rails & Section Rules (Atelier Zero / Open Design)
+ * --------------------------------------------------------------- */
+.side-rail {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	width: 36px;
+	z-index: 3;
+	pointer-events: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.side-rail.right {
+	right: 0;
+	border-left: 1px solid rgba(21, 20, 15, 0.05);
+}
+.side-rail.left {
+	left: 0;
+	border-right: 1px solid rgba(21, 20, 15, 0.05);
+}
+.side-rail .rail-text {
+	font-family: "Inter Tight", "Inter", sans-serif;
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.42em;
+	text-transform: uppercase;
+	color: var(--fg-faint);
+	writing-mode: vertical-rl;
+	white-space: nowrap;
+}
+.side-rail.right .rail-text {
+	transform: rotate(180deg);
+}
+.side-rail.left .rail-text {
+	transform: none;
+}
+
+.sec-rule {
+	display: flex;
+	align-items: center;
+	gap: 18px;
+	padding: 18px 0;
+	border-top: 1px solid rgba(21, 20, 15, 0.16);
+	font-family: "JetBrains Mono", monospace;
+	font-size: 10.5px;
+	letter-spacing: 0.04em;
+	color: var(--fg-faint);
+	text-transform: uppercase;
+}
+.sec-rule .roman {
+	font-family: "Playfair Display", Georgia, serif;
+	font-style: italic;
+	color: var(--accent);
+	font-size: 14px;
+	letter-spacing: 0;
+	text-transform: none;
+}
+.sec-rule .meta {
+	flex: 1;
+	text-align: center;
+}
+.sec-rule .page {
+	font-family: "Inter Tight", sans-serif;
+	letter-spacing: 0.22em;
+}
+
+.mega {
+	font-family: "Playfair Display", Georgia, serif;
+	font-style: italic;
+	font-weight: 500;
+	font-size: clamp(70px, 13vw, 180px);
+	line-height: 0.85;
+	letter-spacing: -0.04em;
+	color: var(--fg);
+}
+.mega .dot {
+	color: var(--accent);
+}
+
+
