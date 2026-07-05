@@ -17,13 +17,66 @@ services:
       PORT: "3001"
       NODE_ENV: "production"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3001/health >/dev/null 2>&1 || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:3001/health >/dev/null 2>&1 || exit 1",
+        ]
       interval: 30s
       timeout: 5s
       start_period: 15s
       retries: 3
     expose:
       - "3001"
+    # ---------------------------------------------------------------------------
+    # Traefik (Dokploy) — reverse-proxy routing for the Bun + Hono backend.
+    #
+    # Without these labels, Dokploy only exposes the `web` SPA on ports 80/443,
+    # so requests to /ws, /health and /api/* fall through to the SPA fallback
+    # (apps/web is the only service with Host(`pointly.space`) labels).
+    #
+    # Path-prefix rules beat the web's Host-only rule by specificity, so the
+    # server gets /ws, /api/* and /health; everything else keeps going to web.
+    #
+    # Naming is stable (no per-deploy random suffix) so the repo is the source
+    # of truth and re-deploys don't drift. Traefik auto-discovers via the
+    # docker socket; no manual registration needed.
+    # ---------------------------------------------------------------------------
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      # HTTP routers (port 80) — redirect to HTTPS via the Dokploy-provided
+      # `redirect-to-https@file` middleware, then to the backend service.
+      - traefik.http.routers.pointly-server-http-ws.rule=Host(`pointly.space`) && PathPrefix(`/ws`)
+      - traefik.http.routers.pointly-server-http-ws.entrypoints=web
+      - traefik.http.routers.pointly-server-http-ws.service=pointly-server
+      - traefik.http.routers.pointly-server-http-ws.middlewares=redirect-to-https@file
+      - traefik.http.routers.pointly-server-http-api.rule=Host(`pointly.space`) && PathPrefix(`/api`)
+      - traefik.http.routers.pointly-server-http-api.entrypoints=web
+      - traefik.http.routers.pointly-server-http-api.service=pointly-server
+      - traefik.http.routers.pointly-server-http-api.middlewares=redirect-to-https@file
+      - traefik.http.routers.pointly-server-http-health.rule=Host(`pointly.space`) && Path(`/health`)
+      - traefik.http.routers.pointly-server-http-health.entrypoints=web
+      - traefik.http.routers.pointly-server-http-health.service=pointly-server
+      - traefik.http.routers.pointly-server-http-health.middlewares=redirect-to-https@file
+      # HTTPS routers (port 443) — direct to the backend, TLS via letsencrypt.
+      # Bun.serve() handles HTTP + WebSocket on the same port (3001) and Traefik
+      # passes the WebSocket upgrade (HTTP/1.1 Upgrade: websocket) through
+      # transparently — no extra middleware required.
+      - traefik.http.routers.pointly-server-secure-ws.rule=Host(`pointly.space`) && PathPrefix(`/ws`)
+      - traefik.http.routers.pointly-server-secure-ws.entrypoints=websecure
+      - traefik.http.routers.pointly-server-secure-ws.tls.certresolver=letsencrypt
+      - traefik.http.routers.pointly-server-secure-ws.service=pointly-server
+      - traefik.http.routers.pointly-server-secure-api.rule=Host(`pointly.space`) && PathPrefix(`/api`)
+      - traefik.http.routers.pointly-server-secure-api.entrypoints=websecure
+      - traefik.http.routers.pointly-server-secure-api.tls.certresolver=letsencrypt
+      - traefik.http.routers.pointly-server-secure-api.service=pointly-server
+      - traefik.http.routers.pointly-server-secure-health.rule=Host(`pointly.space`) && Path(`/health`)
+      - traefik.http.routers.pointly-server-secure-health.entrypoints=websecure
+      - traefik.http.routers.pointly-server-secure-health.tls.certresolver=letsencrypt
+      - traefik.http.routers.pointly-server-secure-health.service=pointly-server
+      # Single load-balancer target — Bun serves HTTP + WS on the same port.
+      - traefik.http.services.pointly-server.loadbalancer.server.port=3001
 
   web:
     <<: *app-base
@@ -38,7 +91,11 @@ services:
       server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1",
+        ]
       interval: 30s
       timeout: 5s
       start_period: 10s
