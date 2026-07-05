@@ -67,13 +67,13 @@ test("D6: Apelido válido 'Helder' redireciona para /arena", async ({
 	await page.waitForSelector('[data-testid="page-arena"]');
 });
 
-test("D9: Nick pré-preenchido se voltou (localStorage)", async ({
+test("D9: Nick pré-preenchido se voltou (sessionStorage)", async ({
 	page,
 	context,
 }) => {
 	// Simula user que já entrou antes
 	await context.addInitScript(() => {
-		localStorage.setItem("pointly.nick", "Voltei");
+		sessionStorage.setItem("pointly.nick", "Voltei");
 	});
 	await page.goto("/join?code=ABCD");
 	await page.waitForSelector('[data-testid="page-join"]');

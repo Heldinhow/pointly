@@ -406,16 +406,16 @@ export function Landing() {
 					</div>
 
 					{/* Stylized Cards Illustration (Hero) */}
-					<div className="relative min-h-[480px] bg-paper-warm border border-ink/5 rounded-3xl flex items-center justify-center overflow-hidden shadow-bone">
+					<div className="w-full relative min-h-[480px] bg-paper-warm border border-ink/5 rounded-3xl flex items-center justify-center overflow-hidden shadow-bone">
 						<div className="relative w-80 h-80 flex items-center justify-center">
 							{/* Card 1: '3' */}
-							<div className="absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[-16deg] -translate-x-28 translate-y-3 transition-all duration-300 hover:rotate-[-6deg] hover:-translate-y-6 hover:-translate-x-32 hover:scale-105 hover:z-20 z-0">
+							<div className="absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[-16deg] -translate-x-28 translate-y-3 transition-all duration-300 hover:rotate-[-6deg] hover:-translate-y-6 hover:-translate-x-[8.5rem] hover:scale-105 hover:z-20 z-0">
 								<span className="font-italic italic text-[56px] text-ink select-none">
 									3
 								</span>
 							</div>
 							{/* Card 2: '☕' */}
-							<div className="absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[16deg] translate-x-28 translate-y-5 transition-all duration-300 hover:rotate-[6deg] hover:-translate-y-6 hover:translate-x-32 hover:scale-105 hover:z-20 z-0">
+							<div className="absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[16deg] translate-x-28 translate-y-5 transition-all duration-300 hover:rotate-[6deg] hover:-translate-y-6 hover:translate-x-[8.5rem] hover:scale-105 hover:z-20 z-0">
 								<div className="flex flex-col items-center justify-center select-none pt-4">
 									<svg
 										viewBox="0 0 100 100"
@@ -597,7 +597,7 @@ export function Landing() {
 
 			{/* Footer — mega word */}
 			<footer className="max-w-[1360px] mx-auto px-6 lg:px-16 pt-16 pb-12 border-t border-ink/10 relative">
-				<div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-16">
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
 					<div className="flex flex-col gap-3">
 						<h4 className="font-display font-bold text-[12px] tracking-wider uppercase text-ink">
 							Pointly
@@ -632,7 +632,7 @@ export function Landing() {
 							Contato
 						</a>
 					</div>
-					<div className="flex flex-col gap-3 md:col-span-2">
+					<div className="flex flex-col gap-3">
 						<h4 className="font-display font-bold text-[12px] tracking-wider uppercase text-ink">
 							Código Aberto
 						</h4>

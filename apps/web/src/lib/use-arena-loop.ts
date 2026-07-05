@@ -228,10 +228,14 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 	// via `room_state` e o `setSala` faz o ticker parar naturalmente.
 	const phase = useSalaStore((s) => s.sala?.phase ?? "idle");
 	useEffect(() => {
-		if (phase !== "voting") return;
+		if (phase !== "voting" && phase !== "revealable") return;
 		const id = setInterval(() => {
 			const current = useSalaStore.getState().sala;
-			if (!current || current.phase !== "voting") return;
+			if (
+				!current ||
+				(current.phase !== "voting" && current.phase !== "revealable")
+			)
+				return;
 			if (current.timer <= 0) return; // server will send 'revealed' shortly
 			useSalaStore.getState().tickTimer();
 		}, 1000);

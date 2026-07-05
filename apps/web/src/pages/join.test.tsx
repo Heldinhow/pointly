@@ -88,7 +88,7 @@ describe("Join page — render", () => {
 		const input = screen.getByTestId("nick-input");
 		expect(input).toBeInTheDocument();
 		expect(input.tagName).toBe("INPUT");
-		expect(screen.getByLabelText(/seu nome na sala/i)).toBe(input);
+		expect(screen.getByLabelText(/apelido/i)).toBe(input);
 	});
 
 	test("botão 'Entrar' começa disabled (nick vazio)", () => {

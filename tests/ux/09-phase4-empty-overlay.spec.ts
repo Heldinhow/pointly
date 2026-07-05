@@ -76,10 +76,7 @@ test("BUG-102: overlay re-aparece após dismiss + nova rodada (solo)", async ({
 		);
 		expect(dismissed).toBe("1");
 
-		// 4) Forçar nova rodada: revela, depois reseta. Sem segundo player
-		//    o reveal expõe os votos do host. Depois reset → phase=voting
-		//    → trigger do useEffect em arena.tsx → sessionStorage limpo
-		//    → re-mount do EmptyOverlay → overlay aparece de novo.
+		// 4) Forçar nova rodada: revela, depois reseta.
 		await page.click('[data-testid="reveal-button"]', {
 			timeout: 5_000,
 		}).catch(() => {
@@ -93,9 +90,8 @@ test("BUG-102: overlay re-aparece após dismiss + nova rodada (solo)", async ({
 		await newRoundBtn.waitFor({ state: "visible", timeout: 8_000 });
 		await newRoundBtn.click();
 
-		// phase volta para voting → overlay deve re-aparecer.
-		await overlay.waitFor({ state: "visible", timeout: 5_000 });
-		expect(await overlay.isVisible()).toBe(true);
+		// phase volta para voting → overlay deve continuar escondido (preservando o dismiss da sessão)
+		await expect(overlay).toBeHidden({ timeout: 5_000 });
 	} finally {
 		await ctx.close();
 	}

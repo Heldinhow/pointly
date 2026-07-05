@@ -448,7 +448,7 @@ export class Sala {
 			this.reveal("__auto_reveal__");
 			return "fired";
 		}
-		return this.phase === "voting" ? "ticking" : "idle";
+		return (this.phase === "voting" || this.phase === "revealable") ? "ticking" : "idle";
 	}
 
 	/**

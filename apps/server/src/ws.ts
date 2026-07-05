@@ -187,16 +187,16 @@ export class WSService {
 			if (tick === "fired") {
 				const salaState = sala.toState();
 				const votesValues = Array.from(sala.votes.values());
+				const stats = computeConsensus(votesValues);
+				const unanimous = isUnanimous(votesValues);
 				this.broadcast(code, {
 					type: "votes_revealed",
 					payload: {
 						votes: Object.fromEntries(sala.votes),
-						median: null,
-						mean: null,
-						range: null,
-						unanimous:
-							votesValues.length > 0 &&
-							votesValues.every((v) => v === votesValues[0]),
+						median: stats.median,
+						mean: stats.mean,
+						range: stats.range,
+						unanimous,
 					},
 				});
 				const event: ServerToClientEvent = salaState.critical

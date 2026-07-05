@@ -379,12 +379,11 @@ export async function multiClient(
 			},
 		);
 		await page.getByTestId("reveal-button").click();
-		// Espera a phase virar 'revealed' (deck fica opacity 0.4)
+		// Espera a phase virar 'revealed' (RevealButton fica post-reveal)
 		await page.waitForFunction(
 			() => {
-				const deck = document.querySelector('[data-testid="deck"]');
-				// deck opacity 0.4 = revealed (classe Tailwind `opacity-40`)
-				return deck?.className.includes("opacity-40");
+				const btn = document.querySelector('[data-testid="reveal-button"]');
+				return btn?.getAttribute("data-reveal-state") === "post-reveal";
 			},
 			undefined,
 			{ timeout: 5_000 },

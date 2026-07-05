@@ -248,7 +248,7 @@ export const useSalaStore = create<SalaStore>()((set) => ({
 	tickTimer: () =>
 		set((s) => {
 			if (!s.sala) return s;
-			if (s.sala.phase !== "voting") return s;
+			if (s.sala.phase !== "voting" && s.sala.phase !== "revealable") return s;
 			const nextTimer = Math.max(0, s.sala.timer - 1);
 			if (nextTimer === s.sala.timer) return s;
 			const critical = nextTimer > 0 && nextTimer <= CRITICAL_THRESHOLD_SECONDS;

@@ -253,7 +253,7 @@ export function Join() {
 							placeholder="ex. Helder"
 							value={nick}
 							onChange={(e) => handleNickChange(e.target.value)}
-							aria-label="Seu nome na sala"
+							autoComplete="off"
 							aria-invalid={!validation.ok && validation.error !== ""}
 							aria-describedby={
 								!validation.ok && validation.error ? "nick-error" : undefined

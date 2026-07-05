@@ -29,4 +29,12 @@ if (typeof globalThis.document === "undefined") {
 	if (dom.window.localStorage) {
 		g.localStorage = dom.window.localStorage;
 	}
+	
+	// Mock IntersectionObserver for testing components that use scroll triggers (e.g. Landing)
+	g.IntersectionObserver = class IntersectionObserver {
+		constructor() {}
+		observe() {}
+		unobserve() {}
+		disconnect() {}
+	};
 }

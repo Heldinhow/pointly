@@ -38,7 +38,7 @@ test.describe("T45: E2E reconnect", () => {
 		try {
 			const code = await suite.createRoom(0);
 			const uuidA = await suite.clients[0]!.page.evaluate(() => {
-				return localStorage.getItem("pointly.uuid");
+				return sessionStorage.getItem("pointly.uuid");
 			});
 			expect(uuidA).toMatch(
 				/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
@@ -71,11 +71,11 @@ test.describe("T45: E2E reconnect", () => {
 				viewport: { width: 1440, height: 900 },
 				locale: "pt-BR",
 			});
-			// Injeta UUID no localStorage ANTES de qualquer script da página rodar.
+			// Injeta UUID no sessionStorage ANTES de qualquer script da página rodar.
 			await contextA2.addInitScript((uuid: string) => {
 				try {
-					localStorage.setItem("pointly.uuid", uuid);
-					localStorage.setItem("pointly.nick", "Helder");
+					sessionStorage.setItem("pointly.uuid", uuid);
+					sessionStorage.setItem("pointly.nick", "Helder");
 				} catch {
 					// ignore
 				}

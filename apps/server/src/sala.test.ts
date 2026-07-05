@@ -227,8 +227,8 @@ describe("Sala — tick + auto-reveal", () => {
 		expect(["voting", "revealable"]).toContain(sala.phase);
 		// avança manualmente para reduzir duração do teste
 		sala.timer = 2;
-		// phase='revealable' → tick retorna 'idle' (mas ainda decrementa o timer)
-		expect(sala.tick()).toBe("idle");
+		// phase='revealable' → tick retorna 'ticking'
+		expect(sala.tick()).toBe("ticking");
 		expect(["voting", "revealable"]).toContain(sala.phase);
 		expect(sala.timer).toBe(1);
 		expect(sala.tick()).toBe("fired");
@@ -278,12 +278,12 @@ describe("Sala — tick returns TickResult", () => {
 		expect(sala.timer).toBe(0);
 	});
 
-	test("retorna 'idle' quando phase='revealable'", () => {
+	test("retorna 'ticking' quando phase='revealable'", () => {
 		// 1 player: phase vai direto voting → revealable
 		sala.castVote("p1", "5");
 		expect(sala.phase).toBe("revealable");
 		sala.timer = 30;
-		expect(sala.tick()).toBe("idle");
+		expect(sala.tick()).toBe("ticking");
 		expect(sala.timer).toBe(29);
 	});
 

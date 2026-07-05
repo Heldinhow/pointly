@@ -14,6 +14,7 @@
  *  - md: 14px pad y / 22px x
  *  - lg: 16px pad y / 28px x
  */
+import { forwardRef } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 import { cn } from "./utils";
@@ -51,28 +52,24 @@ const buttonVariants = cva(
 
 export interface ButtonProps
 	extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-		VariantProps<typeof buttonVariants> {
-	/** Ref forwarded (React 18 idiomático). */
-	ref?: React.Ref<HTMLButtonElement>;
-}
+		VariantProps<typeof buttonVariants> {}
 
 /**
  * Button primitivo. Para CTAs use `variant="coral"` (regra crítica: ≤1 por viewport).
  */
-export function Button({
-	className,
-	variant,
-	size,
-	ref,
-	...props
-}: ButtonProps) {
-	return (
-		<button
-			ref={ref}
-			className={cn(buttonVariants({ variant, size }), className)}
-			{...props}
-		/>
-	);
-}
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+	({ className, variant, size, ...props }, ref) => {
+		return (
+			<button
+				ref={ref}
+				className={cn(buttonVariants({ variant, size }), className)}
+				{...props}
+			/>
+		);
+	},
+);
+
+Button.displayName = "Button";
 
 export { buttonVariants };
+

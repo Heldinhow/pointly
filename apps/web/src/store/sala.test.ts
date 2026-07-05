@@ -442,13 +442,13 @@ describe("useSalaStore — tickTimer (T02 / BUG-101)", () => {
 		expect(useSalaStore.getState().sala).toBe(before);
 	});
 
-	test("tickTimer é no-op quando phase === 'revealable'", () => {
+	test("tickTimer decrementa timer quando phase === 'revealable'", () => {
 		useSalaStore
 			.getState()
 			.setSala(makeSala({ phase: "revealable", timer: 30 }));
 		const beforeTimer = useSalaStore.getState().sala!.timer;
 		useSalaStore.getState().tickTimer();
-		expect(useSalaStore.getState().sala!.timer).toBe(beforeTimer);
+		expect(useSalaStore.getState().sala!.timer).toBe(beforeTimer - 1);
 	});
 
 	test("tickTimer não permite timer ir abaixo de 0 (clamp)", () => {

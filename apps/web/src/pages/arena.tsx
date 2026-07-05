@@ -173,24 +173,8 @@ export function Arena() {
 		return players.length === 1 && players[0]?.id === s.currentPlayerId;
 	});
 
-	// T06/BUG-102 — re-show EmptyOverlay em sala solo após reveal→nova rodada.
-	// Quando `phase === 'voting'` E `players.length === 1` numa nova transição
-	// (incluindo o primeiro mount), resetamos o flag de sessionStorage e
-	// incrementamos um nonce pra forçar `<EmptyOverlay key={nonce} />` a
-	// re-montar e re-ler o storage do zero. `phase` é declarado mais
-	// abaixo no componente (linha ~246) — usamos `sala?.phase` direto
-	// aqui pra evitar shadowing.
-	const [emptyOverlayNonce, setEmptyOverlayNonce] = useState(0);
-	const isSoloVoting = isOnlyPlayer && (sala?.phase ?? "idle") === "voting";
-	const prevSoloVotingRef = useRef(false);
-	useEffect(() => {
-		const was = prevSoloVotingRef.current;
-		prevSoloVotingRef.current = isSoloVoting;
-		if (isSoloVoting && !was) {
-			resetDismissedEmpty();
-			setEmptyOverlayNonce((n) => n + 1);
-		}
-	}, [isSoloVoting]);
+	// O EmptyOverlay agora permanece ocultado após o primeiro dismiss do usuário na mesma sessão.
+	const [emptyOverlayNonce] = useState(0);
 
 	// Intercepta navegações internas da SPA quando o usuário está em uma sala ativa
 	const blocker = useBlocker(
@@ -345,7 +329,7 @@ export function Arena() {
 				</div>
 
 				{/* Timer pill (top-right, absolute) */}
-				<div className="absolute top-3.5 right-12 z-10">
+				<div className="hidden md:block absolute top-3.5 right-12 z-10">
 					<TimerPill />
 				</div>
 
