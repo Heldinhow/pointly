@@ -44,7 +44,7 @@ const config: Config = {
 			// ---------------------------------------------------------
 			// Font families — Inter Tight, Playfair, Inter, JetBrains Mono
 			// ---------------------------------------------------------
-fontFamily: {
+			fontFamily: {
 				// Display / sans: h3, h4 e UI labels
 				display: ['"Inter Tight"', "system-ui", "sans-serif"],
 				// Display / serif: h1, h2 editorial headlines (UX-012)

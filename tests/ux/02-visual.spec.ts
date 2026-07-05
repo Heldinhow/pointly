@@ -23,7 +23,9 @@ const LINEAR_FORBIDDEN = [
 	"rgb(94, 106, 210)", // #5e6ad2
 ];
 
-test("B1+B2: Background --bg aplicado em todas as 4 rotas", async ({ page }) => {
+test("B1+B2: Background --bg aplicado em todas as 4 rotas", async ({
+	page,
+}) => {
 	const routes = ["/", "/join?code=ABCD", "/full"];
 	for (const route of routes) {
 		await page.goto(route);
@@ -90,7 +92,7 @@ test("B6: ≤ 1 CTA terracota por viewport na Landing", async ({ page }) => {
 	const coralButtons = await page.evaluate(() => {
 		// UX-014: token --accent agora é terracota #d24a2a (rgb 210,74,42)
 		const TERRACOTA = "rgb(210, 74, 42)";
-		const buttons = Array.from(document.querySelectorAll('button, a'));
+		const buttons = Array.from(document.querySelectorAll("button, a"));
 		return buttons
 			.filter((b) => window.getComputedStyle(b).backgroundColor === TERRACOTA)
 			.map((b) => ({
@@ -115,7 +117,10 @@ test("B10: Sec-rules arabic aparecem na Landing (01..05)", async ({ page }) => {
 	await page.goto("/");
 	// UX-013: section markers migraram de Roman (I., II., ...) para arabic
 	// italic serif (01, 02, ..., 05) — 5 ocorrências em 5 SectionRule.
-	const bodyText = ((await page.textContent("body")) ?? "").replace(/\s+/g, " ");
+	const bodyText = ((await page.textContent("body")) ?? "").replace(
+		/\s+/g,
+		" ",
+	);
 	// Matchea "01" até "05" como word boundary (evita match em "013" ou "100")
 	const arabicMatches =
 		bodyText.match(/\b(0[1-5])(?!\d)/g)?.map((m) => m.trim()) ?? [];
@@ -124,7 +129,9 @@ test("B10: Sec-rules arabic aparecem na Landing (01..05)", async ({ page }) => {
 	expect(arabicMatches.length).toBeGreaterThanOrEqual(4);
 });
 
-test("B11: Metadata strip mono aparece em todas as 4 telas", async ({ page }) => {
+test("B11: Metadata strip mono aparece em todas as 4 telas", async ({
+	page,
+}) => {
 	const routes = [
 		{ path: "/", expect: "Pointly" },
 		{ path: "/full", expect: "Fig" },

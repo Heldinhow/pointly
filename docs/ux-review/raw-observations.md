@@ -1,6 +1,6 @@
 # Raw Observations — audit-routes sweep
 
-> Gerado em 2026-07-05T04:08:02.317Z pelo spec `tests/ux/12-audit-routes.spec.ts`.
+> Gerado em 2026-07-05T14:37:44.272Z pelo spec `tests/ux/12-audit-routes.spec.ts`.
 > Independente de `tests/ux/REPORT.md` (fresh audit).
 > Cobre 5 viewports × 6 rotas = 30 cenários.
 

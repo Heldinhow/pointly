@@ -80,7 +80,10 @@ test("UX-012 after — Landing h1/h2 em Instrument Serif (vp-1440)", async ({
 	await shot(page, "UX-012-after-landing-hero-serif");
 	test
 		.info()
-		.annotations.push({ type: "ux-012-after", description: JSON.stringify(probe) });
+		.annotations.push({
+			type: "ux-012-after",
+			description: JSON.stringify(probe),
+		});
 	expect(probe.h1.found).toBe(true);
 	expect(probe.h1.matches).toBe(true);
 });
@@ -90,10 +93,9 @@ test("UX-012 after — NotFound h2 em Instrument Serif (vp-1440)", async ({
 	baseURL,
 }) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
-	await page.goto(
-		(baseURL ?? "http://localhost:5173") + "/rota-inexistente",
-		{ waitUntil: "networkidle" },
-	);
+	await page.goto((baseURL ?? "http://localhost:5173") + "/rota-inexistente", {
+		waitUntil: "networkidle",
+	});
 	await page.waitForTimeout(1200);
 
 	const probe = await probeFontFamily(
@@ -105,7 +107,10 @@ test("UX-012 after — NotFound h2 em Instrument Serif (vp-1440)", async ({
 	await shot(page, "UX-012-after-not-found-serif");
 	test
 		.info()
-		.annotations.push({ type: "ux-012-notfound", description: JSON.stringify(probe) });
+		.annotations.push({
+			type: "ux-012-notfound",
+			description: JSON.stringify(probe),
+		});
 	expect(probe.found).toBe(true);
 	expect(probe.matches).toBe(true);
 });
@@ -142,7 +147,10 @@ test("UX-013 after — 5 SectionRule markers em arabic + serif (vp-1440)", async
 	await shot(page, "UX-013-after-section-markers-arabic");
 	test
 		.info()
-		.annotations.push({ type: "ux-013-after", description: JSON.stringify(probe) });
+		.annotations.push({
+			type: "ux-013-after",
+			description: JSON.stringify(probe),
+		});
 	expect(probe.count).toBe(5);
 	expect(probe.matches).toBe(true);
 });
@@ -176,7 +184,10 @@ test("UX-014 after — CTA coral usa terracota (vp-1440)", async ({
 	await shot(page, "UX-014-after-terracotta-cta");
 	test
 		.info()
-		.annotations.push({ type: "ux-014-after", description: JSON.stringify(probe) });
+		.annotations.push({
+			type: "ux-014-after",
+			description: JSON.stringify(probe),
+		});
 	expect(probe.found).toBe(true);
 	expect(probe.matches).toBe(true);
 });
@@ -196,7 +207,9 @@ test("UX-015 after — hero collage presente (vp-1440)", async ({
 
 	const probe = await page.evaluate(() => {
 		// Conta círculos + svg dentro do frame hero
-		const heroFrame = document.querySelector(".bg-paper-warm.border.rounded-3xl");
+		const heroFrame = document.querySelector(
+			".bg-paper-warm.border.rounded-3xl",
+		);
 		if (!heroFrame) return { found: false };
 		const circles = heroFrame.querySelectorAll("[class*='rounded-full']");
 		const svgs = heroFrame.querySelectorAll("svg");
@@ -206,15 +219,17 @@ test("UX-015 after — hero collage presente (vp-1440)", async ({
 			circleCount: circles.length,
 			svgCount: svgs.length,
 			glyphCount: glyphs.length,
-			matches:
-				circles.length >= 2 && svgs.length >= 3 && glyphs.length >= 1,
+			matches: circles.length >= 2 && svgs.length >= 3 && glyphs.length >= 1,
 		};
 	});
 
 	await shot(page, "UX-015-after-hero-collage");
 	test
 		.info()
-		.annotations.push({ type: "ux-015-after", description: JSON.stringify(probe) });
+		.annotations.push({
+			type: "ux-015-after",
+			description: JSON.stringify(probe),
+		});
 	expect(probe.found).toBe(true);
 	expect(probe.matches).toBe(true);
 });
@@ -262,7 +277,10 @@ test("UX-016 after — capability numerals em Instrument Serif 28px (vp-1440)", 
 	await shot(page, "UX-016-after-capability-cards-serif-numeral");
 	test
 		.info()
-		.annotations.push({ type: "ux-016-after", description: JSON.stringify(probe) });
+		.annotations.push({
+			type: "ux-016-after",
+			description: JSON.stringify(probe),
+		});
 	expect(probe.cardCount).toBe(4);
 	expect(probe.matches).toBe(true);
 });
@@ -275,10 +293,9 @@ test("UX-017 after — NotFound parity com Landing (vp-1440)", async ({
 	baseURL,
 }) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
-	await page.goto(
-		(baseURL ?? "http://localhost:5173") + "/rota-inexistente",
-		{ waitUntil: "networkidle" },
-	);
+	await page.goto((baseURL ?? "http://localhost:5173") + "/rota-inexistente", {
+		waitUntil: "networkidle",
+	});
 	await page.waitForTimeout(1500);
 
 	const probe = await page.evaluate(() => {
@@ -325,6 +342,9 @@ test("UX-017 after — NotFound parity com Landing (vp-1440)", async ({
 	await shot(page, "UX-017-after-not-found-parity");
 	test
 		.info()
-		.annotations.push({ type: "ux-017-after", description: JSON.stringify(probe) });
+		.annotations.push({
+			type: "ux-017-after",
+			description: JSON.stringify(probe),
+		});
 	expect(probe.matches).toBe(true);
 });

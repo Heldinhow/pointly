@@ -69,14 +69,14 @@ const MOCK_PLAYERS: MockPlayer[] = [
 
 /** Posições dos assentos na mesa elíptica demonstrativa */
 const SEAT_POSITIONS = [
-	{ left: "50%", top: "82%" },   // Você (baixo)
-	{ left: "18%", top: "72%" },   // Maya (baixo-esquerda)
-	{ left: "9%", top: "46%" },    // Rui (esquerda)
-	{ left: "18%", top: "20%" },   // Aria (topo-esquerda)
-	{ left: "50%", top: "8%" },    // Theo (topo / Host)
-	{ left: "82%", top: "20%" },   // Lia (topo-direita)
-	{ left: "91%", top: "46%" },   // Ivo (direita)
-	{ left: "82%", top: "72%" },   // Nora (baixo-direita)
+	{ left: "50%", top: "82%" }, // Você (baixo)
+	{ left: "18%", top: "72%" }, // Maya (baixo-esquerda)
+	{ left: "9%", top: "46%" }, // Rui (esquerda)
+	{ left: "18%", top: "20%" }, // Aria (topo-esquerda)
+	{ left: "50%", top: "8%" }, // Theo (topo / Host)
+	{ left: "82%", top: "20%" }, // Lia (topo-direita)
+	{ left: "91%", top: "46%" }, // Ivo (direita)
+	{ left: "82%", top: "72%" }, // Nora (baixo-direita)
 ];
 
 /** Mesa mockada que renderiza os assentos ativos de forma responsiva */
@@ -97,8 +97,12 @@ function MockTable() {
 			{/* Linha elíptica da mesa */}
 			<div className="absolute left-[15%] top-[25%] w-[70%] h-[50%] border border-dashed border-ink/15 rounded-[120px] flex items-center justify-center pointer-events-none">
 				<div className="bg-surface border border-ink/10 rounded-full px-4 py-2 text-center shadow-sm">
-					<div className="font-display font-bold text-[12px] text-ink">Nova rodada</div>
-					<div className="font-mono text-[8px] text-ink-faint uppercase tracking-wide mt-0.5">Limpar Votos</div>
+					<div className="font-display font-bold text-[12px] text-ink">
+						Nova rodada
+					</div>
+					<div className="font-mono text-[8px] text-ink-faint uppercase tracking-wide mt-0.5">
+						Limpar Votos
+					</div>
 				</div>
 			</div>
 
@@ -106,9 +110,12 @@ function MockTable() {
 			<div className="absolute inset-0 pt-10 pb-4">
 				{MOCK_PLAYERS.map((player, index) => {
 					const pos = SEAT_POSITIONS[index] || { left: "0px", top: "0px" };
-					const initials = player.nick === "Você" ? "VC" : player.nick.substring(0, 2).toUpperCase();
+					const initials =
+						player.nick === "Você"
+							? "VC"
+							: player.nick.substring(0, 2).toUpperCase();
 					const effectiveMedian = player.votedMedian;
-					
+
 					return (
 						<div
 							key={player.id}
@@ -117,15 +124,24 @@ function MockTable() {
 						>
 							<div
 								className={`relative w-[70px] h-[92px] bg-surface rounded-card border flex flex-col items-center justify-center p-1.5 shadow-sm ${
-									player.isYou ? "border-coral border-2" : effectiveMedian ? "border-mustard border-2" : "border-ink/5"
+									player.isYou
+										? "border-coral border-2"
+										: effectiveMedian
+											? "border-mustard border-2"
+											: "border-ink/5"
 								}`}
 								style={{
-									boxShadow: effectiveMedian && player.isYou ? "inset 0 0 0 2px var(--mustard)" : "none"
+									boxShadow:
+										effectiveMedian && player.isYou
+											? "inset 0 0 0 2px var(--mustard)"
+											: "none",
 								}}
 							>
 								{/* Star (Host) */}
 								{player.isHost && (
-									<span className="absolute top-1 right-1 text-mustard text-[10px] leading-none">★</span>
+									<span className="absolute top-1 right-1 text-mustard text-[10px] leading-none">
+										★
+									</span>
 								)}
 
 								{/* Avatar */}
@@ -185,7 +201,9 @@ function MockDeck() {
 									: "bg-surface/10 border-surface/10 text-surface/60 hover:border-surface/20"
 							}`}
 						>
-							<span className={`font-italic italic text-lg ${isSelected ? "text-white" : "text-surface/80"}`}>
+							<span
+								className={`font-italic italic text-lg ${isSelected ? "text-white" : "text-surface/80"}`}
+							>
 								{val}
 							</span>
 							<span className="font-mono text-[6px] tracking-wide mt-1 uppercase opacity-60">
@@ -203,7 +221,11 @@ function MockDeck() {
 }
 
 /** Componente utilitário para divisores de seção (Section Rules) */
-function SectionRule({ roman, title, page }: { roman: string; title: string; page: string }) {
+function SectionRule({
+	roman,
+	title,
+	page,
+}: { roman: string; title: string; page: string }) {
 	return (
 		<div className="max-w-[1360px] mx-auto px-6 lg:px-16" aria-hidden="true">
 			<div className="sec-rule">
@@ -303,7 +325,11 @@ export function Landing() {
 			</nav>
 
 			{/* Section Rule I - Hero */}
-			<SectionRule roman="01" title="INTRODUÇÃO · VOTAÇÃO EFÊMERA" page="PAGE 001" />
+			<SectionRule
+				roman="01"
+				title="INTRODUÇÃO · VOTAÇÃO EFÊMERA"
+				page="PAGE 001"
+			/>
 
 			{/* HERO — Roman I */}
 			<section
@@ -335,7 +361,8 @@ export function Landing() {
 						</h1>
 						<p className="font-sans text-[16px] lg:text-[17px] leading-[1.6] text-ink-mute mt-6 max-w-[50ch]">
 							Planning Poker gratuito, sem email, sem plano pago. Sincronize a
-							estimativa do seu time em menos de 60 segundos com salas que somem ao terminar.
+							estimativa do seu time em menos de 60 segundos com salas que somem
+							ao terminar.
 						</p>
 
 						<div className="flex flex-wrap items-center gap-4 mt-8">
@@ -365,9 +392,7 @@ export function Landing() {
 									value={joinCode}
 									onChange={(e) =>
 										setJoinCode(
-											e.target.value
-												.toUpperCase()
-												.replace(/[^A-Z0-9]/g, ""),
+											e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""),
 										)
 									}
 									className="font-mono text-[14px] uppercase py-2.5 px-3 w-32 border border-ink/10 rounded-lg bg-surface text-ink placeholder:text-ink-faint focus:border-coral focus:outline-none transition-colors"
@@ -429,7 +454,12 @@ export function Landing() {
 								fill="currentColor"
 								aria-hidden="true"
 							>
-								<path d="M30 6 C 16 14, 12 32, 30 54 C 48 32, 44 14, 30 6 Z M30 12 L30 50" stroke="currentColor" strokeWidth="1" fill="none" />
+								<path
+									d="M30 6 C 16 14, 12 32, 30 54 C 48 32, 44 14, 30 6 Z M30 12 L30 50"
+									stroke="currentColor"
+									strokeWidth="1"
+									fill="none"
+								/>
 							</svg>
 							<svg
 								viewBox="0 0 60 60"
@@ -437,7 +467,12 @@ export function Landing() {
 								fill="currentColor"
 								aria-hidden="true"
 							>
-								<path d="M30 6 C 16 14, 12 32, 30 54 C 48 32, 44 14, 30 6 Z M30 12 L30 50" stroke="currentColor" strokeWidth="1" fill="none" />
+								<path
+									d="M30 6 C 16 14, 12 32, 30 54 C 48 32, 44 14, 30 6 Z M30 12 L30 50"
+									stroke="currentColor"
+									strokeWidth="1"
+									fill="none"
+								/>
 							</svg>
 							<svg
 								viewBox="0 0 60 60"
@@ -445,7 +480,12 @@ export function Landing() {
 								fill="currentColor"
 								aria-hidden="true"
 							>
-								<path d="M30 6 C 16 14, 12 32, 30 54 C 48 32, 44 14, 30 6 Z M30 12 L30 50" stroke="currentColor" strokeWidth="1" fill="none" />
+								<path
+									d="M30 6 C 16 14, 12 32, 30 54 C 48 32, 44 14, 30 6 Z M30 12 L30 50"
+									stroke="currentColor"
+									strokeWidth="1"
+									fill="none"
+								/>
 							</svg>
 
 							{/* Mono plate label (bottom-right) */}
@@ -458,7 +498,11 @@ export function Landing() {
 			</section>
 
 			{/* Section Rule II - About */}
-			<SectionRule roman="02" title="CONVERSAÇÃO · FOCO EM TIMES" page="PAGE 002" />
+			<SectionRule
+				roman="02"
+				title="CONVERSAÇÃO · FOCO EM TIMES"
+				page="PAGE 002"
+			/>
 
 			{/* ABOUT */}
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-20 relative">
@@ -475,7 +519,11 @@ export function Landing() {
 							id="para-times"
 							className="font-sans text-[16px] lg:text-[17px] leading-[1.7] text-ink-mute mt-6 max-w-[56ch]"
 						>
-							O Pointly elimina a burocracia dos cadastros e convites complicados. Você cria a sala, envia a URL para o time no chat da call e começa a estimar. Após todos os jogadores votarem, os resultados revelam a mediana com destaque visual imediato para fomentar o alinhamento saudável.
+							O Pointly elimina a burocracia dos cadastros e convites
+							complicados. Você cria a sala, envia a URL para o time no chat da
+							call e começa a estimar. Após todos os jogadores votarem, os
+							resultados revelam a mediana com destaque visual imediato para
+							fomentar o alinhamento saudável.
 						</p>
 					</div>
 
@@ -485,7 +533,11 @@ export function Landing() {
 			</section>
 
 			{/* Section Rule III - Capabilities */}
-			<SectionRule roman="03" title="CAPABILIDADES · FUNCIONALIDADES" page="PAGE 003" />
+			<SectionRule
+				roman="03"
+				title="CAPABILIDADES · FUNCIONALIDADES"
+				page="PAGE 003"
+			/>
 
 			{/* CAPABILITIES */}
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative">
@@ -515,7 +567,11 @@ export function Landing() {
 			</section>
 
 			{/* Section Rule IV - Dark Showcase */}
-			<SectionRule roman="04" title="DEMONSTRAÇÃO · FLUXO DE VOTO" page="PAGE 004" />
+			<SectionRule
+				roman="04"
+				title="DEMONSTRAÇÃO · FLUXO DE VOTO"
+				page="PAGE 004"
+			/>
 
 			{/* DARK SHOWCASE CONTAINER (Section 6 Style) */}
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-12">
@@ -533,7 +589,9 @@ export function Landing() {
 							.
 						</h2>
 						<p className="font-sans text-[15px] leading-[1.6] text-surface/70 mt-6 max-w-[46ch]">
-							Durante a rodada, as cartas permanecem viradas para baixo para evitar a influência mútua dos votos. O time vota secretamente e o host visualiza o andamento em tempo real.
+							Durante a rodada, as cartas permanecem viradas para baixo para
+							evitar a influência mútua dos votos. O time vota secretamente e o
+							host visualiza o andamento em tempo real.
 						</p>
 						<ul className="mt-8 space-y-3 font-mono text-[12px] text-surface/80">
 							<li className="flex items-center gap-3">
@@ -558,7 +616,11 @@ export function Landing() {
 			</section>
 
 			{/* Section Rule V - Call to Action */}
-			<SectionRule roman="05" title="RECOMENDAÇÃO · COMEÇAR JÁ" page="PAGE 005" />
+			<SectionRule
+				roman="05"
+				title="RECOMENDAÇÃO · COMEÇAR JÁ"
+				page="PAGE 005"
+			/>
 
 			{/* CTA RIBBON */}
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative">
@@ -567,7 +629,8 @@ export function Landing() {
 						Pronto pra começar<span className="text-coral">?</span>
 					</h2>
 					<p className="font-sans text-[15px] lg:text-[16px] leading-[1.7] text-ink-mute max-w-[50ch] mx-auto mt-4">
-						Crie uma sala em menos de 5 segundos. Convide seu time, votem e revelem. Sem cadastros, sem emails, sem dores de cabeça.
+						Crie uma sala em menos de 5 segundos. Convide seu time, votem e
+						revelem. Sem cadastros, sem emails, sem dores de cabeça.
 					</p>
 					<div className="flex items-center justify-center gap-3.5 mt-8">
 						<Button
@@ -626,7 +689,9 @@ export function Landing() {
 							Código Aberto
 						</h4>
 						<p className="font-sans text-[13px] text-ink-mute leading-[1.6]">
-							O Pointly é um projeto open-source projetado para rodar inteiramente no lado do cliente na versão beta, focado em simplicidade absoluta.
+							O Pointly é um projeto open-source projetado para rodar
+							inteiramente no lado do cliente na versão beta, focado em
+							simplicidade absoluta.
 						</p>
 					</div>
 				</div>

@@ -99,9 +99,9 @@ export function NotFound() {
 						</h2>
 
 						<p className="font-sans text-[14.5px] leading-[1.6] text-ink-mute max-w-[44ch]">
-							Esta sala (ou link) não existe — pode ter expirado depois
-							do reveal, ou o código foi digitado errado. Volte para a home
-							e comece uma nova rodada em menos de 60 segundos.
+							Esta sala (ou link) não existe — pode ter expirado depois do
+							reveal, ou o código foi digitado errado. Volte para a home e
+							comece uma nova rodada em menos de 60 segundos.
 						</p>
 
 						{/* Ações */}
