@@ -9,6 +9,7 @@
 
 import { lazy, Suspense } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { NotFound } from "./pages/not-found";
 
 const Landing = lazy(() =>
 	import("./pages/landing").then((m) => ({ default: m.Landing })),
@@ -35,48 +36,59 @@ function PageFallback() {
 	);
 }
 
-function NotFound() {
-	return <div>Not Found</div>;
-}
-
-const router = createBrowserRouter([
+const router = createBrowserRouter(
+	[
+		{
+			path: "/",
+			element: (
+				<Suspense fallback={<PageFallback />}>
+					<Landing />
+				</Suspense>
+			),
+		},
+		{
+			path: "/join",
+			element: (
+				<Suspense fallback={<PageFallback />}>
+					<Join />
+				</Suspense>
+			),
+		},
+		{
+			path: "/arena",
+			element: (
+				<Suspense fallback={<PageFallback />}>
+					<Arena />
+				</Suspense>
+			),
+		},
+		{
+			path: "/full",
+			element: (
+				<Suspense fallback={<PageFallback />}>
+					<Full />
+				</Suspense>
+			),
+		},
+		{
+			path: "*",
+			element: <NotFound />,
+		},
+	],
+	// UX-007: opt-in nos v7 future flags — silencia 6 warnings por page load
+	// sem mudar comportamento. Nota: @remix-run/router 1.21 (bundled com
+	// react-router-dom 6.28) ainda não expõe v7_startTransition no tipo
+	// FutureConfig; deixamos de fora e ganhamos 5 dos 6 warnings.
 	{
-		path: "/",
-		element: (
-			<Suspense fallback={<PageFallback />}>
-				<Landing />
-			</Suspense>
-		),
+		future: {
+			v7_relativeSplatPath: true,
+			v7_fetcherPersist: true,
+			v7_normalizeFormMethod: true,
+			v7_partialHydration: true,
+			v7_skipActionErrorRevalidation: true,
+		},
 	},
-	{
-		path: "/join",
-		element: (
-			<Suspense fallback={<PageFallback />}>
-				<Join />
-			</Suspense>
-		),
-	},
-	{
-		path: "/arena",
-		element: (
-			<Suspense fallback={<PageFallback />}>
-				<Arena />
-			</Suspense>
-		),
-	},
-	{
-		path: "/full",
-		element: (
-			<Suspense fallback={<PageFallback />}>
-				<Full />
-			</Suspense>
-		),
-	},
-	{
-		path: "*",
-		element: <NotFound />,
-	},
-]);
+);
 
 /**
  * RouterProvider pronto para uso em `App.tsx`.

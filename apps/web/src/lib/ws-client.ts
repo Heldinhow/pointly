@@ -287,9 +287,20 @@ export function createWSClient(options: CreateWSClientOptions): WSClient {
 		// mas protege contra payload inválido.
 		const parsed = ClientToServerEventSchema.safeParse(event);
 		if (!parsed.success) {
+			// UX-006: serializa issues para que apareçam em console.warn/.text(),
+			// não fiquem como "[Object]" em Playwright/Chromium.
+			const issues = parsed.error.issues
+				.map((i) => {
+					const path = i.path.join(".") || "(root)";
+					const received =
+						"received" in i && i.received !== undefined
+							? ` (got ${JSON.stringify(i.received)})`
+							: "";
+					return `${path}: ${i.message}${received}`;
+				})
+				.join("; ");
 			console.warn(
-				"[ws-client] refusing to send invalid event:",
-				parsed.error.issues,
+				`[ws-client] refusing to send invalid event type="${event.type ?? "?"}": ${issues}`,
 			);
 			return;
 		}

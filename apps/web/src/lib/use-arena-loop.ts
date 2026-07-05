@@ -83,13 +83,21 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 	// Helper: envia hello após WS abrir
 	const sendHello = useCallback((ws: WSClient) => {
 		if (helloSentRef.current) return;
+		// UX-006: só envia hello quando há nick válido (≥2 chars, conforme
+		// schema do shared). Antes enviava mesmo com nick vazio e o Zod
+		// rejeitava silenciosamente — virava 1 warning por page load.
+		const effectiveNick = nickRef.current?.trim() ?? "";
+		if (effectiveNick.length < 2) {
+			// Aguarda entrada de nick no /join. Re-tenta quando nick mudar.
+			return;
+		}
 		helloSentRef.current = true;
 		const effectiveCode = codeRef.current || undefined;
 		ws.send({
 			type: "hello",
 			payload: {
 				uuid: uuidRef.current,
-				nick: nickRef.current,
+				nick: effectiveNick,
 				code: effectiveCode,
 			},
 		});

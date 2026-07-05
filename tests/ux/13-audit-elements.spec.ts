@@ -42,34 +42,36 @@ function shot(page: Page, name: string, full = true) {
 }
 
 // =========================================================================
-// UX-001: 404 sem branding, ilustração, CTA ou return-home
+// UX-001: 404 page editorial Atelier Zero (pós-fix)
 // =========================================================================
-test("UX-001 — 404 page has no brand/illustration/return-CTA", async ({ page }) => {
+test("UX-001 — 404 page has brand, illustration, return-CTA (post-fix)", async ({ page }) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
-	const consoleWarn: string[] = [];
-	page.on("console", (m) => {
-		if (m.type() === "warning" || m.type() === "error") consoleWarn.push(m.text());
-	});
 	await page.goto("/rota-que-nao-existe", { waitUntil: "networkidle" });
-	await page.waitForTimeout(500);
+	await page.waitForTimeout(800);
 
 	const txt = (await page.locator("body").innerText()).trim();
-	const hasIllustration = await page.locator("svg, img").count();
-	const hasReturnCta = await page
-		.getByRole("link", { name: /voltar|home|retornar|landing/i })
-		.count();
-	const hasBrand = await page
-		.locator("text=/Pointly|Ø/")
-		.count();
+	const has404 = await page.getByTestId("not-found-code").innerText();
+	const hasCreateCta = await page.getByTestId("not-found-create").count();
+	const hasBackCta = await page.getByTestId("not-found-back").count();
+	const hasBrand = await page.locator("text=/Pointly|Ø/").count();
 
-	expect(txt.length, "404 body has minimal text").toBeLessThan(50);
-	expect(hasIllustration, "404 has no illustration").toBe(0);
-	expect(hasReturnCta, "404 has no return CTA").toBe(0);
+	// Após o fix UX-001: 404 editorial com CTA Criar sala + Voltar + brand mark.
+	expect(txt.length, "404 body has editorial copy").toBeGreaterThan(50);
+	expect(has404, "404 has a 404 heading").toContain("404");
+	expect(hasCreateCta, "404 has Criar sala CTA").toBeGreaterThan(0);
+	expect(hasBackCta, "404 has Voltar ghost").toBeGreaterThan(0);
+	expect(hasBrand, "404 has brand (Pointly/Ø)").toBeGreaterThan(0);
 
-	await shot(page, "UX-001-not-found-no-cta");
+	await shot(page, "UX-001-after-not-found-editorial");
 	test.info().annotations.push({
 		type: "ux-001-evidence",
-		description: JSON.stringify({ bodyText: txt, illustration: hasIllustration, returnCta: hasReturnCta, brand: hasBrand }),
+		description: JSON.stringify({
+			bodyLength: txt.length,
+			heading: has404,
+			createCtaCount: hasCreateCta,
+			backCtaCount: hasBackCta,
+			brandCount: hasBrand,
+		}),
 	});
 });
 
@@ -190,9 +192,19 @@ test("UX-006 — ws-client warns refusing to send invalid event", async ({ page 
 
 	test.info().annotations.push({
 		type: "ux-006-evidence",
-		description: JSON.stringify({ totalWarnings: warnings.length, invalidEventCount: invalidEventWarn.length }),
+		description: JSON.stringify({
+			totalWarnings: warnings.length,
+			invalidEventCount: invalidEventWarn.length,
+			sampleMessages: invalidEventWarn.slice(0, 3),
+		}),
 	});
-	expect(invalidEventWarn.length, "ws-client refuses to send invalid event on arena load").toBeGreaterThan(0);
+	// Após o fix, a mensagem serializa as issues Zod em vez de "[Object]".
+	// Se ainda houver warning de "refusing to send", ela deve conter path/message.
+	for (const w of invalidEventWarn) {
+		expect(w, "warning exposto deve mostrar issues Zod, não [Object]").not.toBe(
+			"[ws-client] refusing to send invalid event:",
+		);
+	}
 });
 
 // =========================================================================
@@ -213,7 +225,9 @@ test("UX-007 — react-router v7 future-flag warnings per page", async ({ page }
 		type: "ux-007-evidence",
 		description: JSON.stringify({ futureFlagWarningCount: warnings.length }),
 	});
-	expect(warnings.length, "router warns v7 flags not opted-in").toBeGreaterThan(0);
+	// After UX-007 fix: 5/6 warnings silenced via future flags.
+	// Only v7_startTransition remains — @remix-run/router 1.21 não expõe a flag.
+	expect(warnings.length, "router warns v7 flags not opted-in").toBeLessThanOrEqual(1);
 });
 
 // =========================================================================

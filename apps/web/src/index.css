@@ -194,6 +194,12 @@ a[role="button"] {
 	.cta-sticky-nav {
 		display: none !important;
 	}
+	/* UX-002: side rails colidem com hero em mobile (390/360).
+	   Em mobile o conteúdo precisa de toda a largura — escondemos
+	   os rails verticais para não atravessarem a tipografia display. */
+	.side-rail {
+		display: none !important;
+	}
 }
 
 /* ---------------------------------------------------------------

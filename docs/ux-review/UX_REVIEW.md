@@ -18,13 +18,15 @@
 
 ## 1. Resumo executivo
 
-| Sev   | Count |
-|-------|-------|
-| Crítica | 0     |
-| Alta    | 3     |
-| Média   | 3     |
-| Baixa   | 4     |
-| Total   | 10    |
+| Sev   | Total | Corrigidos (iter-1) | Pendentes |
+|-------|-------|---------------------|-----------|
+| Crítica | 0     | 0                   | 0         |
+| Alta    | 3     | 3                   | 0         |
+| Média   | 3     | 0                   | 3         |
+| Baixa   | 4     | 1                   | 3         |
+| Total   | 10    | 4                   | 6         |
+
+**Iteração 1 (concluída)**: corrigidos UX-001, UX-002, UX-006 (Alta) + UX-007 (Baixa). 0 regressões — baseline Playwright subiu de 118/127 (93.0%) para 119/127 (93.7%).
 
 Positivos confirmados (audit-routes + axe-core):
 
@@ -48,18 +50,18 @@ Tabela principal (sort por sev → ID). Coluna **Evidência (before)** aponta
 sempre para um screenshot em `screenshots/before/`. Coluna **Issue** aponta
 para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
 
-| ID | Sev | Categoria | Título curto | Evidência (before) | Issue | Status |
-|----|-----|-----------|---------------|---------------------|-------|--------|
-| [UX-001](#ux-001) | Alta | UX / fluxo · Navegação | 404 sem branding, ilustração ou CTA de retorno | `screenshots/before/UX-001-not-found-no-cta.png` | [#1](https://github.com/Heldinhow/pointly/issues/1) | `pending-validation` |
-| [UX-002](#ux-002) | Alta | Responsividade · UI | Side rails colidem com hero em mobile (390/360) | `screenshots/before/UX-002-landing-rail-collision-390.png` | [#2](https://github.com/Heldinhow/pointly/issues/2) | `pending-validation` |
-| [UX-006](#ux-006) | Alta | Feedback / Console | `ws-client` envia evento inválido em todo load da arena | (n/a — console warning) | [#3](https://github.com/Heldinhow/pointly/issues/3) | `pending-validation` |
-| [UX-003](#ux-003) | Média | UX / fluxo | Arena vazia sem CTA de share/invite proeminente | `screenshots/before/UX-003-arena-empty-no-invite.png` | [#4](https://github.com/Heldinhow/pointly/issues/4) | `pending-validation` |
-| [UX-009](#ux-009) | Média | A11y · Toque | 15 touch targets < 44×44 em mobile (header logo, botões) | (programatic) | [#5](https://github.com/Heldinhow/pointly/issues/5) | `pending-validation` |
-| [UX-005](#ux-005) | Média | UX / fluxo | Reveal button context na arena-vazia precisa explicação | `screenshots/before/UX-005-arena-reveal-empty.png` | [#6](https://github.com/Heldinhow/pointly/issues/6) | `pending-validation` |
-| [UX-004](#ux-004) | Baixa | UI / consistência | CTA "Entrar" disabled fica opacidade 0.4 — contraste enabled↔disabled baixo | `screenshots/before/UX-004-join-host-empty-cta.png` | [#7](https://github.com/Heldinhow/pointly/issues/7) | `pending-validation` |
-| [UX-007](#ux-007) | Baixa | Feedback / Console | 6 React Router future-flag warnings por page load | (n/a — console warning) | [#8](https://github.com/Heldinhow/pointly/issues/8) | `pending-validation` |
-| [UX-008](#ux-008) | Baixa | Responsividade · UI | Deck mobile: card "0" off-screen sem peek affordance óbvio | `screenshots/before/UX-008-deck-mobile-peek.png` | [#9](https://github.com/Heldinhow/pointly/issues/9) | `pending-validation` |
-| [UX-010](#ux-010) | Baixa | A11y | (positivo) axe-core WCAG 2 AA — 0 violações em 4 rotas | `screenshots/before/UX-010-a11y-*.png` (4 rotas) | (n/a — positivo) | `fix-validated` (positivo) |
+| ID | Sev | Categoria | Título curto | Evidência (before) | Evidência (after) | Issue | Status |
+|----|-----|-----------|---------------|---------------------|---------------------|-------|--------|
+| [UX-001](#ux-001) | Alta | UX / fluxo · Navegação | 404 sem branding, ilustração ou CTA de retorno | `screenshots/before/UX-001-not-found-no-cta.png` | `screenshots/after/UX-001-after-not-found-editorial.png` | [#1](https://github.com/Heldinhow/pointly/issues/1) | `fix-validated` (iter-1) |
+| [UX-002](#ux-002) | Alta | Responsividade · UI | Side rails colidem com hero em mobile (390/360) | `screenshots/before/UX-002-landing-rail-collision-390.png` | `screenshots/after/UX-002-after-rails-hidden-390.png` | [#2](https://github.com/Heldinhow/pointly/issues/2) | `fix-validated` (iter-1) |
+| [UX-006](#ux-006) | Alta | Feedback / Console | `ws-client` envia evento inválido em todo load da arena | (n/a — console warning) | `screenshots/after/UX-006-after-ws-clean-load.png` | [#3](https://github.com/Heldinhow/pointly/issues/3) | `fix-validated` (iter-1) |
+| [UX-003](#ux-003) | Média | UX / fluxo | Arena vazia sem CTA de share/invite proeminente | `screenshots/before/UX-003-arena-empty-no-invite.png` | (iter-2) | [#4](https://github.com/Heldinhow/pointly/issues/4) | `pending-validation` |
+| [UX-009](#ux-009) | Média | A11y · Toque | 15 touch targets < 44×44 em mobile (header logo, botões) | (programatic) | (iter-2) | [#5](https://github.com/Heldinhow/pointly/issues/5) | `pending-validation` |
+| [UX-005](#ux-005) | Média | UX / fluxo | Reveal button context na arena-vazia precisa explicação | `screenshots/before/UX-005-arena-reveal-empty.png` | (iter-2) | [#6](https://github.com/Heldinhow/pointly/issues/6) | `pending-validation` |
+| [UX-004](#ux-004) | Baixa | UI / consistência | CTA "Entrar" disabled fica opacidade 0.4 — contraste enabled↔disabled baixo | `screenshots/before/UX-004-join-host-empty-cta.png` | (iter-3) | [#7](https://github.com/Heldinhow/pointly/issues/7) | `pending-validation` |
+| [UX-007](#ux-007) | Baixa | Feedback / Console | 6 React Router future-flag warnings por page load | (n/a — console warning) | `screenshots/after/UX-007-after-router-flags-optin.png` | [#8](https://github.com/Heldinhow/pointly/issues/8) | `fix-validated` (iter-1) |
+| [UX-008](#ux-008) | Baixa | Responsividade · UI | Deck mobile: card "0" off-screen sem peek affordance óbvio | `screenshots/before/UX-008-deck-mobile-peek.png` | (iter-3) | [#9](https://github.com/Heldinhow/pointly/issues/9) | `pending-validation` |
+| [UX-010](#ux-010) | Baixa | A11y | (positivo) axe-core WCAG 2 AA — 0 violações em 4 rotas | `screenshots/before/UX-010-a11y-*.png` (4 rotas) | n/a | (n/a — positivo) | `fix-validated` (positivo) |
 
 ---
 
@@ -82,8 +84,9 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
      - `surface-noise::before` aplicado
   2. Tratar como rota `errorElement` no `createBrowserRouter` para que erros de runtime também caiam nela (Nielsen #9 — help users recognize errors).
 - **Prioridade**: P2 (impacto alto · esforço médio).
-- **Status**: `pending-validation`
+- **Status**: `fix-validated` (iter-1 — `apps/web/src/pages/not-found.tsx` adicionado, `apps/web/src/routes.tsx` referencia-o)
 - **Issue GitHub**: [#1](https://github.com/Heldinhow/pointly/issues/1)
+- **Fix aplicado**: novo componente `NotFound` em `apps/web/src/pages/not-found.tsx` com Card editorial Atelier Zero (Ø + 404 display-xl coral + headline "Voto perdido no vazio." + sub explicativo + CTAs Criar sala coral + Voltar ghost + surface-noise::before + role="alert"). Validado por `tests/ux/14-audit-after.spec.ts:36` — `data-testid="not-found-code"`, `not-found-create`, `not-found-back` presentes.
 
 ### UX-002
 
@@ -100,8 +103,9 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
   2. Alternativa: em mobile o conteúdo recebe `padding-inline: 16px` e os rails ficam abaixo do fold, sem overlap.
   3. Confirmar com `vp-390` e `vp-820` que o problema desaparece (probable "tablet" 820 ainda mostra lado a lado — verificar).
 - **Prioridade**: P1 (impacto alto · esforço baixo).
-- **Status**: `pending-validation`
+- **Status**: `fix-validated` (iter-1 — `apps/web/src/index.css` esconde `.side-rail` em `@media (max-width: 767px)`)
 - **Issue GitHub**: [#2](https://github.com/Heldinhow/pointly/issues/2)
+- **Fix aplicado**: regra `@media (max-width: 767px) { .side-rail { display: none !important; } }` adicionada ao bloco já existente do `.cta-sticky-nav` em `apps/web/src/index.css`. Validado por `tests/ux/14-audit-after.spec.ts:65` — probe retorna `railsVisible: [false, false]` em vp-390.
 
 ### UX-006
 
@@ -117,8 +121,12 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
   2. Identificar qual evento está sendo enviado (provavelmente `vote`, `join` ou `ready` com payload parcial durante race condition de mount).
   3. Adicionar teste de regressão em `apps/web/src/lib/ws-client.test.ts`.
 - **Prioridade**: P2 (impacto alto · esforço médio).
-- **Status**: `pending-validation`
+- **Status**: `fix-validated` (iter-1 — 2 mudanças: log estruturado + guard de nick válido)
 - **Issue GitHub**: [#3](https://github.com/Heldinhow/pointly/issues/3)
+- **Fix aplicado**:
+  1. `apps/web/src/lib/ws-client.ts:send()` agora serializa `parsed.error.issues` em string única com path/message/received (`console.warn("[ws-client] refusing to send invalid event type=\"hello\": payload.nick: apelido: mínimo 2 chars")` em vez de `[Object]`).
+  2. `apps/web/src/lib/use-arena-loop.ts:sendHello()` agora **bloqueia** o envio se `nick.trim().length < 2`. Isso elimina a causa raiz: Arena montava direto em `/arena?code=…&host=1` (sem passar pelo /join) com nick vazio e o Zod rejeitava.
+  Validado por `tests/ux/14-audit-after.spec.ts:90` — probe retorna `invalidEventCount: 0`.
 
 ### UX-003
 
@@ -208,8 +216,9 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
   1. Em `apps/web/src/routes.tsx`, passar `future: { v7_startTransition: true, v7_relativeSplatPath: true, v7_fetcherPersist: true, v7_normalizeFormMethod: true, v7_partialHydration: true, v7_skipActionErrorRevalidation: true }` ao `createBrowserRouter(...)`.
   2. Sem mudança de comportamento (todas as flags são opt-in para comportamento v7 já suportado).
 - **Prioridade**: P3 (impacto baixo · esforço baixo).
-- **Status**: `pending-validation`
+- **Status**: `fix-validated` (iter-1 — `apps/web/src/routes.tsx` opt-in em 5 v7 future flags)
 - **Issue GitHub**: [#8](https://github.com/Heldinhow/pointly/issues/8)
+- **Fix aplicado**: `createBrowserRouter` recebe `{future: {v7_relativeSplatPath, v7_fetcherPersist, v7_normalizeFormMethod, v7_partialHydration, v7_skipActionErrorRevalidation}}`. `v7_startTransition` foi omitido porque @remix-run/router 1.21 (bundled com react-router-dom 6.28) não expõe a flag. Validado por `tests/ux/14-audit-after.spec.ts:116` — `futureFlagWarningCount: 1` (apenas o warning residual de `v7_startTransition`).
 
 ### UX-008
 
@@ -261,13 +270,15 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
 1. ~~Criar `docs/ux-review/AUDIT_SCOPE.md`~~ ✅ (`d2fe788`)
 2. ~~Capturar before/ via Playwright~~ ✅ (60 + 11 = 71 PNGs)
 3. ~~Criar GitHub Issues~~ ✅ — 9 issues abertas (#1..#9) em `github.com/Heldinhow/pointly`, labels `ux-review` + `severity:*` + `category:*`. Cada finding é uma issue.
-4. **Iteração 1** (próximo): corrigir Crítica+Alta pendentes (UX-001, UX-002, UX-006) + Baixa prioritária (UX-007 router flags, esforço baixíssimo).
-5. **Iteração 2** (se budget permitir): UX-003 · UX-005 · UX-009.
-6. **Iteração 3** (se budget permitir): UX-004 · UX-008.
+4. ~~**Iteração 1**~~ ✅ — corrigidos UX-001 (404), UX-002 (rails mobile), UX-006 (ws-client log + nick guard), UX-007 (router v7 flags). 0 regressões (118→119 pass). 4 PNGs em `screenshots/after/`.
+5. **Iteração 2** (próximo, se budget permitir): UX-003 (arena empty invite) · UX-005 (revelar button 0 jogadores) · UX-009 (touch targets <44×44). Médias prioritárias por impacto.
+6. **Iteração 3** (se budget permitir): UX-004 (CTA disabled contrast) · UX-008 (deck peek).
 7. Re-validar cada fix com Playwright, capturar `screenshots/after/UX-NNN-*.png`, atualizar Status, comentar nas issues com link do commit.
 8. Mega-PR `ux-review-main → main` ao final.
 
 **Critério de parada**: zero Crít/Alt `pending-validation` E ≤3 iterações completas.
+
+**Estado atual**: zero Crítica/Alta pendentes ✅ (3 Alta corrigidas na iter-1). Restam 6 pendentes (3 Médias + 3 Baixas). A regra de parada permite parar aqui com sucesso, mas há budget para iter-2/3.
 
 ## 6. Reprodutibilidade
 
@@ -276,12 +287,13 @@ Auditoria foi gerada em 2026-07-05 a partir de:
 - Branch: `ux-review-main`
 - HEAD inicial: `78caef2` (origin/main)
 - HEAD atual: ver `git log -1`
-- Specs: `tests/ux/12-audit-routes.spec.ts`, `tests/ux/13-audit-elements.spec.ts`
+- Specs: `tests/ux/12-audit-routes.spec.ts`, `tests/ux/13-audit-elements.spec.ts`, `tests/ux/14-audit-after.spec.ts`
 - Raw: `docs/ux-review/raw-observations.md`
+- Mudanças de código: `apps/web/src/index.css`, `apps/web/src/routes.tsx`, `apps/web/src/lib/ws-client.ts`, `apps/web/src/lib/use-arena-loop.ts`, `apps/web/src/pages/not-found.tsx` (novo).
 
 Para reproduzir:
 
 ```bash
 git checkout ux-review-main
-cd tests/ux && bunx playwright test 12-audit-routes 13-audit-elements --project=desktop
+cd tests/ux && bunx playwright test 12-audit-routes 13-audit-elements 14-audit-after --project=desktop
 ```
