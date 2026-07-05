@@ -109,25 +109,35 @@ test("UX-002 — landing side rails overlap hero @ 390px", async ({ page }) => {
 });
 
 // =========================================================================
-// UX-003: arena vazia sem invite/share proeminente
+// UX-003: arena vazia com invite copy + CTA após fix
 // =========================================================================
-test("UX-003 — empty arena lacks prominent share/invite affordance", async ({ page }) => {
+test("UX-003 — empty arena has prominent share/invite affordance (post-fix)", async ({ page }) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/arena?code=ABCD&host=1", { waitUntil: "networkidle" });
-	await page.waitForTimeout(800);
+	await page.waitForTimeout(1_500);
 
-	const shareBtnVisible = await page
-		.getByRole("button", { name: /compartilhar|share|copiar|copy/i })
-		.count();
-	const inviteCta = await page
-		.getByText(/convide|invite|compartilhe|share the code/i)
-		.count();
+	const probe = await page.evaluate(() => {
+		const invite = document.querySelector("[data-testid='arena-empty-invite']");
+		const copyBtn = document.querySelector("[data-testid='empty-invite-copy']");
+		const inviteText = invite?.textContent ?? "";
+		return {
+			hasInviteBlock: !!invite,
+			hasCopyBtn: !!copyBtn,
+			hasCodeReference: /\bABCD\b/.test(inviteText),
+			hasConviteWords: /compartilhe|convide|compartilhar/i.test(inviteText),
+			inviteTextSample: inviteText.slice(0, 120),
+		};
+	});
 
-	await shot(page, "UX-003-arena-empty-no-invite");
+	await shot(page, "UX-003-arena-empty-with-invite");
 	test.info().annotations.push({
 		type: "ux-003-evidence",
-		description: JSON.stringify({ shareButtonCount: shareBtnVisible, inviteTextCount: inviteCta }),
+		description: JSON.stringify(probe),
 	});
+
+	expect(probe.hasInviteBlock, "empty invite block presente").toBe(true);
+	expect(probe.hasCopyBtn, "empty invite copy CTA presente").toBe(true);
+	expect(probe.hasCodeReference, "convida cita código 'ABCD'").toBe(true);
 });
 
 // =========================================================================
@@ -157,23 +167,27 @@ test("UX-004 — join-host primary CTA looks disabled when empty", async ({ page
 });
 
 // =========================================================================
-// UX-005: arena reveal button ativo com 0 jogadores / 0 votos
+// UX-005: reveal button escondido quando players.length === 0
 // =========================================================================
-test("UX-005 — reveal button visible with 0 players, 0 votes", async ({ page }) => {
+test("UX-005 — reveal button hidden with 0 players (post-fix)", async ({ page }) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/arena?code=ABCD&host=1", { waitUntil: "networkidle" });
-	await page.waitForTimeout(800);
+	await page.waitForTimeout(1_200);
 
-	const revealBtn = page.getByRole("button", { name: /revelar votos/i }).first();
-	const visible = await revealBtn.isVisible().catch(() => false);
-	const isDisabled = visible ? await revealBtn.isDisabled() : null;
-	const text = visible ? await revealBtn.innerText() : "(missing)";
+	const probe = await page.evaluate(() => {
+		const btn = document.querySelector("[data-testid='reveal-button']");
+		return {
+			revealInDom: !!btn,
+			hidden: btn ? !btn.getBoundingClientRect().width : true,
+		};
+	});
 
-	await shot(page, "UX-005-arena-reveal-empty");
+	await shot(page, "UX-005-arena-reveal-hidden");
 	test.info().annotations.push({
 		type: "ux-005-evidence",
-		description: JSON.stringify({ visible, isDisabled, text }),
+		description: JSON.stringify(probe),
 	});
+	expect(probe.hidden, "reveal button não está no DOM quando 0 jogadores").toBe(true);
 });
 
 // =========================================================================

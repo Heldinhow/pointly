@@ -131,3 +131,85 @@ test("UX-007 after — router v7 flags silenced (≤1 warning)", async ({ page }
 	});
 	expect(warnings.length, "≤1 router future-flag warning (v7_startTransition não está em @remix-run/router 1.21)").toBeLessThanOrEqual(1);
 });
+
+// =========================================================================
+// UX-003: arena empty invite guidance
+// =========================================================================
+test("UX-003 after — arena empty state has invite copy + CTA", async ({ page }) => {
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await page.goto("/arena?code=ABCD&host=1", { waitUntil: "networkidle" });
+	await page.waitForTimeout(1_500);
+
+	const probe = await page.evaluate(() => {
+		const invite = document.querySelector("[data-testid='arena-empty-invite']");
+		const copy = document.querySelector("[data-testid='empty-invite-copy']");
+		const reveal = document.querySelector("[data-testid='reveal-button']");
+		return {
+			hasInviteBlock: !!invite,
+			hasCopyCta: !!copy,
+			revealHidden: !reveal,
+			inviteText: (invite?.textContent ?? "").slice(0, 100),
+		};
+	});
+
+	await shot(page, "UX-003-after-empty-invite");
+	test.info().annotations.push({ type: "ux-003-after", description: JSON.stringify(probe) });
+});
+
+// =========================================================================
+// UX-005: reveal button escondido quando 0 jogadores
+// =========================================================================
+test("UX-005 after — reveal button hidden with 0 players", async ({ page }) => {
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await page.goto("/arena?code=ABCD&host=1", { waitUntil: "networkidle" });
+	await page.waitForTimeout(1_200);
+
+	const probe = await page.evaluate(() => {
+		const btn = document.querySelector("[data-testid='reveal-button']");
+		return {
+			revealInDom: !!btn,
+			hidden: btn ? !btn.getBoundingClientRect().width : true,
+		};
+	});
+
+	await shot(page, "UX-005-after-reveal-hidden");
+	test.info().annotations.push({ type: "ux-005-after", description: JSON.stringify(probe) });
+});
+
+// =========================================================================
+// UX-009: 0 touch targets < 44×44 em mobile
+// =========================================================================
+test("UX-009 after — touch targets all >= 44×44 in mobile", async ({ page }) => {
+	const tiny: { tag: string; text: string; w: number; h: number; selector: string }[] = [];
+	await page.setViewportSize({ width: 390, height: 844 });
+	for (const path of ["/", "/join?host=1&code=ABCD", "/arena?code=ABCD&host=1", "/full?code=ZZZZ"]) {
+		await page.goto(path, { waitUntil: "networkidle" });
+		await page.waitForTimeout(400);
+		const targets = await page.evaluate(() => {
+			const sel = "button, a[href], [role='button'], input, [tabindex='0']";
+			const out: { tag: string; text: string; w: number; h: number; selector: string }[] = [];
+			document.querySelectorAll(sel).forEach((el) => {
+				const r = el.getBoundingClientRect();
+				if (r.width === 0 || r.height === 0) return;
+				if (r.width < 44 || r.height < 44) {
+					out.push({
+						tag: el.tagName,
+						text: (el.textContent ?? "").trim().slice(0, 40),
+						w: Math.round(r.width),
+						h: Math.round(r.height),
+						selector: el.tagName.toLowerCase(),
+					});
+				}
+			});
+			return out;
+		});
+		for (const t of targets) tiny.push({ ...t, selector: `${path} → ${t.selector}` });
+	}
+
+	await shot(page, "UX-009-after-touch-targets");
+	test.info().annotations.push({
+		type: "ux-009-after",
+		description: JSON.stringify({ total: tiny.length }),
+	});
+	expect(tiny.length, "0 interactive elements < 44×44 em mobile após fix").toBe(0);
+});

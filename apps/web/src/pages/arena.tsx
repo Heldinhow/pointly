@@ -280,43 +280,32 @@ export function Arena() {
 		>
 			{/* Topbar metadata strip */}
 			<header className="border-b border-ink/10 py-2.5 flex-shrink-0">
-				<div className="w-full px-8 flex items-center justify-between font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint">
-					<div className="flex items-center gap-4">
-						<span
-							aria-hidden="true"
-							className="inline-block w-1.5 h-1.5 rounded-full bg-coral animate-pulse"
-						/>
+				<div className="max-w-[1360px] mx-auto px-6 flex items-center justify-between">
+					<div className="flex items-center gap-4 flex-wrap">
 						<Link
 							to="/"
-							className="font-display font-extrabold text-[15px] tracking-[-0.02em] text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors"
-							aria-label="Sair da sala e voltar para a página inicial"
+							className="font-display font-extrabold text-[18px] tracking-[-0.03em] flex items-baseline gap-1.5 hover:text-coral transition-colors flex-shrink-0"
 						>
-							<span className="font-italic italic text-coral text-[18px] leading-none">
+							<span className="font-italic italic text-coral text-[20px] leading-none">
 								Ø
 							</span>
 							Pointly
 						</Link>
-						<span className="hidden">
-							Sala{" "}
-							<span className="text-ink font-medium" data-testid="arena-code">
-								{code || "—"}
+						<span className="font-mono text-[9px] text-ink-faint uppercase tracking-wider flex items-center gap-1.5 flex-wrap">
+							<span>Sala <span className="text-ink font-medium" data-testid="arena-code">{code || "—"}</span></span>
+							<span>·</span>
+							<span data-testid="arena-round">
+								Rodada {String(sala?.round ?? 1).padStart(2, "0")}
+							</span>
+							<span>·</span>
+							<span data-testid="arena-self-nick">
+								Você · <span className="text-ink font-medium">{me?.nick ?? "—"}</span>
 							</span>
 						</span>
 					</div>
 					<SharePill code={code} />
 				</div>
 			</header>
-
-			{/* Arena head: rodape removido — info já vive no Topbar (timer/stats pills).
-			 * Strip "Rodada NN" e "Você · {nick}" ficaram ruidosos sem info nova. */}
-			<div className="hidden">
-				<span data-testid="arena-round-hidden-stub">
-					Rodada {String(sala?.round ?? 1).padStart(2, "0")}
-				</span>
-				<span data-testid="arena-self-nick-hidden-stub">
-					Você · <span className="text-ink">{me?.nick ?? "—"}</span>
-				</span>
-			</div>
 
 			{/* Stage */}
 			<main
@@ -332,6 +321,43 @@ export function Arena() {
 				<div className="hidden md:block absolute top-3.5 right-12 z-10">
 					<TimerPill />
 				</div>
+
+				{/* UX-003: empty-state invite guidance.
+				   Aparece em três estados pré-voto:
+				   (a) sala=null + nick="" — usuário caiu direto em /arena
+				       sem passar por /join (provavelmente deep link);
+				   (b) sala criada mas 0 players — pre-welcome server side;
+				   (c) sala solo com host sem voto (1 player, !hasVoted).
+				   Mostra mono-tag + microcopy + CTA copiar código em
+				   destaque. Não compete com o SharePill do header. */}
+				{(sala === null || (sala !== null && votedCount === 0)) && code && (
+					<div
+						className="relative z-20 mb-4 flex flex-col items-center gap-2.5"
+						data-testid="arena-empty-invite"
+					>
+						<span className="font-mono text-[10px] uppercase tracking-[0.06em] text-coral font-medium">
+							Aguardando primeiro jogador
+						</span>
+						<p className="font-sans text-[14px] leading-[1.55] text-ink-soft text-center max-w-[36ch]">
+							Compartilhe o código{" "}
+							<span className="font-italic italic text-coral text-[16px] leading-none">
+								{code}
+							</span>{" "}
+							para começar a votar.
+						</p>
+						<button
+							type="button"
+							onClick={() => {
+								const url = buildShareUrl(window.location.origin, code);
+								void navigator.clipboard?.writeText(url).catch(() => {});
+							}}
+							className="font-mono text-[10px] uppercase tracking-[0.06em] text-coral hover:text-coral-soft underline underline-offset-4 transition-colors"
+							data-testid="empty-invite-copy"
+						>
+							Copiar código completo ↗
+						</button>
+					</div>
+				)}
 
 				{/* Mesa: Ellipse + 12 Seats + RevealButton central */}
 				<div
@@ -350,14 +376,14 @@ export function Arena() {
 							median !== null &&
 							p.value !== null &&
 							(() => {
-								const numericValue =
-									p.value === "½"
-										? 0.5
-										: p.value === "☕"
-											? null
-											: Number(p.value);
-								return numericValue === median;
-							})();
+									const numericValue =
+										p.value === "½"
+											? 0.5
+											: p.value === "☕"
+												? null
+												: Number(p.value);
+									return numericValue === median;
+								})();
 						return (
 							<div
 								key={p.id}
@@ -381,14 +407,18 @@ export function Arena() {
 						);
 					})}
 
-					{/* RevealButton central */}
-					<RevealButton
-						phase={phase}
-						votedCount={votedCount}
-						totalPlayers={sala?.players.length ?? 0}
-						onReveal={handleReveal}
-						onNewRound={handleNewRound}
-					/>
+					{/* UX-005: esconde RevealButton enquanto não há jogadores
+					   conectados. Sem isso o botão "AGUARDANDO 0 JOGADORES…"
+					   compete por atenção com o CTA de invite. */}
+					{sala !== null && sala.players.length > 0 && (
+						<RevealButton
+							phase={phase}
+							votedCount={votedCount}
+							totalPlayers={sala.players.length}
+							onReveal={handleReveal}
+							onNewRound={handleNewRound}
+						/>
+					)}
 
 					{/* Animações de arremessos */}
 					<ProjectileAnimator />
@@ -396,7 +426,7 @@ export function Arena() {
 
 				{/* Deck dock (bottom center) */}
 				<div
-					className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
+					className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 fib-deck-responsive-wrapper sm:w-auto sm:max-w-none"
 					data-testid="arena-deck-wrapper"
 				>
 					<Deck

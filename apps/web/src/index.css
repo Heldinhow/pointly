@@ -200,6 +200,30 @@ a[role="button"] {
 	.side-rail {
 		display: none !important;
 	}
+	/* UX-009: bumps touch targets to WCAG 2.5.5 minimum (44x44) em
+	   devices coarse pointer. Aplica a qualquer Button/Pill/Link
+	   usado como controle de toque. */
+	button,
+	a[href],
+	[role="button"],
+	[role="link"] {
+		min-height: 44px;
+	}
+	/* Inputs de texto — a11y baseline precisa 44px de altura. */
+	input[type="text"],
+	input[type="email"],
+	input:not([type]),
+	textarea {
+		min-height: 44px;
+		padding-block: 0.625rem;
+	}
+}
+
+@media (max-width: 639px) {
+	.fib-deck-responsive-wrapper {
+		width: 100% !important;
+		max-width: calc(100vw - 32px) !important;
+	}
 }
 
 /* ---------------------------------------------------------------

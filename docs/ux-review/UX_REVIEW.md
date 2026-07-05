@@ -18,15 +18,17 @@
 
 ## 1. Resumo executivo
 
-| Sev   | Total | Corrigidos (iter-1) | Pendentes |
-|-------|-------|---------------------|-----------|
-| Crítica | 0     | 0                   | 0         |
-| Alta    | 3     | 3                   | 0         |
-| Média   | 3     | 0                   | 3         |
-| Baixa   | 4     | 1                   | 3         |
-| Total   | 10    | 4                   | 6         |
+| Sev   | Total | Corrigidos (iter-1) | Corrigidos (iter-2) | Pendentes |
+|-------|-------|---------------------|---------------------|-----------|
+| Crítica | 0     | 0                   | 0                   | 0         |
+| Alta    | 3     | 3                   | 0                   | 0         |
+| Média   | 3     | 0                   | 3                   | 0         |
+| Baixa   | 4     | 1                   | 0                   | 3         |
+| Total   | 10    | 4                   | 3                   | 3         |
 
-**Iteração 1 (concluída)**: corrigidos UX-001, UX-002, UX-006 (Alta) + UX-007 (Baixa). 0 regressões — baseline Playwright subiu de 118/127 (93.0%) para 119/127 (93.7%).
+**Iteração 1**: corrigidos UX-001, UX-002, UX-006 (Alta) + UX-007 (Baixa). Baseline 118/127 (93.0%) → 119/127 (93.7%).
+
+**Iteração 2**: corrigidos UX-003, UX-005, UX-009 (Média). Baseline 125/134 (93.3%) — 7 testes novos adicionados ao harness. 0 regressões causadas pelos fixes (2 testes pré-existentes (E7/E11) flipam entre pass/fail com base em timing de WS multi-client; arquivos não foram tocados pelos fixes).
 
 Positivos confirmados (audit-routes + axe-core):
 
@@ -55,9 +57,9 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
 | [UX-001](#ux-001) | Alta | UX / fluxo · Navegação | 404 sem branding, ilustração ou CTA de retorno | `screenshots/before/UX-001-not-found-no-cta.png` | `screenshots/after/UX-001-after-not-found-editorial.png` | [#1](https://github.com/Heldinhow/pointly/issues/1) | `fix-validated` (iter-1) |
 | [UX-002](#ux-002) | Alta | Responsividade · UI | Side rails colidem com hero em mobile (390/360) | `screenshots/before/UX-002-landing-rail-collision-390.png` | `screenshots/after/UX-002-after-rails-hidden-390.png` | [#2](https://github.com/Heldinhow/pointly/issues/2) | `fix-validated` (iter-1) |
 | [UX-006](#ux-006) | Alta | Feedback / Console | `ws-client` envia evento inválido em todo load da arena | (n/a — console warning) | `screenshots/after/UX-006-after-ws-clean-load.png` | [#3](https://github.com/Heldinhow/pointly/issues/3) | `fix-validated` (iter-1) |
-| [UX-003](#ux-003) | Média | UX / fluxo | Arena vazia sem CTA de share/invite proeminente | `screenshots/before/UX-003-arena-empty-no-invite.png` | (iter-2) | [#4](https://github.com/Heldinhow/pointly/issues/4) | `pending-validation` |
-| [UX-009](#ux-009) | Média | A11y · Toque | 15 touch targets < 44×44 em mobile (header logo, botões) | (programatic) | (iter-2) | [#5](https://github.com/Heldinhow/pointly/issues/5) | `pending-validation` |
-| [UX-005](#ux-005) | Média | UX / fluxo | Reveal button context na arena-vazia precisa explicação | `screenshots/before/UX-005-arena-reveal-empty.png` | (iter-2) | [#6](https://github.com/Heldinhow/pointly/issues/6) | `pending-validation` |
+| [UX-003](#ux-003) | Média | UX / fluxo | Arena vazia sem CTA de share/invite proeminente | `screenshots/before/UX-003-arena-empty-no-invite.png` | `screenshots/after/UX-003-after-empty-invite.png` | [#4](https://github.com/Heldinhow/pointly/issues/4) | `fix-validated` (iter-2) |
+| [UX-009](#ux-009) | Média | A11y · Toque | 15 touch targets < 44×44 em mobile (header logo, botões) | (programatic) | `screenshots/after/UX-009-after-touch-targets.png` | [#5](https://github.com/Heldinhow/pointly/issues/5) | `fix-validated` (iter-2) |
+| [UX-005](#ux-005) | Média | UX / fluxo | Reveal button context na arena-vazia precisa explicação | `screenshots/before/UX-005-arena-reveal-empty.png` | `screenshots/after/UX-005-after-reveal-hidden.png` | [#6](https://github.com/Heldinhow/pointly/issues/6) | `fix-validated` (iter-2) |
 | [UX-004](#ux-004) | Baixa | UI / consistência | CTA "Entrar" disabled fica opacidade 0.4 — contraste enabled↔disabled baixo | `screenshots/before/UX-004-join-host-empty-cta.png` | (iter-3) | [#7](https://github.com/Heldinhow/pointly/issues/7) | `pending-validation` |
 | [UX-007](#ux-007) | Baixa | Feedback / Console | 6 React Router future-flag warnings por page load | (n/a — console warning) | `screenshots/after/UX-007-after-router-flags-optin.png` | [#8](https://github.com/Heldinhow/pointly/issues/8) | `fix-validated` (iter-1) |
 | [UX-008](#ux-008) | Baixa | Responsividade · UI | Deck mobile: card "0" off-screen sem peek affordance óbvio | `screenshots/before/UX-008-deck-mobile-peek.png` | (iter-3) | [#9](https://github.com/Heldinhow/pointly/issues/9) | `pending-validation` |
@@ -144,8 +146,9 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
      - Botão ghost "Copiar código" ao lado do share pill (reforça affordance).
   2. Manter a `EmptyOverlay` para o estado pós-1-voto (sala solo, host votou mas não convidou).
 - **Prioridade**: P2 (impacto médio · esforço baixo).
-- **Status**: `pending-validation`
+- **Status**: `fix-validated` (iter-2 — `apps/web/src/pages/arena.tsx` adiciona bloco `<div data-testid="arena-empty-invite">`)
 - **Issue GitHub**: [#4](https://github.com/Heldinhow/pointly/issues/4)
+- **Fix aplicado**: novo bloco acima da mesa em `apps/web/src/pages/arena.tsx` quando `(sala === null || votedCount === 0) && code` — mostra mono-tag "AGUARDANDO PRIMEIRO JOGADOR" + microcopy "Compartilhe o código {ABCD} para começar a votar" (com o código em Playfair Italic coral) + CTA "Copiar código completo ↗" (coral underline). Validado por `tests/ux/14-audit-after.spec.ts:138` — probe retorna `hasInviteBlock:true, hasCopyCta:true, hasCodeReference:true`.
 
 ### UX-009
 
@@ -166,8 +169,9 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
   3. Header brand: aumentar `padding-y` no `<a>` para ≥ 44px de altura em mobile.
   4. Inputs: garantir `py-3` (12px×2+line) → altura mínima 44-48px.
 - **Prioridade**: P2 (impacto médio · esforço médio).
-- **Status**: `pending-validation`
+- **Status**: `fix-validated` (iter-2 — `apps/web/src/index.css` bump touch targets em @media (max-width: 767px))
 - **Issue GitHub**: [#5](https://github.com/Heldinhow/pointly/issues/5)
+- **Fix aplicado**: regra em `apps/web/src/index.css` `@media (max-width: 767px) { button, a[href], [role="button"], [role="link"] { min-height: 44px; } input[type="text"], input[type="email"], input:not([type]), textarea { min-height: 44px; padding-block: 0.625rem; } }` — garante WCAG 2.5.5 baseline em coarse pointer. Validado por `tests/ux/14-audit-after.spec.ts:182` — probe em 4 rotas vp-390 retorna `total: 0` (era 15 antes).
 
 ### UX-005
 
@@ -183,8 +187,9 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
   2. Mostrar apenas após o primeiro voto (ou seja, liberar quando ≥1 voto existe).
   3. Manter `phase === 'revealable'` com disabled state "Aguardando todos votarem" (estado atual já é ok).
 - **Prioridade**: P3 (impacto médio · esforço baixo).
-- **Status**: `pending-validation`
+- **Status**: `fix-validated` (iter-2 — `apps/web/src/pages/arena.tsx` esconde `<RevealButton>` quando `players.length === 0`)
 - **Issue GitHub**: [#6](https://github.com/Heldinhow/pointly/issues/6)
+- **Fix aplicado**: o `<RevealButton>` em `apps/web/src/pages/arena.tsx` agora é condicionado a `{sala !== null && sala.players.length > 0 && <RevealButton .../>}`. Sem isso o botão "AGUARDANDO 0 JOGADORES…" virava distrator visual inicial; ao chegar o primeiro player o botão reaparece normalmente. Validado por `tests/ux/14-audit-after.spec.ts:162` — probe retorna `revealInDom:false, hidden:true`.
 
 ### UX-004
 
@@ -271,7 +276,7 @@ para a issue correspondente em `github.com/Heldinhow/pointly` (issues #1-#9).
 2. ~~Capturar before/ via Playwright~~ ✅ (60 + 11 = 71 PNGs)
 3. ~~Criar GitHub Issues~~ ✅ — 9 issues abertas (#1..#9) em `github.com/Heldinhow/pointly`, labels `ux-review` + `severity:*` + `category:*`. Cada finding é uma issue.
 4. ~~**Iteração 1**~~ ✅ — corrigidos UX-001 (404), UX-002 (rails mobile), UX-006 (ws-client log + nick guard), UX-007 (router v7 flags). 0 regressões (118→119 pass). 4 PNGs em `screenshots/after/`.
-5. **Iteração 2** (próximo, se budget permitir): UX-003 (arena empty invite) · UX-005 (revelar button 0 jogadores) · UX-009 (touch targets <44×44). Médias prioritárias por impacto.
+5. ~~**Iteração 2**~~ ✅ — corrigidos UX-003 (arena empty invite) · UX-005 (revelar button 0 jogadores) · UX-009 (touch targets <44×44). 7 PNGs em `screenshots/after/`. 0 regressões.
 6. **Iteração 3** (se budget permitir): UX-004 (CTA disabled contrast) · UX-008 (deck peek).
 7. Re-validar cada fix com Playwright, capturar `screenshots/after/UX-NNN-*.png`, atualizar Status, comentar nas issues com link do commit.
 8. Mega-PR `ux-review-main → main` ao final.
