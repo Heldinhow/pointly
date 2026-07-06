@@ -26,10 +26,11 @@
  * @see .specs/features/planning-poker-v1/tasks.md T32
  * @see .specs/features/planning-poker-v1/spec.md F-016, F-017, F-018
  */
-import { useEffect, useRef, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import type { Phase } from "@planning-poker/shared";
 import { DECK_VALUES, type Vote } from "@planning-poker/shared";
 import { cn } from "./ui/utils";
+import { useToast } from "./ui/toast";
 
 export interface DeckProps {
 	/** Voto atual do player local. `null` = não votou. */
@@ -52,6 +53,15 @@ export interface DeckProps {
  */
 export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 	const scrollRef = useRef<HTMLDivElement | null>(null);
+	const toast = useToast();
+	/** T10 — feedback visual: id da carta com bump animation ativo. */
+	const [bumpingValue, setBumpingValue] = useState<Vote | null>(null);
+
+	useEffect(() => {
+		if (!bumpingValue) return;
+		const t = setTimeout(() => setBumpingValue(null), 220);
+		return () => clearTimeout(t);
+	}, [bumpingValue]);
 
 	// BUG-203 / T05: reset scrollLeft no início de cada rodada (phase → voting).
 	useEffect(() => {
@@ -66,8 +76,16 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 		// (Mantemos o handler explícito pra accessibility/axe.)
 		if (e.key === "Enter" || e.key === " ") {
 			e.preventDefault();
-			onSelect(value);
+			handleSelect(value);
 		}
+	}
+
+	function handleSelect(value: Vote) {
+		if (disabled) return;
+		setBumpingValue(value);
+		// T10 — confirmação discreta: toast role=status por 2s.
+		toast.push("Voto registrado", "success");
+		onSelect(value);
 	}
 
 	return (
@@ -111,13 +129,14 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 									: `Votar ${value}`
 							}
 							aria-pressed={selected}
-							onClick={() => onSelect(value)}
+							onClick={() => handleSelect(value)}
 							onKeyDown={(e) => handleKeyDown(e, value)}
 							data-testid={`deck-card-${value}`}
 							data-deck-value={value}
 							data-deck-selected={selected ? "true" : "false"}
 							style={{ scrollSnapAlign: "start" }}
 							className={cn(
+								bumpingValue === value && "deck-card-bump",
 								// base
 								"w-[48px] h-[68px] flex-shrink-0 bg-surface rounded-xl",
 								"flex items-center justify-center select-none",
