@@ -708,6 +708,26 @@ export function Landing() {
 							Produto
 						</h4>
 						<a
+							href="#como-funciona"
+							className="font-mono text-[11px] text-ink-mute hover:text-coral transition-colors"
+						>
+							Roadmap
+						</a>
+						<a
+							href="https://github.com/Heldinhow/pointly/releases"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="font-mono text-[11px] text-ink-mute hover:text-coral transition-colors"
+						>
+							Changelog
+						</a>
+						<span
+							className="font-mono text-[11px] text-ink-faint cursor-default"
+							title="Pointly é gratuito para sempre, sem plano pago."
+						>
+							Preços — grátis para sempre
+						</span>
+						<a
 							href="mailto:hello@pointly.dev"
 							className="font-mono text-[11px] text-ink-mute hover:text-coral transition-colors"
 						>
