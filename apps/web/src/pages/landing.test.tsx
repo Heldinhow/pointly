@@ -189,4 +189,20 @@ describe("Landing — T27", () => {
 		expect(document.getElementById("fluxo-de-voto")).toBeInTheDocument();
 		expect(document.getElementById("cta-final")).toBeInTheDocument();
 	});
+
+	// T8 — Responsividade mobile (375px)
+	test("T8 — selo 'GitHub' também é renderizado no DOM (visível em mobile via sticky nav)", () => {
+		renderLanding();
+		const seloMobile = screen.getByTestId("selo-github-mobile");
+		expect(seloMobile).toBeInTheDocument();
+		expect(seloMobile.tagName).toBe("A");
+		expect(seloMobile.getAttribute("href")).toMatch(/github\.com/i);
+	});
+
+	test("T8 — stats e selo Sem cadastro não excedem viewport mobile (375px)", () => {
+		renderLanding();
+		const selo = screen.getByTestId("selo-sem-cadastro");
+		const rect = selo.getBoundingClientRect();
+		expect(rect.right).toBeLessThanOrEqual(375);
+	});
 });

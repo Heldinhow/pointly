@@ -258,6 +258,45 @@ Verificação:
   (não decrementou), elipse com classe `ellipse-pulse`. Screenshot confirma
   layout limpo sem overlap.
 - T1–T6 intactos.
+
+## T8 — Responsividade mobile (375px)
+
+Issue: #30
+Status: DONE (issue fechada via Closes #30 no PR)
+Mudanças:
+
+- `apps/web/src/pages/landing.tsx`: novo selo `data-testid="selo-github-mobile"`
+  no sticky nav (visível em `<lg`, oculto em ≥lg para não duplicar com
+  o selo do top metadata strip). Garante que o link GitHub (T3) está
+  acessível sem rolar também em viewport 375px (onde o top strip
+  fica oculto via `hidden md:block`).
+- `apps/web/src/pages/landing.test.tsx`: 2 novos testes T8.
+
+Decisões:
+
+- Side rails (texto vertical) já estavam `hidden xl:flex` (T-longo, não
+  escopo deste item). Capacities já colapsavam para 1 coluna via
+  `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` (default mobile-first 1 col).
+  CTAs já tinham `size="lg"` (48px altura ≥44px) e input/button code form
+  ≥44px.
+- **Não precisei mexer em layout principal** — o design system já tinha
+  as propriedades mobile-first certas. Só faltava o selo GitHub no mobile.
+- HeroTable preview já responsivo (aspect-square, max-w-[460px]); em 375px
+  fica em 327x327 dentro do viewport sem overflow.
+
+Verificação:
+
+- `bun run --filter web test src/pages/landing.test.tsx` → 16/16 pass.
+- Playwright live (375x812):
+  - scrollWidth === clientWidth === 375 (zero overflow horizontal).
+  - CTA "Criar sala" hero: 159x48px (≥44px touch target).
+  - Input código: 128x44px; Botão Entrar: 108x44px.
+  - HeroTable: 327x327px (cabe no viewport).
+  - Selo "Sem cadastro": visível, right=238 < 375.
+  - Selo "GitHub" mobile: visível em sticky nav.
+- Screenshots 375x812 (top + full page): layout limpo, sem corte, sem
+  rolagem lateral.
+- T1–T7 intactos.
 - Tokens Atelier Zero passam em todas combinações informativas:
   - Ink (4 tons) sobre paper (4 tons): ≥6.42:1 (AA + AAA folga)
   - Coral sobre paper: ≥3.48:1 (large-text rule, ≥18px bold)
