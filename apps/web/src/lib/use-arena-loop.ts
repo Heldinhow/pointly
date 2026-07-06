@@ -231,6 +231,8 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 
 	// Phase 1 (T02 — BUG-101): ticker cliente para o timer visual.
 	// Decrementa `sala.timer` a cada 1s enquanto `phase === 'voting'`.
+	// T7: também exige ≥2 jogadores — sala solo não tem ninguém para
+	// votar; decrementar o timer nesse estado parecia bug.
 	// Servidor é a fonte da verdade — `room_state` broadcasts a cada 10s
 	// reconciliam qualquer drift (ADR-002). Server não tem `fired` aqui:
 	// quando o server dispara auto-reveal, ele manda `phase: 'revealed'`
@@ -246,6 +248,9 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 			)
 				return;
 			if (current.timer <= 0) return; // server will send 'revealed' shortly
+			// T7 — exige ≥2 jogadores para iniciar a contagem regressiva.
+			// Sala solo: timer permanece parado (não parece bug).
+			if (current.players.length < 2) return;
 			useSalaStore.getState().tickTimer();
 		}, 1000);
 		return () => clearInterval(id);

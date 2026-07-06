@@ -313,6 +313,31 @@ a[role="button"] {
 }
 
 /* ---------------------------------------------------------------
+ * T7 — Elipse pulse (sala aguardando jogadores)
+ * --------------------------------------------------------------- */
+@keyframes ellipse-pulse {
+  0%, 100% {
+    opacity: 0.7;
+    stroke-width: 1;
+  }
+  50% {
+    opacity: 1;
+    stroke-width: 1.5;
+  }
+}
+
+.ellipse-pulse {
+  animation: ellipse-pulse 2.4s ease-in-out infinite;
+  transition: opacity 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ellipse-pulse {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------
  * Side Rails & Section Rules (Atelier Zero / Open Design)
  * --------------------------------------------------------------- */
 .side-rail {

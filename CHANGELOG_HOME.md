@@ -210,6 +210,54 @@ Decisões:
 - 3 outras violações reportadas pelo axe (heading-order no footer h4, falta de
   `<main>` landmark, side-rails sem landmark) **não são escopo de T6** (T6 é
   contraste); ficam como observações registradas para possível follow-up.
+
+## T7 — Estado vazio da sala (esperando jogador)
+
+Issue: #29
+Status: DONE (issue fechada via Closes #29 no PR)
+Mudanças:
+
+- `apps/web/src/components/ui/ellipse.tsx`: nova prop `pulseWhenEmpty` que
+  adiciona classe `ellipse-pulse` no `<ellipse>` SVG quando ativa e troca
+  o `aria-label` para "Mesa da rodada — aguardando jogadores".
+- `apps/web/src/index.css`: nova animação `@keyframes ellipse-pulse`
+  (opacity 0.7→1, stroke-width 1→1.5) com 2.4s ease-in-out infinite;
+  respeita `@media (prefers-reduced-motion: reduce)`.
+- `apps/web/src/pages/arena.tsx`: passa `pulseWhenEmpty={isOnlyPlayer}`
+  para `<Ellipse>` — elipse pulsa quando só VOCÊ está na sala.
+- `apps/web/src/lib/use-arena-loop.ts`: timer (ticker cliente) agora
+  exige `sala.players.length >= 2` antes de decrementar. Sala solo: timer
+  fica parado em 60s até outro jogador entrar.
+- `apps/web/src/components/ui/ellipse.test.tsx`: 2 novos testes para
+  `pulseWhenEmpty`.
+- `apps/web/src/pages/arena.test.tsx`: 2 novos testes T7 (sala solo =
+  ellipse-pulse presente; sala com 2+ = ausente).
+
+Decisões:
+
+- **Pulse na elipse** em vez de placeholders fantasmas (a outra opção do
+  spec). Placeholders exigiriam renderizar 11 assentos vazios com SVG/React,
+  o que adicionaria ruído visual e código. O pulse é sutil, comunica "vivo"
+  sem competir com EmptyOverlay textual e RevealButton "Aguardando 1 jogador…".
+- **Removi** o "ESPERANDO JOGADORES" central que tinha adicionado na
+  iteração 1 — era redundante com EmptyOverlay ("AGUARDANDO PRIMEIRO
+  JOGADOR") e RevealButton ("Aguardando 1 jogador…"). Mantive só o pulse.
+- **Timer não decrementar** é a regra documentada: sala solo não tem
+  ninguém para votar, então a contagem regressiva pareceria bug. Server
+  continua sendo source of truth (ADR-002) — `room_state` a cada 10s
+  reconcilia qualquer drift; quando o 2º jogador entra, timer começa
+  a decrementar normalmente.
+- **`prefers-reduced-motion`** desabilita o pulse (motion safety, requisito
+  já existente do index.css).
+
+Verificação:
+
+- `bun run --filter web test src/pages/arena.test.tsx` → T7 2/2 pass.
+- `bun run --filter web test src/components/ui/ellipse.test.tsx` → T7 2/2 pass.
+- Playwright live: criou sala solo, timer ficou em **60** por 3+ segundos
+  (não decrementou), elipse com classe `ellipse-pulse`. Screenshot confirma
+  layout limpo sem overlap.
+- T1–T6 intactos.
 - Tokens Atelier Zero passam em todas combinações informativas:
   - Ink (4 tons) sobre paper (4 tons): ≥6.42:1 (AA + AAA folga)
   - Coral sobre paper: ≥3.48:1 (large-text rule, ≥18px bold)
