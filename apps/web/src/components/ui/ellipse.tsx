@@ -27,6 +27,11 @@ export interface EllipseProps {
 	dashArray?: string;
 	/** Cor do radial gradient. Default: paper-dark. */
 	fillColor?: string;
+	/**
+	 * T7 — Quando true, elipse recebe animação de pulso sutil para
+	 * comunicar que a sala está aguardando jogadores (estado vazio).
+	 */
+	pulseWhenEmpty?: boolean;
 	/** Children renderizam absolutely positioned sobre o SVG. */
 	children?: React.ReactNode;
 	className?: string;
@@ -45,6 +50,7 @@ export function Ellipse({
 	strokeWidth = 1,
 	dashArray = "8 6",
 	fillColor = "var(--paper-dark)",
+	pulseWhenEmpty = false,
 	children,
 	className,
 	style,
@@ -65,7 +71,7 @@ export function Ellipse({
 			width={width}
 			height={height}
 			role="img"
-			aria-label="Mesa da rodada"
+			aria-label={pulseWhenEmpty ? "Mesa da rodada — aguardando jogadores" : "Mesa da rodada"}
 			className={cn("block", className)}
 			style={style}
 		>
@@ -85,6 +91,12 @@ export function Ellipse({
 				strokeWidth={strokeWidth}
 				strokeDasharray={dashArray}
 				opacity={0.7}
+				style={
+					pulseWhenEmpty
+						? { animation: "ellipse-pulse 2.4s ease-in-out infinite" }
+						: undefined
+				}
+				className={pulseWhenEmpty ? "ellipse-pulse" : undefined}
 			/>
 			{children}
 		</svg>

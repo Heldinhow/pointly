@@ -165,4 +165,40 @@ describe("Arena shell — T30", () => {
 		const btn = screen.getByTestId("reveal-button");
 		expect(btn.getAttribute("data-reveal-state")).toBe("awaiting");
 	});
+
+	// T7 — Estado vazio da sala (esperando jogador)
+	test("T7 — sala solo: elipse recebe classe pulseWhenEmpty (animação de pulso)", () => {
+		useSalaStore.getState().reset();
+		useSalaStore.getState().setSala(
+			makeSala({
+				players: [
+					{
+						id: "p_1",
+						uuid: "00000000-0000-4000-8000-000000000000",
+						nick: "Helder",
+						role: "host",
+						seatIndex: 0,
+						hasVoted: false,
+						value: null,
+						status: "connected",
+						joinedAt: 1_000_000,
+					},
+				],
+			}),
+		);
+		useSalaStore.getState().setCurrentPlayerId("p_1");
+
+		renderArena();
+		const ellipse = document.querySelector("ellipse");
+		expect(ellipse?.classList.contains("ellipse-pulse")).toBe(true);
+	});
+
+	test("T7 — sala com 2+ jogadores NÃO tem ellipse-pulse", () => {
+		useSalaStore.getState().reset();
+		useSalaStore.getState().setSala(makeSala()); // 2 players default
+		useSalaStore.getState().setCurrentPlayerId("p_1");
+		renderArena();
+		const ellipse = document.querySelector("ellipse");
+		expect(ellipse?.classList.contains("ellipse-pulse")).toBe(false);
+	});
 });

@@ -341,7 +341,10 @@ export function Arena() {
 					className="relative w-[960px] h-[500px] mt-6"
 					data-testid="arena-table"
 				>
-					<Ellipse height={500} />
+					<Ellipse
+						height={500}
+						pulseWhenEmpty={isOnlyPlayer}
+					/>
 
 					{/* Seats posicionados via trigonometria */}
 					{sala?.players.map((p) => {

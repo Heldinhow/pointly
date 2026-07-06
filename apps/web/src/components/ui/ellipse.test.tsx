@@ -45,4 +45,21 @@ describe("Ellipse", () => {
 		const circle = container.querySelector("#my-seat");
 		expect(circle).toBeTruthy();
 	});
+
+	// T7 — pulseWhenEmpty
+	test("pulseWhenEmpty=true adiciona classe ellipse-pulse e muda aria-label", () => {
+		const { container } = render(<Ellipse pulseWhenEmpty />);
+		const ellipse = container.querySelector("ellipse");
+		const svg = container.querySelector("svg");
+		expect(ellipse?.classList.contains("ellipse-pulse")).toBe(true);
+		expect(svg?.getAttribute("aria-label")).toBe(
+			"Mesa da rodada — aguardando jogadores",
+		);
+	});
+
+	test("pulseWhenEmpty=false (default) NÃO adiciona classe", () => {
+		const { container } = render(<Ellipse />);
+		const ellipse = container.querySelector("ellipse");
+		expect(ellipse?.classList.contains("ellipse-pulse")).toBe(false);
+	});
 });
