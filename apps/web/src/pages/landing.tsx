@@ -79,6 +79,105 @@ const SEAT_POSITIONS = [
 	{ left: "82%", top: "72%" },   // Nora (baixo-direita)
 ];
 
+/** Posições compactas dos 6 assentos no preview do hero (hexagonal em torno da elipse) */
+const HERO_SEAT_POSITIONS = [
+	{ left: "50%", top: "88%" },   // Você (baixo)
+	{ left: "14%", top: "66%" },   // Maya (baixo-esquerda)
+	{ left: "14%", top: "38%" },   // Aria (topo-esquerda)
+	{ left: "50%", top: "18%" },   // Theo (topo / Host)
+	{ left: "86%", top: "38%" },   // Lia (topo-direita)
+	{ left: "86%", top: "66%" },   // Ivo (baixo-direita)
+];
+
+/** Jogadores compactos para o preview do hero (6 jogadores, votos revelados) */
+const HERO_PLAYERS: MockPlayer[] = [
+	{ id: "h1", nick: "Você", value: "5", isYou: true, votedMedian: true },
+	{ id: "h2", nick: "Maya", value: "3" },
+	{ id: "h3", nick: "Aria", value: "5", votedMedian: true },
+	{ id: "h4", nick: "Theo", value: "8", isHost: true },
+	{ id: "h5", nick: "Lia", value: "5", votedMedian: true },
+	{ id: "h6", nick: "Ivo", value: "8" },
+];
+
+/** Preview compacto da mesa de votação para o hero (substitui a ilustração abstrata Ø). */
+function HeroTable() {
+	return (
+		<div className="relative w-full max-w-[460px] aspect-square mx-auto bg-paper-warm border border-ink/10 rounded-3xl shadow-bone overflow-hidden">
+			{/* Header chip editorial */}
+			<div className="absolute top-3 left-3 right-3 flex items-center justify-between z-20">
+				<div className="font-mono text-[9px] text-ink-mute uppercase tracking-[0.18em] flex items-center gap-1.5 bg-surface/80 backdrop-blur-sm px-2 py-1 rounded-full border border-ink/5">
+					<span className="inline-block w-1.5 h-1.5 rounded-full bg-coral animate-pulse" aria-hidden="true" />
+					Fig. 01 · Mesa revelada
+				</div>
+				<div className="font-mono text-[9px] bg-mustard/15 text-ink-mute px-2 py-1 rounded-full border border-mustard/30 uppercase tracking-wider">
+					Mediana 5
+				</div>
+			</div>
+
+			{/* Elipse pontilhada central */}
+			<div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+				<div className="w-[68%] h-[55%] border border-dashed border-ink/15 rounded-[50%]" />
+			</div>
+
+			{/* Assentos */}
+			<div className="absolute inset-0">
+				{HERO_PLAYERS.map((player, index) => {
+					const pos = HERO_SEAT_POSITIONS[index] || { left: "0px", top: "0px" };
+					const initials = player.nick === "Você" ? "VC" : player.nick.substring(0, 2).toUpperCase();
+					const effectiveMedian = player.votedMedian;
+
+					return (
+						<div
+							key={player.id}
+							className="absolute -translate-x-1/2 -translate-y-1/2"
+							style={{ left: pos.left, top: pos.top }}
+						>
+							<div
+								className={`relative w-[58px] h-[78px] bg-surface rounded-xl border flex flex-col items-center justify-center p-1 shadow-sm ${
+									player.isYou
+										? "border-coral border-2"
+										: effectiveMedian
+											? "border-mustard border-2"
+											: "border-ink/10"
+								}`}
+								style={{
+									boxShadow: effectiveMedian && player.isYou ? "inset 0 0 0 2px var(--mustard)" : "none",
+								}}
+							>
+								{player.isHost && (
+									<span className="absolute top-0.5 right-1 text-mustard text-[9px] leading-none">
+										★
+									</span>
+								)}
+								<div className="w-5 h-5 rounded-full bg-paper-dark flex items-center justify-center font-italic italic text-[10px] text-ink-soft mb-0.5">
+									{initials}
+								</div>
+								<div className="font-display font-semibold text-[8px] text-ink truncate max-w-[48px] tracking-tight">
+									{player.nick}
+								</div>
+								{player.isYou && (
+									<div className="font-mono text-[6px] tracking-[0.05em] text-coral uppercase px-0.5 border border-coral rounded mb-0.5">
+										você
+									</div>
+								)}
+								<div className="font-italic italic text-[15px] text-ink font-bold leading-none mt-0.5">
+									{player.value}
+								</div>
+							</div>
+						</div>
+					);
+				})}
+			</div>
+
+			{/* Footer mono label */}
+			<div className="absolute bottom-3 left-3 right-3 flex justify-between items-center font-mono text-[8px] text-ink-faint uppercase tracking-[0.12em] z-20">
+				<span>6 jogadores · 1 host</span>
+				<span>Mostarda = mediana</span>
+			</div>
+		</div>
+	);
+}
+
 /** Mesa mockada que renderiza os assentos ativos de forma responsiva */
 function MockTable() {
 	return (
@@ -405,54 +504,12 @@ export function Landing() {
 						</div>
 					</div>
 
-					{/* Hero editorial collage (UX-015) */}
+					{/* Hero: preview real da mesa de votação (T1 — substitui a ilustração Ø abstrata) */}
 					<div
-						className="w-full relative min-h-[480px] bg-paper-warm border border-ink/5 rounded-3xl overflow-hidden shadow-bone flex items-center justify-center"
-						aria-hidden="true"
+						className="w-full relative flex items-center justify-center"
+						data-testid="hero-table-preview"
 					>
-						<div className="relative w-[340px] h-[340px]">
-							{/* Terracota solid circle (back layer) */}
-							<div className="absolute inset-x-0 top-2 mx-auto w-[260px] h-[260px] rounded-full bg-coral" />
-
-							{/* Dotted outline circle (offset 30px right/down) */}
-							<div className="absolute inset-0 m-auto w-[300px] h-[300px] rounded-full border-2 border-dashed border-coral/45" />
-
-							{/* Monumental serif glyph */}
-							<span className="absolute inset-0 flex items-center justify-center font-serif italic text-[220px] leading-none text-paper-warm select-none">
-								<span className="-translate-y-3">Ø</span>
-							</span>
-
-							{/* Botanical SVG accents — 3 folhas */}
-							<svg
-								viewBox="0 0 60 60"
-								className="absolute top-3 left-4 w-12 h-12 text-coral-soft"
-								fill="currentColor"
-								aria-hidden="true"
-							>
-								<path d="M30 6 C 16 14, 12 32, 30 54 C 48 32, 44 14, 30 6 Z M30 12 L30 50" stroke="currentColor" strokeWidth="1" fill="none" />
-							</svg>
-							<svg
-								viewBox="0 0 60 60"
-								className="absolute bottom-6 right-3 w-10 h-10 text-coral-soft rotate-45"
-								fill="currentColor"
-								aria-hidden="true"
-							>
-								<path d="M30 6 C 16 14, 12 32, 30 54 C 48 32, 44 14, 30 6 Z M30 12 L30 50" stroke="currentColor" strokeWidth="1" fill="none" />
-							</svg>
-							<svg
-								viewBox="0 0 60 60"
-								className="absolute bottom-12 left-10 w-8 h-8 text-coral-soft -rotate-12"
-								fill="currentColor"
-								aria-hidden="true"
-							>
-								<path d="M30 6 C 16 14, 12 32, 30 54 C 48 32, 44 14, 30 6 Z M30 12 L30 50" stroke="currentColor" strokeWidth="1" fill="none" />
-							</svg>
-
-							{/* Mono plate label (bottom-right) */}
-							<span className="absolute bottom-4 right-4 font-mono text-[9px] tracking-[0.18em] uppercase text-coral-soft/90">
-								Fig. 01 · Atelier
-							</span>
-						</div>
+						<HeroTable />
 					</div>
 				</div>
 			</section>

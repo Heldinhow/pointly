@@ -90,4 +90,22 @@ describe("Landing — T27", () => {
 		expect(input.value).toBe("A1B2");
 		expect(submitBtn).toBeEnabled();
 	});
+
+	// T1 — Hero mostra o produto (preview da mesa de votação)
+	test("T1 — hero mostra preview da mesa com jogadores e mediana visíveis", () => {
+		renderLanding();
+		const preview = screen.getByTestId("hero-table-preview");
+		expect(preview).toBeInTheDocument();
+
+		// Plaqueta editorial 'Fig. 01 · Mesa revelada' indica o produto
+		expect(preview.textContent).toMatch(/Fig\. 01.*Mesa revelada/i);
+
+		// 'Você' e 'Mediana' comunicam que se trata de uma mesa de votação com cartas
+		expect(preview.textContent).toMatch(/Você/i);
+		expect(preview.textContent).toMatch(/Mediana/i);
+
+		// Pelo menos 6 valores Fibonacci expostos (cartas reveladas)
+		const fibVotes = (preview.textContent || "").match(/[01358]|13/g) || [];
+		expect(fibVotes.length).toBeGreaterThanOrEqual(6);
+	});
 });
