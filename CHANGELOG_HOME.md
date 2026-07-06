@@ -113,3 +113,39 @@ Verificação:
   visível sem rolar; T1 e T2 intactos.
 - Hover state não verificado por screenshot mas testado via classes Tailwind
   (`hover:border-coral hover:text-coral`).
+
+## T4 — Footer "Produto" incompleto
+
+Issue: #26
+Status: DONE (issue fechada via Closes #26 no PR)
+Mudanças:
+
+- `apps/web/src/pages/landing.tsx`: coluna "Produto" do footer ganhou 3 itens
+  novos:
+  - **Roadmap** (`<a href="#como-funciona">` ancorando à seção)
+  - **Changelog** (`<a target="_blank" href="https://github.com/Heldinhow/pointly/releases">`)
+  - **Preços — grátis para sempre** (`<span>` em `text-ink-faint` com `cursor-default`
+    e `title` explicando a política — selo editorial, não link)
+  - **Contato** (mantido).
+- `apps/web/src/pages/landing.test.tsx`: novo teste T4 verifica presença de
+  Roadmap, Changelog, Preços e Contato.
+
+Decisões:
+
+- 4 itens na coluna (3 novos + Contato) equilibram com "Pointly" (3 itens) e
+  "Código Aberto" (parágrafo longo). Densidade visualmente comparável.
+- "Preços — grátis para sempre" como **selo** (não link) reforça a identidade
+  editorial e comunica o claim sem precisar de página de preços — o produto é
+  genuinamente grátis.
+- Changelog aponta para o GitHub Releases (não para arquivo local) — mantém
+  rastreabilidade real.
+- Roadmap usa âncora `#como-funciona` como placeholder honesto (não inventei
+  rota fake `/roadmap`); usuário pode expandir no futuro.
+
+Verificação:
+
+- `bun test src/pages/landing.test.tsx` → 12/12 pass (novo teste T4 incluso).
+- Screenshot do footer mostra as 3 colunas: Pointly (3), Produto (4), Código
+  Aberto (parágrafo) — densidade comparável, nenhuma coluna parece vazia.
+- T1, T2, T3 intactos: hero (preview mesa + selo Sem cadastro + selo GitHub no topo)
+  verificados visualmente.

@@ -143,4 +143,15 @@ describe("Landing — T27", () => {
 		// Visível sem rolar — deve estar no topo da página (dentro do top metadata strip)
 		expect(selo.getBoundingClientRect().top).toBeLessThan(100);
 	});
+
+	// T4 — Footer 'Produto' incompleto
+	test("T4 — coluna 'Produto' do footer tem ≥3 itens (densidade comparável)", () => {
+		renderLanding();
+		// Itens novos (T4) presentes na coluna 'Produto'
+		expect(screen.getByText(/Roadmap/i)).toBeInTheDocument();
+		expect(screen.getByText(/Changelog/i)).toBeInTheDocument();
+		expect(screen.getByText(/Pre\u00e7os.*gr\u00e1tis/i)).toBeInTheDocument();
+		// Contato continua presente
+		expect(screen.getByText(/Contato/i)).toBeInTheDocument();
+	});
 });
