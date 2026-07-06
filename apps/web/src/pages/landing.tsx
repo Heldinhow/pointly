@@ -320,6 +320,7 @@ export function Landing() {
 	const heroCtaRef = useRef<HTMLButtonElement | null>(null);
 	const [heroVisible, setHeroVisible] = useState(false);
 	const [tocOpen, setTocOpen] = useState(false);
+	const [isCreating, setIsCreating] = useState(false);
 
 	const TOC_ENTRIES = [
 		{ id: "como-funciona", roman: "01", label: "Introdução" },
@@ -340,7 +341,13 @@ export function Landing() {
 		return () => obs.disconnect();
 	}, []);
 
-	function handleCreateRoom(): void {
+	async function handleCreateRoom(): Promise<void> {
+		if (isCreating) return;
+		setIsCreating(true);
+		// T1 — feedback visual: brief <100ms latency shows disabled state before navigation.
+		// Pure-client routing means actual transition is ~instant; this guarantees the
+		// disabled state is observable (não-flicker) sem causar sensação de travamento.
+		await new Promise((r) => setTimeout(r, 50));
 		navigate("/join?host=1");
 	}
 
@@ -552,6 +559,8 @@ export function Landing() {
 								variant="coral"
 								size="lg"
 								onClick={handleCreateRoom}
+								disabled={isCreating}
+								aria-busy={isCreating}
 								data-testid="cta-create-room"
 								ref={heroCtaRef}
 								id="hero-create-room-cta"
@@ -753,10 +762,12 @@ export function Landing() {
 						Crie uma sala em menos de 5 segundos. Convide seu time, votem e revelem. Sem cadastros, sem emails, sem dores de cabeça.
 					</p>
 					<div className="flex items-center justify-center gap-3.5 mt-8">
-						<Button
+<Button
 							variant="coral"
 							size="lg"
 							onClick={handleCreateRoom}
+							disabled={isCreating}
+							aria-busy={isCreating}
 							data-testid="cta-ribbon-create"
 							className="shadow-coral"
 						>
