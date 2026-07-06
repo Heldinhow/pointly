@@ -47,18 +47,26 @@ test("T1-after: disabled + aria-busy during room creation (<100ms)", async ({ pa
 	// Wait for disabled state to appear (settles within ~50ms latency).
 	await expect(cta).toBeDisabled({ timeout: 200 });
 	await expect(cta).toHaveAttribute("aria-busy", "true");
-	// button.tsx has transition-all duration-150 + disabled:opacity-40; poll
-	// for opacity to settle. Page may navigate before 150ms elapses, so we
-	// accept any value ≤0.5 OR a missing element (navigation completed).
-	let opacitySettled: number | null = null;
-	try {
-		opacitySettled = await cta.evaluate((el) => Number(window.getComputedStyle(el).opacity));
-	} catch {
-		// element detached (navigation completed) — treat as success since disabled was observed
-		opacitySettled = 0.4;
-	}
-	console.log(`[T1-after] opacity during create: ${opacitySettled}`);
-	expect(opacitySettled).toBeLessThanOrEqual(0.5);
+	// Poll for opacity to drop OR element to detach (button.tsx has
+	// transition-all duration-150 + disabled:opacity-40). Within the 200ms
+	// latency + 150ms transition + buffer we expect either visible disabled
+	// style (opacity ≤ 0.5) OR navigation completed (isConnected=false).
+	await expect
+		.poll(
+			async () => {
+				return await page.evaluate(() => {
+					const el = document.querySelector(
+						'[data-testid="cta-create-room"]',
+					) as HTMLButtonElement | null;
+					if (!el) return "detached";
+					const opacity = Number(window.getComputedStyle(el).opacity);
+					return opacity <= 0.5 ? "ok" : `opacity=${opacity}`;
+				});
+			},
+			{ timeout: 800, intervals: [20, 40, 80, 160, 320] },
+		)
+		.toMatch(/ok|detached/);
+	console.log("[T1-after] opacity settled to ≤ 0.5 (or element detached post-navigation)");
 
 	await clickPromise.catch(() => {
 		// navigation may cancel — ignore
