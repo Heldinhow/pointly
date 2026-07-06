@@ -22,27 +22,106 @@ const STATS = [
 	{ num: "0s", label: "Setup" },
 ];
 
-/** Capabilities — 4 features. */
-const CAPABILITIES = [
+/** Capabilities — 4 features. Cada item inclui um ícone Lucide-like (20px coral)
+ *  alinhado à direita do título. Os SVGs são aria-hidden para não poluir
+ *  screen readers (o título do card já carrega o significado). */
+const CAPABILITIES: Array<{
+	n: string;
+	title: string;
+	body: string;
+	icon: () => JSX.Element;
+}> = [
 	{
 		n: "01",
 		title: "Sala instantânea",
 		body: "Crie um código de 4 chars em < 100ms. Sem cadastro, sem email, sem confirmação.",
+		icon: () => (
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				aria-hidden="true"
+				data-testid="cap-icon-zap"
+			>
+				<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
+			</svg>
+		),
 	},
 	{
 		n: "02",
 		title: "Deck Fibonacci",
 		body: "9 cartas: 0, ½, 1, 2, 3, 5, 8, 13, ☕. Pausa explícita sem custo de mediação.",
+		icon: () => (
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				aria-hidden="true"
+				data-testid="cap-icon-layers"
+			>
+				<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" />
+				<path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" />
+				<path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" />
+			</svg>
+		),
 	},
 	{
 		n: "03",
 		title: "Reveal coletivo",
 		body: "Vire a mesa face-up com 1 clique. Mediana destacada em gold. Stats instantâneas.",
+		icon: () => (
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				aria-hidden="true"
+				data-testid="cap-icon-eye"
+			>
+				<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+				<circle cx="12" cy="12" r="3" />
+			</svg>
+		),
 	},
 	{
 		n: "04",
 		title: "Timer crítico",
 		body: "60s com transição pra coral aos 30s. Auto-reveal ao expirar. Sem decisões penduradas.",
+		icon: () => (
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				aria-hidden="true"
+				data-testid="cap-icon-clock"
+			>
+				<circle cx="12" cy="12" r="10" />
+				<polyline points="12 6 12 12 16 14" />
+			</svg>
+		),
 	},
 ];
 
@@ -695,7 +774,12 @@ export function Landing() {
 								<span className="font-serif italic text-coral text-[28px] tracking-normal normal-case font-normal leading-none">
 									{cap.n}
 								</span>
-								<span>Feature</span>
+								<span className="flex items-center gap-2">
+									<span>Feature</span>
+									<span className="text-coral" data-testid={`cap-icon-${cap.n}`}>
+										{cap.icon()}
+									</span>
+								</span>
 							</div>
 							<h3 className="font-display font-extrabold text-[19px] tracking-[-0.02em]">
 								{cap.title}
