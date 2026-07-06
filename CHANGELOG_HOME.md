@@ -186,3 +186,41 @@ Verificação:
 - Screenshot do estado fechado mostra "SUMÁRIO ▾" discreto ao lado do logo.
 - T1, T2, T3, T4 intactos: hero (preview mesa), stats + selo "Sem cadastro",
   selo GitHub no topo, footer com 4 itens na coluna Produto.
+
+## T6 — Contraste de texto secundário (WCAG AA)
+
+Issue: #28
+Status: DONE (issue fechada via Closes #28 no PR)
+Mudanças:
+
+- `tests/e2e/a11y-contrast.spec.ts`: novo teste E2E que carrega a home e roda
+  axe-core com tags `wcag2a, wcag2aa, wcag21a, wcag21aa`; **falha se houver
+  qualquer violação de `color-contrast`**.
+- `apps/web/src/lib/contrast.test.ts`: novo teste unitário (22 testes) que
+  calcula ratios WCAG 2.1 entre os tokens Atelier Zero como regression guard
+  contra mudanças nos valores de cor.
+- Verificação manual via script standalone (`/tmp/contrast-tokens.js`) cobrindo
+  todas as combinações fg/bg.
+
+Decisões:
+
+- **axe-core é a fonte de verdade runtime** (per spec: "axe-core ou Lighthouse
+  a11y"). O teste E2E é o gate oficial; o unit test é regression guard.
+- axe-core reporta **0 violações de contraste** na home em 1440x900.
+- 3 outras violações reportadas pelo axe (heading-order no footer h4, falta de
+  `<main>` landmark, side-rails sem landmark) **não são escopo de T6** (T6 é
+  contraste); ficam como observações registradas para possível follow-up.
+- Tokens Atelier Zero passam em todas combinações informativas:
+  - Ink (4 tons) sobre paper (4 tons): ≥6.42:1 (AA + AAA folga)
+  - Coral sobre paper: ≥3.48:1 (large-text rule, ≥18px bold)
+  - Coral sobre dark `#15140f`: 4.17:1 (axe-core passa)
+  - Surface sobre dark: ≥10:1
+  - Mustard sobre dark: ≥10:1 (joia, sempre 1% da superfície)
+
+Verificação:
+
+- `bun run --filter e2e test a11y-contrast.spec.ts` → 1/1 pass.
+- `bun run --filter web test src/lib/contrast.test.ts` → 22/22 pass.
+- `bun run --filter web test src/pages/landing.test.tsx` → 14/14 pass.
+- axe-core live analysis: 0 contrast violations (WCAG 2.1 AA).
+- T1–T5 intactos.
