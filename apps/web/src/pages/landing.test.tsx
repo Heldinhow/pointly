@@ -154,4 +154,39 @@ describe("Landing — T27", () => {
 		// Contato continua presente
 		expect(screen.getByText(/Contato/i)).toBeInTheDocument();
 	});
+
+	// T5 — Navegação persistente (sumário / índice de revista)
+	test("T5 — sticky nav tem 'Sumário' (TOC) que abre e lista ≥4 âncoras de seção", () => {
+		renderLanding();
+		const toggle = screen.getByTestId("toc-toggle");
+		expect(toggle).toBeInTheDocument();
+		expect(toggle.textContent || "").toMatch(/Sum\u00e1rio/i);
+
+		// Menu inicialmente fechado
+		expect(screen.queryByTestId("toc-menu")).not.toBeInTheDocument();
+
+		// Clica e menu aparece com as 5 entradas
+		fireEvent.click(toggle);
+		const menu = screen.getByTestId("toc-menu");
+		expect(menu).toBeInTheDocument();
+
+		expect(screen.getByTestId("toc-item-como-funciona")).toBeInTheDocument();
+		expect(screen.getByTestId("toc-item-para-times")).toBeInTheDocument();
+		expect(screen.getByTestId("toc-item-capabilidades")).toBeInTheDocument();
+		expect(screen.getByTestId("toc-item-fluxo-de-voto")).toBeInTheDocument();
+		expect(screen.getByTestId("toc-item-cta-final")).toBeInTheDocument();
+
+		// Clicar numa entrada fecha o menu
+		fireEvent.click(screen.getByTestId("toc-item-para-times"));
+		expect(screen.queryByTestId("toc-menu")).not.toBeInTheDocument();
+	});
+
+	test("T5 — seções da página têm ids para o TOC âncorar", () => {
+		renderLanding();
+		expect(document.getElementById("como-funciona")).toBeInTheDocument();
+		expect(document.getElementById("para-times")).toBeInTheDocument();
+		expect(document.getElementById("capabilidades")).toBeInTheDocument();
+		expect(document.getElementById("fluxo-de-voto")).toBeInTheDocument();
+		expect(document.getElementById("cta-final")).toBeInTheDocument();
+	});
 });

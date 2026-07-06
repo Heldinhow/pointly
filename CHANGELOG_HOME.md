@@ -149,3 +149,40 @@ Verificação:
   Aberto (parágrafo) — densidade comparável, nenhuma coluna parece vazia.
 - T1, T2, T3 intactos: hero (preview mesa + selo Sem cadastro + selo GitHub no topo)
   verificados visualmente.
+
+## T5 — Navegação persistente ausente
+
+Issue: #27
+Status: DONE (issue fechada via Closes #27 no PR)
+Mudanças:
+
+- `apps/web/src/pages/landing.tsx`: adicionado dropdown "Sumário" (`data-testid="toc-toggle"`)
+  no sticky nav, ao lado do logo "Pointly". Ao clicar, abre um menu
+  (`data-testid="toc-menu"`) com 5 entradas (01 INTRODUÇÃO, 02 COMO FUNCIONA,
+  03 CAPACIDADES, 04 FLUXO DE VOTO, 05 COMEÇAR). Cada entrada é um botão que
+  dispara `scrollIntoView({ behavior: 'smooth' })` para a seção correspondente.
+- IDs adicionados às seções: `#como-funciona` (já existia), `#para-times` (já existia),
+  `#capabilidades`, `#fluxo-de-voto`, `#cta-final`.
+- Estado `tocOpen` controlado por `useState`; clique fora / em item fecha o menu.
+- `apps/web/src/pages/landing.test.tsx`: 2 novos testes T5 — um verifica que o toggle
+  abre/fecha e mostra as 5 entradas; outro garante que os IDs das seções existem.
+
+Decisões:
+
+- Optei por **dropdown** (não por índice lateral fixo) para preservar a metáfora
+  "revista, role e leia": o índice só aparece quando o usuário o invoca, evitando
+  clutter visual permanente.
+- Estilo: roman numeral em itálico coral (mesma linguagem dos SectionRules),
+  label mono uppercase, arrow `↗` indicando salto. Combina com o tom editorial.
+- Escondi o toggle em viewports < lg para priorizar o CTA "Criar sala" em mobile
+  (T8 vai ajustar mobile separadamente).
+- Guard contra `scrollIntoView` undefined (jsdom) para não quebrar em test
+  environments — o typeof check cai pra no-op se não houver.
+
+Verificação:
+
+- `bun test src/pages/landing.test.tsx` → 14/14 pass (2 novos testes T5 inclusos).
+- Screenshot do TOC aberto mostra as 5 entradas com estilo consistente.
+- Screenshot do estado fechado mostra "SUMÁRIO ▾" discreto ao lado do logo.
+- T1, T2, T3, T4 intactos: hero (preview mesa), stats + selo "Sem cadastro",
+  selo GitHub no topo, footer com 4 itens na coluna Produto.
