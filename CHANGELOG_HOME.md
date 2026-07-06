@@ -47,3 +47,35 @@ Verificação:
   mostarda (host Theo).
 - Full-page screenshot em 1440x900 confirma que ABOUT (MockTable 8 jogadores),
   Capabilities, Dark showcase, CTA e Footer permanecem intactos — sem regressão.
+
+## T2 — Métrica "0 Cadastros" ambígua
+
+Issue: #24
+Status: DONE (issue fechada via Closes #24 no PR)
+Mudanças:
+
+- `apps/web/src/pages/landing.tsx`: removido `{ num: "0", label: "Cadastros" }` de
+  `STATS`; adicionados 3 stats numéricos inequívocos
+  (`12 Assentos`, `60s P/ decidir`, `0s Setup`); adicionado selo editorial
+  `data-testid="selo-sem-cadastro"` em coral (`✓ SEM CADASTRO · SEM E-MAIL`).
+  Anel de stat élargido de 40px para 56px para acomodar "0s" / "60s".
+- `apps/web/src/pages/landing.test.tsx`: 2 novos testes — um verifica que "Cadastros"
+  não aparece mais como label numérico e que o selo está presente; outro garante
+  que os 3 stats restantes (Assentos, Decidir, Setup) são inequívocos.
+
+Decisões:
+
+- Optei pelo caminho (a) do spec: o claim "sem cadastro" virou **selo**, não número.
+  O número "0" continua na barra de stats mas com label **"Setup"** (zero segundos
+  de setup) — inequívoco.
+- Selo em coral com fundo `bg-coral/10` e borda `border-coral/30` para se destacar
+  sem competir com o CTA coral principal "Criar sala".
+- Mantive 3 itens na barra de stats para preservar ritmo visual; troquei o conteúdo,
+  não a estrutura.
+
+Verificação:
+
+- `bun test src/pages/landing.test.tsx` → 10/10 pass (2 novos testes T2 inclusos).
+- Screenshot 1440x900 mostra: stats row com `12 ASSENTOS / 60s P/ DECIDIR / 0s SETUP`,
+  selo `✓ SEM CADASTRO · SEM E-MAIL` em coral logo abaixo.
+- T1 (preview da mesa) intacto: 6 cartas visíveis com mediana 5 destacada.
