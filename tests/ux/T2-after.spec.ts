@@ -15,7 +15,9 @@ test("T2-after: aria-label presente e pesquisável", async ({ page }) => {
 	await page.waitForTimeout(400);
 
 	// DOM query (case-insensitive substring).
-	const entrarBtn = page.locator('button[aria-label*="Entrar na sala"]').first();
+	const entrarBtn = page
+		.locator('button[aria-label*="Entrar na sala"]')
+		.first();
 	await expect(entrarBtn).toHaveCount(1);
 
 	const ariaLabel = await entrarBtn.getAttribute("aria-label");
@@ -74,5 +76,8 @@ test("T2-after: axe-core 0 serious/critical on /", async ({ page }) => {
 	}
 	expect(serious.length).toBe(0);
 
-	await page.screenshot({ path: "../../screenshots/T2-after.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T2-after.png",
+		fullPage: false,
+	});
 });

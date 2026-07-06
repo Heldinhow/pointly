@@ -124,9 +124,7 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 							type="button"
 							disabled={disabled}
 							aria-label={
-								selected
-									? `Selecionada, voto em ${value}`
-									: `Votar ${value}`
+								selected ? `Selecionada, voto em ${value}` : `Votar ${value}`
 							}
 							aria-pressed={selected}
 							onClick={() => handleSelect(value)}
@@ -147,7 +145,9 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 								// selected: coral ring + soft bg + coral ink
 								selected && "border-2 border-coral bg-coral/8 text-coral",
 								// hover (só quando não disabled e não selected)
-								!disabled && !selected && "hover:-translate-y-[3px] hover:border-coral",
+								!disabled &&
+									!selected &&
+									"hover:-translate-y-[3px] hover:border-coral",
 								// disabled: opacity 0.4 (deck pai também aplica, aqui no botão individual)
 								disabled && "pointer-events-none opacity-40 cursor-not-allowed",
 							)}

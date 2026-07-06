@@ -16,7 +16,9 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-test("T1-before: CTA 'Criar sala' anchor — pre-fix baseline", async ({ page }) => {
+test("T1-before: CTA 'Criar sala' anchor — pre-fix baseline", async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/");
 	await page.waitForTimeout(400);
@@ -25,11 +27,16 @@ test("T1-before: CTA 'Criar sala' anchor — pre-fix baseline", async ({ page })
 	await expect(cta).toBeVisible();
 
 	// Screenshot baseline (before-fix state).
-	await page.screenshot({ path: "../../screenshots/T1-before.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T1-before.png",
+		fullPage: false,
+	});
 
 	// Focus visible state via keyboard.
 	await page.keyboard.press("Tab");
-	let activeTestId = await page.evaluate(() => document.activeElement?.getAttribute("data-testid") ?? null);
+	let activeTestId = await page.evaluate(
+		() => document.activeElement?.getAttribute("data-testid") ?? null,
+	);
 	// Press Tab until we land on cta-create-room (skip past header links).
 	for (let i = 0; i < 12 && activeTestId !== "cta-create-room"; i++) {
 		await page.keyboard.press("Tab");

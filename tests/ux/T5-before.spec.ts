@@ -13,5 +13,8 @@ test("T5-before: feature cards sem svg", async ({ page }) => {
 	const svgCount = await card.locator("svg").count();
 	expect(svgCount).toBe(0);
 
-	await page.screenshot({ path: "../../screenshots/T5-before.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T5-before.png",
+		fullPage: false,
+	});
 });

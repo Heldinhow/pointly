@@ -20,7 +20,9 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-test("T12-after: compiled source contém auto-reset + olive + aria-live", async ({ page }) => {
+test("T12-after: compiled source contém auto-reset + olive + aria-live", async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/");
 	await page.waitForTimeout(400);
@@ -54,5 +56,8 @@ test("T12-after: axe-core 0 serious/critical em /arena", async ({ page }) => {
 	}
 	expect(serious.length).toBe(0);
 
-	await page.screenshot({ path: "../../screenshots/T12-after.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T12-after.png",
+		fullPage: false,
+	});
 });

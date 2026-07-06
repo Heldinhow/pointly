@@ -29,12 +29,16 @@ test("T1-after: focus-visible ring on Tab navigation", async ({ page }) => {
 	await expect(cta).toBeFocused();
 
 	// Ring must be visible (non-"none" box-shadow).
-	const ringShadow = await cta.evaluate((el) => window.getComputedStyle(el).boxShadow);
+	const ringShadow = await cta.evaluate(
+		(el) => window.getComputedStyle(el).boxShadow,
+	);
 	expect(ringShadow).not.toBe("none");
 	console.log(`[T1-after] ring box-shadow: ${ringShadow}`);
 });
 
-test("T1-after: disabled + aria-busy during room creation (<100ms)", async ({ page }) => {
+test("T1-after: disabled + aria-busy during room creation (<100ms)", async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/");
 	await page.waitForTimeout(400);
@@ -66,7 +70,9 @@ test("T1-after: disabled + aria-busy during room creation (<100ms)", async ({ pa
 			{ timeout: 800, intervals: [20, 40, 80, 160, 320] },
 		)
 		.toMatch(/ok|detached/);
-	console.log("[T1-after] opacity settled to ≤ 0.5 (or element detached post-navigation)");
+	console.log(
+		"[T1-after] opacity settled to ≤ 0.5 (or element detached post-navigation)",
+	);
 
 	await clickPromise.catch(() => {
 		// navigation may cancel — ignore
@@ -75,10 +81,15 @@ test("T1-after: disabled + aria-busy during room creation (<100ms)", async ({ pa
 	// Screenshot post-fix state (the static landing).
 	await page.goto("/");
 	await page.waitForTimeout(400);
-	await page.screenshot({ path: "../../screenshots/T1-after.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T1-after.png",
+		fullPage: false,
+	});
 });
 
-test("T1-after: tab order — Criar sala precedes Código input", async ({ page }) => {
+test("T1-after: tab order — Criar sala precedes Código input", async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/");
 	await page.waitForTimeout(400);
@@ -102,7 +113,9 @@ test("T1-after: tab order — Criar sala precedes Código input", async ({ page 
 				'button:not([disabled]), input:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
 			),
 		).filter((el) => el.offsetParent !== null);
-		return focusables.map((el) => el.getAttribute("data-testid") ?? el.tagName.toLowerCase());
+		return focusables.map(
+			(el) => el.getAttribute("data-testid") ?? el.tagName.toLowerCase(),
+		);
 	});
 	console.log(`[T1-after] tab order:`, tabOrder.join(" → "));
 

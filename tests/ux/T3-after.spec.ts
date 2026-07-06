@@ -60,5 +60,8 @@ test("T3-after: axe-core 0 serious/critical em /join", async ({ page }) => {
 	}
 	expect(serious.length).toBe(0);
 
-	await page.screenshot({ path: "../../screenshots/T3-after.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T3-after.png",
+		fullPage: false,
+	});
 });

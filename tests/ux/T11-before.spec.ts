@@ -12,5 +12,8 @@ test("T11-before: topbar sem <dl>", async ({ page }) => {
 	const dl = page.locator("header dl");
 	expect(await dl.count()).toBe(0);
 
-	await page.screenshot({ path: "../../screenshots/T11-before.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T11-before.png",
+		fullPage: false,
+	});
 });

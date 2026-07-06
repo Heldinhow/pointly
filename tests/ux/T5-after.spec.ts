@@ -37,9 +37,7 @@ test("T5-after: ícones renderizam 20px coral", async ({ page }) => {
 	expect(box!.height).toBeLessThanOrEqual(22);
 
 	// Cor via stroke ou fill — Lucide usa currentColor + stroke.
-	const stroke = await svg.evaluate(
-		(el) => window.getComputedStyle(el).color,
-	);
+	const stroke = await svg.evaluate((el) => window.getComputedStyle(el).color);
 	console.log(`[T5-after] svg color: ${stroke}`);
 	// Tailwind text-coral resolve para var(--accent) que é coral rgb.
 	expect(stroke).toMatch(/rgb\(210,\s*74,\s*42\)|rgb\(2[0-5]\d/);
@@ -61,5 +59,8 @@ test("T5-after: axe-core 0 serious/critical em /", async ({ page }) => {
 	}
 	expect(serious.length).toBe(0);
 
-	await page.screenshot({ path: "../../screenshots/T5-after.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T5-after.png",
+		fullPage: false,
+	});
 });

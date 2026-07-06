@@ -13,5 +13,8 @@ test("T4-before: side-rails expostos a screen readers", async ({ page }) => {
 	const ariaHidden = await rails.first().getAttribute("aria-hidden");
 	expect(ariaHidden).toBeNull();
 
-	await page.screenshot({ path: "../../screenshots/T4-before.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T4-before.png",
+		fullPage: false,
+	});
 });

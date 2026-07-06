@@ -9,7 +9,9 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-test("T10-after: click em carta dispara toast 'Voto registrado'", async ({ page }) => {
+test("T10-after: click em carta dispara toast 'Voto registrado'", async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/arena?code=ABCD");
 	await page.waitForTimeout(800);
@@ -18,7 +20,9 @@ test("T10-after: click em carta dispara toast 'Voto registrado'", async ({ page 
 	const card3 = page.getByTestId("deck-card-3");
 	const cardCount = await card3.count();
 	if (cardCount === 0) {
-		console.log("[T10-after] deck não renderizou (sem WS) — pulando assertion visual");
+		console.log(
+			"[T10-after] deck não renderizou (sem WS) — pulando assertion visual",
+		);
 		test.skip();
 		return;
 	}
@@ -31,7 +35,10 @@ test("T10-after: click em carta dispara toast 'Voto registrado'", async ({ page 
 	const toast = page.locator("text=Voto registrado").first();
 	await expect(toast).toBeVisible({ timeout: 2000 });
 
-	await page.screenshot({ path: "../../screenshots/T10-after.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T10-after.png",
+		fullPage: false,
+	});
 });
 
 test("T10-after: animação card-bump aplicada no click", async ({ page }) => {

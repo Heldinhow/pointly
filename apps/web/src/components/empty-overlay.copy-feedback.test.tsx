@@ -12,7 +12,14 @@
  * Complementa T12-after.spec.ts (axe-core em /arena + compiled source check).
  */
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+	act,
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react";
 import { EmptyOverlay } from "./empty-overlay";
 
 // Mock navigator.clipboard.writeText to resolve (no actual clipboard in JSDOM).

@@ -50,5 +50,8 @@ test("T8-after: axe-core 0 serious/critical em /", async ({ page }) => {
 		for (const v of serious) console.log(`  - ${v.id}: ${v.help}`);
 	}
 	expect(serious.length).toBe(0);
-	await page.screenshot({ path: "../../screenshots/T8-after.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T8-after.png",
+		fullPage: false,
+	});
 });

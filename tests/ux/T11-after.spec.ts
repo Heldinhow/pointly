@@ -49,5 +49,8 @@ test("T11-after: axe-core 0 serious/critical em /arena", async ({ page }) => {
 		for (const v of serious) console.log(`  - ${v.id}: ${v.help}`);
 	}
 	expect(serious.length).toBe(0);
-	await page.screenshot({ path: "../../screenshots/T11-after.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T11-after.png",
+		fullPage: false,
+	});
 });

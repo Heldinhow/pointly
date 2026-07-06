@@ -12,5 +12,8 @@ test("T8-before: footer sem <nav aria-label='Rodapé'>", async ({ page }) => {
 	const nav = page.locator('nav[aria-label="Rodapé"]');
 	expect(await nav.count()).toBe(0);
 
-	await page.screenshot({ path: "../../screenshots/T8-before.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T8-before.png",
+		fullPage: false,
+	});
 });

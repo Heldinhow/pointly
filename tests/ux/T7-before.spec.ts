@@ -4,7 +4,9 @@
  */
 import { expect, test } from "@playwright/test";
 
-test("T7-before: face-num sem label MEDIANA e tamanho 24px", async ({ page }) => {
+test("T7-before: face-num sem label MEDIANA e tamanho 24px", async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/");
 	await page.waitForTimeout(400);
@@ -20,9 +22,12 @@ test("T7-before: face-num sem label MEDIANA e tamanho 24px", async ({ page }) =>
 		temp.appendChild(seat);
 
 		const fs = parseFloat(
-			window.getComputedStyle(seat.querySelector('[data-testid="seat-face-num"]')!).fontSize,
+			window.getComputedStyle(
+				seat.querySelector('[data-testid="seat-face-num"]')!,
+			).fontSize,
 		);
-		const labelExists = seat.querySelector('[data-testid="seat-mediana-label"]') !== null;
+		const labelExists =
+			seat.querySelector('[data-testid="seat-mediana-label"]') !== null;
 
 		temp.remove();
 		return { fs, labelExists };
@@ -31,5 +36,8 @@ test("T7-before: face-num sem label MEDIANA e tamanho 24px", async ({ page }) =>
 	expect(result.fs).toBe(24);
 	expect(result.labelExists).toBe(false);
 
-	await page.screenshot({ path: "../../screenshots/T7-before.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T7-before.png",
+		fullPage: false,
+	});
 });

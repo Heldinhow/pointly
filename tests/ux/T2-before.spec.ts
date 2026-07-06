@@ -19,5 +19,8 @@ test("T2-before: aria-label ausente (pre-fix baseline)", async ({ page }) => {
 	// Antes da fix: sem aria-label descritivo.
 	expect(ariaLabel).toBeNull();
 
-	await page.screenshot({ path: "../../screenshots/T2-before.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T2-before.png",
+		fullPage: false,
+	});
 });

@@ -10,7 +10,9 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-test("T6-after: CTA ribbon tem cta-pulse class + animation ativa", async ({ page }) => {
+test("T6-after: CTA ribbon tem cta-pulse class + animation ativa", async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.emulateMedia({ reducedMotion: "no-preference" });
 	await page.goto("/");
@@ -32,7 +34,9 @@ test("T6-after: CTA ribbon tem cta-pulse class + animation ativa", async ({ page
 	expect(animationName).toBe("cta-pulse");
 });
 
-test("T6-after: prefers-reduced-motion: reduce → animation: none", async ({ page }) => {
+test("T6-after: prefers-reduced-motion: reduce → animation: none", async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.emulateMedia({ reducedMotion: "reduce" });
 	await page.goto("/");
@@ -75,5 +79,8 @@ test("T6-after: axe-core 0 serious/critical em /", async ({ page }) => {
 	}
 	expect(serious.length).toBe(0);
 	await page.locator("#cta-final").scrollIntoViewIfNeeded();
-	await page.screenshot({ path: "../../screenshots/T6-after.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T6-after.png",
+		fullPage: false,
+	});
 });

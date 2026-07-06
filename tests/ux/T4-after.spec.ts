@@ -33,11 +33,13 @@ test("T4-after: rail-text usa font-mono", async ({ page }) => {
 	const count = await railTexts.count();
 	expect(count).toBeGreaterThanOrEqual(2);
 
-	const fontFamily = await railTexts.first().evaluate(
-		(el) => window.getComputedStyle(el).fontFamily,
-	);
+	const fontFamily = await railTexts
+		.first()
+		.evaluate((el) => window.getComputedStyle(el).fontFamily);
 	console.log(`[T4-after] rail-text font-family: ${fontFamily}`);
-	expect(fontFamily.toLowerCase()).toMatch(/mono|jetbrains|courier|ui-monospace/);
+	expect(fontFamily.toLowerCase()).toMatch(
+		/mono|jetbrains|courier|ui-monospace/,
+	);
 });
 
 test("T4-after: axe-core 0 serious/critical em /", async ({ page }) => {
@@ -61,5 +63,8 @@ test("T4-after: screenshot", async ({ page }) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/");
 	await page.waitForTimeout(400);
-	await page.screenshot({ path: "../../screenshots/T4-after.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T4-after.png",
+		fullPage: false,
+	});
 });

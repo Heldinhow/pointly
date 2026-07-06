@@ -11,8 +11,13 @@ test("T10-before: click sem toast de confirmação", async ({ page }) => {
 
 	const card = page.getByTestId("deck-card-3");
 	if ((await card.count()) === 0) {
-		console.log("[T10-before] deck não renderizou (sem WS) — feature absent confirmed");
-		await page.screenshot({ path: "../../screenshots/T10-before.png", fullPage: false });
+		console.log(
+			"[T10-before] deck não renderizou (sem WS) — feature absent confirmed",
+		);
+		await page.screenshot({
+			path: "../../screenshots/T10-before.png",
+			fullPage: false,
+		});
 		return;
 	}
 
@@ -21,5 +26,8 @@ test("T10-before: click sem toast de confirmação", async ({ page }) => {
 	const toast = page.locator("text=Voto registrado").first();
 	expect(await toast.count()).toBe(0);
 
-	await page.screenshot({ path: "../../screenshots/T10-before.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T10-before.png",
+		fullPage: false,
+	});
 });

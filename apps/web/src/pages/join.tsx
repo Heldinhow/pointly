@@ -30,12 +30,7 @@ import { Card } from "../components/ui/card";
 import { ConnectionStatus } from "../components/ui/connection-status";
 import { useToast } from "../components/ui/toast";
 import { useSalaStore } from "../store/sala";
-import {
-	getNick,
-	getUUID,
-	setCode,
-	setNick,
-} from "../lib/storage";
+import { getNick, getUUID, setCode, setNick } from "../lib/storage";
 
 const NICK_MIN = 2;
 const NICK_MAX = 20;

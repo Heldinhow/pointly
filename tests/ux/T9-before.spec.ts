@@ -12,5 +12,8 @@ test("T9-before: /arena sem slot placeholders", async ({ page }) => {
 	const slots = page.locator('[aria-label="Slot aguardando jogador"]');
 	expect(await slots.count()).toBe(0);
 
-	await page.screenshot({ path: "../../screenshots/T9-before.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T9-before.png",
+		fullPage: false,
+	});
 });

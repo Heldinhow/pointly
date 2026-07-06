@@ -20,5 +20,8 @@ test("T6-before: CTA ribbon sem pulse + sem social proof", async ({ page }) => {
 	const proof = page.locator('[data-testid="cta-social-proof"]');
 	expect(await proof.count()).toBe(0);
 
-	await page.screenshot({ path: "../../screenshots/T6-before.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T6-before.png",
+		fullPage: false,
+	});
 });

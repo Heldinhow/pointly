@@ -305,7 +305,10 @@ export function Arena() {
 							<span aria-hidden="true">·</span>
 							<div className="flex items-baseline gap-1">
 								<dt>Rodada</dt>
-								<dd className="text-ink font-medium m-0" data-testid="arena-round">
+								<dd
+									className="text-ink font-medium m-0"
+									data-testid="arena-round"
+								>
 									{String(sala?.round ?? 1).padStart(2, "0")}
 								</dd>
 							</div>
@@ -352,10 +355,7 @@ export function Arena() {
 					className="relative w-[960px] h-[500px] mt-6"
 					data-testid="arena-table"
 				>
-					<Ellipse
-						height={500}
-						pulseWhenEmpty={isOnlyPlayer}
-					/>
+					<Ellipse height={500} pulseWhenEmpty={isOnlyPlayer} />
 
 					{/* Seats posicionados via trigonometria */}
 					{sala?.players.map((p) => {
@@ -403,31 +403,34 @@ export function Arena() {
 					   pointer-events: none + aria-label para AT. */}
 					{(sala === null || sala.players.length < 2) &&
 						[0, 1, 2]
-							.slice(0, sala === null ? 3 : Math.max(0, 3 - sala.players.length))
+							.slice(
+								0,
+								sala === null ? 3 : Math.max(0, 3 - sala.players.length),
+							)
 							.map((slot) => {
-							const slotAngles = [180, 220, 140];
-							const angle = slotAngles[slot] ?? 180;
-							const pos = seatPosition(angle);
-							return (
-								<div
-									key={`slot-${slot}`}
-									className="absolute pointer-events-none opacity-30"
-									style={{
-										left: `${pos.left}px`,
-										top: `${pos.top}px`,
-										transform: "translate(-50%, -50%)",
-									}}
-									aria-label="Slot aguardando jogador"
-									data-testid={`arena-slot-${slot}`}
-								>
-									<div className="w-24 h-32 bg-surface rounded-card border border-dashed border-ink/15 flex items-center justify-center">
-										<span className="font-mono text-[9px] tracking-[0.08em] uppercase text-ink-faint">
-											Aguardando…
-										</span>
+								const slotAngles = [180, 220, 140];
+								const angle = slotAngles[slot] ?? 180;
+								const pos = seatPosition(angle);
+								return (
+									<div
+										key={`slot-${slot}`}
+										className="absolute pointer-events-none opacity-30"
+										style={{
+											left: `${pos.left}px`,
+											top: `${pos.top}px`,
+											transform: "translate(-50%, -50%)",
+										}}
+										aria-label="Slot aguardando jogador"
+										data-testid={`arena-slot-${slot}`}
+									>
+										<div className="w-24 h-32 bg-surface rounded-card border border-dashed border-ink/15 flex items-center justify-center">
+											<span className="font-mono text-[9px] tracking-[0.08em] uppercase text-ink-faint">
+												Aguardando…
+											</span>
+										</div>
 									</div>
-								</div>
-							);
-						})}
+								);
+							})}
 
 					{/* UX-005: esconde RevealButton enquanto não há jogadores
 					   conectados. Sem isso o botão "AGUARDANDO 0 JOGADORES…"

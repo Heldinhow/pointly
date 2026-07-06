@@ -12,7 +12,9 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-test("T9-after: /arena mostra placeholders (sala=null ou 1 player)", async ({ page }) => {
+test("T9-after: /arena mostra placeholders (sala=null ou 1 player)", async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/arena?code=ABCD");
 	await page.waitForTimeout(800);
@@ -27,14 +29,17 @@ test("T9-after: /arena mostra placeholders (sala=null ou 1 player)", async ({ pa
 	const pe = await first.evaluate(
 		(el) => window.getComputedStyle(el).pointerEvents,
 	);
-	const op = await first.evaluate(
-		(el) => Number(window.getComputedStyle(el).opacity),
+	const op = await first.evaluate((el) =>
+		Number(window.getComputedStyle(el).opacity),
 	);
 	console.log(`[T9-after] pointer-events: ${pe}, opacity: ${op}`);
 	expect(pe).toBe("none");
 	expect(op).toBeLessThan(0.6);
 
-	await page.screenshot({ path: "../../screenshots/T9-after.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T9-after.png",
+		fullPage: false,
+	});
 });
 
 test("T9-after: axe-core 0 serious/critical em /arena", async ({ page }) => {

@@ -12,7 +12,10 @@ test("T12-before: copy state persiste sem auto-reset", async ({ page }) => {
 	const btn = page.getByTestId("empty-overlay-copy");
 	if ((await btn.count()) === 0) {
 		console.log("[T12-before] EmptyOverlay não renderizou");
-		await page.screenshot({ path: "../../screenshots/T12-before.png", fullPage: false });
+		await page.screenshot({
+			path: "../../screenshots/T12-before.png",
+			fullPage: false,
+		});
 		return;
 	}
 
@@ -22,5 +25,8 @@ test("T12-before: copy state persiste sem auto-reset", async ({ page }) => {
 	// Sem auto-reset, ainda está "Copiado ✓".
 	await expect(btn).toContainText("Copiado ✓");
 
-	await page.screenshot({ path: "../../screenshots/T12-before.png", fullPage: false });
+	await page.screenshot({
+		path: "../../screenshots/T12-before.png",
+		fullPage: false,
+	});
 });
