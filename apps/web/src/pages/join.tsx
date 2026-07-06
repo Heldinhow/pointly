@@ -205,7 +205,10 @@ export function Join() {
 						Seu nome na sala<span className="text-coral">.</span>
 					</h1>
 
-					<p className="font-sans text-[14px] leading-[1.55] text-ink-mute">
+					<p
+						id="nick-help"
+						className="font-sans text-[14px] leading-[1.55] text-ink-mute"
+					>
 						Apelido visível para os outros jogadores na mesa. Sem conta, sem
 						email — só como você quer ser chamado nesta rodada.
 					</p>
@@ -256,7 +259,12 @@ export function Join() {
 							autoComplete="off"
 							aria-invalid={!validation.ok && validation.error !== ""}
 							aria-describedby={
-								!validation.ok && validation.error ? "nick-error" : undefined
+								[
+									"nick-help",
+									!validation.ok && validation.error ? "nick-error" : "",
+								]
+									.filter(Boolean)
+									.join(" ") || undefined
 							}
 							disabled={isConnecting}
 							className="font-sans text-[16px] py-3.5 px-4 border border-ink/10 rounded-lg bg-paper text-ink placeholder:text-ink-faint focus:border-coral focus:outline-none transition-colors disabled:opacity-60"
