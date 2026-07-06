@@ -15,11 +15,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 
-/** Stat rings — números reais. */
+/** Stat rings — apenas métricas numéricas inequívocas. */
 const STATS = [
-	{ num: "0", label: "Cadastros" },
 	{ num: "12", label: "Assentos" },
-	{ num: "60", label: "Seg. p/ decidir" },
+	{ num: "60s", label: "P/ decidir" },
+	{ num: "0s", label: "Setup" },
 ];
 
 /** Capabilities — 4 features. */
@@ -493,7 +493,7 @@ export function Landing() {
 									key={s.label}
 									className="flex flex-col gap-1.5 items-start"
 								>
-									<span className="font-italic italic text-[28px] text-ink w-[40px] h-[40px] border border-dashed border-ink/15 rounded-full flex items-center justify-center">
+									<span className="font-italic italic text-[22px] text-ink w-[56px] h-[40px] border border-dashed border-ink/15 rounded-full flex items-center justify-center">
 										{s.num}
 									</span>
 									<span className="font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint">
@@ -501,6 +501,22 @@ export function Landing() {
 									</span>
 								</div>
 							))}
+						</div>
+
+						{/* Selo 'Sem cadastro' — desambigua o claim da home (T2) */}
+						<div
+							className="mt-6 inline-flex items-center gap-2 bg-coral/10 border border-coral/30 rounded-full px-3 py-1.5 self-start"
+							data-testid="selo-sem-cadastro"
+						>
+							<span
+								aria-hidden="true"
+								className="font-italic italic text-coral text-[14px] leading-none"
+							>
+								✓
+							</span>
+							<span className="font-mono text-[10px] tracking-[0.08em] uppercase text-coral font-semibold">
+								Sem cadastro · Sem e-mail
+							</span>
 						</div>
 					</div>
 

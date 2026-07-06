@@ -108,4 +108,25 @@ describe("Landing — T27", () => {
 		const fibVotes = (preview.textContent || "").match(/[01358]|13/g) || [];
 		expect(fibVotes.length).toBeGreaterThanOrEqual(6);
 	});
+
+	// T2 — Métrica '0 Cadastros' ambígua
+	test("T2 — barra de stats não mostra 'Cadastros' como label numérico; selo 'Sem cadastro' presente", () => {
+		renderLanding();
+
+		// O rótulo 'Cadastros' não pode mais aparecer isolado como label numérico
+		expect(screen.queryByText(/^Cadastros$/)).not.toBeInTheDocument();
+
+		// Selo editorial substitui o claim ambíguo
+		const selo = screen.getByTestId("selo-sem-cadastro");
+		expect(selo).toBeInTheDocument();
+		expect(selo.textContent).toMatch(/Sem cadastro/i);
+		expect(selo.textContent).toMatch(/Sem e-mail/i);
+	});
+
+	test("T2 — stats numéricos restantes são inequívocos (Assentos, Decidir, Setup)", () => {
+		renderLanding();
+		expect(screen.getByText(/Assentos/i)).toBeInTheDocument();
+		expect(screen.getByText(/P\/ decidir|Decidir/i)).toBeInTheDocument();
+		expect(screen.getByText(/Setup/i)).toBeInTheDocument();
+	});
 });
