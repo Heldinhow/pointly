@@ -877,8 +877,11 @@ export function Landing() {
 			</section>
 
 			{/* Footer — mega word */}
-			<footer className="max-w-[1360px] mx-auto px-6 lg:px-16 pt-16 pb-12 border-t border-ink/10 relative">
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+			<footer
+				role="contentinfo"
+				className="max-w-[1360px] mx-auto px-6 lg:px-16 pt-16 pb-12 border-t border-ink/10 relative"
+			>
+				<nav aria-label="Rodapé" className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
 					<div className="flex flex-col gap-3">
 						<h4 className="font-display font-bold text-[12px] tracking-wider uppercase text-ink">
 							Pointly
@@ -941,7 +944,7 @@ export function Landing() {
 							O Pointly é um projeto open-source projetado para rodar inteiramente no lado do cliente na versão beta, focado em simplicidade absoluta.
 						</p>
 					</div>
-				</div>
+				</nav>
 
 				<div className="pt-8 border-t border-ink/5 flex flex-col md:flex-row justify-between items-baseline gap-6">
 					<div className="mega select-none">
