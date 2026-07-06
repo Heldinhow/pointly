@@ -306,11 +306,24 @@ export function Seat({
 					{/* State pill: IDLE / VOTED / face-num */}
 					{showFaceNum ? (
 						<div
-							className="font-italic italic text-[24px] text-ink font-bold leading-none mt-1"
-							aria-label={`Voto: ${player.value as Vote}`}
-							data-testid="seat-face-num"
+							className={`flex flex-col items-center leading-none mt-1 ${votedMedian && !unanimous ? "" : ""}`}
+							data-testid="seat-face-num-wrap"
 						>
-							{player.value}
+							{votedMedian && !unanimous && (
+								<div
+									className="font-mono text-[8.5px] tracking-[0.14em] uppercase text-coral font-bold mb-0.5"
+									data-testid="seat-mediana-label"
+								>
+									Mediana
+								</div>
+							)}
+							<div
+								className={`font-italic italic font-bold leading-none ${votedMedian && !unanimous ? "text-[36px] text-coral" : "text-[24px] text-ink"}`}
+								aria-label={`Voto: ${player.value as Vote}`}
+								data-testid="seat-face-num"
+							>
+								{player.value}
+							</div>
 						</div>
 					) : (
 						<span
