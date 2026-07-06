@@ -373,11 +373,11 @@ export function Landing() {
 			className="surface-noise min-h-screen bg-bg text-ink relative overflow-x-hidden select-none"
 		>
 			{/* Side Rails (Desktop/Wide) */}
-			<div className="side-rail left hidden xl:flex">
-				<span className="rail-text">Pointly · Agility with rhythm</span>
+			<div className="side-rail left hidden xl:flex" aria-hidden="true">
+				<span className="rail-text font-mono">Pointly · Agility with rhythm</span>
 			</div>
-			<div className="side-rail right hidden xl:flex">
-				<span className="rail-text">Vol. 01 / Issue No. 26 · Open Beta</span>
+			<div className="side-rail right hidden xl:flex" aria-hidden="true">
+				<span className="rail-text font-mono">Vol. 01 / Issue No. 26 · Open Beta</span>
 			</div>
 
 			{/* Top Metadata Strip */}
