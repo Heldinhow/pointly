@@ -83,9 +83,17 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 			) as HTMLInputElement | null;
 			if (input) {
 				input.select();
+				setCopied(true);
 			}
 		}
 	}, [code, shareUrl]);
+
+	// T12 — feedback pós-clique: reverte "Copiado ✓" → "Copiar link" após 2s.
+	useEffect(() => {
+		if (!copied) return;
+		const t = setTimeout(() => setCopied(false), 2000);
+		return () => clearTimeout(t);
+	}, [copied]);
 
 	// Esc fecha
 	useEffect(() => {
@@ -125,9 +133,14 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 					<button
 						type="button"
 						onClick={handleCopy}
-						className="border border-coral text-coral font-mono text-[10px] uppercase tracking-[0.06em] py-2 px-3.5 rounded-full hover:bg-coral hover:text-white transition-colors"
+						className={`border font-mono text-[10px] uppercase tracking-[0.06em] py-2 px-3.5 rounded-full transition-colors ${
+							copied
+								? "border-olive bg-olive/10 text-olive"
+								: "border-coral text-coral hover:bg-coral hover:text-white"
+						}`}
 						data-testid="empty-overlay-copy"
 						aria-label="Copiar link de compartilhamento"
+						aria-live="polite"
 					>
 						{copied ? "Copiado ✓" : "Copiar link"}
 					</button>
