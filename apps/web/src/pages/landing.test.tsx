@@ -129,4 +129,18 @@ describe("Landing — T27", () => {
 		expect(screen.getByText(/P\/ decidir|Decidir/i)).toBeInTheDocument();
 		expect(screen.getByText(/Setup/i)).toBeInTheDocument();
 	});
+
+	// T3 — Open-source escondido no footer
+	test("T3 — selo '[ GITHUB ↗ ]' visível no header (não só no footer)", () => {
+		renderLanding();
+		const selo = screen.getByTestId("selo-github-header");
+		expect(selo).toBeInTheDocument();
+		expect(selo.tagName).toBe("A");
+		expect(selo.getAttribute("href")).toMatch(/github\.com/i);
+		expect(selo.getAttribute("target")).toBe("_blank");
+		expect(selo.textContent || "").toMatch(/GITHUB/i);
+
+		// Visível sem rolar — deve estar no topo da página (dentro do top metadata strip)
+		expect(selo.getBoundingClientRect().top).toBeLessThan(100);
+	});
 });
