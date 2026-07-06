@@ -257,3 +257,113 @@ describe("handleHello — reconnect (T13a, F-037/F-038)", () => {
 		}
 	});
 });
+
+// ---------------------------------------------------------------------------
+// Reg 2026-07-06: room migration — mesmo UUID em sala A + code de sala B
+// deve fazer evict de A e add em B. Antes do fix, caía no "UUID em uso".
+// ---------------------------------------------------------------------------
+
+describe("handleHello — room migration (reg 2026-07-06)", () => {
+	test("mesmo UUID em sala A desconectada + code B existente → entra em B", () => {
+		// Setup: 2 salas separadas com UUIDs diferentes
+		const createA = handleHello(hub, hello(UUID_P1, "Ana"));
+		expect(createA.ok).toBe(true);
+		const codeA = hub.activeCodes()[0]!;
+
+		const createB = handleHello(hub, hello(UUID_P2, "Bob"));
+		expect(createB.ok).toBe(true);
+		const codeB = hub.activeCodes().find((c) => c !== codeA)!;
+
+		// UUID_P1 desconecta de A
+		const anaId = createA.ok ? createA.playerId : "";
+		hub.markDisconnected(anaId);
+
+		// UUID_P1 tenta entrar em B (sala DIFERENTE)
+		const migrate = handleHello(hub, hello(UUID_P1, "Ana", codeB));
+		expect(migrate.ok).toBe(true);
+		if (migrate.ok) {
+			expect(migrate.sala.code).toBe(codeB);
+			expect(migrate.role).toBe("player");
+			expect(migrate.evictedFrom?.code).toBe(codeA);
+			expect(migrate.evictedFrom?.playerId).toBe(anaId);
+		}
+
+		// Sala A deve ter sido limpa (ou sem o player)
+		const salaA = hub.getSala(codeA);
+		if (salaA) expect(salaA.getPlayer(anaId)).toBeUndefined();
+	});
+
+	test("UUID em sala A + code B inexistente → sala_nao_encontrada + evict de A", () => {
+		const createA = handleHello(hub, hello(UUID_P1, "Ana"));
+		expect(createA.ok).toBe(true);
+		hub.activeCodes()[0]!;
+		const anaId = createA.ok ? createA.playerId : "";
+
+		hub.markDisconnected(anaId);
+
+		const result = handleHello(hub, hello(UUID_P1, "Ana", "ZZZZ"));
+		expect(result.ok).toBe(false);
+		if (!result.ok) expect(result.code).toBe("sala_nao_encontrada");
+
+		// byUUID limpo (sala A não tem mais Ana; hello novo com mesmo UUID
+		// funcionaria)
+		expect(hub.getCodeForUUID(UUID_P1)).toBeNull();
+	});
+
+	test("UUID em sala A + mesmo code A → reconnect (não migration)", () => {
+		const createA = handleHello(hub, hello(UUID_P1, "Ana"));
+		expect(createA.ok).toBe(true);
+		const codeA = hub.activeCodes()[0]!;
+		const anaId = createA.ok ? createA.playerId : "";
+		hub.markDisconnected(anaId);
+
+		const reconnect = handleHello(hub, hello(UUID_P1, "Ana", codeA));
+		expect(reconnect.ok).toBe(true);
+		if (reconnect.ok) {
+			expect(reconnect.reconnected).toBe(true);
+			expect(reconnect.evictedFrom).toBeUndefined();
+		}
+	});
+
+	test("UUID em sala A + sem code → reconnect (criação não acontece)", () => {
+		const createA = handleHello(hub, hello(UUID_P1, "Ana"));
+		expect(createA.ok).toBe(true);
+		const codeA = hub.activeCodes()[0]!;
+		const anaId = createA.ok ? createA.playerId : "";
+		hub.markDisconnected(anaId);
+
+		const reconnect = handleHello(hub, hello(UUID_P1, "Ana"));
+		expect(reconnect.ok).toBe(true);
+		if (reconnect.ok) {
+			expect(reconnect.reconnected).toBe(true);
+			expect(reconnect.sala.code).toBe(codeA);
+		}
+	});
+
+	test("regression prod: UUID órfão em CL8K tenta entrar em PM4H → sucesso", () => {
+		// Repro do bug de produção:
+		//   1. UUID_P1 cria CL8K
+		//   2. CL8K vira "abandonada" (UUID_P1 simula markDisconnected)
+		//   3. UUID_P1 tenta entrar em PM4H com mesmo UUID
+		// Antes do fix: error "UUID em uso"
+		// Depois do fix: welcome com code=PM4H + evictedFrom.code=CL8K
+		const createCL8K = handleHello(hub, hello(UUID_P1, "Ana"));
+		expect(createCL8K.ok).toBe(true);
+		const codeCL8K = hub.activeCodes()[0]!;
+		const anaId = createCL8K.ok ? createCL8K.playerId : "";
+		hub.markDisconnected(anaId);
+
+		const createPM4H = handleHello(hub, hello(UUID_P2, "Bob"));
+		expect(createPM4H.ok).toBe(true);
+		const codePM4H = hub.activeCodes().find((c) => c !== codeCL8K)!;
+
+		// O bug: UUID_P1 (que está "preso" em CL8K como disconnected) tenta
+		// entrar em PM4H
+		const result = handleHello(hub, hello(UUID_P1, "Ana", codePM4H));
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(result.sala.code).toBe(codePM4H);
+			expect(result.evictedFrom?.code).toBe(codeCL8K);
+		}
+	});
+});

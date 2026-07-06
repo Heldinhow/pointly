@@ -106,7 +106,8 @@ describe("Sala — tickGracePeriod", () => {
 		const removed = sala.tickGracePeriod(
 			1_000 + SALA_DISCONNECT_GRACE_MS + 100,
 		);
-		expect(removed).toContain("p2");
+		expect(removed.map((r) => r.playerId)).toContain("p2");
+		expect(removed[0]?.uuid).toBe(p2.uuid);
 		expect(sala.playerCount).toBe(1);
 	});
 

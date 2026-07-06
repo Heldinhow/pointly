@@ -9,6 +9,7 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { Hub } from "./hub";
 import type { Player } from "@planning-poker/shared";
+import { SALA_DISCONNECT_GRACE_MS } from "./sala";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -121,5 +122,66 @@ describe("Hub — tickAllTimers", () => {
 		const r2 = results.find((r) => r.code === sala2.code);
 		expect(r1?.tick).toBe("fired");
 		expect(r2?.tick).toBe("ticking");
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Reg 2026-07-06: byUUID leak — `removePlayer`/`tickGracePeriod`/`reconnect`
+// não limpavam `byUUID` consistentemente, prendendo UUIDs órfãos no Map.
+// ---------------------------------------------------------------------------
+
+describe("Hub — byUUID cleanup (reg 2026-07-06)", () => {
+	test("removePlayer limpa byUUID para player DISCONNECTED (leak fix)", () => {
+		// Antes do fix: `if (player && player.status === "connected")` era
+		// sempre false porque `sala.removePlayer` já tinha deletado o player.
+		// byUUID ficava órfão e hello subsequente com mesmo UUID batia no
+		// "UUID em uso".
+		const { playerId, sala } = hub.createSala(makePlayer("p1", "Ana", "host"));
+		const code = sala.code;
+		hub.markDisconnected(playerId, 1_000);
+		const salaState = hub.getSala(code)!;
+		expect(salaState.getPlayer(playerId)?.status).toBe("disconnected");
+
+		hub.removePlayer(playerId);
+
+		// byUUID limpo → novo hello com mesmo UUID (criando nova sala) funciona
+		const recreate = hub.createSala(makePlayer("p1", "Ana", "host"));
+		expect(recreate.playerId).toBe("p1");
+		expect(recreate.sala.getPlayer("p1")?.uuid).toBe("00000000-0000-4000-8000-0000000000p1");
+	});
+
+	test("tickGracePeriod limpa byUUID após grace period expirar (regression)", () => {
+		const { playerId, sala } = hub.createSala(makePlayer("p1", "Ana", "host"));
+		hub.markDisconnected(playerId, 1_000);
+
+		// Antes do grace period expirar: byUUID ainda tem o UUID
+		hub.tickGracePeriod(1_000 + 30_000);
+		expect(hub.getSala(sala.code)).not.toBeNull();
+		expect(hub.getCodeForUUID("00000000-0000-4000-8000-0000000000p1")).toBe(
+			sala.code,
+		);
+
+		// Após 60s: tickGracePeriod remove o player E o byUUID
+		hub.tickGracePeriod(1_000 + SALA_DISCONNECT_GRACE_MS + 1);
+		expect(hub.getSala(sala.code)).toBeNull();
+		expect(
+			hub.getCodeForUUID("00000000-0000-4000-8000-0000000000p1"),
+		).toBeNull();
+	});
+
+	test("reconnect NÃO chama markConnected (sem side-effect)", () => {
+		// Antes do fix: hub.reconnect invocava sala.markConnected(uuid),
+		// deletando disconnectedAt. Caller que abortasse o reconnect
+		// (ex: código diferente) deixava player órfão sem WS real.
+		const { playerId, sala } = hub.createSala(makePlayer("p1", "Ana", "host"));
+		hub.markDisconnected(playerId, 1_000);
+		const salaState = hub.getSala(sala.code)!;
+		expect(salaState.getPlayer(playerId)?.status).toBe("disconnected");
+
+		const result = hub.reconnect("00000000-0000-4000-8000-0000000000p1");
+		expect(result).not.toBeNull();
+
+		// Status deve permanecer disconnected (caller é quem commita)
+		expect(salaState.getPlayer(playerId)?.status).toBe("disconnected");
 	});
 });
