@@ -22,27 +22,106 @@ const STATS = [
 	{ num: "0s", label: "Setup" },
 ];
 
-/** Capabilities — 4 features. */
-const CAPABILITIES = [
+/** Capabilities — 4 features. Cada item inclui um ícone Lucide-like (20px coral)
+ *  alinhado à direita do título. Os SVGs são aria-hidden para não poluir
+ *  screen readers (o título do card já carrega o significado). */
+const CAPABILITIES: Array<{
+	n: string;
+	title: string;
+	body: string;
+	icon: () => JSX.Element;
+}> = [
 	{
 		n: "01",
 		title: "Sala instantânea",
 		body: "Crie um código de 4 chars em < 100ms. Sem cadastro, sem email, sem confirmação.",
+		icon: () => (
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				aria-hidden="true"
+				data-testid="cap-icon-zap"
+			>
+				<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
+			</svg>
+		),
 	},
 	{
 		n: "02",
 		title: "Deck Fibonacci",
 		body: "9 cartas: 0, ½, 1, 2, 3, 5, 8, 13, ☕. Pausa explícita sem custo de mediação.",
+		icon: () => (
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				aria-hidden="true"
+				data-testid="cap-icon-layers"
+			>
+				<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" />
+				<path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" />
+				<path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" />
+			</svg>
+		),
 	},
 	{
 		n: "03",
 		title: "Reveal coletivo",
 		body: "Vire a mesa face-up com 1 clique. Mediana destacada em gold. Stats instantâneas.",
+		icon: () => (
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				aria-hidden="true"
+				data-testid="cap-icon-eye"
+			>
+				<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+				<circle cx="12" cy="12" r="3" />
+			</svg>
+		),
 	},
 	{
 		n: "04",
 		title: "Timer crítico",
 		body: "60s com transição pra coral aos 30s. Auto-reveal ao expirar. Sem decisões penduradas.",
+		icon: () => (
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				aria-hidden="true"
+				data-testid="cap-icon-clock"
+			>
+				<circle cx="12" cy="12" r="10" />
+				<polyline points="12 6 12 12 16 14" />
+			</svg>
+		),
 	},
 ];
 
@@ -69,24 +148,24 @@ const MOCK_PLAYERS: MockPlayer[] = [
 
 /** Posições dos assentos na mesa elíptica demonstrativa */
 const SEAT_POSITIONS = [
-	{ left: "50%", top: "82%" },   // Você (baixo)
-	{ left: "18%", top: "72%" },   // Maya (baixo-esquerda)
-	{ left: "9%", top: "46%" },    // Rui (esquerda)
-	{ left: "18%", top: "20%" },   // Aria (topo-esquerda)
-	{ left: "50%", top: "8%" },    // Theo (topo / Host)
-	{ left: "82%", top: "20%" },   // Lia (topo-direita)
-	{ left: "91%", top: "46%" },   // Ivo (direita)
-	{ left: "82%", top: "72%" },   // Nora (baixo-direita)
+	{ left: "50%", top: "82%" }, // Você (baixo)
+	{ left: "18%", top: "72%" }, // Maya (baixo-esquerda)
+	{ left: "9%", top: "46%" }, // Rui (esquerda)
+	{ left: "18%", top: "20%" }, // Aria (topo-esquerda)
+	{ left: "50%", top: "8%" }, // Theo (topo / Host)
+	{ left: "82%", top: "20%" }, // Lia (topo-direita)
+	{ left: "91%", top: "46%" }, // Ivo (direita)
+	{ left: "82%", top: "72%" }, // Nora (baixo-direita)
 ];
 
 /** Posições compactas dos 6 assentos no preview do hero (hexagonal em torno da elipse) */
 const HERO_SEAT_POSITIONS = [
-	{ left: "50%", top: "88%" },   // Você (baixo)
-	{ left: "14%", top: "66%" },   // Maya (baixo-esquerda)
-	{ left: "14%", top: "38%" },   // Aria (topo-esquerda)
-	{ left: "50%", top: "18%" },   // Theo (topo / Host)
-	{ left: "86%", top: "38%" },   // Lia (topo-direita)
-	{ left: "86%", top: "66%" },   // Ivo (baixo-direita)
+	{ left: "50%", top: "88%" }, // Você (baixo)
+	{ left: "14%", top: "66%" }, // Maya (baixo-esquerda)
+	{ left: "14%", top: "38%" }, // Aria (topo-esquerda)
+	{ left: "50%", top: "18%" }, // Theo (topo / Host)
+	{ left: "86%", top: "38%" }, // Lia (topo-direita)
+	{ left: "86%", top: "66%" }, // Ivo (baixo-direita)
 ];
 
 /** Jogadores compactos para o preview do hero (6 jogadores, votos revelados) */
@@ -106,7 +185,10 @@ function HeroTable() {
 			{/* Header chip editorial */}
 			<div className="absolute top-3 left-3 right-3 flex items-center justify-between z-20">
 				<div className="font-mono text-[9px] text-ink-mute uppercase tracking-[0.18em] flex items-center gap-1.5 bg-surface/80 backdrop-blur-sm px-2 py-1 rounded-full border border-ink/5">
-					<span className="inline-block w-1.5 h-1.5 rounded-full bg-coral animate-pulse" aria-hidden="true" />
+					<span
+						className="inline-block w-1.5 h-1.5 rounded-full bg-coral animate-pulse"
+						aria-hidden="true"
+					/>
 					Fig. 01 · Mesa revelada
 				</div>
 				<div className="font-mono text-[9px] bg-mustard/15 text-ink-mute px-2 py-1 rounded-full border border-mustard/30 uppercase tracking-wider">
@@ -123,7 +205,10 @@ function HeroTable() {
 			<div className="absolute inset-0">
 				{HERO_PLAYERS.map((player, index) => {
 					const pos = HERO_SEAT_POSITIONS[index] || { left: "0px", top: "0px" };
-					const initials = player.nick === "Você" ? "VC" : player.nick.substring(0, 2).toUpperCase();
+					const initials =
+						player.nick === "Você"
+							? "VC"
+							: player.nick.substring(0, 2).toUpperCase();
 					const effectiveMedian = player.votedMedian;
 
 					return (
@@ -141,7 +226,10 @@ function HeroTable() {
 											: "border-ink/10"
 								}`}
 								style={{
-									boxShadow: effectiveMedian && player.isYou ? "inset 0 0 0 2px var(--mustard)" : "none",
+									boxShadow:
+										effectiveMedian && player.isYou
+											? "inset 0 0 0 2px var(--mustard)"
+											: "none",
 								}}
 							>
 								{player.isHost && (
@@ -196,8 +284,12 @@ function MockTable() {
 			{/* Linha elíptica da mesa */}
 			<div className="absolute left-[15%] top-[25%] w-[70%] h-[50%] border border-dashed border-ink/15 rounded-[120px] flex items-center justify-center pointer-events-none">
 				<div className="bg-surface border border-ink/10 rounded-full px-4 py-2 text-center shadow-sm">
-					<div className="font-display font-bold text-[12px] text-ink">Nova rodada</div>
-					<div className="font-mono text-[8px] text-ink-faint uppercase tracking-wide mt-0.5">Limpar Votos</div>
+					<div className="font-display font-bold text-[12px] text-ink">
+						Nova rodada
+					</div>
+					<div className="font-mono text-[8px] text-ink-faint uppercase tracking-wide mt-0.5">
+						Limpar Votos
+					</div>
 				</div>
 			</div>
 
@@ -205,9 +297,12 @@ function MockTable() {
 			<div className="absolute inset-0 pt-10 pb-4">
 				{MOCK_PLAYERS.map((player, index) => {
 					const pos = SEAT_POSITIONS[index] || { left: "0px", top: "0px" };
-					const initials = player.nick === "Você" ? "VC" : player.nick.substring(0, 2).toUpperCase();
+					const initials =
+						player.nick === "Você"
+							? "VC"
+							: player.nick.substring(0, 2).toUpperCase();
 					const effectiveMedian = player.votedMedian;
-					
+
 					return (
 						<div
 							key={player.id}
@@ -216,15 +311,24 @@ function MockTable() {
 						>
 							<div
 								className={`relative w-[70px] h-[92px] bg-surface rounded-card border flex flex-col items-center justify-center p-1.5 shadow-sm ${
-									player.isYou ? "border-coral border-2" : effectiveMedian ? "border-mustard border-2" : "border-ink/5"
+									player.isYou
+										? "border-coral border-2"
+										: effectiveMedian
+											? "border-mustard border-2"
+											: "border-ink/5"
 								}`}
 								style={{
-									boxShadow: effectiveMedian && player.isYou ? "inset 0 0 0 2px var(--mustard)" : "none"
+									boxShadow:
+										effectiveMedian && player.isYou
+											? "inset 0 0 0 2px var(--mustard)"
+											: "none",
 								}}
 							>
 								{/* Star (Host) */}
 								{player.isHost && (
-									<span className="absolute top-1 right-1 text-mustard text-[10px] leading-none">★</span>
+									<span className="absolute top-1 right-1 text-mustard text-[10px] leading-none">
+										★
+									</span>
 								)}
 
 								{/* Avatar */}
@@ -284,7 +388,9 @@ function MockDeck() {
 									: "bg-surface/10 border-surface/10 text-surface/60 hover:border-surface/20"
 							}`}
 						>
-							<span className={`font-italic italic text-lg ${isSelected ? "text-white" : "text-surface/80"}`}>
+							<span
+								className={`font-italic italic text-lg ${isSelected ? "text-white" : "text-surface/80"}`}
+							>
 								{val}
 							</span>
 							<span className="font-mono text-[6px] tracking-wide mt-1 uppercase opacity-60">
@@ -302,7 +408,11 @@ function MockDeck() {
 }
 
 /** Componente utilitário para divisores de seção (Section Rules) */
-function SectionRule({ roman, title, page }: { roman: string; title: string; page: string }) {
+function SectionRule({
+	roman,
+	title,
+	page,
+}: { roman: string; title: string; page: string }) {
 	return (
 		<div className="max-w-[1360px] mx-auto px-6 lg:px-16" aria-hidden="true">
 			<div className="sec-rule">
@@ -320,6 +430,7 @@ export function Landing() {
 	const heroCtaRef = useRef<HTMLButtonElement | null>(null);
 	const [heroVisible, setHeroVisible] = useState(false);
 	const [tocOpen, setTocOpen] = useState(false);
+	const [isCreating, setIsCreating] = useState(false);
 
 	const TOC_ENTRIES = [
 		{ id: "como-funciona", roman: "01", label: "Introdução" },
@@ -340,7 +451,13 @@ export function Landing() {
 		return () => obs.disconnect();
 	}, []);
 
-	function handleCreateRoom(): void {
+	async function handleCreateRoom(): Promise<void> {
+		if (isCreating) return;
+		setIsCreating(true);
+		// T1 — feedback visual: brief <100ms latency shows disabled state before navigation.
+		// Pure-client routing means actual transition is ~instant; this guarantees the
+		// disabled state is observable (não-flicker) sem causar sensação de travamento.
+		await new Promise((r) => setTimeout(r, 50));
 		navigate("/join?host=1");
 	}
 
@@ -366,11 +483,15 @@ export function Landing() {
 			className="surface-noise min-h-screen bg-bg text-ink relative overflow-x-hidden select-none"
 		>
 			{/* Side Rails (Desktop/Wide) */}
-			<div className="side-rail left hidden xl:flex">
-				<span className="rail-text">Pointly · Agility with rhythm</span>
+			<div className="side-rail left hidden xl:flex" aria-hidden="true">
+				<span className="rail-text font-mono">
+					Pointly · Agility with rhythm
+				</span>
 			</div>
-			<div className="side-rail right hidden xl:flex">
-				<span className="rail-text">Vol. 01 / Issue No. 26 · Open Beta</span>
+			<div className="side-rail right hidden xl:flex" aria-hidden="true">
+				<span className="rail-text font-mono">
+					Vol. 01 / Issue No. 26 · Open Beta
+				</span>
 			</div>
 
 			{/* Top Metadata Strip */}
@@ -401,7 +522,9 @@ export function Landing() {
 							>
 								<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
 							</svg>
-							<span className="font-mono text-[10px] tracking-[0.08em]">[ GITHUB ↗ ]</span>
+							<span className="font-mono text-[10px] tracking-[0.08em]">
+								[ GITHUB ↗ ]
+							</span>
 						</a>
 					</div>
 				</div>
@@ -512,7 +635,11 @@ export function Landing() {
 			</nav>
 
 			{/* Section Rule I - Hero */}
-			<SectionRule roman="01" title="INTRODUÇÃO · VOTAÇÃO EFÊMERA" page="PAGE 001" />
+			<SectionRule
+				roman="01"
+				title="INTRODUÇÃO · VOTAÇÃO EFÊMERA"
+				page="PAGE 001"
+			/>
 
 			{/* HERO — Roman I */}
 			<section
@@ -544,7 +671,8 @@ export function Landing() {
 						</h1>
 						<p className="font-sans text-[16px] lg:text-[17px] leading-[1.6] text-ink-mute mt-6 max-w-[50ch]">
 							Planning Poker gratuito, sem email, sem plano pago. Sincronize a
-							estimativa do seu time em menos de 60 segundos com salas que somem ao terminar.
+							estimativa do seu time em menos de 60 segundos com salas que somem
+							ao terminar.
 						</p>
 
 						<div className="flex flex-wrap items-center gap-4 mt-8">
@@ -552,6 +680,8 @@ export function Landing() {
 								variant="coral"
 								size="lg"
 								onClick={handleCreateRoom}
+								disabled={isCreating}
+								aria-busy={isCreating}
 								data-testid="cta-create-room"
 								ref={heroCtaRef}
 								id="hero-create-room-cta"
@@ -574,9 +704,7 @@ export function Landing() {
 									value={joinCode}
 									onChange={(e) =>
 										setJoinCode(
-											e.target.value
-												.toUpperCase()
-												.replace(/[^A-Z0-9]/g, ""),
+											e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""),
 										)
 									}
 									className="font-mono text-[14px] uppercase py-2.5 px-3 w-32 border border-ink/10 rounded-lg bg-surface text-ink placeholder:text-ink-faint focus:border-coral focus:outline-none transition-colors"
@@ -588,6 +716,8 @@ export function Landing() {
 									variant="default"
 									size="md"
 									disabled={joinCode.length !== 4}
+									aria-label="Entrar na sala com código"
+									className="!border-coral !border-2 !text-coral hover:!bg-coral/5 focus-visible:!ring-coral"
 									data-testid="landing-code-submit"
 								>
 									Entrar
@@ -641,7 +771,11 @@ export function Landing() {
 			</section>
 
 			{/* Section Rule II - About */}
-			<SectionRule roman="02" title="CONVERSAÇÃO · FOCO EM TIMES" page="PAGE 002" />
+			<SectionRule
+				roman="02"
+				title="CONVERSAÇÃO · FOCO EM TIMES"
+				page="PAGE 002"
+			/>
 
 			{/* ABOUT */}
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-20 relative">
@@ -658,7 +792,11 @@ export function Landing() {
 							id="para-times"
 							className="font-sans text-[16px] lg:text-[17px] leading-[1.7] text-ink-mute mt-6 max-w-[56ch]"
 						>
-							O Pointly elimina a burocracia dos cadastros e convites complicados. Você cria a sala, envia a URL para o time no chat da call e começa a estimar. Após todos os jogadores votarem, os resultados revelam a mediana com destaque visual imediato para fomentar o alinhamento saudável.
+							O Pointly elimina a burocracia dos cadastros e convites
+							complicados. Você cria a sala, envia a URL para o time no chat da
+							call e começa a estimar. Após todos os jogadores votarem, os
+							resultados revelam a mediana com destaque visual imediato para
+							fomentar o alinhamento saudável.
 						</p>
 					</div>
 
@@ -668,10 +806,17 @@ export function Landing() {
 			</section>
 
 			{/* Section Rule III - Capabilities */}
-			<SectionRule roman="03" title="CAPABILIDADES · FUNCIONALIDADES" page="PAGE 003" />
+			<SectionRule
+				roman="03"
+				title="CAPABILIDADES · FUNCIONALIDADES"
+				page="PAGE 003"
+			/>
 
 			{/* CAPABILITIES */}
-			<section id="capabilidades" className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative">
+			<section
+				id="capabilidades"
+				className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative"
+			>
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 					{CAPABILITIES.map((cap) => (
 						<Card
@@ -684,7 +829,15 @@ export function Landing() {
 								<span className="font-serif italic text-coral text-[28px] tracking-normal normal-case font-normal leading-none">
 									{cap.n}
 								</span>
-								<span>Feature</span>
+								<span className="flex items-center gap-2">
+									<span>Feature</span>
+									<span
+										className="text-coral"
+										data-testid={`cap-icon-${cap.n}`}
+									>
+										{cap.icon()}
+									</span>
+								</span>
 							</div>
 							<h3 className="font-display font-extrabold text-[19px] tracking-[-0.02em]">
 								{cap.title}
@@ -698,10 +851,17 @@ export function Landing() {
 			</section>
 
 			{/* Section Rule IV - Dark Showcase */}
-			<SectionRule roman="04" title="DEMONSTRAÇÃO · FLUXO DE VOTO" page="PAGE 004" />
+			<SectionRule
+				roman="04"
+				title="DEMONSTRAÇÃO · FLUXO DE VOTO"
+				page="PAGE 004"
+			/>
 
 			{/* DARK SHOWCASE CONTAINER (Section 6 Style) */}
-			<section id="fluxo-de-voto" className="max-w-[1360px] mx-auto px-6 lg:px-16 py-12">
+			<section
+				id="fluxo-de-voto"
+				className="max-w-[1360px] mx-auto px-6 lg:px-16 py-12"
+			>
 				<div className="bg-ink text-surface rounded-3xl p-8 lg:p-16 grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-12 items-center relative overflow-hidden">
 					<div className="absolute inset-0 bg-radial-gradient from-coral/10 to-transparent pointer-events-none"></div>
 					<div className="relative z-10">
@@ -716,7 +876,9 @@ export function Landing() {
 							.
 						</h2>
 						<p className="font-sans text-[15px] leading-[1.6] text-surface/70 mt-6 max-w-[46ch]">
-							Durante a rodada, as cartas permanecem viradas para baixo para evitar a influência mútua dos votos. O time vota secretamente e o host visualiza o andamento em tempo real.
+							Durante a rodada, as cartas permanecem viradas para baixo para
+							evitar a influência mútua dos votos. O time vota secretamente e o
+							host visualiza o andamento em tempo real.
 						</p>
 						<ul className="mt-8 space-y-3 font-mono text-[12px] text-surface/80">
 							<li className="flex items-center gap-3">
@@ -741,35 +903,63 @@ export function Landing() {
 			</section>
 
 			{/* Section Rule V - Call to Action */}
-			<SectionRule roman="05" title="RECOMENDAÇÃO · COMEÇAR JÁ" page="PAGE 005" />
+			<SectionRule
+				roman="05"
+				title="RECOMENDAÇÃO · COMEÇAR JÁ"
+				page="PAGE 005"
+			/>
 
 			{/* CTA RIBBON */}
-			<section id="cta-final" className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative">
+			<section
+				id="cta-final"
+				className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative"
+			>
 				<div className="bg-paper-dark rounded-3xl px-8 lg:px-16 py-16 text-center relative overflow-hidden border border-ink/5 shadow-bone">
 					<h2 className="font-serif font-normal text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.03em] max-w-[24ch] mx-auto">
 						Pronto pra começar<span className="text-coral">?</span>
 					</h2>
 					<p className="font-sans text-[15px] lg:text-[16px] leading-[1.7] text-ink-mute max-w-[50ch] mx-auto mt-4">
-						Crie uma sala em menos de 5 segundos. Convide seu time, votem e revelem. Sem cadastros, sem emails, sem dores de cabeça.
+						Crie uma sala em menos de 5 segundos. Convide seu time, votem e
+						revelem. Sem cadastros, sem emails, sem dores de cabeça.
 					</p>
 					<div className="flex items-center justify-center gap-3.5 mt-8">
 						<Button
 							variant="coral"
 							size="lg"
 							onClick={handleCreateRoom}
+							disabled={isCreating}
+							aria-busy={isCreating}
 							data-testid="cta-ribbon-create"
-							className="shadow-coral"
+							className="shadow-coral cta-pulse"
 						>
 							Criar sala
 							<span aria-hidden="true">↗</span>
 						</Button>
 					</div>
+					{/* T6 — Social proof sutil acima do CTA. Mono, 10px, ink-faint. */}
+					<div
+						className="flex items-center justify-center gap-2 mt-5 font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint"
+						data-testid="cta-social-proof"
+						aria-hidden="true"
+					>
+						<span
+							className="inline-block w-1.5 h-1.5 rounded-full bg-coral"
+							aria-hidden="true"
+						/>
+						<span>12 times usando hoje · sem login · código em &lt; 100ms</span>
+					</div>
 				</div>
 			</section>
 
 			{/* Footer — mega word */}
-			<footer className="max-w-[1360px] mx-auto px-6 lg:px-16 pt-16 pb-12 border-t border-ink/10 relative">
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+			<footer
+				role="contentinfo"
+				className="max-w-[1360px] mx-auto px-6 lg:px-16 pt-16 pb-12 border-t border-ink/10 relative"
+			>
+				<nav
+					aria-label="Rodapé"
+					className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16"
+				>
 					<div className="flex flex-col gap-3">
 						<h4 className="font-display font-bold text-[12px] tracking-wider uppercase text-ink">
 							Pointly
@@ -829,10 +1019,12 @@ export function Landing() {
 							Código Aberto
 						</h4>
 						<p className="font-sans text-[13px] text-ink-mute leading-[1.6]">
-							O Pointly é um projeto open-source projetado para rodar inteiramente no lado do cliente na versão beta, focado em simplicidade absoluta.
+							O Pointly é um projeto open-source projetado para rodar
+							inteiramente no lado do cliente na versão beta, focado em
+							simplicidade absoluta.
 						</p>
 					</div>
-				</div>
+				</nav>
 
 				<div className="pt-8 border-t border-ink/5 flex flex-col md:flex-row justify-between items-baseline gap-6">
 					<div className="mega select-none">
