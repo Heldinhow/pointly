@@ -319,6 +319,15 @@ export function Landing() {
 	const [joinCode, setJoinCode] = useState("");
 	const heroCtaRef = useRef<HTMLButtonElement | null>(null);
 	const [heroVisible, setHeroVisible] = useState(false);
+	const [tocOpen, setTocOpen] = useState(false);
+
+	const TOC_ENTRIES = [
+		{ id: "como-funciona", roman: "01", label: "Introdução" },
+		{ id: "para-times", roman: "02", label: "Como funciona" },
+		{ id: "capabilidades", roman: "03", label: "Capacidades" },
+		{ id: "fluxo-de-voto", roman: "04", label: "Fluxo de voto" },
+		{ id: "cta-final", roman: "05", label: "Começar" },
+	] as const;
 
 	useEffect(() => {
 		const el = heroCtaRef.current;
@@ -340,6 +349,14 @@ export function Landing() {
 		const cleanCode = joinCode.trim().toUpperCase();
 		if (cleanCode.length === 4) {
 			navigate(`/join?code=${cleanCode}`);
+		}
+	}
+
+	function handleTocClick(id: string): void {
+		setTocOpen(false);
+		const target = document.getElementById(id);
+		if (target && typeof target.scrollIntoView === "function") {
+			target.scrollIntoView({ behavior: "smooth", block: "start" });
 		}
 	}
 
@@ -392,16 +409,69 @@ export function Landing() {
 
 			{/* Sticky Navigation */}
 			<nav className="py-4 px-6 lg:px-16 max-w-[1360px] mx-auto flex justify-between items-center border-b border-ink/5 sticky top-0 z-10 bg-bg/95 backdrop-blur-sm">
-				<Link
-					to="/"
-					className="font-display font-extrabold text-[22px] tracking-[-0.03em] flex items-baseline gap-2.5 hover:text-coral transition-colors"
-					aria-label="Pointly — página inicial"
-				>
-					<span className="font-italic italic text-coral text-[26px] leading-none">
-						Ø
-					</span>
-					Pointly
-				</Link>
+				<div className="flex items-center gap-6">
+					<Link
+						to="/"
+						className="font-display font-extrabold text-[22px] tracking-[-0.03em] flex items-baseline gap-2.5 hover:text-coral transition-colors"
+						aria-label="Pointly — página inicial"
+					>
+						<span className="font-italic italic text-coral text-[26px] leading-none">
+							Ø
+						</span>
+						Pointly
+					</Link>
+
+					{/* T5 — Sumário (dropdown editorial tipo 'índice de revista') */}
+					<div className="relative hidden lg:block">
+						<button
+							type="button"
+							onClick={() => setTocOpen((v) => !v)}
+							data-testid="toc-toggle"
+							aria-expanded={tocOpen}
+							aria-haspopup="menu"
+							className="font-mono text-[10px] tracking-[0.08em] uppercase text-ink-mute hover:text-coral transition-colors flex items-center gap-1.5 px-2 py-1 border border-ink/10 rounded-sm"
+						>
+							Sumário
+							<span
+								aria-hidden="true"
+								className={`transition-transform ${tocOpen ? "rotate-180" : ""}`}
+							>
+								▾
+							</span>
+						</button>
+						{tocOpen && (
+							<div
+								role="menu"
+								data-testid="toc-menu"
+								className="absolute left-0 top-full mt-2 min-w-[260px] bg-surface border border-ink/10 rounded-lg shadow-bone p-2 z-20"
+							>
+								{TOC_ENTRIES.map((entry) => (
+									<button
+										key={entry.id}
+										type="button"
+										role="menuitem"
+										onClick={() => handleTocClick(entry.id)}
+										data-testid={`toc-item-${entry.id}`}
+										className="w-full text-left flex items-center gap-3 px-3 py-2 rounded hover:bg-paper-warm transition-colors group"
+									>
+										<span className="font-italic italic text-coral text-[18px] leading-none w-7">
+											{entry.roman}
+										</span>
+										<span className="font-mono text-[11px] tracking-[0.06em] uppercase text-ink-mute group-hover:text-coral transition-colors">
+											{entry.label}
+										</span>
+										<span
+											aria-hidden="true"
+											className="ml-auto text-ink-faint group-hover:text-coral transition-colors"
+										>
+											↗
+										</span>
+									</button>
+								))}
+							</div>
+						)}
+					</div>
+				</div>
 				<Button
 					variant="coral"
 					size="sm"
@@ -581,7 +651,7 @@ export function Landing() {
 			<SectionRule roman="03" title="CAPABILIDADES · FUNCIONALIDADES" page="PAGE 003" />
 
 			{/* CAPABILITIES */}
-			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative">
+			<section id="capabilidades" className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative">
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 					{CAPABILITIES.map((cap) => (
 						<Card
@@ -611,7 +681,7 @@ export function Landing() {
 			<SectionRule roman="04" title="DEMONSTRAÇÃO · FLUXO DE VOTO" page="PAGE 004" />
 
 			{/* DARK SHOWCASE CONTAINER (Section 6 Style) */}
-			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-12">
+			<section id="fluxo-de-voto" className="max-w-[1360px] mx-auto px-6 lg:px-16 py-12">
 				<div className="bg-ink text-surface rounded-3xl p-8 lg:p-16 grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-12 items-center relative overflow-hidden">
 					<div className="absolute inset-0 bg-radial-gradient from-coral/10 to-transparent pointer-events-none"></div>
 					<div className="relative z-10">
@@ -654,7 +724,7 @@ export function Landing() {
 			<SectionRule roman="05" title="RECOMENDAÇÃO · COMEÇAR JÁ" page="PAGE 005" />
 
 			{/* CTA RIBBON */}
-			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative">
+			<section id="cta-final" className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative">
 				<div className="bg-paper-dark rounded-3xl px-8 lg:px-16 py-16 text-center relative overflow-hidden border border-ink/5 shadow-bone">
 					<h2 className="font-serif font-normal text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.03em] max-w-[24ch] mx-auto">
 						Pronto pra começar<span className="text-coral">?</span>
