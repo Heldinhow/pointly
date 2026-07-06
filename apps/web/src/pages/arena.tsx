@@ -387,6 +387,37 @@ export function Arena() {
 						);
 					})}
 
+					{/* T9 — Skeleton placeholders: 2-3 slots aguardando jogador.
+					   Renderiza quando sala é null OU tem <2 players.
+					   pointer-events: none + aria-label para AT. */}
+					{(sala === null || sala.players.length < 2) &&
+						[0, 1, 2]
+							.slice(0, sala === null ? 3 : Math.max(0, 3 - sala.players.length))
+							.map((slot) => {
+							const slotAngles = [180, 220, 140];
+							const angle = slotAngles[slot] ?? 180;
+							const pos = seatPosition(angle);
+							return (
+								<div
+									key={`slot-${slot}`}
+									className="absolute pointer-events-none opacity-30"
+									style={{
+										left: `${pos.left}px`,
+										top: `${pos.top}px`,
+										transform: "translate(-50%, -50%)",
+									}}
+									aria-label="Slot aguardando jogador"
+									data-testid={`arena-slot-${slot}`}
+								>
+									<div className="w-24 h-32 bg-surface rounded-card border border-dashed border-ink/15 flex items-center justify-center">
+										<span className="font-mono text-[9px] tracking-[0.08em] uppercase text-ink-faint">
+											Aguardando…
+										</span>
+									</div>
+								</div>
+							);
+						})}
+
 					{/* UX-005: esconde RevealButton enquanto não há jogadores
 					   conectados. Sem isso o botão "AGUARDANDO 0 JOGADORES…"
 					   compete por atenção com o CTA de invite. */}
