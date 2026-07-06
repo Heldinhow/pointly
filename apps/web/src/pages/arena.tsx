@@ -292,23 +292,34 @@ export function Arena() {
 							</span>
 							Pointly
 						</Link>
-						<span className="font-mono text-[9px] text-ink-faint uppercase tracking-wider flex items-center gap-1.5 flex-wrap">
-							<span>
-								Sala{" "}
-								<span className="text-ink font-medium" data-testid="arena-code">
+						<dl className="font-mono text-[9px] text-ink-faint uppercase tracking-wider flex items-center gap-1.5 flex-wrap m-0">
+							<div className="flex items-baseline gap-1">
+								<dt>Sala</dt>
+								<dd
+									className="text-ink font-medium m-0"
+									data-testid="arena-code"
+								>
 									{code || "—"}
-								</span>
-							</span>
-							<span>·</span>
-							<span data-testid="arena-round">
-								Rodada {String(sala?.round ?? 1).padStart(2, "0")}
-							</span>
-							<span>·</span>
-							<span data-testid="arena-self-nick">
-								Você ·{" "}
-								<span className="text-ink font-medium">{me?.nick ?? "—"}</span>
-							</span>
-						</span>
+								</dd>
+							</div>
+							<span aria-hidden="true">·</span>
+							<div className="flex items-baseline gap-1">
+								<dt>Rodada</dt>
+								<dd className="text-ink font-medium m-0" data-testid="arena-round">
+									{String(sala?.round ?? 1).padStart(2, "0")}
+								</dd>
+							</div>
+							<span aria-hidden="true">·</span>
+							<div className="flex items-baseline gap-1">
+								<dt>Você</dt>
+								<dd
+									className="text-ink font-medium m-0"
+									data-testid="arena-self-nick"
+								>
+									{me?.nick ?? "—"}
+								</dd>
+							</div>
+						</dl>
 					</div>
 					<SharePill code={code} />
 				</div>
