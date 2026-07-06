@@ -12,7 +12,7 @@ Branch de trabalho: `ux/home-loop-t1-t8`. Repo: `Heldinhow/pointly`.
 | T5    | Navegação persistente ausente                      | #27   | `home`, `ux`                 | closed (PR #35)   |
 | T6    | Contraste de texto secundário (WCAG AA)            | #28   | `home`, `ux`, `a11y`         | closed (PR #36)   |
 | T7    | Estado vazio da sala (esperando jogador)           | #29   | `home`, `ux`                 | closed (PR #37)   |
-| T8    | Responsividade mobile (375px)                      | #30   | `home`, `ux`                 | open              |
+| T8    | Responsividade mobile (375px)                      | #30   | `home`, `ux`                 | closed (PR #38)   |
 
 ## Convenções do loop
 
