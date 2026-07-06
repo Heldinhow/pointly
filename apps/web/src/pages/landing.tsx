@@ -847,19 +847,31 @@ export function Landing() {
 					<p className="font-sans text-[15px] lg:text-[16px] leading-[1.7] text-ink-mute max-w-[50ch] mx-auto mt-4">
 						Crie uma sala em menos de 5 segundos. Convide seu time, votem e revelem. Sem cadastros, sem emails, sem dores de cabeça.
 					</p>
-					<div className="flex items-center justify-center gap-3.5 mt-8">
-<Button
+<div className="flex items-center justify-center gap-3.5 mt-8">
+						<Button
 							variant="coral"
 							size="lg"
 							onClick={handleCreateRoom}
 							disabled={isCreating}
 							aria-busy={isCreating}
 							data-testid="cta-ribbon-create"
-							className="shadow-coral"
+							className="shadow-coral cta-pulse"
 						>
 							Criar sala
 							<span aria-hidden="true">↗</span>
 						</Button>
+					</div>
+					{/* T6 — Social proof sutil acima do CTA. Mono, 10px, ink-faint. */}
+					<div
+						className="flex items-center justify-center gap-2 mt-5 font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint"
+						data-testid="cta-social-proof"
+						aria-hidden="true"
+					>
+						<span
+							className="inline-block w-1.5 h-1.5 rounded-full bg-coral"
+							aria-hidden="true"
+						/>
+						<span>12 times usando hoje · sem login · código em &lt; 100ms</span>
 					</div>
 				</div>
 			</section>
