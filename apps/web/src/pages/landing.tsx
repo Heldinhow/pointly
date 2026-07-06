@@ -597,6 +597,8 @@ export function Landing() {
 									variant="default"
 									size="md"
 									disabled={joinCode.length !== 4}
+									aria-label="Entrar na sala com código"
+									className="!border-coral !border-2 !text-coral hover:!bg-coral/5 focus-visible:!ring-coral"
 									data-testid="landing-code-submit"
 								>
 									Entrar
