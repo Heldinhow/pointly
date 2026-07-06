@@ -79,3 +79,37 @@ Verificação:
 - Screenshot 1440x900 mostra: stats row com `12 ASSENTOS / 60s P/ DECIDIR / 0s SETUP`,
   selo `✓ SEM CADASTRO · SEM E-MAIL` em coral logo abaixo.
 - T1 (preview da mesa) intacto: 6 cartas visíveis com mediana 5 destacada.
+
+## T3 — Open-source escondido no footer
+
+Issue: #25
+Status: DONE (issue fechada via Closes #25 no PR)
+Mudanças:
+
+- `apps/web/src/pages/landing.tsx`: adicionado selo `[ GITHUB ↗ ]` no topo metadata
+  strip (visível sem rolar), ao lado de "PLANNING POKER EFÊMERO". Selo é um
+  `<a target="_blank" rel="noopener noreferrer">` apontando para
+  `https://github.com/Heldinhow/pointly`, com ícone SVG do GitHub em
+  `ink-faint` e hover para `coral`. `data-testid="selo-github-header"`.
+- `apps/web/src/pages/landing.test.tsx`: novo teste T3 verifica presença do selo,
+  tag `<a>`, href para github.com, `target="_blank"`, e que está visível
+  sem rolar (`getBoundingClientRect().top < 100`).
+
+Decisões:
+
+- Coloquei o selo no **top metadata strip** (não no sticky nav) para preservar o
+  "Planning Poker Efêmero" como texto editorial e dar respiro ao botão coral
+  "Criar sala" na nav. O selo compete visualmente com o claim "PLANNING POKER
+  EFÊMERO" no mesmo nível tipográfico, mantendo a densidade editorial.
+- Escondi "PLANNING POKER EFÊMERO" em viewports < lg para priorizar o selo GitHub
+  em telas médias (mobile-first visibility do link open-source).
+- Brackets `[ ... ]` ao redor de "GITHUB ↗" mantém a linguagem editorial de
+  "peça numerada" da revista (mesmo padrão usado em "FIG. 01", "MÉDIA 6.25").
+
+Verificação:
+
+- `bun test src/pages/landing.test.tsx` → 11/11 pass (novo teste T3 incluso).
+- Screenshot 1440x900 confirma selo `⊙ [ GITHUB ↗ ]` no canto superior direito,
+  visível sem rolar; T1 e T2 intactos.
+- Hover state não verificado por screenshot mas testado via classes Tailwind
+  (`hover:border-coral hover:text-coral`).
