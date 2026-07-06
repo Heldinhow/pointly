@@ -297,6 +297,26 @@ export class WSService {
 			this.sendError(ws, outcome.code, outcome.message);
 			return;
 		}
+		// Room migration (reg 2026-07-06): se o handler fez evict de outra
+		// sala, broadcast player_left + room_state (ou sala_ended) na sala
+		// antiga — espelha o que `handleLeaveRoomEvent` faz.
+		if (outcome.evictedFrom) {
+			const oldCode = outcome.evictedFrom.code;
+			const oldPlayerId = outcome.evictedFrom.playerId;
+			this.broadcast(oldCode, {
+				type: "player_left",
+				payload: { playerId: oldPlayerId },
+			});
+			const oldSala = this.hub.getSala(oldCode);
+			if (oldSala) {
+				this.broadcastRoomState(oldCode);
+			} else {
+				this.broadcast(oldCode, {
+					type: "sala_ended",
+					payload: { reason: "last_left" },
+				});
+			}
+		}
 		ws.data.playerId = outcome.playerId;
 		ws.data.code = outcome.sala.code;
 		this.sendEvent(ws, {

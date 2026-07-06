@@ -161,15 +161,15 @@ export class Hub {
 			this.byPlayerId.delete(playerId);
 			return { code: null, promoted: null };
 		}
+		// Captura UUID ANTES de sala.removePlayer (que deleta de this.players).
+		// O check `player.status === "connected"` pós-remoção era sempre false
+		// porque o player já não existe, causando leak do byUUID para players
+		// disconnected. Player órfão ficava impedindo hello novo com mesmo UUID.
+		const playerBefore = sala.getPlayer(playerId);
+		const uuid = playerBefore?.uuid;
 		const { promoted } = sala.removePlayer(playerId);
 		this.byPlayerId.delete(playerId);
-		// UUID lookup é mantido até o hub.findPlayerByUUID checar status.
-		// (Player ainda existe na sala como disconnected no grafo, mas
-		// removemos do byUUID pra hello novo com mesmo UUID criar player novo.)
-		const player = sala.getPlayer(playerId);
-		if (player && player.status === "connected") {
-			this.byUUID.delete(player.uuid);
-		}
+		if (uuid) this.byUUID.delete(uuid);
 		// Sala vazia → remove do Map (T18)
 		if (sala.playerCount === 0) {
 			this.salas.delete(code);
@@ -179,8 +179,13 @@ export class Hub {
 	}
 
 	/**
-	 * Reconnect: encontra player por UUID, marca como connected.
-	 * Hub centraliza a busca pra evitar double-lookup entre handlers.
+	 * Reconnect: encontra player por UUID na sala em que está registrado.
+	 *
+	 * **Não tem side-effect** — o caller (hello handler) decide quando commitar
+	 * chamando `sala.markConnected(uuid)` após validar que o reconnect é
+	 * apropriado (mesma sala, ou sem code). Sem essa mudança, o handler caía no
+	 * caminho de "fresh join attempt" após o `markConnected` já ter sido aplicado,
+	 * deletando `disconnectedAt` e deixando o player órfão sem WS real.
 	 */
 	reconnect(
 		uuid: string,
@@ -198,8 +203,7 @@ export class Hub {
 			this.byUUID.delete(uuid);
 			return null;
 		}
-		const reconnected = sala.markConnected(uuid);
-		if (!reconnected) return null;
+		if (!sala.findByUUID(uuid)) return null;
 		return { playerId, sala, code };
 	}
 
@@ -229,9 +233,12 @@ export class Hub {
 		const removed: { code: string; playerId: string }[] = [];
 		for (const [code, sala] of this.salas) {
 			const salaRemovals = sala.tickGracePeriod(now);
-			for (const playerId of salaRemovals) {
-				const player = sala.getPlayer(playerId); // já removido
-				if (player) this.byUUID.delete(player.uuid);
+			for (const { playerId, uuid } of salaRemovals) {
+				// sala.tickGracePeriod agora retorna o UUID junto (capturado
+				// ANTES de sala.removePlayer deletar o player). Antes o hub
+				// tentava `sala.getPlayer(playerId)` pós-remoção e sempre
+				// recebia undefined → byUUID leakava.
+				this.byUUID.delete(uuid);
 				this.byPlayerId.delete(playerId);
 				removed.push({ code, playerId });
 				if (sala.playerCount === 0) {

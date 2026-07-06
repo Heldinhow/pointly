@@ -5,6 +5,14 @@
  * Cria sala (sem code) ou faz join (com code).
  * Reconnect: UUID já em sala → reidrata player (F-037/F-038).
  *
+ * **Room migration** (reg 2026-07-06): se o UUID está em uma sala A e o
+ * cliente envia `code` apontando para sala B, evict de A e add em B.
+ * Sem isso, `addPlayer` lançava `internal_error` ("UUID em uso") porque
+ * `hub.reconnect` chamava `sala.markConnected` como side-effect mesmo
+ * quando o caller abortava o reconnect (deletava `disconnectedAt` e
+ * deixava o player órfão sem WS real). O caller é quem commita o
+ * reconnect com `sala.markConnected` AGORA, após validar code.
+ *
  * @see spec US-1
  */
 
@@ -19,6 +27,10 @@ import { SalaError } from "../sala";
 
 /**
  * Outcome do hello: ou sucesso (welcome) ou erro (oneof code).
+ *
+ * `evictedFrom` é populado quando o handler fez room migration (UUID
+ * estava em sala A, cliente pediu code B): o caller (ws.ts) usa para
+ * fazer broadcast `player_left` na sala A.
  */
 export type HelloOutcome =
 	| {
@@ -27,6 +39,7 @@ export type HelloOutcome =
 			sala: SalaState & { critical: boolean };
 			role: "host" | "player";
 			reconnected: boolean;
+			evictedFrom?: { code: string; playerId: string };
 	  }
 	| {
 			ok: false;
@@ -60,26 +73,40 @@ export function handleHello(hub: Hub, payload: HelloPayload): HelloOutcome {
 	const nick = parsed.data;
 	const { uuid } = payload;
 
-	// 2. Reconnect: UUID conhecido → reidrata
+	// 2. Reconnect: UUID conhecido → tenta reidratar.
+	//    `hub.reconnect` é puro (sem side-effect). Caller decide se commita
+	//    chamando `sala.markConnected(uuid)` após validar code.
 	//    - Sem code: sempre tenta reconnect (cenário app refresh)
 	//    - Com code: tenta reconnect SÓ se UUID bate esta sala
-	//      (se UUID está em outra sala, prioriza join com code = erro UX melhor)
+	//      (caso contrário, room migration → evict + join)
 	const reconnected = hub.reconnect(uuid);
+	let evictedFrom: { code: string; playerId: string } | undefined;
+
 	if (reconnected) {
-		const { code: reconnectCode } = reconnected;
-		// Se code foi passado, conflita → só reconnect se bater
+		const { code: reconnectCode, playerId, sala } = reconnected;
+		// Se code foi passado e bate → reconnect (commit agora)
 		if (!payload.code || payload.code === reconnectCode) {
-			const { playerId, sala } = reconnected;
-			const player = sala.getPlayer(playerId)!;
-			return {
-				ok: true,
-				playerId,
-				role: player.role,
-				sala: sala.toState(),
-				reconnected: true,
-			};
+			const reconnectedPlayer = sala.markConnected(uuid);
+			if (reconnectedPlayer) {
+				const player = sala.getPlayer(playerId)!;
+				return {
+					ok: true,
+					playerId,
+					role: player.role,
+					sala: sala.toState(),
+					reconnected: true,
+				};
+			}
+			// markConnected falhou (race com tickGracePeriod removeu o player).
+			// byUUID já foi limpo pelo tick. Fall through para addPlayer/createSala.
+		} else {
+			// UUID em outra sala + code DIFERENTE presente → room migration.
+			// Evict da sala antiga: hub.removePlayer limpa byUUID (e dispara
+			// remoção da sala se ficar vazia) para que addPlayer subsequente
+			// não caia no "UUID em uso".
+			hub.removePlayer(playerId);
+			evictedFrom = { code: reconnectCode, playerId };
 		}
-		// UUID em outra sala + code presente → treat as fresh join attempt
 	}
 
 	// 3. Constrói Player (id gerado agora; sala pode atribuir outro seatIndex)
@@ -109,6 +136,7 @@ export function handleHello(hub: Hub, payload: HelloPayload): HelloOutcome {
 				role: "host",
 				sala: newSala.toState(),
 				reconnected: false,
+				...(evictedFrom ? { evictedFrom } : {}),
 			};
 		}
 
@@ -120,6 +148,7 @@ export function handleHello(hub: Hub, payload: HelloPayload): HelloOutcome {
 			role: "player",
 			sala: sala.toState(),
 			reconnected: false,
+			...(evictedFrom ? { evictedFrom } : {}),
 		};
 	} catch (e) {
 		// Mapear SalaError / HubError para outcome

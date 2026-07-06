@@ -208,20 +208,30 @@ export class Sala {
 
 	/**
 	 * Job de limpeza de grace period. Chamado externamente (hub / T18)
-	 * a cada 10s. Remove players disconnected há mais de DISCONNECT_GRACE_MS.
+	 * a cada 1s. Remove players disconnected há mais de DISCONNECT_GRACE_MS.
 	 *
-	 * @returns lista de IDs removidos (hub pode disparar broadcasts)
+	 * Retorna `{ playerId, uuid }[]` para que o hub possa limpar o índice
+	 * `byUUID` (que aponta para o playerId). O UUID é capturado ANTES de
+	 * `this.removePlayer`, que deleta o player de `this.players` — sem isso
+	 * o hub não conseguiria mais recuperar o UUID e vazaria a entrada.
+	 *
+	 * @returns lista de `{ playerId, uuid }` removidos
 	 */
-	tickGracePeriod(now: number = Date.now()): string[] {
-		const removed: string[] = [];
+	tickGracePeriod(
+		now: number = Date.now(),
+	): { playerId: string; uuid: string }[] {
+		const removed: { playerId: string; uuid: string }[] = [];
 		for (const [id, disconnectedAtMs] of this.disconnectedAt) {
 			if (now - disconnectedAtMs > DISCONNECT_GRACE_MS) {
-				removed.push(id);
+				const player = this.players.get(id);
+				if (player) {
+					removed.push({ playerId: id, uuid: player.uuid });
+				}
 			}
 		}
-		for (const id of removed) {
-			this.disconnectedAt.delete(id);
-			this.removePlayer(id);
+		for (const { playerId } of removed) {
+			this.disconnectedAt.delete(playerId);
+			this.removePlayer(playerId);
 		}
 		return removed;
 	}
