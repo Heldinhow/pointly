@@ -2,20 +2,21 @@
  * Deck tests — T32 verify (≥3 of 5 minimum required).
  */
 import { describe, expect, mock, test } from "bun:test";
-import { fireEvent, render, screen } from "./ui/test-helpers";
+import { fireEvent } from "@testing-library/react";
+import { renderWithProviders, screen } from "./ui/test-helpers";
 import { Deck } from "./deck";
 import { DECK_VALUES } from "@planning-poker/shared";
 
 describe("Deck — T32", () => {
 	test("renderiza 9 cartas Fibonacci em ordem", () => {
-		render(<Deck currentVote={null} disabled={false} onSelect={() => {}} />);
+		renderWithProviders(<Deck currentVote={null} disabled={false} onSelect={() => {}} />);
 		DECK_VALUES.forEach((v) => {
 			expect(screen.getByTestId(`deck-card-${v}`)).toBeInTheDocument();
 		});
 	});
 
 	test("carta selecionada tem data-deck-selected=true + aria-pressed=true", () => {
-		render(<Deck currentVote="5" disabled={false} onSelect={() => {}} />);
+		renderWithProviders(<Deck currentVote="5" disabled={false} onSelect={() => {}} />);
 		const card = screen.getByTestId("deck-card-5");
 		expect(card.getAttribute("data-deck-selected")).toBe("true");
 		expect(card.getAttribute("aria-pressed")).toBe("true");
@@ -23,7 +24,7 @@ describe("Deck — T32", () => {
 	});
 
 	test("carta não-selecionada tem data-deck-selected=false", () => {
-		render(<Deck currentVote="5" disabled={false} onSelect={() => {}} />);
+		renderWithProviders(<Deck currentVote="5" disabled={false} onSelect={() => {}} />);
 		const card = screen.getByTestId("deck-card-3");
 		expect(card.getAttribute("data-deck-selected")).toBe("false");
 		expect(card.getAttribute("aria-pressed")).toBe("false");
@@ -32,7 +33,7 @@ describe("Deck — T32", () => {
 
 	test("click numa carta chama onSelect(value)", () => {
 		const onSelect = mock((_v: string) => {});
-		render(
+		renderWithProviders(
 			<Deck
 				currentVote={null}
 				disabled={false}
@@ -47,7 +48,7 @@ describe("Deck — T32", () => {
 
 	test("disabled=true bloqueia click + aplica opacity-40 (F-018)", () => {
 		const onSelect = mock(() => {});
-		render(<Deck currentVote={null} disabled={true} onSelect={onSelect} />);
+		renderWithProviders(<Deck currentVote={null} disabled={true} onSelect={onSelect} />);
 		const card = screen.getByTestId("deck-card-5");
 		expect(card).toBeDisabled();
 		expect(card.className).toContain("opacity-40");
@@ -55,20 +56,20 @@ describe("Deck — T32", () => {
 
 	test("teclado Enter dispara onSelect (a11y)", () => {
 		const onSelect = mock(() => {});
-		render(<Deck currentVote={null} disabled={false} onSelect={onSelect} />);
+		renderWithProviders(<Deck currentVote={null} disabled={false} onSelect={onSelect} />);
 		fireEvent.keyDown(screen.getByTestId("deck-card-3"), { key: "Enter" });
 		expect(onSelect).toHaveBeenCalledWith("3");
 	});
 
 	test("teclado Space dispara onSelect (a11y)", () => {
 		const onSelect = mock(() => {});
-		render(<Deck currentVote={null} disabled={false} onSelect={onSelect} />);
+		renderWithProviders(<Deck currentVote={null} disabled={false} onSelect={onSelect} />);
 		fireEvent.keyDown(screen.getByTestId("deck-card-13"), { key: " " });
 		expect(onSelect).toHaveBeenCalledWith("13");
 	});
 
 	test("☕ renderiza como botão distinto (sem numeral italic)", () => {
-		render(<Deck currentVote={null} disabled={false} onSelect={() => {}} />);
+		renderWithProviders(<Deck currentVote={null} disabled={false} onSelect={() => {}} />);
 		const card = screen.getByTestId("deck-card-☕");
 		expect(card).toBeInTheDocument();
 		expect(card.textContent).toContain("☕");
