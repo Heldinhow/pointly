@@ -36,5 +36,8 @@
   },
   "dependencies": {
     "react-router-dom": "6.28.0"
-  }
+  },
+  "trustedDependencies": [
+    "@biomejs/biome"
+  ]
 }
