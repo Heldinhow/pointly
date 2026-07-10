@@ -150,6 +150,17 @@ export function Arena() {
 	// O EmptyOverlay agora permanece ocultado após o primeiro dismiss do usuário na mesma sessão.
 	const [emptyOverlayNonce] = useState(0);
 
+	// Issue #69 / DESIGN-19: side-card variant para desktop >=lg, banner para mobile.
+	const [isDesktop, setIsDesktop] = useState<boolean>(false);
+	useEffect(() => {
+		if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+		const mq = window.matchMedia("(min-width: 1024px)");
+		setIsDesktop(mq.matches);
+		const onChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+		mq.addEventListener("change", onChange);
+		return () => mq.removeEventListener("change", onChange);
+	}, []);
+
 	// Intercepta navegações internas da SPA quando o usuário está em uma sala ativa
 	const blocker = useBlocker(
 		({ currentLocation, nextLocation }) =>
@@ -318,11 +329,16 @@ export function Arena() {
 					<TimerPill />
 				</div>
 
-				{/* Empty overlay (sala solo): banner NÃO-bloqueante acima da mesa.
-				   Renderizado antes da mesa para não competir com o deck no
-				   bottom-8. Substitui o modal antigo (UX-011 / iter-3 hotfix). */}
+				{/* Empty overlay (sala solo): side-card lateral em desktop >=lg (#69),
+				   banner top-strip em mobile (preserva UX existente). Renderizado
+				   antes da mesa para não competir com o deck no bottom-8. */}
 				{isOnlyPlayer && code && (
-					<EmptyOverlay key={emptyOverlayNonce} code={code} />
+					<EmptyOverlay
+						key={emptyOverlayNonce}
+						code={code}
+						hostNick={me?.nick}
+						variant={isDesktop ? "side-card" : "banner"}
+					/>
 				)}
 
 				{/* Mesa: Ellipse + 12 Seats + RevealButton central */}
