@@ -420,6 +420,25 @@ export function Arena() {
 						/>
 					)}
 
+					{/* DESIGN-7 / #68 — contador discreto "X / Y votaram" + aria-live polite.
+					   Posicionado 72px abaixo do centro (imediatamente apos RevealButton).
+					   Visivel so durante voting/revealable; some pos-reveal. */}
+					{sala !== null && sala.players.length > 0 && (phase === "voting" || phase === "revealable") && (
+						<div
+							role="status"
+							aria-live="polite"
+							aria-atomic="true"
+							aria-label={`${votedCount} de ${sala.players.length} jogadores votaram`}
+							className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-[calc(50%+72px)] z-10 font-mono text-[10px] uppercase tracking-[0.06em] text-ink-faint whitespace-nowrap"
+							data-testid="voted-counter"
+						>
+							<span className="text-ink font-semibold" data-testid="voted-counter-value">{votedCount}</span>
+							<span className="mx-0.5">/</span>
+							<span data-testid="voted-counter-total">{sala.players.length}</span>
+							<span className="ml-1">votaram</span>
+						</div>
+					)}
+
 					{/* Animações de arremessos */}
 					<ProjectileAnimator />
 				</div>
