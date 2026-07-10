@@ -428,7 +428,6 @@ export function Arena() {
 							role="status"
 							aria-live="polite"
 							aria-atomic="true"
-							aria-label={`${votedCount} de ${sala.players.length} jogadores votaram`}
 							className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-[calc(50%+72px)] z-10 font-mono text-[10px] uppercase tracking-[0.06em] text-ink-faint whitespace-nowrap"
 							data-testid="voted-counter"
 						>

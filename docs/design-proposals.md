@@ -215,6 +215,11 @@ strings de programação.
 
 ### DESIGN-7 · Falta indicador de progresso da votação
 
+> **✓ IMPLEMENTADO em issue #68 / PR Heldinhow/pointly#83 (2026-07-10).**
+> Branch: `loop/issue-68-voted-counter`. Contador discreto "X / Y votaram"
+> com `role=status` `aria-live=polite` `aria-atomic=true`, 72px abaixo do
+> centro, visivel em voting+revealable, oculta pos-reveal.
+
 **Sintoma.** A Arena mostra quem votou (badge `VOTED` em cada seat)
 mas não mostra **quantos** já votaram em formato numérico. O
 `RevealButton` adivinha (`"Aguardando 5 jogadores..."`) mas é a
