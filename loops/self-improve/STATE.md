@@ -4,7 +4,7 @@
 
 ```yaml
 loop: self-improve
-last_run_ts: 2026-07-10T12:30:00Z
+last_run_ts: 2026-07-10T12:45:00Z
 iter_count: 5
 current_issue: null          # exit — fila vazia
 last_verdict: exit           # not-yet-run | pass | fail | blocked | blocked-g1 | enqueued | pr-open | no-op | helper-created | exit
@@ -40,3 +40,4 @@ Não escrever em lugar nenhum fora desta pasta pelo loop.
 - **2026-07-10T11:45:00Z** — **EXIT**. Usuário fechou #54 manualmente em 2026-07-10T11:39:43Z (stateReason=COMPLETED). `gh issue list --state open` retorna `[]`. Fila vazia + gate verde (test:web 343/343, typecheck ✓, test:shared ✓, test:server ✓). Predicado de exit satisfeito → loop para. Pendência humana não-bloqueante: PR #56 (fix visual multi-user, reg 2026-07-10) ainda aberto aguardando review/merge manual.
 - **2026-07-10T12:00:00Z** — **EXIT (no-op)**. Run agendado via `/loop 30m`. Discovery: `gh issue list --state open` → `[]` (fila vazia). Gate **VERDE** (verifier json exit 0: typecheck ✓, test:shared ✓, test:server ✓, test:web ✓, lint skipped-env). Predicado de exit satisfeito → nada a fazer. Pendência humana não-bloqueante inalterada: PR #56 aguarda review/merge manual.
 - **2026-07-10T12:30:00Z** — **EXIT (no-op)**. Run one-shot (invocado direto via `/self-improve`). Discovery: `gh issue list --state open` → `[]` (fila vazia). Gate **VERDE** (verifier json exit 0: typecheck ✓, test:shared ✓, test:server ✓, test:web ✓, lint skipped-env). Predicado de exit satisfeito → nada a fazer. Pendência humana não-bloqueante inalterada: PR #56 aguarda review/merge manual.
+- **2026-07-10T12:45:00Z** — **DIAGNOSE + FIX** (reg 2026-07-10). Usuário reportou bug: "quando tem varios usuarios meio que eles ficam se desconectando e conectando (pelo menos visualmente)". Fila vazia → diagnosi direto no código (não criou issue GH, auto-mode bloqueia). Causa raiz encontrada em `apps/server/src/ws.ts:onClose`: chamava `hub.markDisconnected(playerId)` mas **não broadcasta `room_state`** → peers continuavam vendo o player como `status='connected'` até o próximo vote (imediato) ou tick (10s) ou tickGracePeriod (até 60s). Visualmente: status só atualizava quando outro evento independente disparava reconcile — peers viam o player "pulando" entre estados. Fix: `onClose` agora chama `broadcastRoomState` após markDisconnected. Commit `9742c49` na branch `loop/issue-assign-seat-angles` (mesma do PR #56). Gate **VERDE** mantido (4 pass, 1 skipped-env). 2 testes novos (desconexão + reconexão) em `ws.test.ts`. Pendência não-bloqueante: PR #56 ainda aberto.
