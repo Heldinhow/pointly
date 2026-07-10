@@ -55,9 +55,17 @@ export interface EmptyOverlayProps {
 	onDismiss?: () => void;
 	/** Override opcional pra URL absoluta (default: window.location.origin). */
 	shareUrl?: string;
+	/**
+	 * Variante de layout (issue #69 / DESIGN-19).
+	 * - "banner" (default): top-strip horizontal sobre o stage (preserva UX existente)
+	 * - "side-card": card lateral direito fixo para desktop >=lg. Mais verbose
+	 *   (welcome + player count + share link + status). O pai decide
+	 *   qual usar com base no viewport (lg+ = side-card, <lg = banner).
+	 */
+	variant?: "banner" | "side-card";
 }
 
-export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
+export function EmptyOverlay({ code, onDismiss, shareUrl, variant = "banner" }: EmptyOverlayProps) {
 	const [copied, setCopied] = useState(false);
 	// Inicializa direto do sessionStorage (via helper) pra evitar flicker
 	// (overlay aparece → useEffect roda → some = CLS ruim).
@@ -107,6 +115,84 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 
 	if (dismissed) return null;
 
+	// Side-card variant (issue #69 / DESIGN-19): card vertical lateral direito,
+	// mais verbose com welcome + codigo + share. Reservado para >=lg.
+	if (variant === "side-card") {
+		return (
+			<aside
+				role="status"
+				aria-live="polite"
+				aria-label={`Bem-vindo a sala ${code}. Convite pelo link.`}
+				data-testid="empty-overlay-side-card"
+				data-od-id="empty-overlay-side-card"
+				className="absolute right-8 top-1/2 -translate-y-1/2 z-10 w-[280px] flex flex-col gap-3"
+			>
+				<Card padding="md" className="flex flex-col gap-3">
+					<div className="flex items-baseline gap-2">
+						<span
+							className="font-italic italic text-coral text-[26px] leading-none"
+							aria-hidden="true"
+						>
+							Ø
+						</span>
+						<span className="font-display font-extrabold text-[16px] tracking-[-0.02em]">
+							Bem-vindo a sala
+						</span>
+					</div>
+
+					<div className="flex flex-col gap-1">
+						<span className="font-mono text-[10px] uppercase tracking-[0.06em] text-ink-faint">
+							Codigo
+						</span>
+						<span className="font-italic italic text-coral text-[20px] leading-none">
+							{code}
+						</span>
+					</div>
+
+					<div className="flex flex-col gap-1">
+						<span className="font-mono text-[10px] uppercase tracking-[0.06em] text-ink-faint">
+							Convite
+						</span>
+						<button
+							type="button"
+							onClick={handleCopy}
+							className={`border font-mono text-[10px] uppercase tracking-[0.06em] py-2 px-3 rounded-full transition-colors w-full ${
+								copied
+									? "border-olive bg-olive/10 text-olive"
+									: "border-coral text-coral hover:bg-coral hover:text-white"
+							}`}
+							data-testid="empty-overlay-side-copy"
+							aria-label="Copiar link de compartilhamento"
+							aria-live="polite"
+						>
+							{copied ? "Copiado ✓" : "Copiar link"}
+						</button>
+					</div>
+
+					<div className="flex items-center gap-2 pt-1 border-t border-ink/5">
+						<span className="flex h-1.5 w-1.5 relative" aria-hidden="true">
+							<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-coral opacity-75" />
+							<span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-coral" />
+						</span>
+						<span className="font-mono text-[10px] uppercase tracking-[0.06em] text-ink-faint">
+							Aguardando primeiro jogador
+						</span>
+					</div>
+
+					<button
+						type="button"
+						onClick={handleDismiss}
+						className="font-mono text-[9.5px] uppercase tracking-[0.06em] text-ink-faint hover:text-ink py-1 underline underline-offset-4 self-end"
+						data-testid="empty-overlay-dismiss"
+					>
+						jogue solo
+					</button>
+				</Card>
+			</aside>
+		);
+	}
+
+	// Default: banner variant (preserva UX existente em <lg).
 	return (
 		<div
 			role="status"
@@ -122,7 +208,7 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 						Aguardando primeiro jogador
 					</span>
 					<span className="font-sans text-[12px] leading-[1.4] text-ink-mute">
-						Código{" "}
+						Codigo{" "}
 						<span className="font-italic italic text-coral text-[14px] leading-none">
 							{code}
 						</span>

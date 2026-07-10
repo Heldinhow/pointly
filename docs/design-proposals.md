@@ -474,6 +474,12 @@ sinal de que classes Tailwind não estão sendo typecheckadas.
 
 ### DESIGN-19 · Lado direito da Arena muito vazio na fase pré-voto
 
+> **✓ IMPLEMENTADO em issue #69 / PR Heldinhow/pointly#84 (2026-07-10).**
+> Branch: `loop/issue-69-side-card-pre-voto`. EmptyOverlay agora tem
+> \`variant="side-card"\` (desktop >=lg) com welcome + codigo + share
+> link + status; \`variant="banner"\` (default, <lg) preserva UX
+> anterior. Decisao via matchMedia hook em arena.tsx.
+
 **Sintoma.** Quando ninguém votou, a Arena mostra `awaiting` button
 central + ellipse vazia + 8 assentos `IDLE`. Em 1440px o terço direito
 do viewport fica visualmente deserto. Nenhum call-to-action além do
