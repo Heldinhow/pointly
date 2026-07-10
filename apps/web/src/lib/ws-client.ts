@@ -57,6 +57,12 @@ export type CreateWSClientOptions = {
 	/** Override do timeout pra esperar pong (ms). Default: 5000. */
 	heartbeatTimeoutMs?: number;
 	/**
+	 * Callback invocado em toda mudança de status. Default: noop.
+	 * Útil para hooks upstream que precisam reagir a open/closed/error
+	 * (ex: resetar flags de dedup apos reconexao).
+	 */
+	onStatusChange?: (status: WSStatus) => void;
+	/**
 	 * Callback invocado toda vez que o WS abre (inclui reconnects).
 	 * Útil para handlers tipo "envia `hello` após WS ficar `open`" que
 	 * precisam disparar tanto no 1º connect quanto após reconnect. Se
@@ -145,6 +151,7 @@ export function createWSClient(options: CreateWSClientOptions): WSClient {
 		url: urlOpt,
 		onEvent,
 		onOpen,
+		onStatusChange,
 		setTimeoutFn = setTimeout,
 		clearTimeoutFn = clearTimeout,
 		WebSocketCtor,
@@ -165,6 +172,7 @@ export function createWSClient(options: CreateWSClientOptions): WSClient {
 
 	function setStatus(next: WSStatus): void {
 		status = next;
+		onStatusChange?.(next);
 	}
 
 	function clearReconnect(): void {
