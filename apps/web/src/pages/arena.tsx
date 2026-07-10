@@ -53,13 +53,7 @@ import { useArenaLoop, getStoredUUID } from "../lib/use-arena-loop";
 import { getNick } from "../lib/storage";
 import { useSalaStore } from "../store/sala";
 import { ProjectileAnimator } from "../components/projectile-animator";
-
-/** Raio da mesa em pixels (vide arena.html R_x=420 R_y=240). */
-const TABLE_RX = 420;
-const TABLE_RY = 210;
-/** Centro do Ellipse SVG (960×560). */
-const TABLE_CX = 480;
-const TABLE_CY = 250;
+import { assignSeatAngles, seatPosition } from "../lib/seat-layout";
 
 /** Share pill — copia link da sala e mostra feedback destacado. */
 function SharePill({ code }: { code: string }) {
@@ -120,33 +114,12 @@ function SharePill({ code }: { code: string }) {
 	);
 }
 
-/** Calcula posição (left, top) para um assento dado seu ângulo (graus, 0=right, 90=bottom). */
-export function seatPosition(angleDeg: number): { left: number; top: number } {
-	const rad = (angleDeg * Math.PI) / 180;
-	return {
-		left: TABLE_CX + Math.cos(rad) * TABLE_RX,
-		top: TABLE_CY + Math.sin(rad) * TABLE_RY,
-	};
-}
-
-/** Distribui 12 assentos: VOCÊ no ângulo 90 (bottom); demais 11 em arco. */
-function assignSeatAngles(
-	mePlayerId: string | null,
-	playerIds: string[],
-): Map<string, number> {
-	const map = new Map<string, number>();
-	// VOCÊ travado em 90° (6h)
-	if (mePlayerId) map.set(mePlayerId, 90);
-
-	// Demais em arco: 11 assentos a 30° de espaçamento começando em 30°
-	const others = playerIds.filter((id) => id !== mePlayerId);
-	for (let i = 0; i < others.length; i++) {
-		// i=0 → 30°; i=10 → 330° (clockwise)
-		const angle = 30 + i * 30;
-		map.set(others[i]!, angle);
-	}
-	return map;
-}
+/** Re-exporta `seatPosition` para preservar a API pública (testes existentes
+ * em `arena.test.tsx` importam daqui). A função canônica vive em
+ * `lib/seat-layout.ts` (reg 2026-07-10 — extraída para compartilhamento com
+ * `projectile-animator.tsx` e para garantir invariantes de estabilidade).
+ */
+export { seatPosition };
 
 export function Arena() {
 	const [searchParams] = useSearchParams();
@@ -229,9 +202,11 @@ export function Arena() {
 
 	// Calcula mediana e votedMedian por player
 	const median = consensus?.median ?? null;
+	// assignSeatAngles agora recebe `players` (com joinedAt) — a função
+	// ordena por joinedAt para garantir estabilidade quando alguém entra/sai
+	// (reg 2026-07-10). Sem isso, assentos pulavam de ângulo a cada room_state.
 	const seatAngles = useMemo(
-		() =>
-			assignSeatAngles(currentPlayerId, sala?.players.map((p) => p.id) ?? []),
+		() => assignSeatAngles(currentPlayerId, sala?.players ?? []),
 		[currentPlayerId, sala],
 	);
 
