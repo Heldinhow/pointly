@@ -148,7 +148,15 @@ export class WSService {
 
 	/**
 	 * Conexão fechada. Se player estava em sala, marca disconnected
-	 * (grace period 60s antes de remover).
+	 * (grace period 60s antes de remover) e broadcasta room_state para os
+	 * peers IMEDIATAMENTE.
+	 *
+	 * **Regressão prod (2026-07-10)**: antes, `markDisconnected` rodava mas
+	 * NENHUM broadcast acontecia — peers continuavam vendo o player como
+	 * `status='connected'` até o próximo vote/tick/tickGracePeriod (até 60s).
+	 * UX observada: "usuários ficam piscando (desconectam/reconectam)".
+	 * Sem este broadcastRoomState imediato, o status só atualizava quando
+	 * algum evento independente disparava reconcile.
 	 */
 	onClose(ws: BunWS, code: number, reason: string): void {
 		const ctx = ws.data;
@@ -161,7 +169,11 @@ export class WSService {
 				ctx.code ?? undefined,
 				`code=${code} reason=${reason}`,
 			);
+			const code_sala = ctx.code;
 			this.hub.markDisconnected(ctx.playerId);
+			// Broadcasta imediatamente para os peers da sala verem
+			// status='disconnected' AGORA, não no próximo tick.
+			if (code_sala) this.broadcastRoomState(code_sala);
 		}
 	}
 
