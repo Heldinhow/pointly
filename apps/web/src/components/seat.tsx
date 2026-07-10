@@ -233,6 +233,7 @@ export function Seat({
 							type="button"
 							onClick={handleTargetClick}
 							disabled={cooldownTime > 0}
+							data-testid="seat-mira-button"
 							className={`w-7 h-7 rounded-full flex items-center justify-center text-xs border bg-surface transition-all duration-200 cursor-pointer shadow-md hover:scale-110 active:scale-95 ${
 								cooldownTime > 0
 									? "border-ink/5 text-ink-faint bg-paper-dark"
@@ -242,6 +243,11 @@ export function Seat({
 								cooldownTime > 0
 									? `Aguarde ${cooldownTime}s`
 									: "Arremessar algo!"
+							}
+							aria-label={
+								cooldownTime > 0
+									? `Mira em ${player.nick} (aguarde ${cooldownTime}s para arremessar)`
+									: `Arremessar em ${player.nick}`
 							}
 						>
 							🎯
