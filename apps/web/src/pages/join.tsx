@@ -3,7 +3,7 @@
  *
  * Tela de entrada com prompt de apelido. Editorial-lite:
  *  - Topbar metadata strip
- *  - FIG. 02 · ENTRAR (mono ink-faint)
+ *  - Strip mono ink-faint "Entrar · sala" no topo
  *  - Card central bone-fill: mark Ø + headline + input nick + botão coral
  *
  * **Flow**:

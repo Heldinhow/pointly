@@ -97,8 +97,9 @@ describe("Landing — T27", () => {
 		const preview = screen.getByTestId("hero-table-preview");
 		expect(preview).toBeInTheDocument();
 
-		// Plaqueta editorial 'Fig. 01 · Mesa revelada' indica o produto
-		expect(preview.textContent).toMatch(/Fig\. 01.*Mesa revelada/i);
+		// Plaqueta de estado 'Votos revelados' confirma que o hero está mostrando
+		// a fase pós-reveal do produto (não a tela de voto cego)
+		expect(preview.textContent).toMatch(/Votos revelados/i);
 
 		// 'Você' e 'Mediana' comunicam que se trata de uma mesa de votação com cartas
 		expect(preview.textContent).toMatch(/Você/i);
