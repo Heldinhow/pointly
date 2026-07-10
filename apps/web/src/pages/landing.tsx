@@ -2,13 +2,16 @@
  * Landing page — T27 (Phase 6) + Design System Refinements.
  *
  * Página inicial do Pointly com o Design System Atelier Zero completo:
- *  - Metadata strip com pulse dot coral + Vol/Issue/PT-BR no topo
+ *  - Metadata strip com pulse dot coral + "Pronto · sem cadastro · PT-BR" (md+)
  *  - Side rails 36px (left/right) com rail text vertical (ocultos em telas menores)
  *  - Section rules com numerais romanos (I, II, III, IV, V) separando as seções
  *  - Títulos híbridos misturando Sans Bold + Serif Italic (Playfair Display)
  *  - Mesa de votação mockada interativa (MockTable) com 8 assentos ativos e revelados
  *  - Seção Dark contrastante (Roman IV) com uma prévia do Deck Fibonacci (MockDeck)
  *  - Mega footer com a marca monumental "Pointly."
+ *
+ * @issue #63 — removida cara de protótipo: "Vol/Issue/PT-BR/Open Beta"
+ *              eram mockup annotations. Substituídos por info útil/honesta.
  */
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -491,7 +494,7 @@ export function Landing() {
 			</div>
 			<div className="side-rail right hidden xl:flex" aria-hidden="true">
 				<span className="rail-text font-mono">
-					Vol. 01 / Issue No. 26 · Open Beta
+					Planning Poker · Efêmero
 				</span>
 			</div>
 
@@ -503,7 +506,7 @@ export function Landing() {
 							<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-coral opacity-75"></span>
 							<span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-coral"></span>
 						</span>
-						<span>Vol. 01 · Issue Nº 26 · Pointly · PT-BR</span>
+						<span>Pronto · sem cadastro · PT-BR</span>
 					</div>
 					<div className="flex items-center gap-4">
 						<span className="hidden lg:inline">Planning Poker Efêmero</span>
