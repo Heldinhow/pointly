@@ -73,9 +73,13 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 	const nickRef = useRef(nick);
 	const codeRef = useRef(code);
 	const uuidRef = useRef(uuid);
-	// INCONS-030 / #92: timestamp da ultima tentativa de `hello` enviado
-	// (debounce 100ms) — dedup de race entre onOpen e o effect de nick.
-	const lastHelloAtRef = useRef(0);
+	// INCONS-030 / #92: dedup de race condition entre `onOpen` e o effect
+	// reativo de `nick` no mount inicial. Quando nick vem pre-preenchido
+	// de sessionStorage, ambos disparam `hello` quase simultaneamente.
+	// Solucao: rastrear o ultimo nick enviado — se for igual, skip.
+	// Implicito: reconexao com mesmo nick e dedupada (servidor trata reconnect
+	// de mesmo uuid como idempotente). Nick change sempre reenvia.
+	const lastSentNickRef = useRef<string | null>(null);
 
 	// Atualiza refs
 	nickRef.current = nick;
@@ -86,24 +90,17 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 	// por reidratar (mesmo uuid → reconnect) ou criar sala (uuid novo → create).
 	// Re-chamadas são seguras: cubrem reconnect, refresh e trocas tardias de nick.
 	const sendHello = useCallback((ws: WSClient) => {
-		// INCONS-030 / #92: dedup de race condition entre `onOpen` e o effect
-		// reativo de `nick`. Em mount com nick pre-preenchido de sessionStorage
-		// + WS aberto rapido, ambos disparam `hello` (mesmo uuid novo) e o
-		// servidor pode criar a sala duas vezes. Janela de 100ms e suficiente
-		// para deduplicar (React double-fire tipicamente <1ms) e ainda permite
-		// re-sends legitimos apos digitacao do usuario.
-		const now = Date.now();
-		if (now - lastHelloAtRef.current < 100) return;
-
-		// UX-006: só envia hello quando há nick válido (≥2 chars, conforme
-		// NickSchema no @planning-poker/shared). Antes enviava mesmo com nick
-		// vazio e o Zod rejeitava silenciosamente — virava 1 warning por page
-		// load. Agora silenciosamente espera o effect reativo de `nick` re-
-		// chamar quando o usuário digitar.
+		// UX-006: nick >= 2 chars (NickSchema). Senão, aguarda effect de nick
+		// re-chamar quando usuário digitar. UX-006 evita warning de Zod por
+		// payload inválido.
 		const effectiveNick = nickRef.current?.trim() ?? "";
 		if (effectiveNick.length < 2) return;
+		// INCONS-030 / #92: dedup race entre onOpen e effect de nick no mount.
+		// Se ja enviamos hello com este nick, skip. Reset onStatusChange
+		// (closed/error) libera reconexao com mesmo nick para re-enviar.
+		if (lastSentNickRef.current === effectiveNick) return;
+		lastSentNickRef.current = effectiveNick;
 		const effectiveCode = codeRef.current || undefined;
-		lastHelloAtRef.current = now;
 		ws.send({
 			type: "hello",
 			payload: {
@@ -135,6 +132,12 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 			// abriu mas nick virou válido depois". O server é idempotente:
 			// mesmo uuid → reconnect; novo → cria sala.
 			onOpen: () => sendHello(wsClient),
+			// Reset dedup flag em disconnect → reconexao com mesmo nick re-envia hello.
+			onStatusChange: (status) => {
+				if (status === "closed" || status === "error") {
+					lastSentNickRef.current = null;
+				}
+			},
 			onEvent: (event) => {
 				// welcome handler: popula currentPlayerId + sala
 				if (event.type === "welcome") {
