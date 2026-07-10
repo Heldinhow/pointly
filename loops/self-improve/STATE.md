@@ -4,7 +4,7 @@
 
 ```yaml
 loop: self-improve
-last_run_ts: 2026-07-10T15:55:52Z
+last_run_ts: 2026-07-10T16:06:58Z
 iter_count: 6
 current_issue: null          # exit — fila vazia (issue #54 fechou manualmente em 11:39:43Z)
 last_verdict: exit           # not-yet-run | pass | fail | blocked | blocked-g1 | enqueued | pr-open | no-op | helper-created | exit
@@ -39,3 +39,4 @@ Não escrever em lugar nenhum fora desta pasta pelo loop.
 - **2026-07-10T11:35:00Z** — iteração #4: usuário autorizou Opção B (helper de auto-close). Criado `loops/self-improve/auto-close-merged.sh` (reg 2026-07-10): detecta PRs mergeados via branch name `loop/issue-N`, title `(#N)` ou body `Closes #N`. Dry-run por padrão. **Detectou #54 como candidata** (PR #55 → issue #54, heurística branch, merged 2026-07-10T10:51:29Z). Aguardando humano rodar `--apply` ou autorizar loop a chamar com `NO_CONFIRM=1`.
 - **2026-07-10T11:45:00Z** — **EXIT**. Issue #54 fechada manualmente em 2026-07-10T11:39:43Z. Fila vazia + gate verde → predicado de exit satisfeito. PR #56 ainda aberto aguardando merge humano. *(Cursor e runs entre 11:35–15:55 viveram na branch `loop/issue-assign-seat-angles` e nunca voltaram pra main em forma de PR — entradas 12:00, 12:30, 12:45, 15:37, 15:55 preservadas em `d9dcb8c` no histórico do branch, mas só essa consolidação do merge vive em main.)*
 - **2026-07-10T15:55:52Z** — **EXIT** com PRs mergeados. Usuário reportou merge de PR #57 (`fix(web): remove mockup-style figure labels from landing`, merged 12:53:51Z → `7519b27`) e PR #56 já tinha sido mergeado em `e54ba0b`. Fila vazia. Gate **VERDE** pós-merge (test:web 343/343 — agora com os testes do PR #56 + UX cleanup do PR #57). Cursor em main evoluiu pra `iter_count: 6`. Branch `loop/issue-landing-remove-mockup-label` removida local+remote (merged). Branch `loop/issue-assign-seat-angles` permanece local com STATE.md atualizado (`d9dcb8c`). Loop segue em modo EXIT; próximo run só vai agir se enfileirar issue nova via `gh issue create`.
+- **2026-07-10T16:06:58Z** — **EXIT (no-op)**. Run one-shot (invocado direto via `/self-improve`). Discovery: `gh issue list --state open` → `[]` (fila vazia). Gate **VERDE** (verifier json exit 0: typecheck ✓, test:shared ✓, test:server ✓, test:web 343/343 ✓, lint skipped-env). Predicado de exit satisfeito → nada a fazer. Sem pendência humana.
