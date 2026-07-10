@@ -290,6 +290,116 @@ describe("WSService — wire format validation", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Regressão prod (2026-07-10): outros clientes NÃO recebiam `room_state`
+// imediato quando um peer desconectava, virando a aparecer "se reconectando"
+// (status=connected) até o próximo vote/reconcile/tickGracePeriod (até 60s).
+// Especificação: ao fechar WS, demais clientes da sala devem ver
+// status='disconnected' IMEDIATAMENTE, sem esperar próximo vote ou tick.
+// ---------------------------------------------------------------------------
+
+describe("WSService — onClose broadcast (regressão flicker)", () => {
+	test("ao desconectar, peers da sala recebem room_state com status='disconnected'", () => {
+		// Ana cria sala
+		service.onOpen(ws);
+		service.onMessage(
+			ws,
+			JSON.stringify({
+				type: "hello",
+				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+			}),
+		);
+		const code = ws.data.code!;
+
+		// Bob entra
+		const bob = new MockBunWS("127.0.0.2");
+		service.onOpen(bob);
+		service.onMessage(
+			bob,
+			JSON.stringify({
+				type: "hello",
+				payload: {
+					uuid: "00000000-0000-4000-8000-000000000002",
+					nick: "Bob",
+					code,
+				},
+			}),
+		);
+		const bobPlayerId = bob.data.playerId!;
+
+		// Baseline: conta quantos room_state Ana já recebeu (welcome + Bob join)
+		const baseline = ws.eventsOfType("room_state").length;
+
+		// Bob desconecta
+		service.onClose(bob, 1006, "abnormal_closure");
+
+		// Ana DEVE ter recebido um room_state extra imediatamente, sem esperar
+		// nenhum vote/tick/tickGracePeriod.
+		const after = ws.eventsOfType("room_state").length;
+		expect(after).toBeGreaterThan(baseline);
+
+		// O room_state mais recente deve mostrar Bob como disconnected
+		const lastRoomState = ws.eventsOfType("room_state").at(-1)!;
+		const bobInState = lastRoomState.payload.sala.players.find(
+			(p) => p.id === bobPlayerId,
+		);
+		expect(bobInState).toBeDefined();
+		expect(bobInState?.status).toBe("disconnected");
+	});
+
+	test("reconnect: ao reconectar com mesmo UUID, peers veem status='connected' IMEDIATO", () => {
+		// Ana + Bob na sala, Bob desconecta
+		service.onOpen(ws);
+		service.onMessage(
+			ws,
+			JSON.stringify({
+				type: "hello",
+				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+			}),
+		);
+		const code = ws.data.code!;
+		const bob = new MockBunWS("127.0.0.2");
+		service.onOpen(bob);
+		service.onMessage(
+			bob,
+			JSON.stringify({
+				type: "hello",
+				payload: {
+					uuid: "00000000-0000-4000-8000-000000000002",
+					nick: "Bob",
+					code,
+				},
+			}),
+		);
+		service.onClose(bob, 1006, "abnormal_closure");
+		const baseline = ws.eventsOfType("room_state").length;
+
+		// Bob reconecta (mesmo UUID, mesmo code) via nova conexão
+		const bob2 = new MockBunWS("127.0.0.2");
+		service.onOpen(bob2);
+		service.onMessage(
+			bob2,
+			JSON.stringify({
+				type: "hello",
+				payload: {
+					uuid: "00000000-0000-4000-8000-000000000002",
+					nick: "Bob",
+					code,
+				},
+			}),
+		);
+
+		// Ana deve ter recebido room_state novo com Bob como connected
+		const after = ws.eventsOfType("room_state").length;
+		expect(after).toBeGreaterThan(baseline);
+		const lastRoomState = ws.eventsOfType("room_state").at(-1)!;
+		const bobInState = lastRoomState.payload.sala.players.find(
+			(p) => p.id === bob.data.playerId,
+		);
+		expect(bobInState?.status).toBe("connected");
+	});
+});
+
+// ---------------------------------------------------------------------------
 // T01: reconciliation cadence (10s) per ADR-002
 // ---------------------------------------------------------------------------
 
