@@ -336,6 +336,7 @@ export function Arena() {
 					<EmptyOverlay
 						key={emptyOverlayNonce}
 						code={code}
+						hostNick={me?.nick}
 						variant={isDesktop ? "side-card" : "banner"}
 					/>
 				)}
