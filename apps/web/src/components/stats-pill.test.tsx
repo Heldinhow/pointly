@@ -40,9 +40,14 @@ describe("formatMean / formatMedian / formatRange — T35 pure", () => {
 });
 
 describe("StatsPill — render", () => {
-	test("consensus=null não renderiza nada", () => {
+	test("consensus=null: skeleton pre-reveal (issue #67)", () => {
 		const { container } = render(<StatsPill consensus={null} />);
-		expect(container.firstChild).toBeNull();
+		const skeleton = container.querySelector(
+			'[data-testid="stats-pill-skeleton"]',
+		);
+		expect(skeleton).toBeInTheDocument();
+		expect(skeleton).toHaveAttribute("aria-hidden", "true");
+		expect(skeleton?.className).toMatch(/animate-pulse/);
 	});
 
 	test("consensus normal: 'MÉDIA 5.4 · MEDIANA 5 · INTERVALO 3–13'", () => {

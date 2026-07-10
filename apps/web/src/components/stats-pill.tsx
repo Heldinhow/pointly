@@ -45,10 +45,22 @@ export function formatMedian(median: number | null): string {
 }
 
 export function StatsPill({ consensus }: StatsPillProps) {
-	// Sem consensus (pré-reveal): não renderiza nada visível, mas mantém
-	// slot reservado pro layout (display:none evita CLS).
+	// Sem consensus (pre-reveal): renderiza skeleton bone-fade para reservar
+	// o slot do layout (evita CLS no reveal) + pista visual de que algo vai
+	// aparecer ali. aria-hidden porque nao ha info semantica ainda.
 	if (!consensus) {
-		return null;
+		return (
+			<div
+				aria-hidden="true"
+				data-testid="stats-pill-skeleton"
+				data-od-id="stats-pill-skeleton"
+				className={cn(
+					"inline-block h-11 w-[220px] rounded-full",
+					"bg-surface/60 border border-ink/5",
+					"animate-pulse",
+				)}
+			/>
+		);
 	}
 
 	const showUnanimous = consensus.unanimous;
