@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useSalaStore } from "../store/sala";
 import { projectileEvents } from "../lib/projectile-events";
+import { assignSeatAngles, seatPosition } from "../lib/seat-layout";
 import type { ProjectileType } from "@planning-poker/shared";
 
 // Mapa de emojis para cada tipo de projétil
@@ -25,32 +26,6 @@ interface ActiveAnimation {
 	isDeflecting: boolean;
 }
 
-// Constantes da mesa para calcular coordenadas idênticas às da Arena
-const TABLE_RX = 420;
-const TABLE_RY = 210;
-const TABLE_CX = 480;
-const TABLE_CY = 250;
-
-function seatPosition(angleDeg: number): { left: number; top: number } {
-	const rad = (angleDeg * Math.PI) / 180;
-	return {
-		left: TABLE_CX + Math.cos(rad) * TABLE_RX,
-		top: TABLE_CY + Math.sin(rad) * TABLE_RY,
-	};
-}
-
-function assignSeatAngles(mePlayerId: string | null, playerIds: string[]): Map<string, number> {
-	const map = new Map<string, number>();
-	if (mePlayerId) map.set(mePlayerId, 90);
-
-	const others = playerIds.filter((id) => id !== mePlayerId);
-	for (let i = 0; i < others.length; i++) {
-		const angle = 30 + i * 30;
-		map.set(others[i]!, angle);
-	}
-	return map;
-}
-
 const EMPTY_PLAYERS: any[] = [];
 
 export function ProjectileAnimator() {
@@ -70,8 +45,10 @@ export function ProjectileAnimator() {
 		const unsubscribe = projectileEvents.subscribe((event) => {
 			const currentPlayers = playersRef.current;
 			const currentMeId = currentPlayerIdRef.current;
-			const playerIds = currentPlayers.map((p) => p.id);
-			const seatAngles = assignSeatAngles(currentMeId, playerIds);
+			// Passa `players` inteiro (não só ids) para que assignSeatAngles
+			// ordene por joinedAt — sem isso, o ângulo do sender/target
+			// divergiria do usado em arena.tsx (reg 2026-07-10).
+			const seatAngles = assignSeatAngles(currentMeId, currentPlayers);
 
 			const senderAngle = seatAngles.get(event.senderPlayerId);
 			const targetAngle = seatAngles.get(event.targetPlayerId);
