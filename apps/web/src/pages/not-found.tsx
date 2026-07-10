@@ -49,7 +49,7 @@ export function NotFound() {
 							<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-coral opacity-75" />
 							<span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-coral" />
 						</span>
-						<span>Vol. 01 · Issue Nº 26 · Pointly · PT-BR</span>
+						<span>Pointly · PT-BR</span>
 					</div>
 					<div>Voto perdido · Status 404</div>
 				</div>

@@ -53,12 +53,12 @@ describe("Landing — T27", () => {
 		expect(h2s.length).toBeGreaterThanOrEqual(1);
 	});
 
-	test("renderiza 4 capability cards numerados", () => {
+	test("renderiza 4 capability cards", () => {
 		renderLanding();
-		expect(screen.getByTestId("cap-card-01")).toBeInTheDocument();
-		expect(screen.getByTestId("cap-card-02")).toBeInTheDocument();
-		expect(screen.getByTestId("cap-card-03")).toBeInTheDocument();
-		expect(screen.getByTestId("cap-card-04")).toBeInTheDocument();
+		expect(screen.getByTestId("cap-card-0")).toBeInTheDocument();
+		expect(screen.getByTestId("cap-card-1")).toBeInTheDocument();
+		expect(screen.getByTestId("cap-card-2")).toBeInTheDocument();
+		expect(screen.getByTestId("cap-card-3")).toBeInTheDocument();
 	});
 
 	test("CTA ribbon 'Criar sala' também presente", () => {
