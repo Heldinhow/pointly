@@ -341,11 +341,9 @@ export function Arena() {
 					/>
 				)}
 
-				{/* Mesa: Ellipse + 12 Seats + RevealButton central.
+				{/* Mesa: Elipse + 12 Assentos + RevealButton central.
 				   INCONS-021 / #91: wrapper responsivo com aspect-ratio +
-				   CSS scaling do canvas 960x500 para caber em mobile/tablet.
-				   Sem o wrapper, mesa e mesas internas cortavam (overflow:hidden
-				   em 360/390/430/768). */}
+				   CSS scaling do canvas 960x500 para caber em mobile/tablet. */}
 				<div
 					className="relative w-full max-w-[960px] aspect-[96/50] mt-6 mx-auto overflow-hidden"
 					data-testid="arena-table"
@@ -361,7 +359,7 @@ export function Arena() {
 					>
 						<Ellipse height={500} pulseWhenEmpty={isOnlyPlayer} />
 
-						{/* Seats posicionados via trigonometria */}
+						{/* Assentos posicionados via trigonometria */}
 						{sala?.players.map((p) => {
 							const angle = seatAngles.get(p.id) ?? 0;
 							const pos = seatPosition(angle);
@@ -466,11 +464,11 @@ export function Arena() {
 							<span className="ml-1">votaram</span>
 						</div>
 					)}
-
-					{/* Animações de arremessos */}
-					<ProjectileAnimator />
 					</div>
 				</div>
+
+				{/* Animações de arremessos — FORA do wrapper escalado (#91 Spec fix) */}
+				<ProjectileAnimator />
 
 				{/* Deck dock (bottom center) */}
 				<div
