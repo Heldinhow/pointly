@@ -161,25 +161,17 @@ a[role="button"] {
 	stroke-dasharray: 40;
 }
 
-/* Escalonamento responsivo para a mesa da Arena */
+/* INCONS-021 / #91: arena-table agora e responsivo via aspect-ratio +
+   CSS custom property (--mesa-scale) aplicada ao inner canvas 960x500.
+   Media queries abaixo sao deprecadas mas mantidas para compat. */
 @media (max-height: 840px), (max-width: 1024px) {
 	[data-testid="arena-stage"] {
 		padding-top: 1rem;
 		padding-bottom: 1rem;
 	}
-	[data-testid="arena-table"] {
-		transform: scale(0.8);
-		transform-origin: center center;
-		margin-top: 0 !important;
-		margin-bottom: -60px;
-	}
 }
 
 @media (max-height: 720px) {
-	[data-testid="arena-table"] {
-		transform: scale(0.7);
-		margin-bottom: -110px;
-	}
 	[data-testid="arena-deck-wrapper"] {
 		bottom: 1rem !important;
 	}

@@ -341,17 +341,30 @@ export function Arena() {
 					/>
 				)}
 
-				{/* Mesa: Ellipse + 12 Seats + RevealButton central */}
+				{/* Mesa: Ellipse + 12 Seats + RevealButton central.
+				   INCONS-021 / #91: wrapper responsivo com aspect-ratio +
+				   CSS scaling do canvas 960x500 para caber em mobile/tablet.
+				   Sem o wrapper, mesa e mesas internas cortavam (overflow:hidden
+				   em 360/390/430/768). */}
 				<div
-					className="relative w-[960px] h-[500px] mt-6"
+					className="relative w-full max-w-[960px] aspect-[96/50] mt-6 mx-auto overflow-hidden"
 					data-testid="arena-table"
+					style={{ ["--mesa-scale" as string]: "min(1, calc(100% / 960px))" }}
 				>
-					<Ellipse height={500} pulseWhenEmpty={isOnlyPlayer} />
+					<div
+						className="origin-top-left"
+						style={{
+							width: "960px",
+							height: "500px",
+							transform: "scale(var(--mesa-scale))",
+						}}
+					>
+						<Ellipse height={500} pulseWhenEmpty={isOnlyPlayer} />
 
-					{/* Seats posicionados via trigonometria */}
-					{sala?.players.map((p) => {
-						const angle = seatAngles.get(p.id) ?? 0;
-						const pos = seatPosition(angle);
+						{/* Seats posicionados via trigonometria */}
+						{sala?.players.map((p) => {
+							const angle = seatAngles.get(p.id) ?? 0;
+							const pos = seatPosition(angle);
 						const isYou = p.id === currentPlayerId;
 						const isMedianVote =
 							faceUp &&
@@ -456,6 +469,7 @@ export function Arena() {
 
 					{/* Animações de arremessos */}
 					<ProjectileAnimator />
+					</div>
 				</div>
 
 				{/* Deck dock (bottom center) */}
