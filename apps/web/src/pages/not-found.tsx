@@ -170,7 +170,7 @@ export function NotFound() {
 							</svg>
 							{/* Mono plate label */}
 							<span className="absolute bottom-1 right-2 font-mono text-[8px] tracking-[0.18em] uppercase text-coral-soft/90">
-								Fig. 404 · Vazio
+								Nº 404
 							</span>
 						</div>
 					</div>

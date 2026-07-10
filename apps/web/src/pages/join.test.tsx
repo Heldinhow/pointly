@@ -4,7 +4,7 @@
  * Cobre:
  *  - validateNick() puro: 1 char rejeitado, 21 rejeitado, espaços duplos,
  *    espaços nas pontas, ok
- *  - Render: card 'Seu nome na sala' + FIG.02 strip + code label
+ *  - Render: card 'Seu nome na sala' + strip mono 'Entrar' + code label
  *  - Validação inline: nick 1 char → erro, nick 'X X X' → erro
  *  - Submit com nick válido dispara redirect (stub)
  *  - A11y: input tem label + aria-invalid em erro

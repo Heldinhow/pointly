@@ -189,7 +189,7 @@ function HeroTable() {
 						className="inline-block w-1.5 h-1.5 rounded-full bg-coral animate-pulse"
 						aria-hidden="true"
 					/>
-					Fig. 01 · Mesa revelada
+					Votos revelados
 				</div>
 				<div className="font-mono text-[9px] bg-mustard/15 text-ink-mute px-2 py-1 rounded-full border border-mustard/30 uppercase tracking-wider">
 					Mediana 5
@@ -274,7 +274,7 @@ function MockTable() {
 			<div className="flex items-center justify-between border-b border-ink/5 pb-2.5 z-10">
 				<div className="font-mono text-[9px] text-ink-faint uppercase tracking-wider flex items-center gap-1.5">
 					<span className="inline-block w-1.5 h-1.5 rounded-full bg-coral"></span>
-					FIG. 02 · Mesa com Votos Revelados
+					Rodada revelada
 				</div>
 				<div className="font-mono text-[8px] bg-mustard/15 text-ink-mute px-2 py-0.5 rounded border border-mustard/20">
 					MÉDIA 6.25 · MEDIANA 5
@@ -360,8 +360,8 @@ function MockTable() {
 
 			{/* Anotação inferior da mesa */}
 			<div className="flex justify-between items-center text-[9px] font-mono text-ink-faint px-1 z-10">
-				<span>MOCK DE 8 JOGADORES</span>
-				<span>DESTAQUE GOLD PARA MEDIANA (5)</span>
+				<span>8 JOGADORES · VOTAÇÃO ENCERRADA</span>
+				<span>DESTAQUE PARA A MEDIANA</span>
 			</div>
 		</div>
 	);
@@ -407,18 +407,19 @@ function MockDeck() {
 	);
 }
 
-/** Componente utilitário para divisores de seção (Section Rules) */
+/** Componente utilitário para divisores de seção (Section Rules).
+ *  Mostra apenas o numeral romano e o título da seção — o folio numérico
+ *  ("PAGE 001") foi removido por parecer anotação de mockup em vez de
+ *  conteúdo de produto. A numeração das seções segue no sumário (TOC). */
 function SectionRule({
 	roman,
 	title,
-	page,
-}: { roman: string; title: string; page: string }) {
+}: { roman: string; title: string }) {
 	return (
 		<div className="max-w-[1360px] mx-auto px-6 lg:px-16" aria-hidden="true">
 			<div className="sec-rule">
 				<span className="roman">{roman}</span>
 				<span className="meta">{title}</span>
-				<span className="page">{page}</span>
 			</div>
 		</div>
 	);
@@ -638,7 +639,6 @@ export function Landing() {
 			<SectionRule
 				roman="01"
 				title="INTRODUÇÃO · VOTAÇÃO EFÊMERA"
-				page="PAGE 001"
 			/>
 
 			{/* HERO — Roman I */}
@@ -774,7 +774,6 @@ export function Landing() {
 			<SectionRule
 				roman="02"
 				title="CONVERSAÇÃO · FOCO EM TIMES"
-				page="PAGE 002"
 			/>
 
 			{/* ABOUT */}
@@ -809,7 +808,6 @@ export function Landing() {
 			<SectionRule
 				roman="03"
 				title="CAPABILIDADES · FUNCIONALIDADES"
-				page="PAGE 003"
 			/>
 
 			{/* CAPABILITIES */}
@@ -854,7 +852,6 @@ export function Landing() {
 			<SectionRule
 				roman="04"
 				title="DEMONSTRAÇÃO · FLUXO DE VOTO"
-				page="PAGE 004"
 			/>
 
 			{/* DARK SHOWCASE CONTAINER (Section 6 Style) */}
@@ -906,7 +903,6 @@ export function Landing() {
 			<SectionRule
 				roman="05"
 				title="RECOMENDAÇÃO · COMEÇAR JÁ"
-				page="PAGE 005"
 			/>
 
 			{/* CTA RIBBON */}

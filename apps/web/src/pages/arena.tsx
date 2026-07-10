@@ -6,7 +6,7 @@
  *
  * **Estrutura visual** (vide design/arena.html):
  *  - Topbar metadata strip (mono, fig, code)
- *  - Arena head: "FIG. 03 · ROUND 0X" + nick local
+ *  - Arena head: "RODADA 0X" + nick local
  *  - Stage: position relative
  *    - Stats pill (top-left, absoluto)
  *    - Timer pill (top-right, absoluto)
