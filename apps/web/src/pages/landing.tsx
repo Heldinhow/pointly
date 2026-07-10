@@ -2,12 +2,12 @@
  * Landing page — T27 (Phase 6) + Design System Refinements.
  *
  * Página inicial do Pointly com o Design System Atelier Zero completo:
- *  - Metadata strip com pulse dot coral + Vol/Issue/PT-BR no topo
+ *  - Metadata strip minimal no topo (Pulse dot coral + idioma)
  *  - Side rails 36px (left/right) com rail text vertical (ocultos em telas menores)
- *  - Section rules com numerais romanos (I, II, III, IV, V) separando as seções
+ *  - Section rules com hairline + título de seção (sem numeral decorativo)
  *  - Títulos híbridos misturando Sans Bold + Serif Italic (Playfair Display)
  *  - Mesa de votação mockada interativa (MockTable) com 8 assentos ativos e revelados
- *  - Seção Dark contrastante (Roman IV) com uma prévia do Deck Fibonacci (MockDeck)
+ *  - Seção Dark contrastante com uma prévia do Deck Fibonacci (MockDeck)
  *  - Mega footer com a marca monumental "Pointly."
  */
 import { useEffect, useRef, useState } from "react";
@@ -26,13 +26,11 @@ const STATS = [
  *  alinhado à direita do título. Os SVGs são aria-hidden para não poluir
  *  screen readers (o título do card já carrega o significado). */
 const CAPABILITIES: Array<{
-	n: string;
 	title: string;
 	body: string;
 	icon: () => JSX.Element;
 }> = [
 	{
-		n: "01",
 		title: "Sala instantânea",
 		body: "Crie um código de 4 chars em < 100ms. Sem cadastro, sem email, sem confirmação.",
 		icon: () => (
@@ -54,7 +52,6 @@ const CAPABILITIES: Array<{
 		),
 	},
 	{
-		n: "02",
 		title: "Deck Fibonacci",
 		body: "9 cartas: 0, ½, 1, 2, 3, 5, 8, 13, ☕. Pausa explícita sem custo de mediação.",
 		icon: () => (
@@ -78,7 +75,6 @@ const CAPABILITIES: Array<{
 		),
 	},
 	{
-		n: "03",
 		title: "Reveal coletivo",
 		body: "Vire a mesa face-up com 1 clique. Mediana destacada em gold. Stats instantâneas.",
 		icon: () => (
@@ -101,7 +97,6 @@ const CAPABILITIES: Array<{
 		),
 	},
 	{
-		n: "04",
 		title: "Timer crítico",
 		body: "60s com transição pra coral aos 30s. Auto-reveal ao expirar. Sem decisões penduradas.",
 		icon: () => (
@@ -244,7 +239,7 @@ function HeroTable() {
 									{player.nick}
 								</div>
 								{player.isYou && (
-									<div className="font-mono text-[6px] tracking-[0.05em] text-coral uppercase px-0.5 border border-coral rounded mb-0.5">
+									<div className="font-mono text-[8px] tracking-[0.05em] text-coral uppercase px-1 border border-coral rounded mb-0.5">
 										você
 									</div>
 								)}
@@ -393,7 +388,7 @@ function MockDeck() {
 							>
 								{val}
 							</span>
-							<span className="font-mono text-[6px] tracking-wide mt-1 uppercase opacity-60">
+							<span className="font-mono text-[8px] tracking-wide mt-1 uppercase opacity-60">
 								{isSelected ? "Votada" : "Valor"}
 							</span>
 						</div>
@@ -408,17 +403,16 @@ function MockDeck() {
 }
 
 /** Componente utilitário para divisores de seção (Section Rules).
- *  Mostra apenas o numeral romano e o título da seção — o folio numérico
- *  ("PAGE 001") foi removido por parecer anotação de mockup em vez de
- *  conteúdo de produto. A numeração das seções segue no sumário (TOC). */
-function SectionRule({
-	roman,
-	title,
-}: { roman: string; title: string }) {
+ *  Mostra apenas o título da seção sobre uma hairline. O numeral romano
+ *  decorativo ("I II III IV V") foi removido por parecer numeração de
+ *  mockup em vez de conteúdo de produto. */
+function SectionRule({ title }: { title: string }) {
 	return (
-		<div className="max-w-[1360px] mx-auto px-6 lg:px-16" aria-hidden="true">
+		<div
+			className="max-w-[1360px] mx-auto px-6 lg:px-16"
+			aria-hidden="true"
+		>
 			<div className="sec-rule">
-				<span className="roman">{roman}</span>
 				<span className="meta">{title}</span>
 			</div>
 		</div>
@@ -434,11 +428,11 @@ export function Landing() {
 	const [isCreating, setIsCreating] = useState(false);
 
 	const TOC_ENTRIES = [
-		{ id: "como-funciona", roman: "01", label: "Introdução" },
-		{ id: "para-times", roman: "02", label: "Como funciona" },
-		{ id: "capabilidades", roman: "03", label: "Capacidades" },
-		{ id: "fluxo-de-voto", roman: "04", label: "Fluxo de voto" },
-		{ id: "cta-final", roman: "05", label: "Começar" },
+		{ id: "como-funciona", label: "Introdução" },
+		{ id: "para-times", label: "Como funciona" },
+		{ id: "capabilidades", label: "Capacidades" },
+		{ id: "fluxo-de-voto", label: "Fluxo de voto" },
+		{ id: "cta-final", label: "Começar" },
 	] as const;
 
 	useEffect(() => {
@@ -491,7 +485,7 @@ export function Landing() {
 			</div>
 			<div className="side-rail right hidden xl:flex" aria-hidden="true">
 				<span className="rail-text font-mono">
-					Vol. 01 / Issue No. 26 · Open Beta
+					Pointly · PT-BR
 				</span>
 			</div>
 
@@ -503,7 +497,7 @@ export function Landing() {
 							<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-coral opacity-75"></span>
 							<span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-coral"></span>
 						</span>
-						<span>Vol. 01 · Issue Nº 26 · Pointly · PT-BR</span>
+						<span>Pointly · PT-BR</span>
 					</div>
 					<div className="flex items-center gap-4">
 						<span className="hidden lg:inline">Planning Poker Efêmero</span>
@@ -578,9 +572,6 @@ export function Landing() {
 										data-testid={`toc-item-${entry.id}`}
 										className="w-full text-left flex items-center gap-3 px-3 py-2 rounded hover:bg-paper-warm transition-colors group"
 									>
-										<span className="font-italic italic text-coral text-[18px] leading-none w-7">
-											{entry.roman}
-										</span>
 										<span className="font-mono text-[11px] tracking-[0.06em] uppercase text-ink-mute group-hover:text-coral transition-colors">
 											{entry.label}
 										</span>
@@ -635,11 +626,8 @@ export function Landing() {
 				</Button>
 			</nav>
 
-			{/* Section Rule I - Hero */}
-			<SectionRule
-				roman="01"
-				title="INTRODUÇÃO · VOTAÇÃO EFÊMERA"
-			/>
+			{/* Section Rule — Hero */}
+			<SectionRule title="INTRODUÇÃO · VOTAÇÃO EFÊMERA" />
 
 			{/* HERO — Roman I */}
 			<section
@@ -770,11 +758,8 @@ export function Landing() {
 				</div>
 			</section>
 
-			{/* Section Rule II - About */}
-			<SectionRule
-				roman="02"
-				title="CONVERSAÇÃO · FOCO EM TIMES"
-			/>
+			{/* Section Rule — About */}
+			<SectionRule title="CONVERSAÇÃO · FOCO EM TIMES" />
 
 			{/* ABOUT */}
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-20 relative">
@@ -804,11 +789,8 @@ export function Landing() {
 				</div>
 			</section>
 
-			{/* Section Rule III - Capabilities */}
-			<SectionRule
-				roman="03"
-				title="CAPABILIDADES · FUNCIONALIDADES"
-			/>
+			{/* Section Rule — Capabilities */}
+			<SectionRule title="CAPABILIDADES · FUNCIONALIDADES" />
 
 			{/* CAPABILITIES */}
 			<section
@@ -816,25 +798,20 @@ export function Landing() {
 				className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative"
 			>
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-					{CAPABILITIES.map((cap) => (
+					{CAPABILITIES.map((cap, idx) => (
 						<Card
-							key={cap.n}
+							key={cap.title}
 							padding="md"
 							className="flex flex-col gap-3 bg-surface border border-ink/10 rounded-2xl shadow-bone hover:border-coral hover:-translate-y-1 hover:shadow-md transition-all duration-200"
-							data-testid={`cap-card-${cap.n}`}
+							data-testid={`cap-card-${idx}`}
 						>
-							<div className="flex justify-between items-baseline font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint">
-								<span className="font-serif italic text-coral text-[28px] tracking-normal normal-case font-normal leading-none">
-									{cap.n}
-								</span>
-								<span className="flex items-center gap-2">
-									<span>Feature</span>
-									<span
-										className="text-coral"
-										data-testid={`cap-icon-${cap.n}`}
-									>
-										{cap.icon()}
-									</span>
+							<div className="flex justify-between items-center font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint">
+								<span>Feature</span>
+								<span
+									className="text-coral"
+									data-testid={`cap-icon-${idx}`}
+								>
+									{cap.icon()}
 								</span>
 							</div>
 							<h3 className="font-display font-extrabold text-[19px] tracking-[-0.02em]">
@@ -848,11 +825,8 @@ export function Landing() {
 				</div>
 			</section>
 
-			{/* Section Rule IV - Dark Showcase */}
-			<SectionRule
-				roman="04"
-				title="DEMONSTRAÇÃO · FLUXO DE VOTO"
-			/>
+			{/* Section Rule — Dark Showcase */}
+			<SectionRule title="DEMONSTRAÇÃO · FLUXO DE VOTO" />
 
 			{/* DARK SHOWCASE CONTAINER (Section 6 Style) */}
 			<section
@@ -899,11 +873,8 @@ export function Landing() {
 				</div>
 			</section>
 
-			{/* Section Rule V - Call to Action */}
-			<SectionRule
-				roman="05"
-				title="RECOMENDAÇÃO · COMEÇAR JÁ"
-			/>
+			{/* Section Rule — Call to Action */}
+			<SectionRule title="RECOMENDAÇÃO · COMEÇAR JÁ" />
 
 			{/* CTA RIBBON */}
 			<section
