@@ -10,8 +10,7 @@
  *  - Seção Dark contrastante (Roman IV) com uma prévia do Deck Fibonacci (MockDeck)
  *  - Mega footer com a marca monumental "Pointly."
  *
- * @issue #63 — removida cara de protótipo: "Vol/Issue/PT-BR/Open Beta"
- *              eram mockup annotations. Substituídos por info útil/honesta.
+ * @issue #63 — Vol/Issue/PT-BR/Open Beta removidos da landing + 404 (parity).
  */
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
