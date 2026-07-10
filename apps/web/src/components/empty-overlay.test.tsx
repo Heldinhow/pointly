@@ -14,22 +14,22 @@ describe("buildShareUrl — T36 pure", () => {
 });
 
 describe("EmptyOverlay — render", () => {
-	test("renderiza headline 'Convide outros' + share URL readonly", () => {
+	test("renderiza banner com código + botão de copiar", () => {
 		render(<EmptyOverlay code="9B9F" onDismiss={() => {}} />);
-		expect(
-			screen.getByRole("heading", { level: 2, name: /convide outros/i }),
-		).toBeInTheDocument();
-		const input = screen.getByTestId("empty-overlay-share-url");
-		expect(input).toBeInTheDocument();
-		expect(input).toHaveAttribute("readonly");
-		expect((input as HTMLInputElement).value).toMatch(/code=9B9F/);
+		// Banner não-bloqueante: presença do testid principal + texto do código.
+		expect(screen.getByTestId("empty-overlay")).toBeInTheDocument();
+		expect(screen.getByText("9B9F")).toBeInTheDocument();
+		// Botão de copiar URL presente e em estado inicial "Copiar link".
+		const copy = screen.getByTestId("empty-overlay-copy");
+		expect(copy).toBeInTheDocument();
+		expect(copy.textContent?.trim()).toBe("Copiar link");
 	});
 
-	test("role='dialog' + aria-modal='true' (a11y)", () => {
+	test("role='status' + aria-live='polite' (a11y do banner)", () => {
 		render(<EmptyOverlay code="9B9F" onDismiss={() => {}} />);
-		const dialog = screen.getByTestId("empty-overlay");
-		expect(dialog.getAttribute("role")).toBe("dialog");
-		expect(dialog.getAttribute("aria-modal")).toBe("true");
+		const banner = screen.getByTestId("empty-overlay");
+		expect(banner.getAttribute("role")).toBe("status");
+		expect(banner.getAttribute("aria-live")).toBe("polite");
 	});
 
 	test("click em 'Copiar link' chama navigator.clipboard.writeText", async () => {
@@ -100,17 +100,34 @@ describe("EmptyOverlay — render", () => {
 		}
 	});
 
-	test("shareUrl override é usado quando fornecido", () => {
-		render(
-			<EmptyOverlay
-				code="9B9F"
-				onDismiss={() => {}}
-				shareUrl="https://example.com/custom?code=9B9F"
-			/>,
-		);
-		expect(screen.getByTestId("empty-overlay-share-url")).toHaveValue(
-			"https://example.com/custom?code=9B9F",
-		);
+	test("shareUrl override é usado quando Copiar link é clicado", () => {
+		const writeText = mock(async (_s: string) => {});
+		const origClipboard = navigator.clipboard;
+		Object.defineProperty(navigator, "clipboard", {
+			configurable: true,
+			value: { writeText },
+		});
+		try {
+			render(
+				<EmptyOverlay
+					code="9B9F"
+					onDismiss={() => {}}
+					shareUrl="https://example.com/custom?code=9B9F"
+				/>,
+			);
+			fireEvent.click(screen.getByTestId("empty-overlay-copy"));
+			return new Promise((r) => setTimeout(r, 0)).then(() => {
+				expect(writeText).toHaveBeenCalledTimes(1);
+				const lastArg =
+					writeText.mock.calls[writeText.mock.calls.length - 1]?.[0];
+				expect(lastArg).toBe("https://example.com/custom?code=9B9F");
+			});
+		} finally {
+			Object.defineProperty(navigator, "clipboard", {
+				configurable: true,
+				value: origClipboard,
+			});
+		}
 	});
 
 	// T06 — BUG-305: clicar "Copiar link" NÃO fecha o overlay.

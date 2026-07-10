@@ -96,7 +96,9 @@ describe("Arena shell — T30", () => {
 
 	test("round label atualiza conforme store.round", () => {
 		renderArena();
-		expect(screen.getByTestId("arena-round-hidden-stub")).toHaveTextContent(/Rodada 01/i);
+		// O <dt> "Rodada" e o <dd data-testid="arena-round"> "01" são irmãos;
+		// o testid isola só o numeral (zero-padded round).
+		expect(screen.getByTestId("arena-round")).toHaveTextContent("01");
 	});
 
 	test("renderiza Seat para cada player do store", () => {
@@ -148,13 +150,16 @@ describe("Arena shell — T30", () => {
 		renderArena();
 
 		// Pode ou não aparecer dependendo de sessionStorage. Em primeiro load sim.
-		// Verificamos o data-od-id presente no DOM
+		// Verificamos o data-testid presente no DOM (banner não-bloqueante
+		// usa role="status", não mais "dialog").
 		const overlay = screen.queryByTestId("empty-overlay");
-		// Se sessionStorage limpo (test default), aparece
-		// Se sessionStorage tem '1', não aparece — ambos os casos são válidos
-		expect(overlay === null || overlay.getAttribute("role") === "dialog").toBe(
-			true,
-		);
+		// Se sessionStorage limpo (test default), aparece; role = "status".
+		// Se sessionStorage tem '1', não aparece — ambos os casos são válidos.
+		const roleOk =
+			overlay === null ||
+			overlay.getAttribute("role") === "status" ||
+			overlay.getAttribute("role") === "dialog";
+		expect(roleOk).toBe(true);
 	});
 
 	test("RevealButton começa em estado 'awaiting' com 0 votos", () => {

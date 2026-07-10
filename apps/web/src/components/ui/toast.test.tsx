@@ -6,8 +6,9 @@
  *        useToast fora do provider throw error;
  *        multiple toasts empilhados.
  */
-import { describe, expect, test } from "bun:test";
-import { act, render, screen } from "./test-helpers";
+import { describe, expect, mock, test } from "bun:test";
+import { act, render as rtlRender, screen } from "@testing-library/react";
+import { render } from "./test-helpers";
 import { ToastProvider, useToast } from "./toast";
 
 function Harness({
@@ -69,8 +70,17 @@ describe("Toast", () => {
 	});
 
 	test("useToast fora do provider throw error", () => {
-		// Captura expectação sem renderizar (throw acontece em render).
-		expect(() => render(<Harness />)).toThrow(/ToastProvider/);
+		// rtlRender cru (sem ToastProvider): throw acontece síncrono.
+		// React 18 reporta via console.error como "Uncaught" — suprimimos
+		// durante este teste pra manter a saída limpa (issue #54 critério).
+		const errSpy = mock();
+		const origError = console.error;
+		console.error = errSpy;
+		try {
+			expect(() => rtlRender(<Harness />)).toThrow(/ToastProvider/);
+		} finally {
+			console.error = origError;
+		}
 	});
 
 	test("múltiplos toasts empilham", () => {
