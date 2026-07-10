@@ -293,15 +293,56 @@ describe("WSService — wire format validation", () => {
 // Regressão prod (2026-07-10): outros clientes NÃO recebiam `room_state`
 // imediato quando um peer desconectava, virando a aparecer "se reconectando"
 // (status=connected) até o próximo vote/reconcile/tickGracePeriod (até 60s).
-// Especificação: ao fechar WS, demais clientes da sala devem ver
-// status='disconnected' IMEDIATAMENTE, sem esperar próximo vote ou tick.
+//
+// Issue #59: PR #58 introduziu broadcast imediato (sem debounce) que
+// causava flicker visível em reconexões rápidas — peer renderizava
+// `connected → disconnected → connected` em <1s. Fix #59 introduz
+// debounce de 1.5s: se o cliente reconectar dentro da janela, o broadcast
+// de disconnect é CANCELADO. Sem cancelamento (= disconnect permanente),
+// o peer recebe o status='disconnected' após 1.5s. Estes testes
+// verificam o comportamento com debounce (issue #59 fix).
 // ---------------------------------------------------------------------------
 
-describe("WSService — onClose broadcast (regressão flicker)", () => {
-	test("ao desconectar, peers da sala recebem room_state com status='disconnected'", () => {
+describe("WSService — onClose broadcast com debounce (issue #59)", () => {
+	/**
+	 * Helper: cria timer helpers fake para controle determinístico do
+	 * debounce sem esperar tempo real.
+	 */
+	function makeFakeTimers(): {
+		setTimeoutFn: typeof setTimeout;
+		clearTimeoutFn: typeof clearTimeout;
+		runAll: () => void;
+	} {
+		let nextId = 1;
+		const handles = new Map<number, { fn: () => void }>();
+		const runAll = () => {
+			for (const [, h] of [...handles.entries()]) h.fn();
+			handles.clear();
+		};
+		const setTimeoutFn = ((fn: () => void, _ms: number) => {
+			const id = nextId++;
+			handles.set(id, { fn });
+			return id as unknown as ReturnType<typeof setTimeout>;
+		}) as unknown as typeof setTimeout;
+		const clearTimeoutFn = ((id: unknown) => {
+			handles.delete(id as number);
+		}) as unknown as typeof clearTimeout;
+		return { setTimeoutFn, clearTimeoutFn, runAll };
+	}
+
+	test("disconnect permanente (sem reconnect): peer vê room_state com status='disconnected'", () => {
+		const timers = makeFakeTimers();
+		const localService = new WSService(
+			hub,
+			logger,
+			undefined,
+			timers.setTimeoutFn,
+			timers.clearTimeoutFn,
+		);
+
 		// Ana cria sala
-		service.onOpen(ws);
-		service.onMessage(
+		localService.onOpen(ws);
+		localService.onMessage(
 			ws,
 			JSON.stringify({
 				type: "hello",
@@ -312,8 +353,8 @@ describe("WSService — onClose broadcast (regressão flicker)", () => {
 
 		// Bob entra
 		const bob = new MockBunWS("127.0.0.2");
-		service.onOpen(bob);
-		service.onMessage(
+		localService.onOpen(bob);
+		localService.onMessage(
 			bob,
 			JSON.stringify({
 				type: "hello",
@@ -326,18 +367,21 @@ describe("WSService — onClose broadcast (regressão flicker)", () => {
 		);
 		const bobPlayerId = bob.data.playerId!;
 
-		// Baseline: conta quantos room_state Ana já recebeu (welcome + Bob join)
 		const baseline = ws.eventsOfType("room_state").length;
 
-		// Bob desconecta
-		service.onClose(bob, 1006, "abnormal_closure");
+		// Bob fecha WS — broadcast agendado (não imediato por causa do debounce).
+		localService.onClose(bob, 1006, "abnormal_closure");
+		expect(localService.hasPendingDisconnectBroadcast(bobPlayerId)).toBe(true);
 
-		// Ana DEVE ter recebido um room_state extra imediatamente, sem esperar
-		// nenhum vote/tick/tickGracePeriod.
+		// Antes do debounce expirar, peer NÃO vê broadcast extra.
+		const afterImmediate = ws.eventsOfType("room_state").length;
+		expect(afterImmediate).toBe(baseline);
+
+		// Debounce expira — peer vê broadcast com Bob disconnected.
+		timers.runAll();
 		const after = ws.eventsOfType("room_state").length;
 		expect(after).toBeGreaterThan(baseline);
 
-		// O room_state mais recente deve mostrar Bob como disconnected
 		const lastRoomState = ws.eventsOfType("room_state").at(-1)!;
 		const bobInState = lastRoomState.payload.sala.players.find(
 			(p) => p.id === bobPlayerId,
@@ -346,10 +390,19 @@ describe("WSService — onClose broadcast (regressão flicker)", () => {
 		expect(bobInState?.status).toBe("disconnected");
 	});
 
-	test("reconnect: ao reconectar com mesmo UUID, peers veem status='connected' IMEDIATO", () => {
-		// Ana + Bob na sala, Bob desconecta
-		service.onOpen(ws);
-		service.onMessage(
+	test("reconnect dentro da janela: peer NÃO vê o broadcast de disconnect (sem flicker)", () => {
+		const timers = makeFakeTimers();
+		const localService = new WSService(
+			hub,
+			logger,
+			undefined,
+			timers.setTimeoutFn,
+			timers.clearTimeoutFn,
+		);
+
+		// Ana + Bob na sala
+		localService.onOpen(ws);
+		localService.onMessage(
 			ws,
 			JSON.stringify({
 				type: "hello",
@@ -358,8 +411,8 @@ describe("WSService — onClose broadcast (regressão flicker)", () => {
 		);
 		const code = ws.data.code!;
 		const bob = new MockBunWS("127.0.0.2");
-		service.onOpen(bob);
-		service.onMessage(
+		localService.onOpen(bob);
+		localService.onMessage(
 			bob,
 			JSON.stringify({
 				type: "hello",
@@ -370,13 +423,17 @@ describe("WSService — onClose broadcast (regressão flicker)", () => {
 				},
 			}),
 		);
-		service.onClose(bob, 1006, "abnormal_closure");
-		const baseline = ws.eventsOfType("room_state").length;
 
-		// Bob reconecta (mesmo UUID, mesmo code) via nova conexão
+		// Bob desconecta
+		localService.onClose(bob, 1006, "abnormal_closure");
+		expect(
+			localService.hasPendingDisconnectBroadcast(bob.data.playerId!),
+		).toBe(true);
+
+		// Bob reconecta (mesmo UUID, mesmo code) via nova conexão ANTES do debounce.
 		const bob2 = new MockBunWS("127.0.0.2");
-		service.onOpen(bob2);
-		service.onMessage(
+		localService.onOpen(bob2);
+		localService.onMessage(
 			bob2,
 			JSON.stringify({
 				type: "hello",
@@ -388,9 +445,16 @@ describe("WSService — onClose broadcast (regressão flicker)", () => {
 			}),
 		);
 
-		// Ana deve ter recebido room_state novo com Bob como connected
-		const after = ws.eventsOfType("room_state").length;
-		expect(after).toBeGreaterThan(baseline);
+		// handleHello cancelou o agendamento.
+		expect(
+			localService.hasPendingDisconnectBroadcast(bob.data.playerId!),
+		).toBe(false);
+
+		// Timer expira (sem efeito, foi cancelado).
+		timers.runAll();
+
+		// Peer (Ana) NÃO viu o broadcast de disconnect — só vê o do reconnect.
+		// Sem isso, haveria flicker `connected → disconnected → connected`.
 		const lastRoomState = ws.eventsOfType("room_state").at(-1)!;
 		const bobInState = lastRoomState.payload.sala.players.find(
 			(p) => p.id === bob.data.playerId,

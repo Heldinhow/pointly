@@ -4,11 +4,11 @@
 
 ```yaml
 loop: self-improve
-last_run_ts: 2026-07-10T16:11:52Z
+last_run_ts: 2026-07-10T17:00:00Z
 iter_count: 7
 current_issue: null          # exit — fila vazia
-last_verdict: pr-open        # not-yet-run | pass | fail | blocked | blocked-g1 | enqueued | pr-open | no-op | helper-created | exit
-next_priority: human-gate    # open | human-gate | closed
+last_verdict: exit           # not-yet-run | pass | fail | blocked | blocked-g1 | enqueued | pr-open | no-op | helper-created | exit
+next_priority: closed        # open | human-gate | closed
 ```
 
 ## Como preencher/zerar
@@ -41,3 +41,4 @@ Não escrever em lugar nenhum fora desta pasta pelo loop.
 - **2026-07-10T15:55:52Z** — **EXIT** com PRs mergeados. Usuário reportou merge de PR #57 (`fix(web): remove mockup-style figure labels from landing`, merged 12:53:51Z → `7519b27`) e PR #56 já tinha sido mergeado em `e54ba0b`. Fila vazia. Gate **VERDE** pós-merge (test:web 343/343 — agora com os testes do PR #56 + UX cleanup do PR #57). Cursor em main evoluiu pra `iter_count: 6`. Branch `loop/issue-landing-remove-mockup-label` removida local+remote (merged). Branch `loop/issue-assign-seat-angles` permanece local com STATE.md atualizado (`d9dcb8c`). Loop segue em modo EXIT; próximo run só vai agir se enfileirar issue nova via `gh issue create`.
 - **2026-07-10T16:06:58Z** — **EXIT (no-op)**. Run one-shot (invocado direto via `/self-improve`). Discovery: `gh issue list --state open` → `[]` (fila vazia). Gate **VERDE** (verifier json exit 0: typecheck ✓, test:shared ✓, test:server ✓, test:web 343/343 ✓, lint skipped-env). Predicado de exit satisfeito → nada a fazer. Sem pendência humana.
 - **2026-07-10T16:11:52Z** — **DIAGNOSE + PR-OPEN**. Usuário reportou de novo "usuarios piscando desconectam/reconectam". Verifiquei `apps/server/src/ws.ts:onClose` em main → **fix NÃO estava em main**: PR #56 squash (`e54ba0b`) só levou o `assignSeatAngles`, deixou pra trás `9742c49` (broadcast `room_state` no `onClose`). Cherry-pick limpo de `9742c49` em branch nova `loop/issue-flicker-disconnect-broadcast` baseada em main → commit `0abd07e`. Gate **VERDE** (test:server 161/161). PR **#58** aberto. Testes de regressão (2 cenários em `ws.test.ts`: disconnect + reconnect) preservados do commit original.
+- **2026-07-10T17:00:00Z** — **EXIT** com sync. Local main estava divergente (3 commits de cursor à frente, sem o merge do PR #58). `git pull` detectou divergent; merge de `origin/main` resgatou `38d1f80` (PR #58 squash) que **agora está em main** com `if (code_sala) this.broadcastRoomState(code_sala)` no `onClose`. Conflito em STATE.md resolvido pegando theirs (= origin/main cursor). Verifier **VERDE** pós-sync. Pendência humana: nenhuma.
