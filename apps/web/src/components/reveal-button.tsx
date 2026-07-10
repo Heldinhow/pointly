@@ -92,6 +92,29 @@ export function RevealButton({
 	};
 
 	return (
+		<>
+			{state === "awaiting" ? (
+				// DESIGN-4 / #71: estado awaiting NAO e CTA. Renderiza como status
+				// badge com pulse dot (ellipse-pulse reutilizado). aria-hidden porque
+				// a info ja e comunicada pelo voted-counter (#68).
+				<div
+					data-testid="reveal-button"
+					data-od-id="reveal-button"
+					data-reveal-state="awaiting"
+					aria-hidden="true"
+					className={cn(
+						"absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+						"flex items-center gap-2",
+						"px-4 py-2 rounded-full whitespace-nowrap",
+						"font-mono text-[10px] uppercase tracking-[0.16em]",
+						"bg-paper/60 border border-ink/10 text-ink-faint",
+						"backdrop-blur-[2px]",
+					)}
+				>
+					<span className="ellipse-pulse inline-block text-coral" aria-hidden="true">●</span>
+					<span>{hint}</span>
+				</div>
+			) : (
 		<button
 			type="button"
 			disabled={disabled}
@@ -115,9 +138,6 @@ export function RevealButton({
 				"font-display font-semibold text-[13px] tracking-[0.01em]",
 				"transition-all duration-200 select-none",
 				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
-				// awaiting (ghost, disabled)
-				state === "awaiting" &&
-					"bg-paper-dark border border-ink/15 text-ink-faint cursor-not-allowed",
 				// ready (coral pill, enabled)
 				state === "ready" &&
 					"bg-coral border border-coral text-white cursor-pointer shadow-coral hover:-translate-x-1/2 hover:-translate-y-[calc(50%+1px)] hover:bg-coral-soft",
@@ -143,5 +163,7 @@ export function RevealButton({
 				{hint}
 			</span>
 		</button>
+			)}
+		</>
 	);
 }

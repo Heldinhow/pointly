@@ -29,7 +29,7 @@ describe("RevealButton — deriveButtonState (pure)", () => {
 });
 
 describe("RevealButton — render", () => {
-	test("estado awaiting: 'Aguardando N jogadores…' + disabled", () => {
+	test("estado awaiting: 'Aguardando N jogadores…' como status badge (#71 / DESIGN-4)", () => {
 		render(
 			<RevealButton
 				phase="idle"
@@ -39,10 +39,13 @@ describe("RevealButton — render", () => {
 				onNewRound={() => {}}
 			/>,
 		);
-		const btn = screen.getByTestId("reveal-button");
-		expect(btn.getAttribute("data-reveal-state")).toBe("awaiting");
-		expect(btn).toBeDisabled();
-		expect(btn).toHaveTextContent(/Aguardando 12 jogadores/i);
+		const el = screen.getByTestId("reveal-button");
+		expect(el.getAttribute("data-reveal-state")).toBe("awaiting");
+		// DESIGN-4: awaiting nao e CTA. Renderiza como <div> (status badge),
+		// nao como <button> com disabled. Por isso nao tem propriedade disabled.
+		expect(el.tagName).toBe("DIV");
+		expect(el).toHaveAttribute("aria-hidden", "true");
+		expect(el).toHaveTextContent(/Aguardando 12 jogadores/i);
 	});
 
 	test("estado ready: 'Revelar votos.' enabled + bg-coral", () => {
@@ -130,7 +133,7 @@ describe("RevealButton — interactions", () => {
 		expect(onReveal).not.toHaveBeenCalled();
 	});
 
-	test("aria-label contextual ao estado (a11y)", () => {
+	test("aria-label/aria-hidden contextual ao estado (a11y)", () => {
 		const { rerender } = render(
 			<RevealButton
 				phase="idle"
@@ -140,8 +143,10 @@ describe("RevealButton — interactions", () => {
 				onNewRound={() => {}}
 			/>,
 		);
-		expect(screen.getByTestId("reveal-button").getAttribute("aria-label")).toMatch(
-			/aguardando/i,
+		// awaiting (#71 / DESIGN-4): aria-hidden porque e status badge, nao CTA.
+		// voted-counter (#68) ja anuncia o status de votacao separadamente.
+		expect(screen.getByTestId("reveal-button").getAttribute("aria-hidden")).toBe(
+			"true",
 		);
 
 		rerender(
