@@ -61,6 +61,27 @@ const HEARTBEAT_TIMEOUT_MS = 60_000;
 const RECONCILE_INTERVAL_MS = 10_000;
 
 /**
+ * Janela (ms) em que o broadcast de disconnect é ADIADO após `onClose`
+ * para suprimir o flicker visual em reconexões rápidas. Se o cliente
+ * reconectar (handleHello → markConnected) dentro dessa janela, o
+ * broadcast agendado é CANCELADO e o peer nunca vê a transição
+ * `connected → disconnected → connected` que era a causa raiz do
+ * issue #59.
+ *
+ * Trade-off consciente: peer vê o peer offline ~1.5s mais tarde do que
+ * com broadcast imediato (PR #58). Em Planning Poker com 3-12 pessoas,
+ * tolerável — flicker visível era pior que 1.5s de "delay ghost". O
+ * `tickGracePeriod` (60s) continua removendo players de verdade.
+ *
+ * Sem isso: cada reconnect (~50ms-1s) dispara 2 room_state broadcasts
+ * que o peer renderiza com CSS transition 200ms → "pisca-pisca".
+ *
+ * @see docs/adr/0009-reconnect-uuid-strategy.md
+ * @see https://github.com/Heldinhow/pointly/issues/59
+ */
+const DISCONNECT_BROADCAST_DEBOUNCE_MS = 1_500;
+
+/**
  * Service entry — processa uma mensagem recebida do cliente.
  * Chama o handler apropriado e envia resposta.
  */
@@ -75,15 +96,34 @@ export class WSService {
 	 * Usado para cadência de reconciliação (10s por sala) — T01.
 	 */
 	private readonly lastBroadcastAt: Map<string, number> = new Map();
+	/**
+	 * Agendamentos pendentes de broadcast `disconnected` por playerId.
+	 * Chave = playerId. Valor = { code, handle }. Cancelado quando o
+	 * cliente reconecta dentro da janela (issue #59 — flicker fix).
+	 */
+	private readonly pendingDisconnectBroadcasts: Map<
+		string,
+		{ code: string; handle: ReturnType<typeof setTimeout> }
+	> = new Map();
+	/**
+	 * Timer helpers injetáveis (default: setTimeout/clearTimeout globais).
+	 * Override somente em testes com fake timers (não usado em prod).
+	 */
+	private readonly setTimeoutFn: typeof setTimeout;
+	private readonly clearTimeoutFn: typeof clearTimeout;
 
 	constructor(
 		hub: Hub,
 		logger: Logger = new Logger(),
 		rateLimiter: RateLimiter = new RateLimiter(5),
+		setTimeoutFn: typeof setTimeout = setTimeout,
+		clearTimeoutFn: typeof clearTimeout = clearTimeout,
 	) {
 		this.hub = hub;
 		this.logger = logger;
 		this.rateLimiter = rateLimiter;
+		this.setTimeoutFn = setTimeoutFn;
+		this.clearTimeoutFn = clearTimeoutFn;
 	}
 
 	// -----------------------------------------------------------------------
@@ -148,15 +188,28 @@ export class WSService {
 
 	/**
 	 * Conexão fechada. Se player estava em sala, marca disconnected
-	 * (grace period 60s antes de remover) e broadcasta room_state para os
-	 * peers IMEDIATAMENTE.
+	 * (grace period 60s antes de remover) e AGENDA broadcast de room_state
+	 * para daqui a `DISCONNECT_BROADCAST_DEBOUNCE_MS` ms.
 	 *
-	 * **Regressão prod (2026-07-10)**: antes, `markDisconnected` rodava mas
-	 * NENHUM broadcast acontecia — peers continuavam vendo o player como
-	 * `status='connected'` até o próximo vote/tick/tickGracePeriod (até 60s).
-	 * UX observada: "usuários ficam piscando (desconectam/reconectam)".
-	 * Sem este broadcastRoomState imediato, o status só atualizava quando
-	 * algum evento independente disparava reconcile.
+	 * **Issue #59 (flicker multi-cliente)**: broadcast IMEDIATO causava
+	 * flicker visível em reconexões rápidas — o peer renderizava
+	 * `connected → disconnected (200ms CSS transition) → connected` em
+	 * <1s. Agora o broadcast é ADIADO por 1.5s; se o cliente reconectar
+	 * antes (handleHello → reconnect → markConnected), o agendamento é
+	 * cancelado via `cancelScheduledDisconnectBroadcast`. Peer nunca vê
+	 * a transição espúria.
+	 *
+	 * **Regressão prod (2026-07-10)**: na versão anterior a PR #58,
+	 * `markDisconnected` rodava mas NENHUM broadcast acontecia — peers
+	 * continuavam vendo o player como `status='connected'` até o próximo
+	 * vote/tick/tickGracePeriod (até 60s). PR #58 introduziu broadcast
+	 * imediato. Esta versão adiciona debounce para evitar flicker.
+	 *
+	 * **Trade-off**: peer vê peer offline ~1.5s mais tarde em desconexão
+	 * permanente; flicker eliminado em reconexão rápida. Em Planning
+	 * Poker com 3-12 pessoas, aceitable.
+	 *
+	 * @see https://github.com/Heldinhow/pointly/issues/59
 	 */
 	onClose(ws: BunWS, code: number, reason: string): void {
 		const ctx = ws.data;
@@ -171,10 +224,47 @@ export class WSService {
 			);
 			const code_sala = ctx.code;
 			this.hub.markDisconnected(ctx.playerId);
-			// Broadcasta imediatamente para os peers da sala verem
-			// status='disconnected' AGORA, não no próximo tick.
-			if (code_sala) this.broadcastRoomState(code_sala);
+			// Em vez de broadcast imediato, agenda para daqui 1.5s.
+			// Se o cliente reconectar antes, `handleHelloEvent` cancela
+			// via `cancelScheduledDisconnectBroadcast`.
+			if (code_sala) this.scheduleDisconnectBroadcast(code_sala, ctx.playerId);
 		}
+	}
+
+	/**
+	 * Agenda broadcast room_state após `DISCONNECT_BROADCAST_DEBOUNCE_MS`
+	 * para que peers vejam o peer como `disconnected`. Cancelável por
+	 * `cancelScheduledDisconnectBroadcast` se houver reconnect dentro da janela.
+	 */
+	private scheduleDisconnectBroadcast(code: string, playerId: string): void {
+		// Se já existe agendamento para esse playerId, cancela antes.
+		this.cancelScheduledDisconnectBroadcast(playerId);
+		const handle = this.setTimeoutFn(() => {
+			this.pendingDisconnectBroadcasts.delete(playerId);
+			this.broadcastRoomState(code);
+		}, DISCONNECT_BROADCAST_DEBOUNCE_MS);
+		this.pendingDisconnectBroadcasts.set(playerId, { code, handle });
+	}
+
+	/**
+	 * Cancela um broadcast de disconnect pendente se existir.
+	 * Chamado em `handleHelloEvent` quando o cliente reconecta dentro
+	 * da janela de debounce (issue #59 — flicker fix).
+	 */
+	private cancelScheduledDisconnectBroadcast(playerId: string): void {
+		const pending = this.pendingDisconnectBroadcasts.get(playerId);
+		if (pending) {
+			this.clearTimeoutFn(pending.handle);
+			this.pendingDisconnectBroadcasts.delete(playerId);
+		}
+	}
+
+	/**
+	 * Test-only: retorna `true` se existe broadcast de disconnect agendado
+	 * para esse playerId. Não usado em produção.
+	 */
+	hasPendingDisconnectBroadcast(playerId: string): boolean {
+		return this.pendingDisconnectBroadcasts.has(playerId);
 	}
 
 	/**
@@ -309,6 +399,17 @@ export class WSService {
 			this.sendError(ws, outcome.code, outcome.message);
 			return;
 		}
+		// Issue #59 (flicker fix): se o cliente reconectou dentro da janela
+		// `DISCONNECT_BROADCAST_DEBOUNCE_MS`, cancela o broadcast pendente
+		// de disconnect para que peers NÃO vejam a transição espúria.
+		// Aplica-se a:
+		// - reconnect (mesmo uuid, mesmo code): reconnected=true
+		// - reconnect que disparou room migration: reconnected=false MAS
+		//   mesmo playerId está sendo reusado (handleHello retornou mesmo id).
+		// Regra geral: se outcome.playerId já tinha um disconnect agendado,
+		// cancelamos. Simples e cobre todos os casos de reconexão.
+		this.cancelScheduledDisconnectBroadcast(outcome.playerId);
+
 		// Room migration (reg 2026-07-06): se o handler fez evict de outra
 		// sala, broadcast player_left + room_state (ou sala_ended) na sala
 		// antiga — espelha o que `handleLeaveRoomEvent` faz.
