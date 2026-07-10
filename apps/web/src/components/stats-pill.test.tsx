@@ -47,7 +47,7 @@ describe("StatsPill — render", () => {
 		);
 		expect(skeleton).toBeInTheDocument();
 		expect(skeleton).toHaveAttribute("aria-hidden", "true");
-		expect(skeleton?.className).toMatch(/animate-pulse/);
+		expect(skeleton?.className).toMatch(/pulse_4s/);
 	});
 
 	test("consensus normal: 'MÉDIA 5.4 · MEDIANA 5 · INTERVALO 3–13'", () => {

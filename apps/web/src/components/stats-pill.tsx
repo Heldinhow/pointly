@@ -8,7 +8,7 @@
  *  - Aparece só pós-reveal
  *
  * **Lógica**:
- *  - Se `consensus === null`, renderiza vazio (ou hidden)
+ *  - Se `consensus === null`, renderiza skeleton bone-fade pre-reveal (h-11 animate-pulse 4s)
  *  - Se `consensus.unanimous === true`, exibe badge UNANIMOUS + range (sem mediana gold)
  *  - Caso contrário, exibe média + mediana gold + range
  *
@@ -45,9 +45,10 @@ export function formatMedian(median: number | null): string {
 }
 
 export function StatsPill({ consensus }: StatsPillProps) {
-	// Sem consensus (pre-reveal): renderiza skeleton bone-fade para reservar
+	// Sem consensus (pre-reveal): renderiza skeleton pre-reveal para reservar
 	// o slot do layout (evita CLS no reveal) + pista visual de que algo vai
 	// aparecer ali. aria-hidden porque nao ha info semantica ainda.
+	// Pulse 4s + opacity /40 conforme issue #67 / DESIGN-2.
 	if (!consensus) {
 		return (
 			<div
@@ -55,9 +56,9 @@ export function StatsPill({ consensus }: StatsPillProps) {
 				data-testid="stats-pill-skeleton"
 				data-od-id="stats-pill-skeleton"
 				className={cn(
-					"inline-block h-11 w-[220px] rounded-full",
-					"bg-surface/60 border border-ink/5",
-					"animate-pulse",
+					"inline-flex items-center min-w-[220px] h-11 rounded-full",
+					"bg-surface/40 border border-ink/5",
+					"animate-[pulse_4s_ease-in-out_infinite]",
 				)}
 			/>
 		);
