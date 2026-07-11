@@ -343,9 +343,12 @@ export function Arena() {
 
 				{/* Mesa: Elipse + 12 Assentos + RevealButton central.
 				   INCONS-021 / #91: wrapper responsivo com aspect-ratio +
-				   CSS scaling do canvas 960x500 para caber em mobile/tablet. */}
+				   CSS scaling do canvas 960x500 para caber em mobile/tablet.
+				   Issue #99: max-w responsivo por breakpoint (960 mobile,
+				   1100 lg, 1280 xl, 1400 2xl) — mesa nao fica minuscula
+				   em desktop/wide. */}
 				<div
-					className="relative w-full max-w-[960px] aspect-[96/50] mt-6 mx-auto overflow-hidden"
+					className="relative w-full max-w-[960px] lg:max-w-[1100px] xl:max-w-[1280px] 2xl:max-w-[1400px] aspect-[96/50] mt-6 mx-auto overflow-hidden"
 					data-testid="arena-table"
 					style={{ ["--mesa-scale" as string]: "min(1, calc(100% / 960px))" }}
 				>
