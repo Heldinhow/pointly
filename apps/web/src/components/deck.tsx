@@ -153,12 +153,46 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 							)}
 						>
 							{isCoffee ? (
-								<span
-									className="font-display text-[16px] text-ink"
+								// DESIGN-12 / #74: cafe em SVG (Phosphor-style) com
+								// vapor animado via animate-steam-1/2/3 (ja existem em
+								// index.css). Substitui emoji que dependia de font
+								// rendering cross-platform. Stem do copo com fillOpacity
+								// 0.15 para nao competir com o numeral das outras cartas.
+								<svg
+									width="24"
+									height="24"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="1.6"
+									strokeLinecap="round"
+									strokeLinejoin="round"
 									aria-hidden="true"
+									data-testid="deck-coffee-icon"
+									className="text-ink"
 								>
-									☕
-								</span>
+									<path
+										d="M7 3 C7 4.5 5 5 5 6.5 C5 8 7 8.5 7 10"
+										className="animate-steam-1"
+										opacity="0.45"
+									/>
+									<path
+										d="M12 2 C12 3.5 10 4 10 5.5 C10 7 12 7.5 12 9"
+										className="animate-steam-2"
+										opacity="0.45"
+									/>
+									<path
+										d="M17 3 C17 4.5 15 5 15 6.5 C15 8 17 8.5 17 10"
+										className="animate-steam-3"
+										opacity="0.45"
+									/>
+									<path
+										d="M4 11 H17 V17 C17 19 15 20 13 20 H8 C6 20 4 19 4 17 Z"
+										fill="currentColor"
+										fillOpacity="0.15"
+									/>
+									<path d="M17 13 C19 13 19 16 17 16" />
+								</svg>
 							) : (
 								<span
 									className="font-italic italic text-[20px] text-ink leading-none"
