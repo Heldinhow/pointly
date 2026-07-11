@@ -55,7 +55,7 @@ describe("Toast", () => {
 		expect(viewport?.getAttribute("aria-atomic")).toBe("true");
 	});
 
-	test("toast success usa kind success (surface bg + olive text)", () => {
+	test("toast success usa kind success (surface bg + ink text + olive border) — INCONS-004 / #90", () => {
 		render(
 			<ToastProvider>
 				<Harness text="Operação ok" kind="success" />
@@ -66,7 +66,10 @@ describe("Toast", () => {
 		});
 		const toast = screen.getByRole("status");
 		expect(toast.className).toContain("bg-surface");
-		expect(toast.className).toContain("text-olive");
+		// INCONS-004 / #90: text-ink (alto contraste ~14:1) substitui text-olive (4.37:1, abaixo AA).
+		// Border olive/40 preserva hint semantico de "success" sem comprometer legibilidade.
+		expect(toast.className).toContain("text-ink");
+		expect(toast.className).toContain("border-olive");
 	});
 
 	test("useToast fora do provider throw error", () => {
