@@ -153,3 +153,27 @@ describe("Join page — querystring parsing", () => {
 		expect(screen.queryByTestId("host-note")).not.toBeInTheDocument();
 	});
 });
+
+describe("Join page — submit feedback (issue #108)", () => {
+	// Issue #108: Toast "Bem-vindo, X." desaparecia antes do usuario
+	// conseguir ler porque a navegacao para /arena acontecia em 200ms
+	// (antes do toast ficar visivel). Fix: navegacao agora em 600ms
+	// para que o toast fique visivel por ~400ms antes da troca de tela.
+	test("submit com nick valido mostra toast 'Bem-vindo' imediatamente", async () => {
+		renderJoin();
+		const input = screen.getByTestId("nick-input");
+		const submit = screen.getByTestId("join-submit");
+
+		fireEvent.change(input, { target: { value: "Helder" } });
+		fireEvent.click(submit);
+
+		// Pequeno delay (< 600ms) — toast deve estar visivel,
+		// /join ainda renderizado (navegacao agendada mas nao executada)
+		await new Promise((resolve) => setTimeout(resolve, 50));
+		expect(screen.getByText(/bem-vindo, helder/i)).toBeInTheDocument();
+		// Headline do /join ainda presente — prova que navegacao nao rolou ainda
+		expect(
+			screen.getByRole("heading", { level: 1, name: /seu nome na sala/i }),
+		).toBeInTheDocument();
+	});
+});
