@@ -141,9 +141,12 @@ export function Join() {
 			// - join com code: navega para /arena?code=XXXX — server faz
 			//   `addPlayer` no `hello`.
 			const target = code ? `/arena?code=${code}` : "/arena";
+			// Issue #108: navegação após 600ms para que o toast "Bem-vindo, X."
+			// seja minimamente visível (~400ms antes do navigate).
+			// Antes era 200ms — toast sumia antes da troca de tela.
 			setTimeout(() => {
 				navigate(target);
-			}, 200);
+			}, 600);
 		},
 		[nick, code, toast, navigate, setSalaEnded],
 	);
