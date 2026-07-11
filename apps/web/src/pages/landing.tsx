@@ -403,9 +403,11 @@ function MockDeck() {
 }
 
 /** Componente utilitário para divisores de seção (Section Rules).
- *  Mostra apenas o título da seção sobre uma hairline. O numeral romano
+ *  Mostra apenas o título da seção sobre uma hairline sutil. O numeral romano
  *  decorativo ("I II III IV V") foi removido por parecer numeração de
- *  mockup em vez de conteúdo de produto. */
+ *  mockup em vez de conteúdo de produto. O título é renderizado em
+ *  sentence case (não uppercase mono) para soar como label de produto
+ *  em vez de chamada editorial. */
 function SectionRule({ title }: { title: string }) {
 	return (
 		<div
@@ -413,7 +415,9 @@ function SectionRule({ title }: { title: string }) {
 			aria-hidden="true"
 		>
 			<div className="sec-rule">
-				<span className="meta">{title}</span>
+				<span className="meta font-display font-medium text-[13px] tracking-tight text-ink-mute normal-case">
+					{title}
+				</span>
 			</div>
 		</div>
 	);
@@ -485,7 +489,8 @@ export function Landing() {
 			</div>
 			<div className="side-rail right hidden xl:flex" aria-hidden="true">
 				<span className="rail-text font-mono">
-					Pointly · PT-BR
+					{/* Empty — placeholder kept for layout consistency */}
+					&nbsp;
 				</span>
 			</div>
 
@@ -497,7 +502,7 @@ export function Landing() {
 							<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-coral opacity-75"></span>
 							<span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-coral"></span>
 						</span>
-						<span>Pointly · PT-BR</span>
+						<span>Pointly · beta aberto</span>
 					</div>
 					<div className="flex items-center gap-4">
 						<span className="hidden lg:inline">Planning Poker Efêmero</span>
@@ -626,10 +631,8 @@ export function Landing() {
 				</Button>
 			</nav>
 
-			{/* Section Rule — Hero */}
-			<SectionRule title="INTRODUÇÃO · VOTAÇÃO EFÊMERA" />
+			<SectionRule title="Como funciona" />
 
-			{/* HERO — Roman I */}
 			<section
 				id="como-funciona"
 				className="max-w-[1360px] mx-auto px-6 lg:px-16 pt-12 pb-16 relative"
@@ -758,8 +761,7 @@ export function Landing() {
 				</div>
 			</section>
 
-			{/* Section Rule — About */}
-			<SectionRule title="CONVERSAÇÃO · FOCO EM TIMES" />
+			<SectionRule title="Por que times ágeis usam" />
 
 			{/* ABOUT */}
 			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-20 relative">
@@ -789,8 +791,7 @@ export function Landing() {
 				</div>
 			</section>
 
-			{/* Section Rule — Capabilities */}
-			<SectionRule title="CAPABILIDADES · FUNCIONALIDADES" />
+			<SectionRule title="Recursos" />
 
 			{/* CAPABILITIES */}
 			<section
@@ -825,10 +826,9 @@ export function Landing() {
 				</div>
 			</section>
 
-			{/* Section Rule — Dark Showcase */}
-			<SectionRule title="DEMONSTRAÇÃO · FLUXO DE VOTO" />
+			<SectionRule title="Como funciona na prática" />
 
-			{/* DARK SHOWCASE CONTAINER (Section 6 Style) */}
+			{/* DARK SHOWCASE */}
 			<section
 				id="fluxo-de-voto"
 				className="max-w-[1360px] mx-auto px-6 lg:px-16 py-12"
@@ -874,7 +874,7 @@ export function Landing() {
 			</section>
 
 			{/* Section Rule — Call to Action */}
-			<SectionRule title="RECOMENDAÇÃO · COMEÇAR JÁ" />
+			<SectionRule title="Pronto para começar?" />
 
 			{/* CTA RIBBON */}
 			<section
