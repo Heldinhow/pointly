@@ -28,6 +28,19 @@ interface ActiveAnimation {
 
 const EMPTY_PLAYERS: any[] = [];
 
+/**
+ * Respeita Apple Reduced Motion API: se o usuário configurou
+ * `prefers-reduced-motion: reduce`, encurta a duração da animação do
+ * projétil para 0ms (impacto instantâneo). Sem isso, o projétil
+ * apareceria instantaneamente no destino mas o evento de impacto
+ * (setTimeout) demoraria 700ms — visual lag.
+ */
+function getEffectiveDuration(requestedMs: number): number {
+	if (typeof window === "undefined") return requestedMs;
+	const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+	return mq?.matches ? 0 : requestedMs;
+}
+
 export function ProjectileAnimator() {
 	const [activeAnimations, setActiveAnimations] = useState<ActiveAnimation[]>([]);
 	const players = useSalaStore((s) => s.sala?.players ?? EMPTY_PLAYERS);
@@ -60,7 +73,9 @@ export function ProjectileAnimator() {
 
 			const animationId = Math.random().toString(36).substring(2, 9);
 			const emoji = PROJECTILE_EMOJIS[event.projectileType] ?? "📝";
-			const duration = 700; // ms
+			// Apple Reduced Motion API: se usuário preferir reduzir motion,
+			// projétil aparece instantaneamente no destino (0ms).
+			const duration = getEffectiveDuration(700);
 
 			// Inicia a animação (voo de ida)
 			setActiveAnimations((prev) => [
