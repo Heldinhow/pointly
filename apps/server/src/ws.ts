@@ -287,7 +287,6 @@ export class WSService {
 		const results = this.hub.tickAllTimers(now);
 		for (const { code, tick, sala } of results) {
 			if (tick === "fired") {
-				const salaState = sala.toState();
 				const votesValues = Array.from(sala.votes.values());
 				const stats = computeConsensus(votesValues);
 				const unanimous = isUnanimous(votesValues);
@@ -301,13 +300,17 @@ export class WSService {
 						unanimous,
 					},
 				});
-				const event: ServerToClientEvent = salaState.critical
-					? {
-							type: "room_state",
-							payload: { sala: stripCritical(salaState), critical: true },
-						}
-					: { type: "room_state", payload: { sala: stripCritical(salaState) } };
-				this.broadcast(code, event);
+				const salaPayload = this.buildRoomStatePayload(code);
+				if (salaPayload) {
+					const salaState = sala.toState();
+					const event: ServerToClientEvent = salaState.critical
+						? {
+								type: "room_state",
+								payload: { sala: salaPayload, critical: true },
+							}
+						: { type: "room_state", payload: { sala: salaPayload } };
+					this.broadcast(code, event);
+				}
 				this.lastBroadcastAt.set(code, now);
 			} else if (tick === "ticking") {
 				const last = this.lastBroadcastAt.get(code) ?? 0;
@@ -328,14 +331,17 @@ export class WSService {
 			// Sala pode ter sumido; check
 			const sala = this.hub.getSala(code);
 			if (sala) {
-				const salaState = sala.toState();
-				const event: ServerToClientEvent = salaState.critical
-					? {
-							type: "room_state",
-							payload: { sala: stripCritical(salaState), critical: true },
-						}
-					: { type: "room_state", payload: { sala: stripCritical(salaState) } };
-				this.broadcast(code, event);
+				const salaPayload = this.buildRoomStatePayload(code);
+				if (salaPayload) {
+					const salaState = sala.toState();
+					const event: ServerToClientEvent = salaState.critical
+						? {
+								type: "room_state",
+								payload: { sala: salaPayload, critical: true },
+							}
+						: { type: "room_state", payload: { sala: salaPayload } };
+					this.broadcast(code, event);
+				}
 			} else {
 				// Sala vazia → fim
 				this.broadcast(code, {
@@ -629,11 +635,47 @@ export class WSService {
 		}
 	}
 
+	/**
+	 * Monta o payload de `room_state` aplicando o filtro de debounce:
+	 * jogadores dentro da janela de disconnect debounce (#59) ainda
+	 * aparecem como `status='connected'` para peers — o estado interno
+	 * do sala fica `disconnected` (para o `tickGracePeriod` rodar), mas
+	 * peers só devem ver a transição depois que o debounce expirar E o
+	 * cliente não tiver reconectado.
+	 *
+	 * Sem esse filtro: peers vêem flicker quando (a) reconciliation broadcast
+	 * (cada 10s durante voting) ou (b) auto-reveal broadcast disparam
+	 * entre o `onClose` (marca disconnected) e o `handleHello` (que
+	 * cancelaria o scheduled broadcast). Peers observam "disconnected"
+	 * mesmo que o cliente esteja prestes a reconectar.
+	 *
+	 * @see https://github.com/Heldinhow/pointly/issues/91 (regressão
+	 *   pós-fix #59, relatada em prod 2026-07-11: "users ficam se
+	 *   desconectando e conectando visualmente")
+	 */
+	private buildRoomStatePayload(code: string): SalaState | null {
+		const sala = this.hub.getSala(code);
+		if (!sala) return null;
+		const state = sala.toState();
+		let salaPayload = stripCritical(state);
+		if (this.pendingDisconnectBroadcasts.size > 0) {
+			const hiddenPlayerIds = new Set(this.pendingDisconnectBroadcasts.keys());
+			salaPayload = {
+				...salaPayload,
+				players: salaPayload.players.map((p) =>
+					hiddenPlayerIds.has(p.id) ? { ...p, status: "connected" } : p,
+				),
+			};
+		}
+		return salaPayload;
+	}
+
 	private broadcastRoomState(code: string, except?: BunWS): void {
 		const sala = this.hub.getSala(code);
 		if (!sala) return;
+		const salaPayload = this.buildRoomStatePayload(code);
+		if (!salaPayload) return;
 		const state = sala.toState();
-		const salaPayload = stripCritical(state);
 		const event: ServerToClientEvent = state.critical
 			? { type: "room_state", payload: { sala: salaPayload, critical: true } }
 			: { type: "room_state", payload: { sala: salaPayload } };
