@@ -56,6 +56,27 @@ describe("Seat — T31", () => {
 		expect(screen.queryByTestId("seat-state")).not.toBeInTheDocument();
 	});
 
+	// DESIGN-5 / #85: numeral pos-reveal 24px → 28px (consistencia editorial).
+	// Antes: text-[24px]. Depois: text-[28px] para alinhar com a presença
+	// editorial do numeral do deck (Playfair Italic 20px no button do deck
+	// + textura do reveal). O numeral mediano segue em 36px.
+	test("numeral pos-reveal usa 28px (DESIGN-5)", () => {
+		const p = makePlayer({ hasVoted: true, value: "5" });
+		render(<Seat player={p} isYou={false} faceUp={true} votedMedian={false} unanimous={false} />);
+		const num = screen.getByTestId("seat-face-num");
+		expect(num.className).toContain("text-[28px]");
+		expect(num.className).not.toContain("text-[24px]");
+		expect(num.className).toContain("text-ink");
+	});
+
+	test("numeral mediano (votedMedian) mantém 36px coral", () => {
+		const p = makePlayer({ hasVoted: true, value: "5" });
+		render(<Seat player={p} isYou={false} faceUp={true} votedMedian={true} unanimous={false} />);
+		const num = screen.getByTestId("seat-face-num");
+		expect(num.className).toContain("text-[36px]");
+		expect(num.className).toContain("text-coral");
+	});
+
 	test("avatar mostra inicial do nick", () => {
 		const p = makePlayer({ nick: "Maya" });
 		render(<Seat player={p} isYou={false} faceUp={false} votedMedian={false} unanimous={false} />);

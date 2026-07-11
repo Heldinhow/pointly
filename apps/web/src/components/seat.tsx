@@ -382,7 +382,7 @@ export function Seat({
 								</div>
 							)}
 							<div
-								className={`font-italic italic font-bold leading-none ${votedMedian && !unanimous ? "text-[36px] text-coral" : "text-[24px] text-ink"}`}
+								className={`font-italic italic font-bold leading-none ${votedMedian && !unanimous ? "text-[36px] text-coral" : "text-[28px] text-ink"}`}
 								aria-label={`Voto: ${player.value as Vote}`}
 								data-testid="seat-face-num"
 							>
