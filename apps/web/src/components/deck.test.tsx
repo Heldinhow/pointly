@@ -68,10 +68,12 @@ describe("Deck — T32", () => {
 		expect(onSelect).toHaveBeenCalledWith("13");
 	});
 
-	test("☕ renderiza como botão distinto (sem numeral italic)", () => {
+	test("☕ renderiza como botao distinto (sem numeral italic) — DESIGN-12 / #74", () => {
 		renderWithProviders(<Deck currentVote={null} disabled={false} onSelect={() => {}} />);
 		const card = screen.getByTestId("deck-card-☕");
 		expect(card).toBeInTheDocument();
-		expect(card.textContent).toContain("☕");
+		// DESIGN-12 / #74: emoji foi substituido por SVG com vapor animado.
+		// Verifica o data-testid do SVG em vez do emoji.
+		expect(card.querySelector('[data-testid="deck-coffee-icon"]')).toBeInTheDocument();
 	});
 });
