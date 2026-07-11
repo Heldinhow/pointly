@@ -87,8 +87,23 @@ const RECONNECT_BASE_MS = 1_000;
 const RECONNECT_MAX_MS = 30_000;
 /** Heartbeat ping a cada 30s. */
 const DEFAULT_HEARTBEAT_INTERVAL_MS = 30_000;
-/** Se pong não chega em 5s, fecha + reconnect. */
-const DEFAULT_HEARTBEAT_TIMEOUT_MS = 5_000;
+/**
+ * Se pong não chega em 15s, fecha + reconnect.
+ *
+ * Root cause do flicker visual (issue #59): timeout de 5s era agressivo
+ * demais — redes normais (Wi-Fi compartilhado, mobile, hotel) podem ter
+ * picos de latência de 6-10s. Cada "pong atrasado" causava reconnect →
+ * peers viam flash disconnected.
+ *
+ * 15s é tolerante para ~99% das latências reais (mobile 4G/5G, Wi-Fi
+ * instável) sem mascarar desconexões reais (>30s tipicamente significa
+ * rede caiu). Ping continua sendo enviado a cada 30s, então 15s de pong
+ * timeout = 50% da janela entre pings — generoso.
+ *
+ * Trade-off: usuário pode demorar até 15s para perceber que perdeu
+ * conexão. Aceitável dado que flicker era pior UX.
+ */
+const DEFAULT_HEARTBEAT_TIMEOUT_MS = 15_000;
 
 // ---------------------------------------------------------------------------
 // Helpers

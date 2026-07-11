@@ -605,6 +605,37 @@ describe("createWSClient — heartbeat", () => {
 		expect(scheduled.some((s) => s.ms === 5_000)).toBe(true);
 		expect(scheduled.some((s) => s.ms === 30_000)).toBe(false);
 	});
+
+	// Root cause do flicker (issue #59): DEFAULT_HEARTBEAT_TIMEOUT_MS
+	// precisa ser grande o suficiente para tolerar latência real de
+	// mobile/Wi-Fi (~6-10s) sem causar reconnect storm.
+	test("DEFAULT_HEARTBEAT_TIMEOUT_MS e 15s (anti-flicker, anti-reconnect-storm)", () => {
+		const scheduled: Array<{ ms: number; fn: () => void }> = [];
+		const fakeSetTimeout = ((fn: () => void, ms: number) => {
+			scheduled.push({ ms, fn });
+			return 99 as unknown as ReturnType<typeof setTimeout>;
+		}) as unknown as typeof setTimeout;
+		const fakeClearTimeout = (() => {}) as unknown as typeof clearTimeout;
+
+		const client = createWSClient({
+			url: "ws://test/ws",
+			onEvent: () => {},
+			setTimeoutFn: fakeSetTimeout,
+			clearTimeoutFn: fakeClearTimeout,
+			heartbeatIntervalMs: 1_000, // ping a cada 1s pra teste ser rapido
+		});
+		client.connect();
+		MockWebSocket.instances[0]!.simulateOpen();
+
+		// open() agendou heartbeat em 1s (intervalo custom)
+		const pingHandler = scheduled.find((s) => s.ms === 1_000);
+		expect(pingHandler).toBeDefined();
+		pingHandler!.fn();
+
+		// Apos ping, deve agendar pong timeout com 15s (DEFAULT_HEARTBEAT_TIMEOUT_MS)
+		const pongTimeout = scheduled.find((s) => s.ms === 15_000);
+		expect(pongTimeout).toBeDefined();
+	});
 });
 
 // ---------------------------------------------------------------------------
