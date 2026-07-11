@@ -92,7 +92,8 @@ export function SeatPrimitive({
 			{/* host star (mostarda) — canto superior direito */}
 			{isHost && (
 				<span
-					aria-label="Host"
+					aria-label="Host — gerencia a mesa"
+					title="Host — gerencia a mesa (pode revelar votos e iniciar nova rodada)"
 					className="absolute top-1.5 right-1.5 text-mustard text-sm leading-none"
 					style={{ fontFamily: "system-ui, sans-serif" }}
 				>
