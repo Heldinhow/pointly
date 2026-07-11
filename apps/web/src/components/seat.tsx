@@ -250,7 +250,31 @@ export function Seat({
 									: `Arremessar em ${player.nick}`
 							}
 						>
-							🎯
+							{/* DESIGN-3 / #72: crosshair SVG (Phosphor-style). Substitui emoji 🎯
+							    que dependia de font rendering cross-platform. SVG herdando
+							    currentColor preserva estados awaiting/ready (coral/ink). */}
+							<svg
+								width="14"
+								height="14"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								aria-hidden="true"
+								data-testid="seat-mira-icon"
+							>
+								<circle cx="12" cy="12" r="9" />
+								<line x1="12" y1="2" x2="12" y2="6" />
+								<line x1="12" y1="18" x2="12" y2="22" />
+								<line x1="2" y1="12" x2="6" y2="12" />
+								<line x1="18" y1="12" x2="22" y2="12" />
+								<line x1="4.93" y1="4.93" x2="7.76" y2="7.76" />
+								<line x1="16.24" y1="16.24" x2="19.07" y2="19.07" />
+								<line x1="4.93" y1="19.07" x2="7.76" y2="16.24" />
+								<line x1="16.24" y1="7.76" x2="19.07" y2="4.93" />
+							</svg>
 						</button>
 
 						{/* Menu de Projéteis horizontal elegante (Estilo slack reactions) */}
@@ -282,10 +306,25 @@ export function Seat({
 					</div>
 				)}
 
-				{/* Deflect Shield Indicator */}
+				{/* Deflect Shield Indicator — DESIGN-3 / #72: shield SVG
+				    (Phosphor-style) substitui emoji 🛡️ que dependia de font
+				    cross-platform. Herda currentColor (mustard). */}
 				{impact === "deflect" && (
 					<div className="absolute inset-0 bg-mustard/15 border-2 border-mustard rounded-card z-30 pointer-events-none flex items-center justify-center animate-pulse">
-						<span className="text-xl">🛡️</span>
+						<svg
+							width="24"
+							height="24"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2.5"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							aria-hidden="true"
+							data-testid="seat-deflect-icon"
+						>
+							<path d="M12 2 L4 5 L4 11 C4 16 7 20 12 22 C17 20 20 16 20 11 L20 5 Z" />
+						</svg>
 					</div>
 				)}
 
