@@ -40,7 +40,9 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 
 const KIND_STYLES: Record<ToastKind, string> = {
 	info: "bg-surface text-ink border-ink/10",
-	success: "bg-surface text-olive border-olive/30",
+	// INCONS-004 / #90: text-olive sobre bg-surface = 4.37:1 (abaixo AA).
+	// text-ink sobre bg-surface = ~14:1 (AAA). Border olive preserva hint semantico.
+	success: "bg-surface text-ink border-olive/40",
 	error: "bg-coral text-white border-coral",
 };
 
