@@ -22,14 +22,14 @@ describe("SeatPrimitive", () => {
 		expect(seat?.className).not.toContain("border-coral");
 	});
 
-	test("isHost=true renderiza ★ mostarda com aria-label='Host'", () => {
+	test("isHost=true renderiza ★ mostarda com aria-label='Host — gerencia a mesa'", () => {
 		render(<SeatPrimitive isHost>Host</SeatPrimitive>);
-		expect(screen.getByLabelText("Host")).toBeInTheDocument();
+		expect(screen.getByLabelText("Host — gerencia a mesa")).toBeInTheDocument();
 	});
 
 	test("isHost=false NÃO renderiza star", () => {
 		const { queryByLabelText } = render(<SeatPrimitive>Regular</SeatPrimitive>);
-		expect(queryByLabelText("Host")).toBeNull();
+		expect(queryByLabelText("Host — gerencia a mesa")).toBeNull();
 	});
 
 	test("state=disconnected aplica opacity-40", () => {
