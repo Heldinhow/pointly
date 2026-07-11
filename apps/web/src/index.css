@@ -36,6 +36,17 @@
 	--font-display-serif: "Instrument Serif", "Playfair Display", Georgia, serif;
 }
 
+/* DESIGN-13 / #75: body padding-inline 36px para que o conteudo nao
+   fique embaixo dos side-rails fixos (largura 36px) visiveis a partir
+   de 768px (ver .side-rail @ max-width:767px → display:none). Aplica
+   de 768px pra cima; abaixo disso os rails nao renderizam e o padding
+   default (0) nao despercica espaco horizontal. */
+@media (min-width: 768px) {
+	body {
+		padding-inline: 36px;
+	}
+}
+
 /* ---------------------------------------------------------------
  * Base — paper bg, ink default, Inter body
  * --------------------------------------------------------------- */
