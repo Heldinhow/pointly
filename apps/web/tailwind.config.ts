@@ -36,6 +36,7 @@ const config: Config = {
 				// Coral (ÚNICO acento quente)
 				coral: "var(--accent)",
 				"coral-soft": "var(--coral-soft)",
+				"coral-deep": "var(--coral-deep)",
 				// Joias (NUNCA CTA)
 				mustard: "var(--mustard)",
 				olive: "var(--olive)",

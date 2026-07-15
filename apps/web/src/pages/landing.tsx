@@ -144,7 +144,7 @@ const MockTable = memo(function MockTable() {
 
 								{/* Badge "Você" */}
 								{player.isYou && (
-									<div className="font-mono text-[7px] tracking-[0.05em] text-coral uppercase px-1 border border-coral rounded mb-0.5">
+									<div className="font-mono text-[7px] tracking-[0.05em] text-coral-deep uppercase px-1 border border-coral rounded mb-0.5">
 										Você
 									</div>
 								)}
@@ -187,10 +187,10 @@ const MockDeck = memo(function MockDeck() {
 					return (
 						<div
 							key={val}
-							className={`w-12 h-16 rounded-xl border flex flex-col items-center justify-center transition-all ${
+							className={`w-12 h-16 rounded-xl border flex flex-col items-center justify-center ${
 								isSelected
 									? "bg-coral text-white border-coral shadow-coral scale-105"
-									: "bg-surface/10 border-surface/10 text-surface/60 hover:border-surface/20"
+									: "bg-surface/10 border-surface/10 text-surface/60"
 							}`}
 						>
 							<span className={`font-italic italic text-lg ${isSelected ? "text-white" : "text-surface/80"}`}>
@@ -334,7 +334,7 @@ export function Landing() {
 			>
 				<div className="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-12 lg:gap-16 items-center">
 					<div>
-						<div className="font-display font-semibold text-[11px] tracking-[0.22em] uppercase text-coral mb-4 flex items-center gap-2.5">
+						<div className="font-display font-semibold text-[11px] tracking-[0.22em] uppercase text-coral-deep mb-4 flex items-center gap-2.5">
 							<span
 								aria-hidden="true"
 								className="inline-block w-[18px] h-px bg-coral"
@@ -548,17 +548,14 @@ export function Landing() {
 				</div>
 			</section>
 
-			{/* Section Rule II - About */}
-			<SectionRule roman="II." title="CONVERSAÇÃO · FOCO EM TIMES" page="PAGE 002" />
-
-			{/* ABOUT — manifesto editorial */}
+			{/* ABOUT — manifesto editorial (sem SectionRule reflex — eyebrow inline) */}
 			<section
 				className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-28 relative"
 				id="para-times"
 			>
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
 					<aside className="lg:col-span-3 flex flex-col gap-3 lg:pt-3">
-						<div className="font-mono text-[10px] tracking-[0.18em] uppercase text-coral">
+						<div className="font-mono text-[10px] tracking-[0.18em] uppercase text-coral-deep">
 							Manifesto
 						</div>
 						<div className="font-italic italic text-ink-mute text-[15px] leading-[1.65] max-w-[28ch]">
@@ -594,11 +591,14 @@ export function Landing() {
 				</div>
 			</section>
 
-			{/* Section Rule III - Capabilities */}
-			<SectionRule roman="III." title="CAPABILIDADES · FUNCIONALIDADES" page="PAGE 003" />
-
 			{/* CAPABILITIES — lista numerada em manual-style */}
-			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-14 sm:py-24 relative">
+			<section
+				id="capacidades"
+				className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-14 sm:py-24 relative scroll-mt-24"
+			>
+				<div className="font-mono text-[10px] tracking-[0.18em] uppercase text-coral-deep mb-8">
+					Funcionalidades
+				</div>
 				<ol className="flex flex-col">
 					{CAPABILITIES.map((cap, i) => (
 						<li
@@ -620,19 +620,26 @@ export function Landing() {
 								</p>
 							</div>
 							<div className="hidden sm:flex justify-end items-baseline">
-								<span className="font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint opacity-0 group-hover/cap:opacity-100 transition-opacity duration-300">
+								<a
+									href="#cta-final"
+									onClick={(e) => {
+										e.preventDefault();
+										document
+											.getElementById("cta-final")
+											?.scrollIntoView({ behavior: "smooth" });
+									}}
+									className="font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint opacity-0 group-hover/cap:opacity-100 hover:text-coral transition-all duration-300"
+									data-testid={`cap-link-${cap.n}`}
+								>
 									Ver →
-								</span>
+								</a>
 							</div>
 						</li>
 					))}
 				</ol>
 			</section>
 
-			{/* Section Rule IV - Dark Showcase */}
-			<SectionRule roman="IV." title="DEMONSTRAÇÃO · FLUXO DE VOTO" page="PAGE 004" />
-
-			{/* DARK SHOWCASE CONTAINER (Section 6 Style) */}
+			{/* DARK SHOWCASE CONTAINER (sem SectionRule reflex — a container é a transição) */}
 			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-12 sm:py-16">
 				<div className="bg-ink text-surface rounded-3xl p-8 lg:p-16 grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-12 items-center relative overflow-hidden">
 					<div
@@ -655,7 +662,7 @@ export function Landing() {
 						<line x1="200" y1="20" x2="200" y2="380" stroke="#f7f1de" strokeWidth="0.4" strokeDasharray="1 4" />
 					</svg>
 					<div className="relative z-10">
-						<div className="font-mono text-[10px] tracking-[0.2em] text-coral uppercase mb-4">
+						<div className="font-mono text-[10px] tracking-[0.2em] text-coral-deep uppercase mb-4">
 							ESTADO DE VOTAÇÃO
 						</div>
 						<h2 className="font-display font-extrabold text-[clamp(28px,3.5vw,52px)] leading-[1.04] tracking-[-0.035em] text-balance max-w-[18ch]">
@@ -673,19 +680,19 @@ export function Landing() {
 						</p>
 						<ul className="mt-9 space-y-3.5 font-mono text-[11.5px] tracking-[0.06em] uppercase text-surface/80">
 							<li className="flex items-baseline gap-3">
-								<span className="font-italic italic text-coral text-[13px] normal-case font-medium">
+								<span className="font-italic italic text-coral-deep text-[13px] normal-case font-medium">
 									A
 								</span>
 								Deck Fibonacci · 9 cartas
 							</li>
 							<li className="flex items-baseline gap-3">
-								<span className="font-italic italic text-coral text-[13px] normal-case font-medium">
+								<span className="font-italic italic text-coral-deep text-[13px] normal-case font-medium">
 									B
 								</span>
 								Viradas pra baixo até alguém revelar
 							</li>
 							<li className="flex items-baseline gap-3">
-								<span className="font-italic italic text-coral text-[13px] normal-case font-medium">
+								<span className="font-italic italic text-coral-deep text-[13px] normal-case font-medium">
 									C
 								</span>
 								Destaque dourado nos votos medianos
@@ -702,10 +709,12 @@ export function Landing() {
 			{/* Section Rule V - Call to Action */}
 			<SectionRule roman="V." title="RECOMENDAÇÃO · COMEÇAR JÁ" page="PAGE 005" />
 
-			{/* CTA RIBBON */}
-			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-14 sm:py-24 relative">
-				<div className="bg-ink text-surface rounded-3xl px-6 sm:px-10 lg:px-16 py-14 sm:py-20 text-center relative overflow-hidden">
-					{/* Concentric rings decorativas */}
+			{/* CTA RIBBON — full-bleed, edge-to-edge ink */}
+			<section
+				id="cta-final"
+				className="bg-ink text-surface px-4 sm:px-6 lg:px-16 py-20 sm:py-28 relative overflow-hidden scroll-mt-20"
+			>
+					{/* Concentric rings decorativas (full-bleed) */}
 					<svg
 						className="absolute inset-0 w-full h-full opacity-[0.07] pointer-events-none"
 						viewBox="0 0 400 200"
@@ -726,8 +735,8 @@ export function Landing() {
 								"radial-gradient(at 50% 100%, rgba(237,111,92,0.18) 0px, transparent 70%)",
 						}}
 					/>
-					<div className="relative z-10">
-						<div className="font-mono text-[10px] tracking-[0.18em] uppercase text-coral mb-5">
+					<div className="max-w-[1360px] mx-auto text-center relative z-10">
+						<div className="font-mono text-[10px] tracking-[0.18em] uppercase text-coral-deep mb-5">
 							Última chamada
 						</div>
 						<h2 className="font-display font-extrabold text-[clamp(36px,5vw,72px)] leading-[1.02] tracking-[-0.04em] max-w-[16ch] mx-auto text-balance">
@@ -751,7 +760,7 @@ export function Landing() {
 								type="button"
 								onClick={() =>
 									document
-										.getElementById("como-funciona")
+										.getElementById("capacidades")
 										?.scrollIntoView({ behavior: "smooth" })
 								}
 								data-testid="cta-ribbon-how"
@@ -764,7 +773,6 @@ export function Landing() {
 							Sem cadastro · sem e-mail · sem paywall · open source
 						</div>
 					</div>
-				</div>
 			</section>
 
 			{/* Footer — mega word */}
@@ -789,7 +797,7 @@ export function Landing() {
 							Página inicial
 						</Link>
 						<a
-							href="#como-funciona"
+							href="#capacidades"
 							className="font-mono text-[11px] text-ink-mute hover:text-coral transition-colors"
 						>
 							Como funciona

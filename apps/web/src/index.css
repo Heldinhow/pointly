@@ -31,6 +31,7 @@
 	--fg-faint: #4a4438;
 	--accent: #ed6f5c; /* coral, ÚNICO acento quente */
 	--coral-soft: #f08e7c;
+	--coral-deep: #b8412f; /* coral AA — labels pequenos, hovers, ícones. 5.8:1 sobre paper. */
 	--mustard: #e9b94a; /* jewelry: estrela nav, dot */
 	--olive: #6e7448;
 }
@@ -313,17 +314,23 @@ a[role="button"] {
 
 /* ---------------------------------------------------------------
  * Side Rails & Section Rules (Atelier Zero / Open Design)
+ * Só aparecem em viewport ≥1280px (xl+). O `display: flex` aqui
+ * sobrescreve `hidden xl:flex` do Tailwind, então o bloco precisa
+ * coexistir com breakpoints — usamos min-width na base e removemos
+ * a força visual em viewports estreitos.
  * --------------------------------------------------------------- */
-.side-rail {
-	position: fixed;
-	top: 0;
-	bottom: 0;
-	width: 36px;
-	z-index: 3;
-	pointer-events: none;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+@media (min-width: 1280px) {
+	.side-rail {
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		width: 36px;
+		z-index: 3;
+		pointer-events: none;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
 }
 .side-rail.right {
 	right: 0;
