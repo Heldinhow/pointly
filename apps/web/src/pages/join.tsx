@@ -200,10 +200,10 @@ export function Join() {
 			</div>
 
 			{/* Stage */}
-			<main className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-16 py-10">
+			<main className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-16 py-8 sm:py-12">
 				<Card
 					padding="lg"
-					className="w-full max-w-[520px] flex flex-col gap-5"
+					className="w-full max-w-[520px] flex flex-col gap-6"
 					data-od-id="nick-card"
 					data-testid="join-card"
 				>
