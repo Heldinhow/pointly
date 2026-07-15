@@ -369,11 +369,20 @@ export function Landing() {
 								ref={heroCtaRef}
 								id="hero-create-room-cta"
 							>
-								Criar sala
+								Criar sala agora
 								<span aria-hidden="true">↗</span>
 							</Button>
 
-							<div className="hidden sm:block h-10 w-px bg-ink/10" />
+							<div
+								className="hidden sm:flex items-center gap-3"
+								aria-hidden="true"
+							>
+								<div className="h-px w-6 bg-ink/15" />
+								<span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-faint">
+									ou
+								</span>
+								<div className="h-px w-6 bg-ink/15" />
+							</div>
 
 							<form
 								onSubmit={handleJoinWithCode}
@@ -578,7 +587,13 @@ export function Landing() {
 			{/* DARK SHOWCASE CONTAINER (Section 6 Style) */}
 			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-12 sm:py-16">
 				<div className="bg-ink text-surface rounded-3xl p-8 lg:p-16 grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-12 items-center relative overflow-hidden">
-					<div className="absolute inset-0 bg-radial-gradient from-coral/10 to-transparent pointer-events-none"></div>
+					<div
+						className="absolute inset-0 pointer-events-none"
+						style={{
+							background:
+								"radial-gradient(at 20% 0%, rgba(237,111,92,0.16) 0px, transparent 55%), radial-gradient(at 100% 100%, rgba(233,185,74,0.06) 0px, transparent 50%)",
+						}}
+					/>
 					<div className="relative z-10">
 						<div className="font-mono text-[10px] tracking-[0.2em] text-coral uppercase mb-4">
 							ESTADO DE VOTAÇÃO
@@ -621,22 +636,35 @@ export function Landing() {
 			{/* CTA RIBBON */}
 			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-14 sm:py-20 relative">
 				<div className="bg-paper-dark rounded-3xl px-6 sm:px-10 lg:px-16 py-14 sm:py-20 text-center relative overflow-hidden border border-ink/5 shadow-bone">
-					<h2 className="font-display font-extrabold text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.035em] max-w-[24ch] mx-auto text-balance">
+					<h2 className="font-display font-extrabold text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.035em] max-w-[24ch] mx-auto text-pretty">
 						Pronto pra começar<span className="text-coral">?</span>
 					</h2>
 					<p className="font-sans text-[15px] lg:text-[16px] leading-[1.7] text-ink-mute max-w-[50ch] mx-auto mt-4">
-						Crie uma sala em menos de 5 segundos. Convide seu time, votem e revelem. Sem cadastros, sem emails, sem dores de cabeça.
+						Menos de 5 segundos pra abrir uma sala. Convide pelo chat,
+						votem, e a mesa revela sozinha quando alguém decide. Sem
+						cadastros — só um apelido e o código da sala.
 					</p>
-					<div className="flex items-center justify-center gap-3.5 mt-8">
+					<div className="flex items-center justify-center gap-3.5 mt-9">
 						<Button
 							variant="coral"
 							size="lg"
 							onClick={handleCreateRoom}
 							data-testid="cta-ribbon-create"
-							className="shadow-coral"
 						>
-							Criar sala
+							Criar sala agora
 							<span aria-hidden="true">↗</span>
+						</Button>
+						<Button
+							variant="default"
+							size="lg"
+							onClick={() =>
+								document
+									.getElementById("como-funciona")
+									?.scrollIntoView({ behavior: "smooth" })
+							}
+							data-testid="cta-ribbon-how"
+						>
+							Ver como funciona
 						</Button>
 					</div>
 				</div>
@@ -681,10 +709,12 @@ export function Landing() {
 					</div>
 					<div className="flex flex-col gap-3">
 						<h4 className="font-display font-bold text-[12px] tracking-wider uppercase text-ink">
-							Código Aberto
+							Código aberto
 						</h4>
 						<p className="font-sans text-[13px] text-ink-mute leading-[1.6]">
-							O Pointly é um projeto open-source projetado para rodar inteiramente no lado do cliente na versão beta, focado em simplicidade absoluta.
+							Funciona no navegador, sem servidor próprio na versão beta.
+							Código aberto, forkável, sem paywalls. Quando algo travar,
+							você pode consertar — não precisa esperar.
 						</p>
 					</div>
 				</div>
