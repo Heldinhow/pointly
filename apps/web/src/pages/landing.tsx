@@ -244,10 +244,16 @@ export function Landing() {
 		navigate("/join?host=1");
 	}, [navigate]);
 
+	/** Sanitização agressiva: paste pode trazer espaços, NBSP, chars Unicode.
+	 *  Defesa para evitar `code=  ABC ` chegando no URL. */
 	const handleJoinWithCode = useCallback(
 		(e: React.FormEvent): void => {
 			e.preventDefault();
-			const cleanCode = joinCode.trim().toUpperCase();
+			const cleanCode = joinCode
+				.normalize("NFKD")
+				.replace(/[^A-Za-z0-9]/g, "")
+				.slice(0, 4)
+				.toUpperCase();
 			if (cleanCode.length === 4) {
 				navigate(`/join?code=${cleanCode}`);
 			}
@@ -376,6 +382,10 @@ export function Landing() {
 							>
 								<input
 									type="text"
+									inputMode="text"
+									autoCapitalize="characters"
+									autoCorrect="off"
+									spellCheck={false}
 									maxLength={4}
 									placeholder="XXXX"
 									value={joinCode}
