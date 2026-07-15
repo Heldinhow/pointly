@@ -175,7 +175,7 @@ export function Join() {
 				<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 flex items-center justify-between">
 					<Link
 						to="/"
-						className="font-display font-extrabold text-[18px] tracking-[-0.02em] flex items-baseline gap-2 hover:text-coral transition-colors"
+						className="font-display font-extrabold text-[18px] tracking-[-0.02em] flex items-baseline gap-2 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
 						aria-label="Pointly — página inicial"
 					>
 						<span className="font-italic italic text-coral text-[22px] leading-none">
