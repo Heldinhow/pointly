@@ -524,18 +524,26 @@ export function Landing() {
 			{/* CAPABILITIES */}
 			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-14 sm:py-20 relative">
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-					{CAPABILITIES.map((cap) => (
+					{CAPABILITIES.map((cap, i) => (
 						<Card
 							key={cap.n}
 							padding="md"
-							className="flex flex-col gap-3 bg-surface border border-ink/10 rounded-2xl shadow-bone hover:border-coral transition-colors duration-300"
+							className="group/cap relative flex flex-col gap-3 bg-surface border border-ink/10 rounded-2xl shadow-bone hover:border-coral hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_rgba(237,111,92,0.45)] transition-all duration-300 motion-safe:hover:[transform:translateY(-2px)_rotate(-0.4deg)]"
 							data-testid={`cap-card-${cap.n}`}
 						>
+							<span
+								aria-hidden="true"
+								className="absolute top-3 right-3 font-italic italic text-coral/0 group-hover/cap:text-coral transition-all duration-500 group-hover/cap:translate-x-0 -translate-x-1 text-[14px] leading-none"
+							>
+								✦
+							</span>
 							<div className="flex justify-between items-baseline font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint">
-								<span className="font-italic italic text-coral text-[18px] tracking-normal normal-case font-medium">
+								<span className="font-italic italic text-coral text-[18px] tracking-normal normal-case font-medium transition-transform duration-300 group-hover/cap:scale-110 origin-left">
 									{cap.n}
 								</span>
-								<span>Feature</span>
+								<span className="relative after:content-[''] after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-px after:bg-coral after:scale-x-0 group-hover/cap:after:scale-x-100 after:origin-left after:transition-transform after:duration-300">
+									Feature {String(i + 1).padStart(2, "0")}
+								</span>
 							</div>
 							<h3 className="font-display font-extrabold text-[19px] tracking-[-0.02em]">
 								{cap.title}
