@@ -84,9 +84,18 @@ export function StatsPill({ consensus }: StatsPillProps) {
 			{showUnanimous ? (
 				<span
 					data-testid="stats-unanimous-badge"
-					className="font-mono text-[10px] tracking-[0.06em] uppercase text-mustard font-semibold"
+					className="font-mono text-[10px] tracking-[0.06em] uppercase text-mustard font-semibold inline-flex items-center gap-1"
 				>
-					★ Unanimous
+					<span aria-hidden="true" className="inline-block">
+						★
+					</span>
+					Unanimous
+					<span
+						aria-hidden="true"
+						className="inline-block text-mustard/70 text-[9px] -ml-0.5"
+					>
+						✦
+					</span>
 				</span>
 			) : (
 				<span data-testid="stats-median">
