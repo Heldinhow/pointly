@@ -32,12 +32,10 @@ export function Full() {
 	}
 
 	function handleBack(): void {
-		// Preferimos history.back() (preserva contexto); fallback: /arena.
-		if (window.history.length > 1) {
-			window.history.back();
-		} else {
-			navigate("/");
-		}
+		// Sai da rota de erro para um destino previsivel: pagina inicial.
+		// history.back() foi removido por ser imprevisivel em deep links
+		// (pode voltar a uma sala ja encerrada).
+		navigate("/");
 	}
 
 	return (
@@ -110,7 +108,8 @@ export function Full() {
 					<p className="font-sans text-[14.5px] leading-[1.6] text-ink-mute max-w-[42ch]">
 						Esta sala já tem {MAX_PLAYERS} jogadores. O Pointly limita a
 						mesa a {MAX_PLAYERS} assentos para manter a votação síncrona e
-						o reveal legível. Crie outra sala ou tente um código diferente.
+						o reveal legível. Crie outra sala ou volte para a página inicial
+						e tente um código diferente.
 					</p>
 
 					{/* Ações */}
