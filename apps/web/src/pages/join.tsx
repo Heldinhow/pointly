@@ -163,7 +163,7 @@ export function Join() {
 		>
 			{/* Header topbar */}
 			<header className="border-b border-ink/10 py-4 flex-shrink-0 bg-bg/95 backdrop-blur-sm sticky top-0 z-10">
-				<div className="max-w-[1360px] mx-auto px-16 flex items-center justify-between">
+				<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 flex items-center justify-between">
 					<Link
 						to="/"
 						className="font-display font-extrabold text-[18px] tracking-[-0.02em] flex items-baseline gap-2 hover:text-coral transition-colors"
@@ -181,7 +181,7 @@ export function Join() {
 			</header>
 
 			{/* Header strip */}
-			<div className="max-w-[1360px] mx-auto px-16 w-full py-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-ink-faint">
+			<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 w-full py-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-ink-faint">
 				<span>
 					Sala:{" "}
 					<span className="text-ink font-medium" data-testid="join-code-label">
@@ -191,10 +191,10 @@ export function Join() {
 			</div>
 
 			{/* Stage */}
-			<main className="flex-1 flex items-center justify-center px-16 py-10">
+			<main className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-16 py-10">
 				<Card
 					padding="lg"
-					className="w-[520px] flex flex-col gap-5"
+					className="w-full max-w-[520px] flex flex-col gap-5"
 					data-od-id="nick-card"
 					data-testid="join-card"
 				>
@@ -277,6 +277,7 @@ export function Join() {
 								variant="coral"
 								size="md"
 								disabled={!validation.ok || isConnecting}
+								aria-busy={isConnecting}
 								data-testid="join-submit"
 							>
 								{isConnecting ? "Conectando…" : "Entrar"}
