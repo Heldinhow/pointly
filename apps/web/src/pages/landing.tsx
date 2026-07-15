@@ -369,7 +369,7 @@ export function Landing() {
 								<input
 									type="text"
 									maxLength={4}
-									placeholder="Código"
+									placeholder="XXXX"
 									value={joinCode}
 									onChange={(e) =>
 										setJoinCode(
@@ -379,7 +379,8 @@ export function Landing() {
 										)
 									}
 									className="font-mono text-[14px] uppercase py-2.5 px-3 w-32 border border-ink/10 rounded-lg bg-surface text-ink placeholder:text-ink-faint focus:border-coral focus:outline-none transition-colors"
-									aria-label="Código da sala de 4 caracteres"
+									aria-label="Código da sala de 4 caracteres alfanuméricos"
+									aria-describedby="landing-code-hint"
 									data-testid="landing-code-input"
 								/>
 								<Button
@@ -393,6 +394,12 @@ export function Landing() {
 									<span aria-hidden="true">↗</span>
 								</Button>
 							</form>
+							<span
+								id="landing-code-hint"
+								className="font-mono text-[10px] text-ink-faint uppercase tracking-wider block w-full sm:w-auto mt-1"
+							>
+								código de 4 letras
+							</span>
 						</div>
 
 						{/* Stat rings */}
@@ -417,13 +424,13 @@ export function Landing() {
 					<div className="w-full relative min-h-[420px] sm:min-h-[480px] bg-paper-warm border border-ink/5 rounded-3xl flex items-center justify-center overflow-hidden shadow-bone" aria-hidden="true">
 						<div className="relative w-80 h-80 flex items-center justify-center">
 							{/* Card 1: '3' */}
-							<div className="absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[-16deg] -translate-x-28 translate-y-3 transition-all duration-300 hover:rotate-[-6deg] hover:-translate-y-6 hover:-translate-x-[8.5rem] hover:scale-105 hover:z-20 z-0">
+							<div className="absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[-16deg] -translate-x-28 translate-y-3 z-0">
 								<span className="font-italic italic text-[56px] text-ink select-none">
 									3
 								</span>
 							</div>
 							{/* Card 2: '☕' */}
-							<div className="absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[16deg] translate-x-28 translate-y-5 transition-all duration-300 hover:rotate-[6deg] hover:-translate-y-6 hover:translate-x-[8.5rem] hover:scale-105 hover:z-20 z-0">
+							<div className="absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[16deg] translate-x-28 translate-y-5 z-0">
 								<div className="flex flex-col items-center justify-center select-none pt-4">
 									<svg
 										viewBox="0 0 100 100"
@@ -463,7 +470,7 @@ export function Landing() {
 								</div>
 							</div>
 							{/* Card 3: '5' (Destaque Central) */}
-							<div className="absolute w-44 h-60 bg-surface border-2 border-coral rounded-2xl shadow-xl flex flex-col items-center justify-center transition-all duration-300 z-10 hover:-translate-y-6 hover:scale-105 hover:z-20">
+							<div className="absolute w-44 h-60 bg-surface border-2 border-coral rounded-2xl shadow-xl flex flex-col items-center justify-center z-10">
 								<span className="font-italic italic text-[68px] leading-none text-coral select-none">
 									5
 								</span>
