@@ -277,13 +277,14 @@ export function Join() {
 							2–20 caracteres · como você quer ser chamado nesta rodada
 						</div>
 
-						<div className="flex items-center gap-3 mt-1.5">
+						<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-1.5">
 							<Button
 								type="submit"
 								variant="coral"
 								size="md"
 								disabled={!validation.ok || isConnecting}
 								aria-busy={isConnecting}
+								className="w-full sm:w-auto"
 								data-testid="join-submit"
 							>
 								{isConnecting ? "Conectando…" : "Entrar"}
@@ -294,6 +295,7 @@ export function Join() {
 								variant="default"
 								size="md"
 								onClick={() => navigate("/")}
+								className="w-full sm:w-auto"
 								data-testid="join-back"
 							>
 								Voltar
