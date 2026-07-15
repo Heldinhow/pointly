@@ -250,13 +250,13 @@ export function Join() {
 							id="nick-input"
 							type="text"
 							maxLength={NICK_MAX}
-							placeholder="ex. Helder"
+							placeholder="ex. Luna"
 							value={nick}
 							onChange={(e) => handleNickChange(e.target.value)}
 							autoComplete="off"
 							aria-invalid={!validation.ok && validation.error !== ""}
 							aria-describedby={
-								!validation.ok && validation.error ? "nick-error" : undefined
+								!validation.ok && validation.error ? "nick-error" : "nick-hint"
 							}
 							disabled={isConnecting}
 							className="font-sans text-[16px] py-3.5 px-4 border border-ink/10 rounded-lg bg-paper text-ink placeholder:text-ink-faint focus:border-coral focus:outline-none transition-colors disabled:opacity-60"
@@ -269,6 +269,12 @@ export function Join() {
 							data-testid="nick-error"
 						>
 							{!validation.ok ? validation.error : ""}
+						</div>
+						<div
+							id="nick-hint"
+							className="font-mono text-[10px] text-ink-faint tracking-[0.02em]"
+						>
+							2–20 caracteres · como você quer ser chamado nesta rodada
 						</div>
 
 						<div className="flex items-center gap-3 mt-1.5">
