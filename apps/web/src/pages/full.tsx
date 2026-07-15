@@ -70,10 +70,8 @@ export function Full() {
 
 			{/* Header strip */}
 			<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 w-full py-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-ink-faint">
-				<span>Entrada negada</span>
-				<span>
-					Código <span className="text-ink font-medium">—</span>
-				</span>
+				<span>Sala lotada</span>
+				<span>Esta sala atingiu o limite</span>
 			</div>
 
 			{/* Stage */}
@@ -106,10 +104,10 @@ export function Full() {
 					</div>
 
 					<p className="font-sans text-[14.5px] leading-[1.6] text-ink-mute max-w-[42ch]">
-						Esta sala já tem {MAX_PLAYERS} jogadores. O Pointly limita a
-						mesa a {MAX_PLAYERS} assentos para manter a votação síncrona e
-						o reveal legível. Crie outra sala ou volte para a página inicial
-						e tente um código diferente.
+						Esta sala já tem {MAX_PLAYERS} jogadores. Limitamos a mesa a
+						{MAX_PLAYERS} assentos para manter a votação síncrona e a
+						leitura do resultado clara. Crie uma sala nova ou volte para a
+						página inicial e tente um código diferente.
 					</p>
 
 					{/* Ações */}
@@ -120,7 +118,7 @@ export function Full() {
 							onClick={handleCreateNew}
 							data-testid="full-create-new"
 						>
-							Criar nova sala
+							Criar sala nova
 							<span aria-hidden="true">↗</span>
 						</Button>
 						<Button
@@ -129,7 +127,7 @@ export function Full() {
 							onClick={handleBack}
 							data-testid="full-back"
 						>
-							Voltar
+							Voltar ao início
 						</Button>
 					</div>
 				</Card>
