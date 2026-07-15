@@ -52,16 +52,16 @@ export function validateNick(input: string): NickValidation {
 		return { ok: false, error: "" }; // empty: no error yet (UX)
 	}
 	if (v.length < NICK_MIN) {
-		return { ok: false, error: "Mínimo 2 caracteres." };
+		return { ok: false, error: "Use pelo menos 2 caracteres." };
 	}
 	if (v.length > NICK_MAX) {
-		return { ok: false, error: "Máximo 20 caracteres." };
+		return { ok: false, error: "Use no máximo 20 caracteres." };
 	}
 	if (/ {2,}/.test(v)) {
-		return { ok: false, error: "Sem espaços duplos." };
+		return { ok: false, error: "Evite espaços duplos no meio do nome." };
 	}
 	if (v !== v.trim()) {
-		return { ok: false, error: "Sem espaços no início ou fim." };
+		return { ok: false, error: "Remova espaços no início e no fim." };
 	}
 	return { ok: true, value: v };
 }
@@ -207,7 +207,7 @@ export function Join() {
 
 					<p className="font-sans text-[14px] leading-[1.55] text-ink-mute">
 						Apelido visível para os outros jogadores na mesa. Sem conta, sem
-						email — só como você quer ser chamado nesta rodada.
+						e-mail — só como você quer ser chamado nesta rodada.
 					</p>
 
 					{showHostNote && (
@@ -215,7 +215,7 @@ export function Join() {
 							data-testid="host-note"
 							className="font-mono text-[11px] tracking-[0.04em] text-ink-faint uppercase py-2.5 px-3.5 border border-ink/5 rounded-lg bg-paper-warm"
 						>
-							Você está criando esta sala.
+							Você vai criar uma sala nova e receber o código ao entrar.
 						</div>
 					)}
 
