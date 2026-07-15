@@ -107,6 +107,13 @@ export function Full() {
 						página inicial e tente um código diferente.
 					</p>
 
+					<p className="font-mono text-[10.5px] tracking-[0.04em] uppercase text-ink-faint -mt-2">
+						<q className="font-italic italic text-ink-mute normal-case tracking-normal text-[12.5px] mr-1.5">
+							Doze cabeças pensam melhor que três.
+						</q>
+						mesas lotadas rendem mais
+					</p>
+
 					{/* Ações */}
 					<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5 mt-1">
 						<Button
