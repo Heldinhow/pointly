@@ -88,7 +88,7 @@ export function Full() {
 					</h1>
 
 					{/* Contagem 12/12 */}
-					<div className="flex items-baseline gap-3 py-3.5 border-y border-ink/10 w-full">
+					<div className="flex items-baseline gap-3 py-3.5 border-y border-coral/20 w-full">
 						<span
 							className="font-italic italic text-coral text-[42px] leading-none"
 							data-testid="full-count"
