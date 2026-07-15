@@ -291,7 +291,7 @@ export function Arena() {
 						/>
 						<Link
 							to="/"
-							className="font-display font-extrabold text-[15px] tracking-[-0.02em] text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors"
+							className="font-display font-extrabold text-[15px] tracking-[-0.02em] text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
 							aria-label="Sair da sala e voltar para a página inicial"
 						>
 							<span className="font-italic italic text-coral text-[18px] leading-none">
