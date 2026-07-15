@@ -495,7 +495,7 @@ export function Landing() {
 			<SectionRule roman="II." title="CONVERSAÇÃO · FOCO EM TIMES" page="PAGE 002" />
 
 			{/* ABOUT */}
-			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-12 sm:py-20 relative">
+			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 relative">
 				<div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-16 items-center">
 					<div className="flex flex-col items-start">
 						<h2 className="font-display font-extrabold text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.035em] text-balance">
@@ -522,8 +522,8 @@ export function Landing() {
 			<SectionRule roman="III." title="CAPABILIDADES · FUNCIONALIDADES" page="PAGE 003" />
 
 			{/* CAPABILITIES */}
-			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-12 sm:py-16 relative">
-				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-14 sm:py-20 relative">
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
 					{CAPABILITIES.map((cap) => (
 						<Card
 							key={cap.n}
@@ -552,7 +552,7 @@ export function Landing() {
 			<SectionRule roman="IV." title="DEMONSTRAÇÃO · FLUXO DE VOTO" page="PAGE 004" />
 
 			{/* DARK SHOWCASE CONTAINER (Section 6 Style) */}
-			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-8 sm:py-12">
+			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-12 sm:py-16">
 				<div className="bg-ink text-surface rounded-3xl p-8 lg:p-16 grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-12 items-center relative overflow-hidden">
 					<div className="absolute inset-0 bg-radial-gradient from-coral/10 to-transparent pointer-events-none"></div>
 					<div className="relative z-10">
@@ -595,8 +595,8 @@ export function Landing() {
 			<SectionRule roman="V." title="RECOMENDAÇÃO · COMEÇAR JÁ" page="PAGE 005" />
 
 			{/* CTA RIBBON */}
-			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-12 sm:py-16 relative">
-				<div className="bg-paper-dark rounded-3xl px-8 lg:px-16 py-16 text-center relative overflow-hidden border border-ink/5 shadow-bone">
+			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-14 sm:py-20 relative">
+				<div className="bg-paper-dark rounded-3xl px-6 sm:px-10 lg:px-16 py-14 sm:py-20 text-center relative overflow-hidden border border-ink/5 shadow-bone">
 					<h2 className="font-display font-extrabold text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.035em] max-w-[24ch] mx-auto text-balance">
 						Pronto pra começar<span className="text-coral">?</span>
 					</h2>
