@@ -75,7 +75,7 @@ export function Full() {
 			<main className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-16 py-8 sm:py-12">
 				<Card
 					padding="lg"
-					className="w-full max-w-[560px] flex flex-col gap-6"
+					className="w-full max-w-[560px] flex flex-col gap-6 transition-shadow duration-200"
 					role="alert"
 					aria-label="Sala cheia"
 					data-od-id="full-card"
