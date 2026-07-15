@@ -268,7 +268,7 @@ export function Join() {
 								!validation.ok && validation.error ? "nick-error" : "nick-hint"
 							}
 							disabled={isConnecting}
-							className="font-sans text-[16px] py-3.5 px-4 border border-ink/10 rounded-lg bg-paper text-ink placeholder:text-ink-faint focus:border-coral focus:outline-none transition-colors disabled:opacity-60"
+							className="font-sans text-[16px] py-3.5 px-4 border border-ink/10 rounded-lg bg-paper text-ink placeholder:text-ink-faint focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20 transition-colors disabled:opacity-60 aria-[invalid=true]:border-coral"
 							data-testid="nick-input"
 						/>
 						<div
