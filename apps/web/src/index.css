@@ -160,6 +160,36 @@ a[role="button"] {
 	stroke-dasharray: 40;
 }
 
+/* ---------------------------------------------------------------
+ * Hero illustration — fade-in com stagger das cartas decorativas.
+ * Respeita prefers-reduced-motion (regra global acima).
+ * --------------------------------------------------------------- */
+@keyframes hero-card-in {
+	0% {
+		opacity: 0;
+		transform: var(--hero-from, translateY(8px)) scale(0.96);
+	}
+	100% {
+		opacity: 1;
+		transform: var(--hero-to, translateY(0)) scale(1);
+	}
+}
+
+.hero-card-1 {
+	--hero-from: translate(-7rem, 0.75rem) rotate(-16deg);
+	--hero-to: translate(-7rem, 0.75rem) rotate(-16deg);
+	animation: hero-card-in 600ms ease-out 100ms both;
+}
+.hero-card-2 {
+	--hero-from: translate(7rem, 1.25rem) rotate(16deg);
+	--hero-to: translate(7rem, 1.25rem) rotate(16deg);
+	animation: hero-card-in 600ms ease-out 250ms both;
+}
+.hero-card-3 {
+	--hero-from: translateY(8px) scale(0.94);
+	--hero-to: translateY(0) scale(1);
+	animation: hero-card-in 700ms ease-out 400ms both;
+}
 /* Escalonamento responsivo para a mesa da Arena */
 @media (max-height: 840px), (max-width: 1024px) {
 	[data-testid="arena-stage"] {

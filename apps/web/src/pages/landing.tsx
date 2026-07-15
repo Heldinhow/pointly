@@ -432,13 +432,13 @@ export function Landing() {
 					<div className="w-full relative min-h-[420px] sm:min-h-[480px] bg-paper-warm border border-ink/5 rounded-3xl flex items-center justify-center overflow-hidden shadow-bone" aria-hidden="true">
 						<div className="relative w-80 h-80 flex items-center justify-center">
 							{/* Card 1: '3' */}
-							<div className="absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[-16deg] -translate-x-28 translate-y-3 z-0">
+							<div className="hero-card-1 absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[-16deg] -translate-x-28 translate-y-3 z-0">
 								<span className="font-italic italic text-[56px] text-ink select-none">
 									3
 								</span>
 							</div>
 							{/* Card 2: '☕' */}
-							<div className="absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[16deg] translate-x-28 translate-y-5 z-0">
+							<div className="hero-card-2 absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[16deg] translate-x-28 translate-y-5 z-0">
 								<div className="flex flex-col items-center justify-center select-none pt-4">
 									<svg
 										viewBox="0 0 100 100"
@@ -478,7 +478,7 @@ export function Landing() {
 								</div>
 							</div>
 							{/* Card 3: '5' (Destaque Central) */}
-							<div className="absolute w-44 h-60 bg-surface border-2 border-coral rounded-2xl shadow-xl flex flex-col items-center justify-center z-10">
+							<div className="hero-card-3 absolute w-44 h-60 bg-surface border-2 border-coral rounded-2xl shadow-xl flex flex-col items-center justify-center z-10">
 								<span className="font-italic italic text-[68px] leading-none text-coral select-none">
 									5
 								</span>
