@@ -303,7 +303,19 @@ export function Arena() {
 							</span>
 						</span>
 					</div>
-					<SharePill code={code} />
+					<div className="flex items-center gap-3">
+						<button
+							type="button"
+							onClick={() => setOpenHelp(true)}
+							aria-label="Atalhos de teclado (pressione ?)"
+							title="Atalhos: ?, R, N"
+							className="font-mono text-[10px] uppercase tracking-wider text-ink-faint hover:text-coral transition-colors px-2 py-1 border border-ink/10 rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral"
+							data-testid="arena-help-button"
+						>
+							<span aria-hidden="true">?</span>
+						</button>
+						<SharePill code={code} />
+					</div>
 				</div>
 			</header>
 
