@@ -10,7 +10,7 @@
  *  - Seção Dark contrastante (Roman IV) com uma prévia do Deck Fibonacci (MockDeck)
  *  - Mega footer com a marca monumental "Pointly."
  */
-import { useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -80,7 +80,7 @@ const SEAT_POSITIONS = [
 ];
 
 /** Mesa mockada que renderiza os assentos ativos de forma responsiva */
-function MockTable() {
+const MockTable = memo(function MockTable() {
 	return (
 		<div
 			className="relative w-full aspect-[4/3] max-w-[620px] mx-auto bg-paper-warm border border-ink/10 rounded-3xl p-4 lg:p-6 shadow-bone overflow-hidden flex flex-col justify-between"
@@ -166,10 +166,10 @@ function MockTable() {
 			</div>
 		</div>
 	);
-}
+});
 
 /** Interface do deck mockada para a seção escura */
-function MockDeck() {
+const MockDeck = memo(function MockDeck() {
 	const cards = ["0", "½", "1", "2", "3", "5", "8", "13", "☕"];
 	return (
 		<div
@@ -208,7 +208,7 @@ function MockDeck() {
 			</div>
 		</div>
 	);
-}
+});
 
 /** Componente utilitário para divisores de seção (Section Rules) */
 function SectionRule({ roman, title, page }: { roman: string; title: string; page: string }) {
@@ -240,17 +240,29 @@ export function Landing() {
 		return () => obs.disconnect();
 	}, []);
 
-	function handleCreateRoom(): void {
+	const handleCreateRoom = useCallback((): void => {
 		navigate("/join?host=1");
-	}
+	}, [navigate]);
 
-	function handleJoinWithCode(e: React.FormEvent): void {
-		e.preventDefault();
-		const cleanCode = joinCode.trim().toUpperCase();
-		if (cleanCode.length === 4) {
-			navigate(`/join?code=${cleanCode}`);
-		}
-	}
+	const handleJoinWithCode = useCallback(
+		(e: React.FormEvent): void => {
+			e.preventDefault();
+			const cleanCode = joinCode.trim().toUpperCase();
+			if (cleanCode.length === 4) {
+				navigate(`/join?code=${cleanCode}`);
+			}
+		},
+		[joinCode, navigate],
+	);
+
+	const navCtaStyle = useMemo(
+		() => ({
+			opacity: heroVisible ? 0 : 1,
+			pointerEvents: (heroVisible ? "none" : "auto") as const,
+			transition: "opacity 200ms ease",
+		}),
+		[heroVisible],
+	);
 
 	return (
 		<div
@@ -299,11 +311,7 @@ export function Landing() {
 					className="cta-sticky-nav"
 					aria-hidden={heroVisible}
 					tabIndex={heroVisible ? -1 : 0}
-					style={{
-						opacity: heroVisible ? 0 : 1,
-						pointerEvents: heroVisible ? "none" : "auto",
-						transition: "opacity 200ms ease",
-					}}
+					style={navCtaStyle}
 				>
 					Criar sala
 					<span aria-hidden="true">↗</span>
