@@ -320,23 +320,25 @@ export function Arena() {
 
 			{/* Stage */}
 			<main
-				className="flex-1 relative flex flex-col items-center justify-center px-12 overflow-hidden"
+				className="flex-1 relative flex flex-col items-center justify-center px-4 sm:px-8 lg:px-12 overflow-hidden"
 				data-testid="arena-stage"
 			>
 				{/* Stats pill (top-left, absolute) */}
-				<div className="absolute top-3.5 left-12 z-10">
+				<div className="absolute top-3.5 left-3 sm:left-8 lg:left-12 z-10">
 					<StatsPill consensus={consensus} />
 				</div>
 
 				{/* Timer pill (top-right, absolute) */}
-				<div className="hidden md:block absolute top-3.5 right-12 z-10">
+				<div className="hidden md:block absolute top-3.5 right-3 sm:right-8 lg:right-12 z-10">
 					<TimerPill />
 				</div>
 
 				{/* Mesa: Ellipse + 12 Seats + RevealButton central */}
 				<div
-					className="relative w-[960px] h-[500px] mt-6"
+					className="relative w-full max-w-[960px] aspect-[96/50] mt-6"
 					data-testid="arena-table"
+					role="group"
+					aria-label="Mesa da rodada"
 				>
 					<Ellipse height={500} />
 
