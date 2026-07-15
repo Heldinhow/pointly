@@ -312,7 +312,7 @@ export function Arena() {
 							onClick={() => setOpenHelp(true)}
 							aria-label="Atalhos de teclado (pressione ?)"
 							title="Atalhos: ?, R, N"
-							className="font-mono text-[10px] uppercase tracking-wider text-ink-faint hover:text-coral transition-colors px-2 py-1 border border-ink/10 rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral"
+							className="font-mono text-[10px] uppercase tracking-wider text-ink-faint hover:text-coral hover:border-coral/40 transition-colors px-2 py-1 border border-ink/10 rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral focus-visible:border-coral"
 							data-testid="arena-help-button"
 						>
 							<span aria-hidden="true">?</span>
