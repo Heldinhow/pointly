@@ -22,27 +22,27 @@ const STATS = [
 	{ num: "60", label: "Seg. para decidir" },
 ];
 
-/** Capabilities — 4 features. */
+/** Capabilities — 4 features numeradas como manual. */
 const CAPABILITIES = [
 	{
 		n: "01",
 		title: "Sala instantânea",
-		body: "Crie um código de 4 letras em menos de 100 ms. Sem cadastro, sem e-mail, sem confirmação.",
+		body: "Crie um código de 4 letras em menos de 100 ms. Sem cadastro, sem e-mail, sem confirmação. Cola o link no chat e pronto.",
 	},
 	{
 		n: "02",
 		title: "Deck Fibonacci",
-		body: "9 cartas: 0, ½, 1, 2, 3, 5, 8, 13, ☕. A pausa explícita vale como voto — sem custo de coordenação.",
+		body: "9 cartas: 0, ½, 1, 2, 3, 5, 8, 13, ☕. A pausa explícita vale como voto — sem custo de coordenação pra quem discorda do time.",
 	},
 	{
 		n: "03",
 		title: "Revelar coletivo",
-		body: "Vire a mesa com 1 clique. A mediana fica em destaque dourado. Estatísticas instantâneas.",
+		body: "Vire a mesa com um clique. A mediana fica em destaque dourado, estatística visível, conversa continua.",
 	},
 	{
 		n: "04",
 		title: "Timer crítico",
-		body: "60 s com mudança de cor aos 30 s. Revela sozinho ao expirar. Sem decisões penduradas.",
+		body: "60 segundos, mudança de cor aos 30. Expira sozinho. Decisões penduradas não vão pra próxima sprint.",
 	},
 ];
 
@@ -447,138 +447,186 @@ export function Landing() {
 						</div>
 					</div>
 
-					{/* Stylized Cards Illustration (Hero) */}
-					<div className="w-full relative min-h-[420px] sm:min-h-[480px] bg-paper-warm border border-ink/5 rounded-3xl flex items-center justify-center overflow-hidden shadow-bone" aria-hidden="true">
-						<div className="relative w-full max-w-[320px] aspect-square mx-auto flex items-center justify-center">
-							{/* Card 1: '3' */}
-							<div className="hero-card-1 absolute w-32 h-44 sm:w-36 sm:h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[-16deg] -translate-x-20 sm:-translate-x-28 translate-y-3 z-0">
-								<span className="font-italic italic text-[56px] text-ink select-none">
-									3
-								</span>
-							</div>
-							{/* Card 2: '☕' */}
-							<div className="hero-card-2 absolute w-32 h-44 sm:w-36 sm:h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[16deg] translate-x-20 sm:translate-x-28 translate-y-5 z-0">
-								<div className="flex flex-col items-center justify-center select-none pt-4">
-									<svg
-										viewBox="0 0 100 100"
-										className="w-20 h-20 text-ink relative overflow-visible"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="3.5"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										aria-hidden="true"
-									>
-										{/* Linhas de vapor animadas */}
-										<path
-											d="M42,28 Q39,18 43,10 T41,-4"
-											className="animate-steam-1 stroke-ink/40"
-										/>
-										<path
-											d="M50,28 Q53,16 47,8 T51,-8"
-											className="animate-steam-2 stroke-ink/40"
-										/>
-										<path
-											d="M58,28 Q55,18 59,10 T57,-4"
-											className="animate-steam-3 stroke-ink/40"
-										/>
+					{/* Mesa Elíptica — wireframe com 12 assentos e mediana glow */}
+					<figure className="m-0 w-full">
+						<figcaption className="sr-only">
+							Ilustração da mesa de votação com 12 assentos distribuídos em elipse, mediana 5 destacada em ouro.
+						</figcaption>
+						<div className="relative w-full bg-paper-warm border border-ink/5 rounded-3xl overflow-hidden shadow-bone" aria-hidden="true">
+							<div className="relative w-full max-w-[560px] aspect-square mx-auto p-6 sm:p-10">
+								<svg
+									viewBox="0 0 400 400"
+									className="absolute inset-0 w-full h-full"
+								>
+									{/* Concentric dashed ellipses */}
+									<ellipse cx="200" cy="200" rx="170" ry="120" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 4" className="text-ink/15" />
+									<ellipse cx="200" cy="200" rx="140" ry="95" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 4" className="text-ink/10" />
+									<ellipse cx="200" cy="200" rx="95" ry="60" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 4" className="text-ink/8" />
 
-										{/* Corpo da Xícara */}
-										<path
-											d="M28,35 L72,35 L68,70 C67,76 61,82 54,82 L46,82 C39,82 33,76 32,70 Z"
-											fill="currentColor"
-											fillOpacity="0.05"
-										/>
-										{/* Alça */}
-										<path d="M72,45 C78,45 82,50 81,56 C80,62 73,63 72,63" />
-										{/* Prato */}
-										<path d="M20,88 L80,88" strokeWidth="4" />
-									</svg>
+									{/* Median arc — gold */}
+									<path
+										d="M 200,200 m -50,-30 a 58,38 0 0 1 100,0"
+										fill="none"
+										stroke="var(--mustard)"
+										strokeWidth="6"
+										strokeLinecap="round"
+										opacity="0.85"
+									/>
+									{/* Median dot */}
+									<circle cx="200" cy="190" r="3" fill="var(--mustard)" />
+
+									{/* Axis labels */}
+									<text x="200" y="32" textAnchor="middle" className="fill-ink-faint font-mono" fontSize="9" letterSpacing="1">12H</text>
+									<text x="200" y="378" textAnchor="middle" className="fill-ink-faint font-mono" fontSize="9" letterSpacing="1">VOCÊ</text>
+									<text x="32" y="204" textAnchor="middle" className="fill-ink-faint font-mono" fontSize="9" letterSpacing="1">9H</text>
+									<text x="368" y="204" textAnchor="middle" className="fill-ink-faint font-mono" fontSize="9" letterSpacing="1">3H</text>
+								</svg>
+								{/* 12 seats positioning via inline style — flex fallback if SVG layout not enough */}
+								<div className="absolute inset-0">
+									{/* Numbers positioned by trig: cx=200, cy=200, rx=140, ry=80 */}
+									{[
+										{ a: 270, label: "5", gold: true }, // 12h
+										{ a: 240, label: "5" },
+										{ a: 210, label: "8" },
+										{ a: 180, label: "3" },
+										{ a: 150, label: "5", gold: true },
+										{ a: 120, label: "5" },
+										{ a: 90, label: "8" }, // 3h
+										{ a: 60, label: "?" },
+										{ a: 30, label: "3" },
+										{ a: 0, label: "5", gold: true },
+										{ a: 330, label: "5" },
+										{ a: 300, label: "5", you: true }, // VOCÊ
+									].map((s, i) => {
+										const rad = (s.a * Math.PI) / 180;
+										const x = 50 + (Math.cos(rad) * 38 + 12);
+										const y = 50 + (Math.sin(rad) * 22 + 12);
+										return (
+											<div
+												key={i}
+												className="absolute -translate-x-1/2 -translate-y-1/2"
+												style={{ left: `${x}%`, top: `${y}%` }}
+											>
+												<div
+													className={`relative flex items-center justify-center w-9 h-12 sm:w-11 sm:h-14 rounded-md border bg-surface text-ink font-italic italic text-[18px] sm:text-[20px] leading-none transition-all ${
+														s.you
+															? "border-coral border-2 text-coral shadow-[0_0_0_3px_rgba(237,111,92,0.18)]"
+															: s.gold
+																? "border-mustard border-2 shadow-[0_0_12px_-2px_rgba(233,185,74,0.45)]"
+																: s.label === "?"
+																	? "border-ink/10 border-dashed text-ink-faint"
+																	: "border-ink/15"
+													}`}
+												>
+													{s.label}
+												</div>
+											</div>
+										);
+									})}
+								</div>
+								{/* Center label */}
+								<div className="absolute left-1/2 top-1/2 -translate-x-1/2 translate-y-12 text-center pointer-events-none">
+									<div className="font-display font-bold text-[11px] tracking-[0.18em] uppercase text-mustard">
+										Mediana · 5
+									</div>
+									<div className="font-mono text-[9px] tracking-wider uppercase text-ink-faint mt-0.5">
+										unanimous·alinhado
+									</div>
 								</div>
 							</div>
-							{/* Card 3: '5' (Destaque Central) */}
-							<div className="hero-card-3 absolute w-44 h-60 bg-surface border-2 border-coral rounded-2xl shadow-xl flex flex-col items-center justify-center z-10">
-								<span className="font-italic italic text-[68px] leading-none text-coral select-none">
-									5
+
+							{/* Caption strip */}
+							<div className="border-t border-ink/5 px-5 sm:px-7 py-3 flex items-center justify-between font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint">
+								<span className="flex items-center gap-2">
+									<span className="inline-block w-1.5 h-1.5 rounded-full bg-coral animate-pulse" />
+									Rodada 03 · revelada
 								</span>
-								<span className="font-mono text-[11px] tracking-[0.2em] uppercase text-coral/80 mt-2">
-									Mediana
-								</span>
+								<span>FIG. 01</span>
 							</div>
 						</div>
-					</div>
+					</figure>
 				</div>
 			</section>
 
 			{/* Section Rule II - About */}
 			<SectionRule roman="II." title="CONVERSAÇÃO · FOCO EM TIMES" page="PAGE 002" />
 
-			{/* ABOUT */}
-			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 relative">
-				<div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-16 items-center">
-					<div className="flex flex-col items-start">
-						<h2 className="font-display font-extrabold text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.035em] text-balance">
+			{/* ABOUT — manifesto editorial */}
+			<section
+				className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-28 relative"
+				id="para-times"
+			>
+				<div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+					<aside className="lg:col-span-3 flex flex-col gap-3 lg:pt-3">
+						<div className="font-mono text-[10px] tracking-[0.18em] uppercase text-coral">
+							Manifesto
+						</div>
+						<div className="font-italic italic text-ink-mute text-[15px] leading-[1.65] max-w-[28ch]">
+							Estimativa não é planilha. É conversa. O Pointly só existe pra
+							facilitar essa conversa sem atrapalhar.
+						</div>
+					</aside>
+
+					<div className="lg:col-span-9">
+						<h2 className="font-display font-extrabold text-[clamp(36px,5.5vw,84px)] leading-[1.02] tracking-[-0.04em] text-balance max-w-[14ch]">
 							Times ágeis estimam{" "}
 							<em className="font-italic italic font-normal text-ink-soft">
 								conversando
 							</em>
-							, não preenchendo planilha<span className="text-coral">.</span>
+							<span className="text-coral">,&nbsp;</span>
+							não preenchendo planilha.
 						</h2>
-						<p
-							id="para-times"
-							className="font-sans text-[16px] lg:text-[17px] leading-[1.7] text-ink-mute mt-6 max-w-[56ch]"
-						>
-							O Pointly elimina a burocracia dos cadastros e convites complicados. Você cria a sala, envia a URL para o time no chat da call e começa a estimar. Após todos os jogadores votarem, os resultados revelam a mediana com destaque visual imediato para fomentar o alinhamento saudável.
-						</p>
-					</div>
 
-					{/* Populated interactive MockTable */}
-					<figure className="m-0">
-						<figcaption className="sr-only">
-							Ilustração de demonstração: mesa com 8 jogadores após revelar os votos,
-							mediana 5 em destaque dourado.
-						</figcaption>
-						<MockTable />
-					</figure>
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-6 mt-12 pt-10 border-t border-ink/10">
+							<p className="font-sans text-[15px] leading-[1.7] text-ink-mute max-w-[42ch]">
+								Você cria a sala, cola o link no chat da call e o time já está
+								dentro. Sem cadastro, sem aprovação, sem esperar alguém configurar
+								permissões. Atrasou de reunião? Abre uma sala em 5 segundos.
+							</p>
+							<p className="font-sans text-[15px] leading-[1.7] text-ink-mute max-w-[42ch]">
+								Quando todo mundo vota, as cartas viram. A mediana aparece em
+								dourado, os votos que combinam ficam em destaque, e a conversa
+								continua a partir do que importa: o número e o que ele revela
+								sobre a história que o time está contando.
+							</p>
+						</div>
+					</div>
 				</div>
 			</section>
 
 			{/* Section Rule III - Capabilities */}
 			<SectionRule roman="III." title="CAPABILIDADES · FUNCIONALIDADES" page="PAGE 003" />
 
-			{/* CAPABILITIES */}
-			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-14 sm:py-20 relative">
-				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+			{/* CAPABILITIES — lista numerada em manual-style */}
+			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-14 sm:py-24 relative">
+				<ol className="flex flex-col">
 					{CAPABILITIES.map((cap, i) => (
-						<Card
+						<li
 							key={cap.n}
-							padding="md"
-							className="group/cap relative flex flex-col gap-3 bg-surface border border-ink/10 rounded-2xl shadow-bone hover:border-coral hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_rgba(237,111,92,0.45)] transition-all duration-300 motion-safe:hover:[transform:translateY(-2px)_rotate(-0.4deg)]"
-							data-testid={`cap-card-${cap.n}`}
+							className={`group/cap relative grid grid-cols-[auto_1fr] sm:grid-cols-[80px_1fr_120px] gap-x-6 sm:gap-x-10 items-baseline py-7 sm:py-9 transition-colors duration-300 ${
+								i !== 0 ? "border-t border-ink/10" : "border-t border-ink/15"
+							}`}
+							data-testid={`cap-row-${cap.n}`}
 						>
-							<span
-								aria-hidden="true"
-								className="absolute top-3 right-3 font-italic italic text-coral/0 group-hover/cap:text-coral transition-all duration-500 group-hover/cap:translate-x-0 -translate-x-1 text-[14px] leading-none"
-							>
-								✦
+							<span className="font-italic italic text-coral text-[28px] sm:text-[36px] leading-none tracking-normal">
+								{cap.n}
 							</span>
-							<div className="flex justify-between items-baseline font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint">
-								<span className="font-italic italic text-coral text-[18px] tracking-normal normal-case font-medium transition-transform duration-300 group-hover/cap:scale-110 origin-left">
-									{cap.n}
-								</span>
-								<span className="relative after:content-[''] after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-px after:bg-coral after:scale-x-0 group-hover/cap:after:scale-x-100 after:origin-left after:transition-transform after:duration-300">
-									Feature {String(i + 1).padStart(2, "0")}
+							<div className="flex flex-col gap-1.5">
+								<h3 className="font-display font-extrabold text-[20px] sm:text-[26px] tracking-[-0.025em] leading-[1.15] text-balance">
+									{cap.title}
+								</h3>
+								<p className="font-sans text-[14.5px] sm:text-[15px] leading-[1.6] text-ink-mute max-w-[52ch]">
+									{cap.body}
+								</p>
+							</div>
+							<div className="hidden sm:flex justify-end items-baseline">
+								<span className="font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint opacity-0 group-hover/cap:opacity-100 transition-opacity duration-300">
+									Ver →
 								</span>
 							</div>
-							<h3 className="font-display font-extrabold text-[19px] tracking-[-0.02em]">
-								{cap.title}
-							</h3>
-							<p className="font-sans text-[13.5px] leading-[1.55] text-ink-mute">
-								{cap.body}
-							</p>
-						</Card>
+						</li>
 					))}
-				</div>
+				</ol>
 			</section>
 
 			{/* Section Rule IV - Dark Showcase */}
@@ -594,32 +642,53 @@ export function Landing() {
 								"radial-gradient(at 20% 0%, rgba(237,111,92,0.16) 0px, transparent 55%), radial-gradient(at 100% 100%, rgba(233,185,74,0.06) 0px, transparent 50%)",
 						}}
 					/>
+					{/* Wireframe ellipse overlay (decorativo, com pointer-events none) */}
+					<svg
+						className="absolute -right-20 -bottom-20 w-[680px] h-[680px] opacity-15 pointer-events-none"
+						viewBox="0 0 400 400"
+						aria-hidden="true"
+					>
+						<ellipse cx="200" cy="200" rx="180" ry="120" fill="none" stroke="#f7f1de" strokeWidth="0.6" strokeDasharray="2 5" />
+						<ellipse cx="200" cy="200" rx="140" ry="92" fill="none" stroke="#f7f1de" strokeWidth="0.6" strokeDasharray="2 5" />
+						<ellipse cx="200" cy="200" rx="95" ry="60" fill="none" stroke="#f7f1de" strokeWidth="0.6" strokeDasharray="2 5" />
+						<line x1="20" y1="200" x2="380" y2="200" stroke="#f7f1de" strokeWidth="0.4" strokeDasharray="1 4" />
+						<line x1="200" y1="20" x2="200" y2="380" stroke="#f7f1de" strokeWidth="0.4" strokeDasharray="1 4" />
+					</svg>
 					<div className="relative z-10">
 						<div className="font-mono text-[10px] tracking-[0.2em] text-coral uppercase mb-4">
 							ESTADO DE VOTAÇÃO
 						</div>
-						<h2 className="font-display font-extrabold text-[clamp(28px,3.5vw,52px)] leading-[1.05] tracking-[-0.03em] text-balance">
+						<h2 className="font-display font-extrabold text-[clamp(28px,3.5vw,52px)] leading-[1.04] tracking-[-0.035em] text-balance max-w-[18ch]">
 							Escolhas secretas que viram{" "}
 							<em className="font-italic italic font-normal text-coral-soft">
 								consenso memorável
 							</em>
 							.
 						</h2>
-						<p className="font-sans text-[15px] leading-[1.6] text-surface/70 mt-6 max-w-[46ch]">
-							Durante a rodada, as cartas permanecem viradas para baixo para evitar a influência mútua dos votos. O time vota secretamente e o host visualiza o andamento em tempo real.
+						<p className="font-sans text-[15px] leading-[1.65] text-surface/70 mt-7 max-w-[44ch]">
+							Durante a rodada, as cartas ficam viradas pra baixo —
+							ninguém influencia o voto do outro. Quando alguém revela,
+							o destaque dourado mostra quem votou na mediana: o ponto
+							de alinhamento.
 						</p>
-						<ul className="mt-8 space-y-3 font-mono text-[12px] text-surface/80">
-							<li className="flex items-center gap-3">
-								<span className="w-1.5 h-1.5 rounded-full bg-coral"></span>
-								Deck Fibonacci clássico de 9 cartas
+						<ul className="mt-9 space-y-3.5 font-mono text-[11.5px] tracking-[0.06em] uppercase text-surface/80">
+							<li className="flex items-baseline gap-3">
+								<span className="font-italic italic text-coral text-[13px] normal-case font-medium">
+									A
+								</span>
+								Deck Fibonacci · 9 cartas
 							</li>
-							<li className="flex items-center gap-3">
-								<span className="w-1.5 h-1.5 rounded-full bg-coral"></span>
-								Cartas viradas para baixo até alguém revelar
+							<li className="flex items-baseline gap-3">
+								<span className="font-italic italic text-coral text-[13px] normal-case font-medium">
+									B
+								</span>
+								Viradas pra baixo até alguém revelar
 							</li>
-							<li className="flex items-center gap-3">
-								<span className="w-1.5 h-1.5 rounded-full bg-coral"></span>
-								Destaque dourado para os votos que batem com a mediana
+							<li className="flex items-baseline gap-3">
+								<span className="font-italic italic text-coral text-[13px] normal-case font-medium">
+									C
+								</span>
+								Destaque dourado nos votos medianos
 							</li>
 						</ul>
 					</div>
@@ -634,45 +703,81 @@ export function Landing() {
 			<SectionRule roman="V." title="RECOMENDAÇÃO · COMEÇAR JÁ" page="PAGE 005" />
 
 			{/* CTA RIBBON */}
-			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-14 sm:py-20 relative">
-				<div className="bg-paper-dark rounded-3xl px-6 sm:px-10 lg:px-16 py-14 sm:py-20 text-center relative overflow-hidden border border-ink/5 shadow-bone">
-					<h2 className="font-display font-extrabold text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.035em] max-w-[24ch] mx-auto text-pretty">
-						Pronto pra começar<span className="text-coral">?</span>
-					</h2>
-					<p className="font-sans text-[15px] lg:text-[16px] leading-[1.7] text-ink-mute max-w-[50ch] mx-auto mt-4">
-						Menos de 5 segundos pra abrir uma sala. Convide pelo chat,
-						votem, e a mesa revela sozinha quando alguém decide. Sem
-						cadastros — só um apelido e o código da sala.
-					</p>
-					<div className="flex items-center justify-center gap-3.5 mt-9">
-						<Button
-							variant="coral"
-							size="lg"
-							onClick={handleCreateRoom}
-							data-testid="cta-ribbon-create"
-						>
-							Criar sala agora
-							<span aria-hidden="true">↗</span>
-						</Button>
-						<Button
-							variant="default"
-							size="lg"
-							onClick={() =>
-								document
-									.getElementById("como-funciona")
-									?.scrollIntoView({ behavior: "smooth" })
-							}
-							data-testid="cta-ribbon-how"
-						>
-							Ver como funciona
-						</Button>
+			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-14 sm:py-24 relative">
+				<div className="bg-ink text-surface rounded-3xl px-6 sm:px-10 lg:px-16 py-14 sm:py-20 text-center relative overflow-hidden">
+					{/* Concentric rings decorativas */}
+					<svg
+						className="absolute inset-0 w-full h-full opacity-[0.07] pointer-events-none"
+						viewBox="0 0 400 200"
+						preserveAspectRatio="xMidYMid slice"
+						aria-hidden="true"
+					>
+						<ellipse cx="80" cy="100" rx="40" ry="40" fill="none" stroke="#ed6f5c" strokeWidth="0.6" />
+						<ellipse cx="80" cy="100" rx="70" ry="70" fill="none" stroke="#ed6f5c" strokeWidth="0.4" />
+						<ellipse cx="80" cy="100" rx="110" ry="110" fill="none" stroke="#ed6f5c" strokeWidth="0.4" />
+						<ellipse cx="320" cy="100" rx="40" ry="40" fill="none" stroke="#e9b94a" strokeWidth="0.6" />
+						<ellipse cx="320" cy="100" rx="70" ry="70" fill="none" stroke="#e9b94a" strokeWidth="0.4" />
+						<ellipse cx="320" cy="100" rx="110" ry="110" fill="none" stroke="#e9b94a" strokeWidth="0.4" />
+					</svg>
+					<div
+						className="absolute inset-0 pointer-events-none"
+						style={{
+							background:
+								"radial-gradient(at 50% 100%, rgba(237,111,92,0.18) 0px, transparent 70%)",
+						}}
+					/>
+					<div className="relative z-10">
+						<div className="font-mono text-[10px] tracking-[0.18em] uppercase text-coral mb-5">
+							Última chamada
+						</div>
+						<h2 className="font-display font-extrabold text-[clamp(36px,5vw,72px)] leading-[1.02] tracking-[-0.04em] max-w-[16ch] mx-auto text-balance">
+							Pronto pra começar<span className="text-coral">.</span>
+						</h2>
+						<p className="font-italic italic text-surface/85 text-[18px] sm:text-[20px] leading-[1.5] max-w-[36ch] mx-auto mt-7">
+							Menos de 5 segundos pra abrir uma sala. Convide pelo chat,
+							votem, mesa revela sozinha quando alguém decide.
+						</p>
+						<div className="flex flex-wrap items-center justify-center gap-3.5 mt-10">
+							<Button
+								variant="coral"
+								size="lg"
+								onClick={handleCreateRoom}
+								data-testid="cta-ribbon-create"
+							>
+								Criar sala agora
+								<span aria-hidden="true">↗</span>
+							</Button>
+							<button
+								type="button"
+								onClick={() =>
+									document
+										.getElementById("como-funciona")
+										?.scrollIntoView({ behavior: "smooth" })
+								}
+								data-testid="cta-ribbon-how"
+								className="font-mono text-[11px] tracking-[0.06em] uppercase text-surface/80 hover:text-coral transition-colors px-3 py-2 border-b border-surface/30 hover:border-coral focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral rounded-sm"
+							>
+								Ver como funciona →
+							</button>
+						</div>
+						<div className="mt-9 pt-7 border-t border-surface/10 font-mono text-[10px] tracking-[0.06em] uppercase text-surface/40">
+							Sem cadastro · sem e-mail · sem paywall · open source
+						</div>
 					</div>
 				</div>
 			</section>
 
 			{/* Footer — mega word */}
-			<footer className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 pt-12 sm:pt-16 pb-8 sm:pb-12 border-t border-ink/10 relative">
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+			<footer className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 pt-12 sm:pt-20 pb-8 sm:pb-12 border-t border-ink/10 relative">
+				<div className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-faint flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-12">
+					<span className="text-coral font-semibold">●</span>
+					<span>Fim da transmissão</span>
+					<span className="text-ink/30">·</span>
+					<span>Vol. 01 · Issue Nº 26</span>
+					<span className="text-ink/30">·</span>
+					<span>{new Date().getFullYear()} PT-BR</span>
+				</div>
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
 					<div className="flex flex-col gap-3">
 						<h4 className="font-display font-bold text-[12px] tracking-wider uppercase text-ink">
 							Pointly
@@ -719,12 +824,20 @@ export function Landing() {
 					</div>
 				</div>
 
-				<div className="pt-8 border-t border-ink/5 flex flex-col md:flex-row justify-between items-baseline gap-6">
-					<div className="mega select-none">
+				<div className="pt-10 border-t border-ink/10 flex flex-col gap-8">
+					<div className="mega select-none text-center md:text-left">
 						Pointly<span className="dot">.</span>
 					</div>
-					<div className="font-mono text-[10px] text-ink-faint">
-						© {new Date().getFullYear()} POINTLY. APELIDO NÃO É E-MAIL.
+					<div className="flex flex-col md:flex-row justify-between items-baseline gap-4 font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint">
+						<div>
+							© {new Date().getFullYear()} Pointly · CC BY-SA 4.0
+						</div>
+						<div className="font-italic italic normal-case tracking-normal text-[13px] text-ink-mute">
+							Apelido não é e-mail.
+						</div>
+						<div>
+							Construído em PT-BR · São Paulo → Recife
+						</div>
 					</div>
 				</div>
 			</footer>
