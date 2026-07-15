@@ -597,7 +597,7 @@ export function Landing() {
 			{/* CTA RIBBON */}
 			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-12 sm:py-16 relative">
 				<div className="bg-paper-dark rounded-3xl px-8 lg:px-16 py-16 text-center relative overflow-hidden border border-ink/5 shadow-bone">
-					<h2 className="font-display font-extrabold text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.035em] max-w-[24ch] mx-auto">
+					<h2 className="font-display font-extrabold text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.035em] max-w-[24ch] mx-auto text-balance">
 						Pronto pra começar<span className="text-coral">?</span>
 					</h2>
 					<p className="font-sans text-[15px] lg:text-[16px] leading-[1.7] text-ink-mute max-w-[50ch] mx-auto mt-4">
