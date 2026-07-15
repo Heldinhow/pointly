@@ -66,6 +66,8 @@ function SharePill({ code }: { code: string }) {
 	const [copied, setCopied] = useState(false);
 
 	const handleCopy = useCallback(async () => {
+		// Guard: code vazio (race com welcome do WS) — não copia link quebrado
+		if (!code) return;
 		const url = buildShareUrl(window.location.origin, code);
 		try {
 			if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -100,8 +102,10 @@ function SharePill({ code }: { code: string }) {
 			type="button"
 			onClick={handleCopy}
 			data-testid="share-pill"
+			disabled={!code}
 			className={cn(
 				"inline-flex items-center gap-2 rounded-full px-4 py-2 font-mono text-[10px] tracking-[0.06em] uppercase border transition-all duration-200 cursor-pointer shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral",
+				"disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-surface disabled:hover:text-coral",
 				copied
 					? "bg-olive border-transparent text-white"
 					: "bg-surface border-coral text-coral hover:bg-coral hover:text-white",
@@ -111,6 +115,7 @@ function SharePill({ code }: { code: string }) {
 					? "Link copiado com sucesso"
 					: "Copiar link de compartilhamento da sala"
 			}
+			title={!code ? "Código da sala ainda não está disponível" : undefined}
 		>
 			<span className="font-sans text-[11px] leading-none" aria-hidden="true">
 				{copied ? "✓" : "📋"}
@@ -154,7 +159,14 @@ export function Arena() {
 
 	// Lê nick pré-preenchido do sessionStorage (T08 / ADR-006).
 	// Tab-close apaga; preenche se voltou na mesma aba.
-	const [nick] = useState<string>(() => getNick() ?? "");
+	const [nick] = useState<string>(() => {
+		try {
+			return getNick() ?? "";
+		} catch {
+			// sessionStorage indisponível (modo privado, quota, etc) — não crashar
+			return "";
+		}
+	});
 	// UUID persistente (ADR-0009)
 	const uuid = getStoredUUID();
 
