@@ -324,6 +324,9 @@ export function Arena() {
 
 			{/* Arena head: rodape removido — info já vive no Topbar (timer/stats pills).
 			 * Strip "Rodada NN" e "Você · {nick}" ficaram ruidosos sem info nova. */}
+			<h1 className="sr-only">
+				Sala {code || "—"} · rodada {String(sala?.round ?? 1).padStart(2, "0")}
+			</h1>
 			<div className="hidden">
 				<span data-testid="arena-round-hidden-stub">
 					Rodada {String(sala?.round ?? 1).padStart(2, "0")}
