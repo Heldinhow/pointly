@@ -47,7 +47,7 @@ export function Full() {
 		>
 			{/* Metadata strip top */}
 			<header className="border-b border-ink/10 py-2.5 flex-shrink-0">
-				<div className="max-w-[1360px] mx-auto px-16 flex items-center justify-between">
+				<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 flex items-center justify-between">
 					<div className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-wider text-ink-faint">
 						<span
 							aria-hidden="true"
@@ -71,7 +71,7 @@ export function Full() {
 			</header>
 
 			{/* Header strip */}
-			<div className="max-w-[1360px] mx-auto px-16 w-full py-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-ink-faint">
+			<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 w-full py-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-ink-faint">
 				<span>Entrada negada</span>
 				<span>
 					Código <span className="text-ink font-medium">—</span>
@@ -79,10 +79,11 @@ export function Full() {
 			</div>
 
 			{/* Stage */}
-			<main className="flex-1 flex items-center justify-center px-16 py-10">
+			<main className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-16 py-10">
 				<Card
 					padding="lg"
-					className="w-[560px] flex flex-col gap-5"
+					className="w-full max-w-[560px] flex flex-col gap-5"
+					role="alert"
 					aria-label="Sala cheia"
 					data-od-id="full-card"
 				>
