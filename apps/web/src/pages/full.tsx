@@ -83,7 +83,7 @@ export function Full() {
 					<div className="font-italic italic text-coral text-[36px] leading-none">
 						Ø
 					</div>
-					<h1 className="font-display font-extrabold text-[34px] leading-[1.05] tracking-tight">
+					<h1 className="font-display font-extrabold text-[34px] leading-[1.05] tracking-[-0.03em] text-balance">
 						Sala cheia<span className="text-coral">.</span>
 					</h1>
 
