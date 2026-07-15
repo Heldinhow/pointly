@@ -81,7 +81,12 @@ export function Join() {
 	// -------------------------------------------------------------------------
 	const [nick, setNickState] = useState<string>(() => {
 		// T08: nick pré-preenchido vem de sessionStorage (privacidade-by-default).
-		return getNick() ?? "";
+		try {
+			return getNick() ?? "";
+		} catch {
+			// sessionStorage indisponível (modo privado iOS / quota). Não crashar.
+			return "";
+		}
 	});
 	const [validation, setValidation] = useState<NickValidation>({
 		ok: false,
@@ -132,12 +137,29 @@ export function Join() {
 
 			// Gera/recupera UUID persistente (ADR-0009). T08: sessionStorage.
 			// Será usado em T38 quando integrarmos com ws-client real.
-			getUUID();
+			try {
+				getUUID();
+			} catch {
+				// sessionStorage indisponível — seguimos sem UUID persistente;
+				// usuário pode voltar a entrar, mas perderá o ID.
+			}
 
-			// Persiste nick + code na sessionStorage (UX: preenche se voltou
-			// na mesma aba). Tab-close apaga automaticamente (ADR-006).
-			setNick(result.value);
-			if (code) setCode(code);
+			// Persiste nick na sessionStorage (UX: preenche se voltou na
+			// mesma aba). Tab-close apaga automaticamente (ADR-006).
+			try {
+				setNick(result.value);
+			} catch {
+				// silencioso — nick é nice-to-have, não bloqueia entrada
+			}
+			// Só persiste o code se for bem-formado (4 alfanum, maiúsculas).
+			// Defesa contra URL maliciosa tipo /join?code=<script>.
+			if (code && /^[A-Z0-9]{4}$/.test(code)) {
+				try {
+					setCode(code);
+				} catch {
+					/* idem */
+				}
+			}
 
 			toast.push(`Bem-vindo, ${result.value}.`, "success");
 
