@@ -281,9 +281,18 @@ export function Join() {
 						</div>
 						<div
 							id="nick-hint"
-							className="font-mono text-[10px] text-ink-faint tracking-[0.02em]"
+							className="font-mono text-[10px] text-ink-faint tracking-[0.02em] flex items-center justify-between gap-3"
 						>
-							2–20 caracteres · como você quer ser chamado nesta rodada
+							<span>2–20 caracteres · como você quer ser chamado nesta rodada</span>
+							{validation.ok && (
+								<span
+									aria-hidden="true"
+									className="text-olive font-medium tabular-nums inline-flex items-center gap-1"
+								>
+									<span className="leading-none">✓</span>
+									{nick.length}/{NICK_MAX}
+								</span>
+							)}
 						</div>
 
 						<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-1.5">
