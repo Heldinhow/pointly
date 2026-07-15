@@ -421,13 +421,13 @@ export function Landing() {
 						</div>
 
 						{/* Stat rings */}
-						<div className="flex gap-8 mt-12 pt-8 border-t border-ink/5">
+						<div className="flex flex-wrap gap-x-8 gap-y-4 mt-12 pt-8 border-t border-ink/5">
 							{STATS.map((s) => (
 								<div
 									key={s.label}
 									className="flex flex-col gap-1.5 items-start"
 								>
-									<span className="font-italic italic text-[28px] text-ink w-[40px] h-[40px] border border-dashed border-ink/15 rounded-full flex items-center justify-center">
+									<span className="font-italic italic text-[28px] leading-none text-ink w-[40px] h-[40px] border border-dashed border-ink/15 rounded-full flex items-center justify-center">
 										{s.num}
 									</span>
 									<span className="font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint">
@@ -440,15 +440,15 @@ export function Landing() {
 
 					{/* Stylized Cards Illustration (Hero) */}
 					<div className="w-full relative min-h-[420px] sm:min-h-[480px] bg-paper-warm border border-ink/5 rounded-3xl flex items-center justify-center overflow-hidden shadow-bone" aria-hidden="true">
-						<div className="relative w-80 h-80 flex items-center justify-center">
+						<div className="relative w-full max-w-[320px] aspect-square mx-auto flex items-center justify-center">
 							{/* Card 1: '3' */}
-							<div className="hero-card-1 absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[-16deg] -translate-x-28 translate-y-3 z-0">
+							<div className="hero-card-1 absolute w-32 h-44 sm:w-36 sm:h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[-16deg] -translate-x-20 sm:-translate-x-28 translate-y-3 z-0">
 								<span className="font-italic italic text-[56px] text-ink select-none">
 									3
 								</span>
 							</div>
 							{/* Card 2: '☕' */}
-							<div className="hero-card-2 absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[16deg] translate-x-28 translate-y-5 z-0">
+							<div className="hero-card-2 absolute w-32 h-44 sm:w-36 sm:h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[16deg] translate-x-20 sm:translate-x-28 translate-y-5 z-0">
 								<div className="flex flex-col items-center justify-center select-none pt-4">
 									<svg
 										viewBox="0 0 100 100"
@@ -524,7 +524,13 @@ export function Landing() {
 					</div>
 
 					{/* Populated interactive MockTable */}
-					<MockTable />
+					<figure className="m-0">
+						<figcaption className="sr-only">
+							Ilustração de demonstração: mesa com 8 jogadores após revelar os votos,
+							mediana 5 em destaque dourado.
+						</figcaption>
+						<MockTable />
+					</figure>
 				</div>
 			</section>
 
