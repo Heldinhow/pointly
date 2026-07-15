@@ -115,7 +115,7 @@ function SharePill({ code }: { code: string }) {
 			<span className="font-sans text-[11px] leading-none" aria-hidden="true">
 				{copied ? "✓" : "📋"}
 			</span>
-			<span>{copied ? "Link Copiado!" : `Compartilhar: ${code || "—"}`}</span>
+			<span>{copied ? "Link copiado!" : `Convidar com código: ${code || "—"}`}</span>
 		</button>
 	);
 }
@@ -185,7 +185,7 @@ export function Arena() {
 	useEffect(() => {
 		if (blocker.state === "blocked") {
 			const confirmExit = window.confirm(
-				"Deseja mesmo sair da sala? Seu voto e participação serão perdidos.",
+				"Sair da sala agora? Seu voto e sua participação na rodada atual serão perdidos.",
 			);
 			if (confirmExit) {
 				blocker.proceed();
