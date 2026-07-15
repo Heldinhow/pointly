@@ -17,6 +17,7 @@
  * @see .specs/features/planning-poker-v1/tasks.md T29
  * @see .specs/features/planning-poker-v1/spec.md F-007 (F-ID US-1)
  */
+import { useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -27,16 +28,12 @@ const MAX_PLAYERS = 12;
 export function Full() {
 	const navigate = useNavigate();
 
-	function handleCreateNew(): void {
+	// Sai da rota de erro para um destino previsivel: pagina inicial.
+	// history.back() foi removido por ser imprevisivel em deep links
+	// (pode voltar a uma sala ja encerrada).
+	const goHome = useCallback((): void => {
 		navigate("/");
-	}
-
-	function handleBack(): void {
-		// Sai da rota de erro para um destino previsivel: pagina inicial.
-		// history.back() foi removido por ser imprevisivel em deep links
-		// (pode voltar a uma sala ja encerrada).
-		navigate("/");
-	}
+	}, [navigate]);
 
 	return (
 		<div
@@ -115,7 +112,7 @@ export function Full() {
 						<Button
 							variant="coral"
 							size="md"
-							onClick={handleCreateNew}
+							onClick={goHome}
 							className="w-full sm:w-auto"
 							data-testid="full-create-new"
 						>
@@ -125,7 +122,7 @@ export function Full() {
 						<Button
 							variant="default"
 							size="md"
-							onClick={handleBack}
+							onClick={goHome}
 							className="w-full sm:w-auto"
 							data-testid="full-back"
 						>
