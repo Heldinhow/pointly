@@ -337,7 +337,7 @@ export function Landing() {
 						</div>
 						<h1
 							data-testid="hero-headline"
-							className="font-display font-extrabold text-[clamp(40px,5vw,80px)] leading-[1.02] tracking-[-0.04em]"
+							className="font-display font-extrabold text-[clamp(40px,5vw,80px)] leading-[1.02] tracking-[-0.04em] text-balance"
 						>
 							Vote com{" "}
 							<em className="font-italic italic font-normal text-ink-soft">
@@ -498,7 +498,7 @@ export function Landing() {
 			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-12 sm:py-20 relative">
 				<div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-16 items-center">
 					<div className="flex flex-col items-start">
-						<h2 className="font-display font-extrabold text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.035em]">
+						<h2 className="font-display font-extrabold text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.035em] text-balance">
 							Times ágeis estimam{" "}
 							<em className="font-italic italic font-normal text-ink-soft">
 								conversando
@@ -559,7 +559,7 @@ export function Landing() {
 						<div className="font-mono text-[10px] tracking-[0.2em] text-coral uppercase mb-4">
 							ESTADO DE VOTAÇÃO
 						</div>
-						<h2 className="font-display font-extrabold text-[clamp(28px,3.5vw,52px)] leading-[1.05] tracking-[-0.03em]">
+						<h2 className="font-display font-extrabold text-[clamp(28px,3.5vw,52px)] leading-[1.05] tracking-[-0.03em] text-balance">
 							Escolhas secretas que viram{" "}
 							<em className="font-italic italic font-normal text-coral-soft">
 								consenso memorável
