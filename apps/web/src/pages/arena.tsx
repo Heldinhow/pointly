@@ -345,13 +345,16 @@ export function Arena() {
 					<TimerPill />
 				</div>
 
-				{/* Mesa: Ellipse + 12 Seats + RevealButton central */}
+				{/* Mesa: Ellipse + 12 Seats + RevealButton central.
+				 * Container responsivo com scroll horizontal em mobile (a mesa
+				 * tem geometria fixa de 960×500 — não cabe em viewport estreito). */}
 				<div
-					className="relative w-full max-w-[960px] aspect-[96/50] mt-6"
+					className="relative w-full max-w-[960px] mt-6 overflow-x-auto overflow-y-hidden"
 					data-testid="arena-table"
 					role="group"
 					aria-label="Mesa da rodada"
 				>
+					<div className="relative w-[960px] h-[500px] min-w-[960px]">
 					<Ellipse height={500} />
 
 					{/* Seats posicionados via trigonometria */}
@@ -406,6 +409,7 @@ export function Arena() {
 
 					{/* Animações de arremessos */}
 					<ProjectileAnimator />
+					</div>
 				</div>
 
 				{/* Deck dock (bottom center) */}
