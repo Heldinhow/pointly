@@ -23,7 +23,7 @@
  * @see .specs/features/planning-poker-v1/tasks.md T28
  * @see .specs/features/planning-poker-v1/spec.md F-001, F-002, F-008
  */
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -111,6 +111,15 @@ export function Join() {
 		setValidation(validateNick(value));
 	}, []);
 
+	// Ref para o setTimeout de redirect — cancela no unmount pra evitar
+	// setState em componente desmontado.
+	const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	useEffect(() => {
+		return () => {
+			if (redirectTimeoutRef.current) clearTimeout(redirectTimeoutRef.current);
+		};
+	}, []);
+
 	const handleSubmit = useCallback(
 		async (e: FormEvent<HTMLFormElement>) => {
 			e.preventDefault();
@@ -146,7 +155,7 @@ export function Join() {
 			// - join com code: navega para /arena?code=XXXX — server faz
 			//   `addPlayer` no `hello`.
 			const target = code ? `/arena?code=${code}` : "/arena";
-			setTimeout(() => {
+			redirectTimeoutRef.current = setTimeout(() => {
 				navigate(target);
 			}, 200);
 		},
