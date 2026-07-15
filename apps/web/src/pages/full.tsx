@@ -50,7 +50,7 @@ export function Full() {
 						/>
 						<Link
 							to="/"
-							className="font-display font-bold text-[15px] tracking-tight text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors"
+							className="font-display font-bold text-[15px] tracking-tight text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
 							aria-label="Pointly — página inicial"
 						>
 							<span className="font-italic italic text-coral text-[18px] leading-none">
