@@ -295,7 +295,7 @@ export function Landing() {
 			<nav className="py-4 px-6 lg:px-16 max-w-[1360px] mx-auto flex justify-between items-center border-b border-ink/5 sticky top-0 z-10 bg-bg/95 backdrop-blur-sm">
 				<Link
 					to="/"
-					className="font-display font-extrabold text-[22px] tracking-[-0.03em] flex items-baseline gap-2.5 hover:text-coral transition-colors"
+					className="font-display font-extrabold text-[22px] tracking-[-0.03em] flex items-baseline gap-2.5 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
 					aria-label="Pointly — página inicial"
 				>
 					<span className="font-italic italic text-coral text-[26px] leading-none">
