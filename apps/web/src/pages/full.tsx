@@ -111,11 +111,12 @@ export function Full() {
 					</p>
 
 					{/* Ações */}
-					<div className="flex items-center gap-3.5 mt-1">
+					<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5 mt-1">
 						<Button
 							variant="coral"
 							size="md"
 							onClick={handleCreateNew}
+							className="w-full sm:w-auto"
 							data-testid="full-create-new"
 						>
 							Criar sala nova
@@ -125,6 +126,7 @@ export function Full() {
 							variant="default"
 							size="md"
 							onClick={handleBack}
+							className="w-full sm:w-auto"
 							data-testid="full-back"
 						>
 							Voltar ao início
