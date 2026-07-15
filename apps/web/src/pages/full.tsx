@@ -129,11 +129,12 @@ export function Full() {
 						<Button
 							variant="default"
 							size="md"
-							onClick={goHome}
+							onClick={() => window.location.reload()}
 							className="w-full sm:w-auto"
-							data-testid="full-back"
+							data-testid="full-retry"
+							aria-label="Tentar entrar novamente na mesma sala"
 						>
-							Voltar ao início
+							Esperar um assento
 						</Button>
 					</div>
 				</Card>
