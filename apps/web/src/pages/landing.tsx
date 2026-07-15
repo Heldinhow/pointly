@@ -316,7 +316,7 @@ export function Landing() {
 			{/* HERO — Roman I */}
 			<section
 				id="como-funciona"
-				className="max-w-[1360px] mx-auto px-6 lg:px-16 pt-12 pb-16 relative"
+				className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 pt-8 sm:pt-12 pb-12 sm:pb-16 relative"
 			>
 				<div className="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-12 lg:gap-16 items-center">
 					<div>
@@ -346,7 +346,7 @@ export function Landing() {
 							estimativa do seu time em menos de 60 segundos com salas que somem ao terminar.
 						</p>
 
-						<div className="flex flex-wrap items-center gap-4 mt-8">
+						<div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-8">
 							<Button
 								variant="coral"
 								size="lg"
@@ -359,11 +359,11 @@ export function Landing() {
 								<span aria-hidden="true">↗</span>
 							</Button>
 
-							<div className="h-10 w-px bg-ink/10 hidden sm:block" />
+							<div className="hidden sm:block h-10 w-px bg-ink/10" />
 
 							<form
 								onSubmit={handleJoinWithCode}
-								className="flex items-center gap-2"
+								className="flex flex-col xs:flex-row sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto"
 								data-testid="join-code-form"
 							>
 								<input
@@ -396,7 +396,7 @@ export function Landing() {
 							</form>
 							<span
 								id="landing-code-hint"
-								className="font-mono text-[10px] text-ink-faint uppercase tracking-wider block w-full sm:w-auto mt-1"
+								className="font-mono text-[10px] text-ink-faint uppercase tracking-wider block w-full sm:w-auto mt-0 sm:mt-0 sm:ml-2"
 							>
 								código de 4 letras
 							</span>
@@ -487,7 +487,7 @@ export function Landing() {
 			<SectionRule roman="II." title="CONVERSAÇÃO · FOCO EM TIMES" page="PAGE 002" />
 
 			{/* ABOUT */}
-			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-20 relative">
+			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-12 sm:py-20 relative">
 				<div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-16 items-center">
 					<div className="flex flex-col items-start">
 						<h2 className="font-display font-extrabold text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.035em]">
@@ -514,7 +514,7 @@ export function Landing() {
 			<SectionRule roman="III." title="CAPABILIDADES · FUNCIONALIDADES" page="PAGE 003" />
 
 			{/* CAPABILITIES */}
-			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative">
+			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-12 sm:py-16 relative">
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 					{CAPABILITIES.map((cap) => (
 						<Card
@@ -544,7 +544,7 @@ export function Landing() {
 			<SectionRule roman="IV." title="DEMONSTRAÇÃO · FLUXO DE VOTO" page="PAGE 004" />
 
 			{/* DARK SHOWCASE CONTAINER (Section 6 Style) */}
-			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-12">
+			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-8 sm:py-12">
 				<div className="bg-ink text-surface rounded-3xl p-8 lg:p-16 grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-12 items-center relative overflow-hidden">
 					<div className="absolute inset-0 bg-radial-gradient from-coral/10 to-transparent pointer-events-none"></div>
 					<div className="relative z-10">
@@ -587,7 +587,7 @@ export function Landing() {
 			<SectionRule roman="V." title="RECOMENDAÇÃO · COMEÇAR JÁ" page="PAGE 005" />
 
 			{/* CTA RIBBON */}
-			<section className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 relative">
+			<section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 py-12 sm:py-16 relative">
 				<div className="bg-paper-dark rounded-3xl px-8 lg:px-16 py-16 text-center relative overflow-hidden border border-ink/5 shadow-bone">
 					<h2 className="font-display font-extrabold text-[clamp(32px,4vw,60px)] leading-[1.04] tracking-[-0.035em] max-w-[24ch] mx-auto">
 						Pronto pra começar<span className="text-coral">?</span>
@@ -611,7 +611,7 @@ export function Landing() {
 			</section>
 
 			{/* Footer — mega word */}
-			<footer className="max-w-[1360px] mx-auto px-6 lg:px-16 pt-16 pb-12 border-t border-ink/10 relative">
+			<footer className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-16 pt-12 sm:pt-16 pb-8 sm:pb-12 border-t border-ink/10 relative">
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
 					<div className="flex flex-col gap-3">
 						<h4 className="font-display font-bold text-[12px] tracking-wider uppercase text-ink">
