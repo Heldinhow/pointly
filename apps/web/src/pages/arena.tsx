@@ -355,7 +355,7 @@ export function Arena() {
 				 * Container responsivo com scroll horizontal em mobile (a mesa
 				 * tem geometria fixa de 960×500 — não cabe em viewport estreito). */}
 				<div
-					className="relative w-full max-w-[960px] mt-6 overflow-x-auto overflow-y-hidden"
+					className="relative w-full max-w-[960px] mt-4 sm:mt-6 lg:mt-8 overflow-x-auto overflow-y-hidden"
 					data-testid="arena-table"
 					role="group"
 					aria-label="Mesa da rodada"
@@ -420,7 +420,7 @@ export function Arena() {
 
 				{/* Deck dock (bottom center) */}
 				<div
-					className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
+					className="absolute bottom-4 sm:bottom-6 lg:bottom-10 left-1/2 -translate-x-1/2 z-10"
 					data-testid="arena-deck-wrapper"
 				>
 					<Deck
