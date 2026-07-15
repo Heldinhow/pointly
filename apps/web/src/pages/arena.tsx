@@ -234,24 +234,27 @@ export function Arena() {
 		[currentPlayerId, sala],
 	);
 
-	function handleCardSelect(
-		value: Parameters<typeof Deck>[0]["onSelect"] extends (v: infer V) => void
-			? V
-			: never,
-	): void {
-		// T38: envia cast_vote via WS
-		castVote(value);
-	}
+	const handleCardSelect = useCallback(
+		(
+			value: Parameters<typeof Deck>[0]["onSelect"] extends (v: infer V) => void
+				? V
+				: never,
+		): void => {
+			// T38: envia cast_vote via WS
+			castVote(value);
+		},
+		[castVote],
+	);
 
-	function handleReveal(): void {
+	const handleReveal = useCallback((): void => {
 		// T39: envia reveal_votes via WS
 		requestReveal();
-	}
+	}, [requestReveal]);
 
-	function handleNewRound(): void {
+	const handleNewRound = useCallback((): void => {
 		// T40: envia start_new_round via WS
 		requestNewRound();
-	}
+	}, [requestNewRound]);
 
 	// T09 / BUG-306 / ADR-007 — atalhos de teclado.
 	// `R` revela (qualquer player, fase voting, ≥1 voto),
