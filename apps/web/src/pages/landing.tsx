@@ -93,7 +93,7 @@ const MockTable = memo(function MockTable() {
 					<span className="inline-block w-1.5 h-1.5 rounded-full bg-coral"></span>
 					FIG. 02 · Mesa com Votos Revelados
 				</div>
-				<div className="font-mono text-[8px] bg-mustard/15 text-ink-mute px-2 py-0.5 rounded border border-mustard/20">
+				<div className="font-mono text-[8px] bg-mustard/25 text-ink px-2 py-0.5 rounded border border-mustard/40">
 					MÉDIA 6.25 · MEDIANA 5
 				</div>
 			</div>
