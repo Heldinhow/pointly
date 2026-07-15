@@ -82,7 +82,11 @@ const SEAT_POSITIONS = [
 /** Mesa mockada que renderiza os assentos ativos de forma responsiva */
 function MockTable() {
 	return (
-		<div className="relative w-full aspect-[4/3] max-w-[620px] mx-auto bg-paper-warm border border-ink/10 rounded-3xl p-4 lg:p-6 shadow-bone overflow-hidden flex flex-col justify-between">
+		<div
+			className="relative w-full aspect-[4/3] max-w-[620px] mx-auto bg-paper-warm border border-ink/10 rounded-3xl p-4 lg:p-6 shadow-bone overflow-hidden flex flex-col justify-between"
+			aria-label="Mesa demonstrativa com 8 jogadores e votos revelados"
+			role="img"
+		>
 			{/* Header da mesa demonstrativa */}
 			<div className="flex items-center justify-between border-b border-ink/5 pb-2.5 z-10">
 				<div className="font-mono text-[9px] text-ink-faint uppercase tracking-wider flex items-center gap-1.5">
@@ -168,7 +172,11 @@ function MockTable() {
 function MockDeck() {
 	const cards = ["0", "½", "1", "2", "3", "5", "8", "13", "☕"];
 	return (
-		<div className="bg-bg/5 border border-surface/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4">
+		<div
+			className="bg-bg/5 border border-surface/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4"
+			aria-label="Deck Fibonacci com a carta 5 selecionada"
+			role="img"
+		>
 			<div className="font-mono text-[9px] text-surface/40 uppercase flex justify-between">
 				<span>Seleção de Carta Ativa</span>
 				<span>DECK FIBONACCI</span>
@@ -247,7 +255,7 @@ export function Landing() {
 	return (
 		<div
 			data-testid="page-landing"
-			className="surface-noise min-h-screen bg-bg text-ink relative overflow-x-hidden select-none"
+			className="surface-noise min-h-screen bg-bg text-ink relative overflow-x-hidden"
 		>
 			{/* Side Rails (Desktop/Wide) */}
 			<div className="side-rail left hidden xl:flex">
@@ -406,7 +414,7 @@ export function Landing() {
 					</div>
 
 					{/* Stylized Cards Illustration (Hero) */}
-					<div className="w-full relative min-h-[480px] bg-paper-warm border border-ink/5 rounded-3xl flex items-center justify-center overflow-hidden shadow-bone">
+					<div className="w-full relative min-h-[420px] sm:min-h-[480px] bg-paper-warm border border-ink/5 rounded-3xl flex items-center justify-center overflow-hidden shadow-bone" aria-hidden="true">
 						<div className="relative w-80 h-80 flex items-center justify-center">
 							{/* Card 1: '3' */}
 							<div className="absolute w-36 h-52 bg-surface border border-ink/10 rounded-2xl shadow-lg flex items-center justify-center rotate-[-16deg] -translate-x-28 translate-y-3 transition-all duration-300 hover:rotate-[-6deg] hover:-translate-y-6 hover:-translate-x-[8.5rem] hover:scale-105 hover:z-20 z-0">
