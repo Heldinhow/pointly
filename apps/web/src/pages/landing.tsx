@@ -17,9 +17,9 @@ import { Card } from "../components/ui/card";
 
 /** Stat rings — números reais. */
 const STATS = [
-	{ num: "0", label: "Cadastros" },
+	{ num: "0", label: "Contas" },
 	{ num: "12", label: "Assentos" },
-	{ num: "60", label: "Seg. p/ decidir" },
+	{ num: "60", label: "Seg. para decidir" },
 ];
 
 /** Capabilities — 4 features. */
@@ -27,22 +27,22 @@ const CAPABILITIES = [
 	{
 		n: "01",
 		title: "Sala instantânea",
-		body: "Crie um código de 4 chars em < 100ms. Sem cadastro, sem email, sem confirmação.",
+		body: "Crie um código de 4 letras em menos de 100 ms. Sem cadastro, sem e-mail, sem confirmação.",
 	},
 	{
 		n: "02",
 		title: "Deck Fibonacci",
-		body: "9 cartas: 0, ½, 1, 2, 3, 5, 8, 13, ☕. Pausa explícita sem custo de mediação.",
+		body: "9 cartas: 0, ½, 1, 2, 3, 5, 8, 13, ☕. A pausa explícita vale como voto — sem custo de coordenação.",
 	},
 	{
 		n: "03",
-		title: "Reveal coletivo",
-		body: "Vire a mesa face-up com 1 clique. Mediana destacada em gold. Stats instantâneas.",
+		title: "Revelar coletivo",
+		body: "Vire a mesa com 1 clique. A mediana fica em destaque dourado. Estatísticas instantâneas.",
 	},
 	{
 		n: "04",
 		title: "Timer crítico",
-		body: "60s com transição pra coral aos 30s. Auto-reveal ao expirar. Sem decisões penduradas.",
+		body: "60 s com mudança de cor aos 30 s. Revela sozinho ao expirar. Sem decisões penduradas.",
 	},
 ];
 
@@ -568,11 +568,11 @@ export function Landing() {
 							</li>
 							<li className="flex items-center gap-3">
 								<span className="w-1.5 h-1.5 rounded-full bg-coral"></span>
-								Ocultação total até o Reveal do Host
+								Cartas viradas para baixo até alguém revelar
 							</li>
 							<li className="flex items-center gap-3">
 								<span className="w-1.5 h-1.5 rounded-full bg-coral"></span>
-								Destaque Mustard para votos alinhados com a mediana
+								Destaque dourado para os votos que batem com a mediana
 							</li>
 						</ul>
 					</div>
