@@ -222,7 +222,7 @@ export function Join() {
 					{showHostNote && (
 						<div
 							data-testid="host-note"
-							className="font-mono text-[11px] tracking-[0.04em] text-ink-faint uppercase py-2.5 px-3.5 border border-ink/5 rounded-lg bg-paper-warm"
+							className="font-mono text-[11px] tracking-[0.04em] text-ink-faint uppercase py-2.5 px-3.5 border border-ink/5 rounded-lg bg-paper-warm transition-colors duration-200"
 						>
 							Você vai criar uma sala nova e receber o código ao entrar.
 						</div>
