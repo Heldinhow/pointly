@@ -1,3 +1,5 @@
+import type { Phase } from "@planning-poker/shared";
+import { DECK_VALUES, type Vote } from "@planning-poker/shared";
 /**
  * Deck — T32 (Phase 6).
  *
@@ -26,9 +28,7 @@
  * @see .specs/features/planning-poker-v1/tasks.md T32
  * @see .specs/features/planning-poker-v1/spec.md F-016, F-017, F-018
  */
-import { useEffect, useRef, type KeyboardEvent } from "react";
-import type { Phase } from "@planning-poker/shared";
-import { DECK_VALUES, type Vote } from "@planning-poker/shared";
+import { type KeyboardEvent, useEffect, useRef } from "react";
 import { cn } from "./ui/utils";
 
 export interface DeckProps {
@@ -106,9 +106,7 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 							type="button"
 							disabled={disabled}
 							aria-label={
-								selected
-									? `Selecionada, voto em ${value}`
-									: `Votar ${value}`
+								selected ? `Selecionada, voto em ${value}` : `Votar ${value}`
 							}
 							aria-pressed={selected}
 							onClick={() => onSelect(value)}
@@ -128,7 +126,9 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 								// selected: coral ring + soft bg + coral ink
 								selected && "border-2 border-coral bg-coral/8 text-coral",
 								// hover (só quando não disabled e não selected)
-								!disabled && !selected && "hover:-translate-y-[3px] hover:border-coral",
+								!disabled &&
+									!selected &&
+									"hover:-translate-y-[3px] hover:border-coral",
 								// disabled: opacity 0.4 (deck pai também aplica, aqui no botão individual)
 								disabled && "pointer-events-none opacity-40 cursor-not-allowed",
 							)}

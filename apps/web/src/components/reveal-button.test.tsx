@@ -2,8 +2,8 @@
  * RevealButton tests — T33 verify (≥3 of 5 minimum required).
  */
 import { describe, expect, mock, test } from "bun:test";
-import { fireEvent, render, screen } from "./ui/test-helpers";
 import { RevealButton, deriveButtonState } from "./reveal-button";
+import { fireEvent, render, screen } from "./ui/test-helpers";
 
 describe("RevealButton — deriveButtonState (pure)", () => {
 	test("phase=idle + 0 votos → awaiting", () => {
@@ -140,9 +140,9 @@ describe("RevealButton — interactions", () => {
 				onNewRound={() => {}}
 			/>,
 		);
-		expect(screen.getByTestId("reveal-button").getAttribute("aria-label")).toMatch(
-			/aguardando/i,
-		);
+		expect(
+			screen.getByTestId("reveal-button").getAttribute("aria-label"),
+		).toMatch(/aguardando/i);
 
 		rerender(
 			<RevealButton
@@ -153,9 +153,9 @@ describe("RevealButton — interactions", () => {
 				onNewRound={() => {}}
 			/>,
 		);
-		expect(screen.getByTestId("reveal-button").getAttribute("aria-label")).toMatch(
-			/revelar votos agora/i,
-		);
+		expect(
+			screen.getByTestId("reveal-button").getAttribute("aria-label"),
+		).toMatch(/revelar votos agora/i);
 
 		rerender(
 			<RevealButton
@@ -166,8 +166,8 @@ describe("RevealButton — interactions", () => {
 				onNewRound={() => {}}
 			/>,
 		);
-		expect(screen.getByTestId("reveal-button").getAttribute("aria-label")).toMatch(
-			/nova rodada/i,
-		);
+		expect(
+			screen.getByTestId("reveal-button").getAttribute("aria-label"),
+		).toMatch(/nova rodada/i);
 	});
 });

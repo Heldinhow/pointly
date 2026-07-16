@@ -7,8 +7,8 @@ import { describe, expect, test } from "bun:test";
 import {
 	DECK_VALUES,
 	PhaseSchema,
-	VoteSchema,
 	type Player,
+	VoteSchema,
 } from "@planning-poker/shared";
 
 describe("web ↔ @planning-poker/shared workspace", () => {

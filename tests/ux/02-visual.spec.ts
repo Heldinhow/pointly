@@ -22,7 +22,9 @@ const LINEAR_FORBIDDEN = [
 	"rgb(94, 106, 210)", // #5e6ad2
 ];
 
-test("B1+B2: Background --bg aplicado em todas as 4 rotas", async ({ page }) => {
+test("B1+B2: Background --bg aplicado em todas as 4 rotas", async ({
+	page,
+}) => {
 	const routes = ["/", "/join?code=ABCD", "/full"];
 	for (const route of routes) {
 		await page.goto(route);
@@ -84,7 +86,7 @@ test("B6: ≤ 1 CTA coral por viewport na Landing", async ({ page }) => {
 	await page.goto("/");
 	const coralButtons = await page.evaluate(() => {
 		const CORAL = "rgb(237, 111, 92)";
-		const buttons = Array.from(document.querySelectorAll('button, a'));
+		const buttons = Array.from(document.querySelectorAll("button, a"));
 		return buttons
 			.filter((b) => window.getComputedStyle(b).backgroundColor === CORAL)
 			.map((b) => ({
@@ -110,14 +112,19 @@ test("B10: Sec-rules Roman aparecem na Landing (I., II., III., IV., V.)", async 
 }) => {
 	await page.goto("/");
 	// JSX adiciona whitespace entre tags: "I ." → normalizar
-	const bodyText = ((await page.textContent("body")) ?? "").replace(/\s+/g, " ");
+	const bodyText = ((await page.textContent("body")) ?? "").replace(
+		/\s+/g,
+		" ",
+	);
 	const romanMatches = bodyText.match(/\b(I{1,3}|IV|V)\s*\./g) ?? [];
 	console.log(`[B10] Roman numerals found:`, romanMatches);
 	// Landing declara 5 seções (I–V); aceita >= 4
 	expect(romanMatches.length).toBeGreaterThanOrEqual(4);
 });
 
-test("B11: Metadata strip mono aparece em todas as 4 telas", async ({ page }) => {
+test("B11: Metadata strip mono aparece em todas as 4 telas", async ({
+	page,
+}) => {
 	const routes = [
 		{ path: "/", expect: "Pointly" },
 		{ path: "/full", expect: "Fig" },

@@ -11,13 +11,17 @@ import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { renderHook } from "../components/ui/test-helpers";
 import { ToastProvider } from "../components/ui/toast";
-import { useArenaLoop, getStoredUUID } from "./use-arena-loop";
+import { getStoredUUID, useArenaLoop } from "./use-arena-loop";
 
 /** Wrapper pra renderHook com providers (Router + Toast). */
 function renderArenaLoop(params: Parameters<typeof useArenaLoop>[0]) {
 	const wrapper = ({ children }: { children: ReactNode }) => (
 		<ToastProvider>
-			<MemoryRouter>{children}</MemoryRouter>
+			<MemoryRouter
+				future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+			>
+				{children}
+			</MemoryRouter>
 		</ToastProvider>
 	);
 	return renderHook(() => useArenaLoop(params), { wrapper });

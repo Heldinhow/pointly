@@ -2,12 +2,12 @@
  * Arena page tests — T30 verify (≥3 of 5 minimum required).
  */
 import { describe, expect, test } from "bun:test";
-import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import type { SalaState } from "@planning-poker/shared";
+import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import { render, screen } from "../components/ui/test-helpers";
 import { ToastProvider } from "../components/ui/toast";
-import { Arena, seatPosition } from "./arena";
 import { useSalaStore } from "../store/sala";
-import type { SalaState } from "@planning-poker/shared";
+import { Arena, seatPosition } from "./arena";
 
 function makeSala(overrides: Partial<SalaState> = {}): SalaState {
 	return {
@@ -48,10 +48,19 @@ function makeSala(overrides: Partial<SalaState> = {}): SalaState {
 
 function renderArena(initialEntry = "/arena?code=9B9F") {
 	const routes = [{ path: "/arena", element: <Arena /> }];
-	const router = createMemoryRouter(routes, { initialEntries: [initialEntry] });
+	const router = createMemoryRouter(routes, {
+		initialEntries: [initialEntry],
+		future: {
+			v7_fetcherPersist: true,
+			v7_normalizeFormMethod: true,
+			v7_partialHydration: true,
+			v7_relativeSplatPath: true,
+			v7_skipActionErrorRevalidation: true,
+		},
+	});
 	return render(
 		<ToastProvider>
-			<RouterProvider router={router} />
+			<RouterProvider router={router} future={{ v7_startTransition: true }} />
 		</ToastProvider>,
 	);
 }
@@ -96,7 +105,9 @@ describe("Arena shell — T30", () => {
 
 	test("round label atualiza conforme store.round", () => {
 		renderArena();
-		expect(screen.getByTestId("arena-round-hidden-stub")).toHaveTextContent(/Rodada 01/i);
+		expect(screen.getByTestId("arena-round-hidden-stub")).toHaveTextContent(
+			/Rodada 01/i,
+		);
 	});
 
 	test("renderiza Seat para cada player do store", () => {

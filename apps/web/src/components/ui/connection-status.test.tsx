@@ -2,8 +2,8 @@
  * ConnectionStatus primitive tests — T26 verify (1 of 5 minimum).
  */
 import { describe, expect, test } from "bun:test";
-import { render, screen } from "./test-helpers";
 import { ConnectionStatus } from "./connection-status";
+import { render, screen } from "./test-helpers";
 
 describe("ConnectionStatus", () => {
 	test("variant loading mostra 'Conectando…' com dot coral pulse", () => {

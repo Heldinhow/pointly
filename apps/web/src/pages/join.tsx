@@ -23,19 +23,21 @@
  * @see .specs/features/planning-poker-v1/tasks.md T28
  * @see .specs/features/planning-poker-v1/spec.md F-001, F-002, F-008
  */
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import {
+	type FormEvent,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { ThemeToggle } from "../components/theme-toggle";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { ConnectionStatus } from "../components/ui/connection-status";
 import { useToast } from "../components/ui/toast";
+import { getNick, getUUID, setCode, setNick } from "../lib/storage";
 import { useSalaStore } from "../store/sala";
-import {
-	getNick,
-	getUUID,
-	setCode,
-	setNick,
-} from "../lib/storage";
 
 const NICK_MIN = 2;
 const NICK_MAX = 20;
@@ -88,19 +90,31 @@ export function Join() {
 			return "";
 		}
 	});
-	const [validation, setValidation] = useState<NickValidation>({
-		ok: false,
-		error: "",
-	});
+	const [localCode, setLocalCode] = useState("");
+	// IMPORTANT: validar o nick INICIAL — se ele veio pré-preenchido de
+	// sessionStorage, ainda é string vazia "" e o botão fica desabilitado
+	// mesmo com 5 chars válidos na tela. Sem isso o "Entrar" só destrava
+	// após o usuário digitar (bug reportado em P1 do polish).
+	const [validation, setValidation] = useState<NickValidation>(() =>
+		validateNick(nick),
+	);
 	const [isConnecting, setIsConnecting] = useState(false);
+	// TODO: remove on T38 — `connected` é falso-positive enquanto o WS não
+	// fechou. Ver comentário P0 na handleSubmit.
 	const [connectionState, setConnectionState] = useState<
 		"idle" | "connecting" | "connected" | "error"
 	>("idle");
 
+	const showCodeInput = !code && !isHost;
+
+	// Refs imperativos: codeInputRef para focus/select quando o código
+	// submetido é mal-formado (UX padrão de formulários curtos).
+	const codeInputRef = useRef<HTMLInputElement>(null);
+	const nickInputRef = useRef<HTMLInputElement>(null);
+
 	// -------------------------------------------------------------------------
-	// Store hooks (apenas para aplicar welcome/error via setSalaEnded)
+	// Store hooks (apenas para aplicar welcome/error via reset)
 	// -------------------------------------------------------------------------
-	const setSalaEnded = useSalaStore((s) => s.setSalaEnded);
 	const reset = useSalaStore((s) => s.reset);
 
 	// Limpa store no mount (caso esteja entrando de outra sala)
@@ -116,6 +130,15 @@ export function Join() {
 		setValidation(validateNick(value));
 	}, []);
 
+	const handleCodeChange = useCallback((value: string) => {
+		const clean = value
+			.normalize("NFKD")
+			.replace(/[^A-Za-z0-9]/g, "")
+			.slice(0, 4)
+			.toUpperCase();
+		setLocalCode(clean);
+	}, []);
+
 	// Ref para o setTimeout de redirect — cancela no unmount pra evitar
 	// setState em componente desmontado.
 	const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -125,12 +148,38 @@ export function Join() {
 		};
 	}, []);
 
+	// Esc global: Escape volta pra landing. Não capturado durante submit
+	// (isConnecting) pra não abortar mid-navigation.
+	useEffect(() => {
+		if (isConnecting) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") {
+				e.preventDefault();
+				navigate("/");
+			}
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, [isConnecting, navigate]);
+
 	const handleSubmit = useCallback(
 		async (e: FormEvent<HTMLFormElement>) => {
 			e.preventDefault();
 			const result = validateNick(nick);
 			setValidation(result);
 			if (!result.ok) return;
+
+			const activeCode = code || localCode;
+			const isCodeValid =
+				isHost || (activeCode && /^[A-Z0-9]{4}$/.test(activeCode));
+			if (!isCodeValid) {
+				toast.push("Código da sala inválido.", "error");
+				// UX padrão de forms curtos: traz o campo de volta pro foco
+				// com o texto selecionado, pra usuário corrigir sem apagar.
+				codeInputRef.current?.focus();
+				codeInputRef.current?.select();
+				return;
+			}
 
 			setIsConnecting(true);
 			setConnectionState("connecting");
@@ -153,15 +202,13 @@ export function Join() {
 			}
 			// Só persiste o code se for bem-formado (4 alfanum, maiúsculas).
 			// Defesa contra URL maliciosa tipo /join?code=<script>.
-			if (code && /^[A-Z0-9]{4}$/.test(code)) {
+			if (activeCode && /^[A-Z0-9]{4}$/.test(activeCode)) {
 				try {
-					setCode(code);
+					setCode(activeCode);
 				} catch {
 					/* idem */
 				}
 			}
-
-			toast.push(`Bem-vindo, ${result.value}.`, "success");
 
 			// Em produção: ws-client.connect() + ws.send({ type: 'hello', ... })
 			// + listener pra 'welcome' / 'error' → store.setSala + setCurrentPlayerId
@@ -169,98 +216,107 @@ export function Join() {
 			//
 			// Aqui (T28 stub): navegamos para arena sem WS. O ws-client real
 			// é ativado pela arena em T38.
-			setConnectionState("connected");
+			//
+			// P0 audit: NÃO emitir toast 'Bem-vindo' nem flash de
+			// ConnectionStatus=connected antes da navegação — o WS ainda
+			// não fechou; emitir success aqui é fake UX. // TODO: reabilitar
+			// os toasts/indicadores em T38 quando o connect real responder.
 
 			// Persistência mínima: nick ativo + code (host ou join)
 			// - host=1: navega para /arena SEM code — server cria nova sala
 			//   no `hello` (T13) e devolve `sala.code` no `welcome`.
 			// - join com code: navega para /arena?code=XXXX — server faz
 			//   `addPlayer` no `hello`.
-			const target = code ? `/arena?code=${code}` : "/arena";
+			const target = isHost ? "/arena" : `/arena?code=${activeCode}`;
 			redirectTimeoutRef.current = setTimeout(() => {
+				// Cleanup: reseta connectionState para não vazar no destino.
+				// TODO: remove on T38 — quando connect real responde
+				// 'welcome'/'error' a partir do Arena, isso deixa de existir.
+				setConnectionState("idle");
 				navigate(target);
 			}, 200);
 		},
-		[nick, code, toast, navigate, setSalaEnded],
+		[nick, code, localCode, isHost, toast, navigate],
 	);
 
-	const codeLabel = code || "—";
-	const showHostNote = isHost;
+	const codeLabel = code || localCode || "—";
+	// Em-dash acessível: leitores de tela anunciam "código pendente" em vez
+	// de "traço" — copy intencional pro estado vazio.
+	const codeDisplay =
+		codeLabel === "—" ? <span aria-label="código pendente">—</span> : codeLabel;
 
 	return (
 		<div
 			data-testid="page-join"
 			className="surface-noise min-h-screen bg-bg text-ink flex flex-col"
 		>
-			{/* Header topbar */}
-			<header className="border-b border-ink/10 py-4 flex-shrink-0 bg-bg/95 backdrop-blur-sm sticky top-0 z-10">
+			{/* Header topbar — superfície sólida (sem glassmorphism). Tela de
+			    formulário único não justifica sticky: o usuário percorre o card
+			    inteiro dentro de uma viewport cabeçudo+rodapé, e o sticky só
+			    comeria pixels verticais sem benefício. */}
+			<header className="border-b border-ink/10 py-4 flex-shrink-0 bg-bg">
 				<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 flex items-center justify-between">
 					<Link
 						to="/"
-						className="font-display font-extrabold text-[18px] tracking-[-0.02em] flex items-baseline gap-2 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+						className="font-display font-extrabold text-nav-wordmark tracking-[-0.02em] flex items-baseline gap-2 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
 						aria-label="Pointly — página inicial"
 					>
-						<span className="font-italic italic text-coral text-[22px] leading-none">
+						<span className="font-italic italic text-coral text-nav-mark">
 							Ø
 						</span>
 						Pointly
 					</Link>
-					<div className="font-mono text-[10px] uppercase tracking-wider text-ink-faint">
-						Entrar
+					<div className="flex items-center gap-4">
+						<ThemeToggle />
+						<div className="font-sans text-caption text-ink-mute">Entrar</div>
 					</div>
 				</div>
 			</header>
 
-			{/* Header strip */}
-			<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 w-full py-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-ink-faint">
-				<span>
-					Sala:{" "}
-					<span className="text-ink font-medium" data-testid="join-code-label">
-						{isHost && !code ? "será gerada ao entrar" : codeLabel}
+			{/* Header strip — só renderiza quando existe code de fato. */}
+			{!isHost && code && (
+				<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 w-full py-3 sm:py-4 flex items-center justify-between text-caption text-ink-mute">
+					<span>
+						Sala{" "}
+						<span
+							className="font-mono text-body font-medium tracking-[0.08em] text-ink"
+							data-testid="join-code-label"
+						>
+							{codeDisplay}
+						</span>
 					</span>
-				</span>
-			</div>
+				</div>
+			)}
 
 			{/* Stage */}
 			<main className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-16 py-8 sm:py-12">
 				<Card
 					padding="lg"
-					className="w-full max-w-[520px] flex flex-col gap-6"
+					className="w-full max-w-[520px] flex flex-col gap-7 sm:gap-8"
 					data-od-id="nick-card"
 					data-testid="join-card"
 				>
-					<div className="font-italic italic text-coral text-[36px] leading-none">
-						Ø
-					</div>
-					<h1 className="font-display font-extrabold text-[34px] leading-[1.05] tracking-[-0.03em] text-balance">
-						Seu nome na sala<span className="text-coral">.</span>
+					{/* Ø glyph em 28px (text-brand-mark): fica ABAIXO do heading
+					    (card-title 34px) — antes text-card-mark 36px deixava o
+					    Ø visualmente MAIOR que o h1, invertendo a hierarquia. */}
+					<div className="font-italic italic text-coral text-brand-mark">Ø</div>
+					<h1 className="font-display font-extrabold text-card-title tracking-[-0.03em] text-balance">
+						Entrar na sala<span className="text-coral-deep">.</span>
 					</h1>
 
-					<p className="font-sans text-[14px] leading-[1.55] text-ink-mute">
-						Apelido visível para os outros jogadores na mesa. Sem conta, sem
-						e-mail — só como você quer ser chamado nesta rodada.
+					<p className="max-w-[36ch] font-sans text-body leading-[1.55] text-ink-mute">
+						Escolha como você quer aparecer para o time. Não precisa de conta.
 					</p>
 
-					{showHostNote && (
-						<div
-							data-testid="host-note"
-							className="font-mono text-[11px] tracking-[0.04em] text-ink-faint uppercase py-2.5 px-3.5 border border-ink/5 rounded-lg bg-paper-warm transition-colors duration-200"
-						>
-							Você vai criar uma sala nova e receber o código ao entrar.
-						</div>
-					)}
-
-					{/* Status de conexão */}
-					{connectionState !== "idle" && (
-						<div className="flex">
+					{/* Status de conexão — só erro é informação útil durante o
+					    stub T28. Connecting/connected ficam implícitos pelo
+					    estado disabled + spinners dos controles (a11y: não
+					    anunciar transições que ainda não confirmaram nada). */}
+					{connectionState === "error" && (
+						<div className="flex" role="alert">
 							<ConnectionStatus
-								variant={
-									connectionState === "error"
-										? "error"
-										: connectionState === "connected"
-											? "connected"
-											: "loading"
-								}
+								variant="error"
+								className="normal-case font-sans text-caption tracking-normal px-3 py-2"
 							/>
 						</div>
 					)}
@@ -271,58 +327,106 @@ export function Join() {
 						autoComplete="off"
 						data-testid="nick-form"
 					>
-						<label
-							htmlFor="nick-input"
-							className="font-display font-semibold text-[11px] tracking-[0.22em] uppercase text-ink-faint"
-						>
-							Apelido
-						</label>
-						<input
-							id="nick-input"
-							type="text"
-							maxLength={NICK_MAX}
-							placeholder="ex. Luna"
-							value={nick}
-							onChange={(e) => handleNickChange(e.target.value)}
-							autoComplete="off"
-							aria-invalid={!validation.ok && validation.error !== ""}
-							aria-describedby={
-								!validation.ok && validation.error ? "nick-error" : "nick-hint"
-							}
-							disabled={isConnecting}
-							className="font-sans text-[16px] py-3.5 px-4 border border-ink/10 rounded-lg bg-paper text-ink placeholder:text-ink-faint focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20 transition-colors disabled:opacity-60 aria-[invalid=true]:border-coral"
-							data-testid="nick-input"
-						/>
-						<div
-							id="nick-error"
-							role="alert"
-							className="font-mono text-[11px] text-coral min-h-[14px] tracking-[0.02em]"
-							data-testid="nick-error"
-						>
-							{!validation.ok ? validation.error : ""}
-						</div>
-						<div
-							id="nick-hint"
-							className="font-mono text-[10px] text-ink-faint tracking-[0.02em] flex items-center justify-between gap-3"
-						>
-							<span>2–20 caracteres · como você quer ser chamado nesta rodada</span>
-							{validation.ok && (
-								<span
-									aria-hidden="true"
-									className="text-olive font-medium tabular-nums inline-flex items-center gap-1"
+						{showCodeInput && (
+							<div
+								className="flex flex-col gap-1.5 mb-3"
+								data-testid="join-code-field"
+							>
+								<label
+									htmlFor="code-input"
+									className="font-sans font-medium text-caption text-ink"
 								>
-									<span className="leading-none">✓</span>
-									{nick.length}/{NICK_MAX}
-								</span>
-							)}
-						</div>
+									Código da sala
+								</label>
+								<input
+									id="code-input"
+									ref={codeInputRef}
+									type="text"
+									maxLength={4}
+									placeholder="ex. ABCD"
+									value={localCode}
+									onChange={(e) => handleCodeChange(e.target.value)}
+									aria-describedby="code-input-hint"
+									aria-invalid={
+										!isHost &&
+										showCodeInput &&
+										localCode.length > 0 &&
+										localCode.length !== 4
+									}
+									autoComplete="off"
+									disabled={isConnecting}
+									className="font-mono text-center text-body py-3.5 px-4 border border-ink/10 rounded-lg bg-paper-warm text-ink placeholder:text-caption placeholder:text-ink-faint focus:border-coral focus:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep/40 transition-colors disabled:opacity-60 tracking-widest uppercase [&:-webkit-autofill]:bg-paper-warm [&:-webkit-autofill]:[-webkit-text-fill-color:var(--fg)] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_var(--paper-warm)_inset]"
+									data-testid="join-code-input"
+								/>
+								<p
+									id="code-input-hint"
+									className="font-sans text-caption text-ink-mute leading-[1.55]"
+								>
+									Peça o código de 4 letras para quem criou a sala.
+								</p>
+							</div>
+						)}
+
+						<fieldset className="contents m-0 min-w-0 p-0 border-0">
+							<legend className="sr-only">Como você quer ser chamado</legend>
+							<label htmlFor="nick-input" className="sr-only">
+								Como você quer ser chamado
+							</label>
+							<input
+								id="nick-input"
+								ref={nickInputRef}
+								type="text"
+								maxLength={NICK_MAX}
+								placeholder="ex. Luna"
+								value={nick}
+								onChange={(e) => handleNickChange(e.target.value)}
+								autoComplete="nickname"
+								aria-invalid={!validation.ok && validation.error !== ""}
+								aria-describedby={
+									!validation.ok && validation.error
+										? "nick-error"
+										: "nick-hint"
+								}
+								disabled={isConnecting}
+								className="font-sans text-body py-3.5 px-4 border border-ink/10 rounded-lg bg-paper-warm text-ink placeholder:text-caption placeholder:text-ink-faint focus:border-coral focus:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep/40 transition-colors disabled:opacity-60 aria-[invalid=true]:border-coral-deep [&:-webkit-autofill]:bg-paper-warm [&:-webkit-autofill]:[-webkit-text-fill-color:var(--fg)] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_var(--paper-warm)_inset]"
+								data-testid="nick-input"
+							/>
+							<div
+								id="nick-error"
+								role={!validation.ok && validation.error ? "alert" : undefined}
+								aria-live="polite"
+								className="font-sans text-caption text-coral-deep min-h-[22px] tracking-normal"
+								data-testid="nick-error"
+							>
+								{!validation.ok && validation.error ? validation.error : ""}
+							</div>
+							<div
+								id="nick-hint"
+								className="font-sans text-caption text-ink-mute leading-[1.55] flex flex-wrap items-center justify-between gap-x-3 gap-y-1"
+							>
+								<span>De 2 a 20 caracteres · como você quer ser chamado</span>
+								{validation.ok && (
+									<span
+										aria-hidden="true"
+										className="text-olive font-medium tabular-nums inline-flex items-center gap-1"
+									>
+										<span className="leading-none">✓</span>
+										{nick.length}/{NICK_MAX}
+									</span>
+								)}
+							</div>
+						</fieldset>
 
 						<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-1.5">
 							<Button
 								type="submit"
 								variant="coral"
-								size="md"
-								disabled={!validation.ok || isConnecting}
+								size="lg"
+								disabled={
+									!validation.ok ||
+									isConnecting ||
+									(showCodeInput && localCode.length !== 4)
+								}
 								aria-busy={isConnecting}
 								className="w-full sm:w-auto"
 								data-testid="join-submit"
@@ -333,7 +437,7 @@ export function Join() {
 							<Button
 								type="button"
 								variant="default"
-								size="md"
+								size="lg"
 								onClick={() => navigate("/")}
 								className="w-full sm:w-auto"
 								data-testid="join-back"

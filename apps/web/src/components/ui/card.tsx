@@ -3,7 +3,13 @@
  *
  * Phase 5 (T26). Primitivo de superfície elevada.
  *
- * Base: `bg-surface rounded-card shadow-bone border border-ink/5 surface-noise relative`.
+ * Base: `bg-surface rounded-card shadow-card border border-ink/5 surface-noise relative`.
+ *
+ * Usa `shadow-card` (≤8px blur), NÃO `shadow-bone` (60px blur).
+ * Bone fica reservada pra superfícies flutuantes sem border (modais,
+ * popovers, tooltips). Combinar border 1px + shadow-bone é codex
+ * "ghost-card" tell — vide Border+Plus-Shadow Rule em DESIGN.md.
+ *
  * O `relative` + `z-10` no conteúdo garante que a noise ::before não
  * escureça o children.
  *
@@ -29,7 +35,20 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * Bone-fill card. Use como container de formulários, stats, modais (overlay).
+ * Bone-fill card. Use como container de formulários, stats, banners.
+ *
+ * Tokens aplicados:
+ *  - `bg-surface`           → bleached ivory (var --surface)
+ *  - `rounded-card`         → 18px radius (Atelier Zero — cards nunca >18px)
+ *  - `shadow-card`          → 0 4px 8px -1px (≤8px blur, borda carrega o lift)
+ *  - `border border-ink/5`  → hairline 1px
+ *
+ * NÃO usar `shadow-bone` aqui — é codex "ghost-card" tell com 1px border.
+ * Bone shadow (60px blur) é reservado pra superfícies SEM border
+ * (modais flutuantes, popovers, toasts). Vide DESIGN.md §4 Border-Plus-Shadow Rule.
+ *
+ * Para overlays sem border (popovers, menus suspensos), prefira uma
+ * `<div>` comum com `shadow-bone` — Card é só pra containers com hairline.
  */
 export function Card({
 	className,
@@ -44,7 +63,7 @@ export function Card({
 			ref={ref}
 			data-testid="card-root"
 			className={cn(
-				"bg-surface rounded-card shadow-bone border border-ink/5 relative",
+				"bg-surface rounded-card shadow-card border border-ink/5 relative",
 				!noNoise && "surface-noise",
 				PAD_CLASSES[padding],
 				className,

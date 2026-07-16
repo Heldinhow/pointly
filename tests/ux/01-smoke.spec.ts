@@ -110,7 +110,9 @@ test("A6: prefers-reduced-motion desabilita pulse no metadata", async ({
 	const page = await ctx.newPage();
 	await page.goto("/");
 	const pulseOpacity = await page.evaluate(() => {
-		const dot = document.querySelector('span[aria-hidden="true"].animate-pulse');
+		const dot = document.querySelector(
+			'span[aria-hidden="true"].animate-pulse',
+		);
 		if (!dot) return null;
 		return window.getComputedStyle(dot).animationName;
 	});

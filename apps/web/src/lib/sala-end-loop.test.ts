@@ -2,18 +2,18 @@
  * sala_ended + sala_cheia UX tests — T41 verify (≥3 tests).
  */
 import { beforeEach, describe, expect, mock, test } from "bun:test";
+import type {
+	ErrorEvent,
+	SalaEndedEvent,
+	SalaEndedReason,
+} from "@planning-poker/shared";
+import { useSalaStore } from "../store/sala";
 import {
 	applyErrorEvent,
 	applySalaEndedEvent,
 	createSalaEndLoop,
 } from "./sala-end-loop";
 import type { SalaEndHooks } from "./sala-end-loop";
-import { useSalaStore } from "../store/sala";
-import type {
-	ErrorEvent,
-	SalaEndedEvent,
-	SalaEndedReason,
-} from "@planning-poker/shared";
 
 /** Mock de hooks pra testabilidade (sem React Router / ToastProvider). */
 function makeHooks() {

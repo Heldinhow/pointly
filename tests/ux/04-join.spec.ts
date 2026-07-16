@@ -85,7 +85,7 @@ test("D10: Nick com caractere especial/emoji aceita (audit)", async ({
 	page,
 }) => {
 	await page.getByTestId("nick-input").fill("Helder🎲");
-	const errorText = await page.textBody?.() ?? "";
+	const errorText = (await page.textBody?.()) ?? "";
 	// Comportamento atual: aceita. Só audit, não falha se diferente.
 	const submitDisabled = await page.getByTestId("join-submit").isDisabled();
 	console.log(

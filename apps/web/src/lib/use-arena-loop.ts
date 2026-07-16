@@ -1,3 +1,4 @@
+import type { Vote } from "@planning-poker/shared";
 /**
  * useArenaLoop — composition hook que conecta o Arena ao WebSocket server.
  *
@@ -27,16 +28,15 @@
  */
 import { useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Vote } from "@planning-poker/shared";
 import { useToast } from "../components/ui/toast";
 import { useSalaStore } from "../store/sala";
 import { createNewRoundLoop } from "./new-round-loop";
-import { createRevealLoop } from "./reveal-loop";
-import { createSalaEndLoop, type SalaEndHooks } from "./sala-end-loop";
-import { createVoteLoop } from "./vote-loop";
 import { createProjectileLoop } from "./projectile-loop";
-import { createWSClient, type WSClient } from "./ws-client";
+import { createRevealLoop } from "./reveal-loop";
+import { type SalaEndHooks, createSalaEndLoop } from "./sala-end-loop";
 import { getUUID } from "./storage";
+import { createVoteLoop } from "./vote-loop";
+import { type WSClient, createWSClient } from "./ws-client";
 
 /** Parâmetros do hook. */
 export interface UseArenaLoopParams {
@@ -255,9 +255,18 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 		loopsRef.current?.newRound.requestNewRound();
 	}, []);
 
-	const throwProjectile = useCallback((targetPlayerId: string, projectileType: import("@planning-poker/shared").ProjectileType) => {
-		loopsRef.current?.projectile.throwProjectile(targetPlayerId, projectileType);
-	}, []);
+	const throwProjectile = useCallback(
+		(
+			targetPlayerId: string,
+			projectileType: import("@planning-poker/shared").ProjectileType,
+		) => {
+			loopsRef.current?.projectile.throwProjectile(
+				targetPlayerId,
+				projectileType,
+			);
+		},
+		[],
+	);
 
 	return {
 		castVote,

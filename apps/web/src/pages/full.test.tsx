@@ -14,7 +14,9 @@ import { Full } from "./full";
 
 function renderFull() {
 	return render(
-		<MemoryRouter>
+		<MemoryRouter
+			future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+		>
 			<Full />
 		</MemoryRouter>,
 	);
@@ -30,16 +32,16 @@ describe("Full page (sala cheia) — T29", () => {
 		expect(screen.getByText(/\/ 12 · máximo atingido/i)).toBeInTheDocument();
 	});
 
-	test("renderiza CTA coral 'Criar nova sala' + ghost 'Voltar'", () => {
+	test("renderiza CTA coral 'Criar nova sala' + default 'Esperar um assento'", () => {
 		renderFull();
 		const createBtn = screen.getByTestId("full-create-new");
-		const backBtn = screen.getByTestId("full-back");
+		const retryBtn = screen.getByTestId("full-retry");
 		expect(createBtn).toBeInTheDocument();
-		expect(backBtn).toBeInTheDocument();
+		expect(retryBtn).toBeInTheDocument();
 		// Coral variant aplica bg coral
 		expect(createBtn.className).toContain("bg-coral");
 		// Default variant aplica border ink/20
-		expect(backBtn.className).toContain("border-ink/20");
+		expect(retryBtn.className).toContain("border-ink/20");
 	});
 
 	test("card tem aria-label 'Sala cheia' (a11y)", () => {
@@ -64,24 +66,33 @@ describe("Full page (sala cheia) — T29", () => {
 		).toBeInTheDocument();
 	});
 
-	test("history.back é chamado em 'Voltar' quando há histórico", () => {
-		// Mock window.history.back
-		const origBack = window.history.back;
-		const backSpy = mock(() => {});
-		window.history.back = backSpy as typeof window.history.back;
+	test("window.location.reload é chamado ao clicar em Esperar um assento", () => {
+		const reloadSpy = mock(() => {});
+		const origWindow = globalThis.window;
 
-		// Simula histórico > 1
-		Object.defineProperty(window.history, "length", {
-			configurable: true,
-			value: 2,
+		const windowProxy = new Proxy(origWindow, {
+			get(target, prop) {
+				if (prop === "location") {
+					return {
+						...target.location,
+						reload: reloadSpy,
+					};
+				}
+				// @ts-ignore
+				return target[prop];
+			},
 		});
+
+		// @ts-ignore
+		globalThis.window = windowProxy;
 
 		try {
 			renderFull();
-			fireEvent.click(screen.getByTestId("full-back"));
-			expect(backSpy).toHaveBeenCalled();
+			fireEvent.click(screen.getByTestId("full-retry"));
+			expect(reloadSpy).toHaveBeenCalled();
 		} finally {
-			window.history.back = origBack;
+			// @ts-ignore
+			globalThis.window = origWindow;
 		}
 	});
 });

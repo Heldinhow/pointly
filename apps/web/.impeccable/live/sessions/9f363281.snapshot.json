@@ -1,0 +1,24 @@
+{
+	"id": "9f363281",
+	"phase": "discarded",
+	"pageUrl": "/",
+	"sourceFile": "src/pages/landing.tsx",
+	"previewFile": null,
+	"previewMode": null,
+	"expectedVariants": 3,
+	"arrivedVariants": 3,
+	"visibleVariant": 3,
+	"paramValues": {
+		"edge": "regular"
+	},
+	"pendingEventSeq": null,
+	"pendingEvent": null,
+	"deliveryLease": null,
+	"checkpointRevision": 6,
+	"activeOwner": "35826b96",
+	"sourceMarkers": {},
+	"fallbackMode": null,
+	"annotationArtifacts": [],
+	"diagnostics": [],
+	"updatedAt": "2026-07-15T01:24:44.292Z"
+}

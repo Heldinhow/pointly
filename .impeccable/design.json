@@ -1,0 +1,167 @@
+{
+	"schemaVersion": 2,
+	"generatedAt": "2026-07-15T12:38:00Z",
+	"title": "Design System: Pointly",
+	"extensions": {
+		"colorMeta": {
+			"primary": {
+				"role": "primary",
+				"displayName": "Terracotta Coral",
+				"canonical": "oklch(69% 0.17 32)",
+				"tonalRamp": [
+					"oklch(20% 0.05 32)",
+					"oklch(30% 0.08 32)",
+					"oklch(40% 0.11 32)",
+					"oklch(50% 0.14 32)",
+					"oklch(60% 0.16 32)",
+					"oklch(70% 0.17 32)",
+					"oklch(80% 0.14 32)",
+					"oklch(90% 0.08 32)"
+				]
+			},
+			"neutral-bg": {
+				"role": "neutral",
+				"displayName": "Warm Parchment",
+				"canonical": "oklch(93% 0.02 85)",
+				"tonalRamp": [
+					"oklch(15% 0.005 85)",
+					"oklch(30% 0.01 85)",
+					"oklch(45% 0.015 85)",
+					"oklch(60% 0.02 85)",
+					"oklch(75% 0.02 85)",
+					"oklch(85% 0.02 85)",
+					"oklch(93% 0.02 85)",
+					"oklch(97% 0.015 85)"
+				]
+			},
+			"neutral-surface": {
+				"role": "neutral",
+				"displayName": "Bleached Ivory",
+				"canonical": "oklch(96% 0.01 88)",
+				"tonalRamp": [
+					"oklch(20% 0.005 88)",
+					"oklch(35% 0.008 88)",
+					"oklch(50% 0.01 88)",
+					"oklch(65% 0.01 88)",
+					"oklch(78% 0.01 88)",
+					"oklch(88% 0.01 88)",
+					"oklch(94% 0.01 88)",
+					"oklch(97% 0.005 88)"
+				]
+			}
+		},
+		"typographyMeta": {
+			"display": {
+				"displayName": "Display Sans",
+				"purpose": "Large branding glyphs, mega footer titles, display stats."
+			},
+			"body": {
+				"displayName": "Body Sans",
+				"purpose": "Standard content paragraphs, form inputs, button text."
+			},
+			"label": {
+				"displayName": "Metadata Mono",
+				"purpose": "JetBrains Mono metadata tags and status indicators."
+			}
+		},
+		"shadows": [
+			{
+				"name": "bone",
+				"value": "0 30px 60px -30px rgba(21, 20, 15, 0.15)",
+				"purpose": "Ambient depth for elevated containers and dialog overlays."
+			},
+			{
+				"name": "coral",
+				"value": "0 14px 26px -16px rgba(237, 111, 92, 0.6)",
+				"purpose": "Tactile drop shadow for coral action triggers."
+			}
+		],
+		"motion": [
+			{
+				"name": "standard-ease",
+				"value": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+				"purpose": "Default styling shifts and hovering feedback transitions."
+			}
+		],
+		"breakpoints": [
+			{
+				"name": "desktop-standard",
+				"value": "1440px",
+				"purpose": "Target desktop layout boundary."
+			}
+		]
+	},
+	"components": [
+		{
+			"name": "Primary Button",
+			"kind": "button",
+			"refersTo": "button-primary",
+			"description": "Primary action button used for key call-to-actions, limited to one per viewport.",
+			"html": "<button class=\"ds-btn-primary\">Criar Sala</button>",
+			"css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Inter', system-ui, -apple-system, sans-serif; font-weight: 500; font-size: 16px; height: 40px; padding: 0 20px; border-radius: 9999px; border: none; background-color: #ed6f5c; color: #ffffff; white-space: nowrap; user-select: none; transition: all 0.15s ease-in-out; box-shadow: 0 14px 26px -16px rgba(237, 111, 92, 0.6); cursor: pointer; } .ds-btn-primary:hover { background-color: #f08e7c; } .ds-btn-primary:active { transform: translateY(1px); }"
+		},
+		{
+			"name": "Secondary Button",
+			"kind": "button",
+			"refersTo": "button-default",
+			"description": "Secondary actions that sit alongside primary buttons without visual competition.",
+			"html": "<button class=\"ds-btn-secondary\">Voltar</button>",
+			"css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Inter', system-ui, -apple-system, sans-serif; font-weight: 500; font-size: 16px; height: 40px; padding: 0 20px; border-radius: 9999px; border: 1px solid rgba(21, 20, 15, 0.2); background-color: transparent; color: #15140f; white-space: nowrap; user-select: none; transition: all 0.15s ease-in-out; cursor: pointer; } .ds-btn-secondary:hover { border-color: rgba(21, 20, 15, 0.4); } .ds-btn-secondary:active { transform: translateY(1px); }"
+		},
+		{
+			"name": "Elevated Ivory Card",
+			"kind": "card",
+			"refersTo": "card-elevated",
+			"description": "Content grouping container applying surface noise texture and structural shadows.",
+			"html": "<div class=\"ds-card ds-surface-noise\"><div class=\"ds-card-header\"><h3 class=\"ds-card-title\">Nova Sala</h3></div><div class=\"ds-card-body\"><p>Insira seu apelido para começar a estimar.</p></div></div>",
+			"css": ".ds-card { background-color: #f7f1de; border-radius: 18px; border: 1px solid rgba(21, 20, 15, 0.05); padding: 28px; position: relative; box-shadow: 0 30px 60px -30px rgba(21, 20, 15, 0.15); box-sizing: border-box; } .ds-card-header { margin-bottom: 20px; } .ds-card-title { font-family: 'Inter Tight', system-ui, -apple-system, sans-serif; font-weight: 700; font-size: 24px; margin: 0; color: #15140f; } .ds-card-body { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 16px; color: #2a2620; } .ds-surface-noise::before { content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: 18px; background-image: radial-gradient(at 20% 30%, rgba(21, 20, 15, 0.025) 0px, transparent 50%), radial-gradient(at 80% 70%, rgba(21, 20, 15, 0.025) 0px, transparent 50%); opacity: 0.07; z-index: 0; }"
+		}
+	],
+	"narrative": {
+		"northStar": "The Atelier Zero Gallery",
+		"overview": "Pointly's visual language is artisanal, restrained, and tactile. It treats the digital workspace like a physical gallery: structured around fine lines, clean margins, and an off-white warm paper canvas. Identity is driven by strategic typographic choices and a high-contrast ink hierarchy, rather than heavy background fills or elaborate UI frames. Every page features a fine SVG fractal noise filter to mimic the texture of heavy paper.",
+		"keyCharacteristics": [
+			"Paper & Ink Foundation: The interface relies on warm paper tones and dark ink text, establishing immediate reading contrast.",
+			"Micro-textured Surfaces: All containers and full pages apply a subtle SVG turbulence noise in a radial gradient mask.",
+			"Restrained Jewelry: High-chroma color is strictly capped; primary coral is limited, and mustard yellow is reserved exclusively for highlights."
+		],
+		"rules": [
+			{
+				"name": "The Single CTA Rule",
+				"body": "No more than one solid coral CTA may be visible within a single screen viewport. Secondary actions must use border outlines or ghost treatments.",
+				"section": "colors"
+			},
+			{
+				"name": "The Jewelry Scale Rule",
+				"body": "High-chroma highlights like Antique Gold must cover less than 1% of any screen surface. They are jewelry, not structural color.",
+				"section": "colors"
+			},
+			{
+				"name": "The No-Condensed Display Rule",
+				"body": "Letter spacing on display headings must never go below -0.04em. Anything tighter makes the glyphs collide, hurting legibility and character.",
+				"section": "typography"
+			},
+			{
+				"name": "The Playfair Highlight Rule",
+				"body": "The Playfair Display font is used exclusively in italics for the brand Ø glyph and numerical deck values. Never use it for standard headings or body copy.",
+				"section": "typography"
+			},
+			{
+				"name": "The Border-Plus-Shadow Rule",
+				"body": "Never combine a border heavier than 1px with a shadow wider than 8px. Elevated containers must use either a 1px border with ambient shadow, or a clean boundary line alone.",
+				"section": "elevation"
+			}
+		],
+		"dos": [
+			"Do apply the .surface-noise class to all primary page roots and cards to maintain a unified tactile texture.",
+			"Do use Playfair Display italic for all Fibonacci cards and the brand Ø mark.",
+			"Do ensure small labels and icons in coral use the accessible Coral Deep (#b8412f) to meet AA contrast standards."
+		],
+		"donts": [
+			"Don't use border-left or border-right accent stripes on cards or lists.",
+			"Don't use gradient text or glassmorphism blurs.",
+			"Don't use standard sans-serif uppercase eyebrows on every section (use section rules .sec-rule instead).",
+			"Don't round cards or sections with border-radius larger than 18px (except for fully rounded buttons or tags)."
+		]
+	}
+}

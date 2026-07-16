@@ -14,16 +14,19 @@ test("C1: Host solo vota 5 → reveal", async ({ browser }) => {
 		expect(code).toMatch(/^[A-Z0-9]{4}$/);
 
 		// EmptyOverlay aparece quando sozinho — dismissa
-		const overlay = suite.clients[0]!.page.locator('[data-testid="empty-overlay"]');
+		const overlay = suite.clients[0]!.page.locator(
+			'[data-testid="empty-overlay"]',
+		);
 		if (await overlay.isVisible({ timeout: 3000 }).catch(() => false)) {
 			await suite.clients[0]!.page.getByTestId("empty-overlay-dismiss").click();
 			await suite.clients[0]!.page.waitForTimeout(400);
 		}
 
 		// Estado inicial: awaiting
-		const initial = await suite.clients[0]!.page
-			.getByTestId("reveal-button")
-			.getAttribute("data-reveal-state");
+		const initial =
+			await suite.clients[0]!.page.getByTestId("reveal-button").getAttribute(
+				"data-reveal-state",
+			);
 		expect(initial).toBe("awaiting");
 
 		await suite.vote(0, "5");
@@ -144,16 +147,16 @@ test("C6: Empty overlay aparece quando sozinho", async ({ browser }) => {
 		);
 
 		const shareUrl =
-			(await suite.clients[0]!.page
-				.getByTestId("empty-overlay-share-url")
-				.inputValue()) ?? "";
+			(await suite.clients[0]!.page.getByTestId(
+				"empty-overlay-share-url",
+			).inputValue()) ?? "";
 		// Aceita tanto `/join?code=XXXX` (SPA) quanto `join.html?code=XXXX` (legacy wireframe)
 		expect(shareUrl).toMatch(/(\/join|join\.html)\?code=[A-Z0-9]{4}/);
 
 		// Botão "Entrar mesmo assim" (ou similar) presente
-		const dismissCount = await suite.clients[0]!.page
-			.getByTestId("empty-overlay-dismiss")
-			.count();
+		const dismissCount = await suite.clients[0]!.page.getByTestId(
+			"empty-overlay-dismiss",
+		).count();
 		console.log(`[C6] dismiss button count: ${dismissCount}`);
 	} finally {
 		await suite.dispose();
@@ -182,9 +185,9 @@ test("C10: Unanimidade (3 clients = 5)", async ({ browser }) => {
 		expect(c?.range).toEqual([5, 5]);
 
 		// Badge unanimidade presente
-		const badge = await suite.clients[0]!.page
-			.getByTestId("stats-unanimous-badge")
-			.count();
+		const badge = await suite.clients[0]!.page.getByTestId(
+			"stats-unanimous-badge",
+		).count();
 		console.log(`[C10] unanimity badge count: ${badge}`);
 	} finally {
 		await suite.dispose();

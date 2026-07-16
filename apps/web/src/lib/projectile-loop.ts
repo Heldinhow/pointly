@@ -2,8 +2,8 @@ import type {
 	ProjectileType,
 	ServerToClientEvent,
 } from "@planning-poker/shared";
-import type { WSClient } from "./ws-client";
 import { projectileEvents } from "./projectile-events";
+import type { WSClient } from "./ws-client";
 
 /**
  * Envia mensagem `throw_projectile` para o servidor via WebSocket.

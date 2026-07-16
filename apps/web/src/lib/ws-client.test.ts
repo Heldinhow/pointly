@@ -19,9 +19,9 @@ import {
 	beforeEach,
 	describe,
 	expect,
-	test,
 	mock,
 	spyOn,
+	test,
 } from "bun:test";
 
 // ---------------------------------------------------------------------------

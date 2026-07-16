@@ -4,8 +4,8 @@
  * Cobre variants e sizes; verifica integração com cn/tailwind-merge.
  */
 import { describe, expect, test } from "bun:test";
-import { render, screen } from "./test-helpers";
 import { Button } from "./button";
+import { render, screen } from "./test-helpers";
 
 describe("Button — variants", () => {
 	test("renderiza Button coral com texto esperado (CTA primário)", () => {

@@ -16,13 +16,18 @@
  */
 import "@testing-library/jest-dom";
 import { afterEach } from "bun:test";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render as rtlRender, screen } from "@testing-library/react";
+import { ThemeProvider } from "../theme-provider";
 
 import type {} from "./jest-dom-augment";
 
 afterEach(() => {
 	cleanup();
 });
+
+function render(ui: React.ReactElement, options?: any) {
+	return rtlRender(<ThemeProvider>{ui}</ThemeProvider>, options);
+}
 
 export { render, screen, cleanup };
 export { act, fireEvent, renderHook } from "@testing-library/react";

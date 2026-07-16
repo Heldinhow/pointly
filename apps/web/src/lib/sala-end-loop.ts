@@ -36,8 +36,8 @@ import type {
 	SalaEndedEvent,
 	ServerToClientEvent,
 } from "@planning-poker/shared";
-import type { SalaStore } from "../store/sala";
 import type { ToastKind } from "../components/ui/toast";
+import type { SalaStore } from "../store/sala";
 
 /** Hooks injetados pra testabilidade (sem depender de useNavigate/useToast). */
 export interface SalaEndHooks {

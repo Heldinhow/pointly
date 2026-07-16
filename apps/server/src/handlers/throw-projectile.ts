@@ -1,4 +1,7 @@
-import type { ThrowProjectilePayload, ProjectileOutcome } from "@planning-poker/shared";
+import type {
+	ThrowProjectilePayload,
+	ProjectileOutcome,
+} from "@planning-poker/shared";
 import type { Hub } from "../hub";
 import { SalaError } from "../sala";
 
@@ -52,7 +55,7 @@ export function handleThrowProjectile(
 		let outcome: ProjectileOutcome = "hit";
 		if (rand < 0.05) {
 			outcome = "deflect";
-		} else if (rand < 0.20) {
+		} else if (rand < 0.2) {
 			outcome = "dodge";
 		}
 

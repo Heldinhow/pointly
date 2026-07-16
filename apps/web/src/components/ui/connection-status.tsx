@@ -10,12 +10,15 @@
  *
  * Use no header da Arena (ao lado do código da sala) e na tela Join.
  */
-import { cva, type VariantProps } from "class-variance-authority";
+import { type VariantProps, cva } from "class-variance-authority";
 import type * as React from "react";
 import { cn } from "./utils";
 
 const statusVariants = cva(
-	"inline-flex items-center gap-2 px-3 py-1 rounded-full font-mono text-[10px] uppercase tracking-wider border",
+	// text-micro-label = 10px token (ramp Atelier Zero §3 Hierarchy).
+	// Antes era `text-[10px]` arbitrário; token existe precisamente pra
+	// esse uso em small caps mono labels (timer / connection state pills).
+	"inline-flex items-center gap-2 px-3 py-1 rounded-full font-mono text-micro-label uppercase tracking-[0.04em] border",
 	{
 		variants: {
 			variant: {
@@ -69,7 +72,7 @@ export function ConnectionStatus({
 				className={cn(
 					"inline-block w-2 h-2 rounded-full",
 					DOT_COLORS[v],
-					v === "loading" && "animate-pulse",
+					v === "loading" && "motion-reduce:animate-none animate-pulse",
 				)}
 			/>
 			<span>{label}</span>

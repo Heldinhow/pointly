@@ -1,0 +1,155 @@
+{
+	"id": "c31a4acf",
+	"phase": "generating",
+	"pageUrl": "/",
+	"sourceFile": null,
+	"previewFile": null,
+	"previewMode": null,
+	"expectedVariants": 3,
+	"arrivedVariants": 0,
+	"visibleVariant": 0,
+	"paramValues": {
+		"edge": "regular"
+	},
+	"pendingEventSeq": 2,
+	"pendingEvent": {
+		"type": "generate",
+		"id": "c31a4acf",
+		"action": "impeccable",
+		"freeformPrompt": "remove this",
+		"count": 3,
+		"pageUrl": "/",
+		"element": {
+			"tagName": "div",
+			"id": null,
+			"classes": [
+				"relative",
+				"w-full",
+				"max-w-[460px]",
+				"aspect-square",
+				"mx-auto",
+				"bg-paper-warm",
+				"border",
+				"border-ink/10",
+				"rounded-3xl",
+				"shadow-bone",
+				"overflow-hidden"
+			],
+			"textContent": "Fig. 01 · Mesa reveladaMediana 5VCVocêvocê5MAMaya3ARAria5★THTheo8LILia5IVIvo86 jogadores · 1 hostMostarda = mediana",
+			"outerHTML": "<div class=\"relative w-full max-w-[460px] aspect-square mx-auto bg-paper-warm border border-ink/10 rounded-3xl shadow-bone overflow-hidden\"><div class=\"absolute top-3 left-3 right-3 flex items-center justify-between z-20\"><div class=\"font-mono text-[9px] text-ink-mute uppercase tracking-[0.18em] flex items-center gap-1.5 bg-surface/80 backdrop-blur-sm px-2 py-1 rounded-full border border-ink/5\"><span class=\"inline-block w-1.5 h-1.5 rounded-full bg-coral animate-pulse\" aria-hidden=\"true\"></span>Fig. 01 · Mesa revelada</div><div class=\"font-mono text-[9px] bg-mustard/15 text-ink-mute px-2 py-1 rounded-full border border-mustard/30 uppercase tracking-wider\" style=\"\">Mediana 5</div></div><div class=\"absolute inset-0 flex items-center justify-center pointer-events-none\"><div class=\"w-[68%] h-[55%] border border-dashed border-ink/15 rounded-[50%]\"></div></div><div class=\"absolute inset-0\"><div class=\"absolute -translate-x-1/2 -translate-y-1/2\" style=\"left: 50%; top: 88%;\"><div class=\"relative w-[58px] h-[78px] bg-surface rounded-xl border flex flex-col items-center justify-center p-1 shadow-sm border-coral border-2\" style=\"box-shadow: inset 0 0 0 2px var(--mustard);\"><div class=\"w-5 h-5 rounded-full bg-paper-dark flex items-center justify-center font-italic italic text-[10px] text-ink-soft mb-0.5\" style=\"\">VC</div><div class=\"font-display font-semibold text-[8px] text-ink truncate max-w-[48px] tracking-tight\" style=\"\">Você</div><div class=\"font-mono text-[6px] tracking-[0.05em] text-coral uppercase px-0.5 border border-coral rounded mb-0.5\" style=\"\">você</div><div class=\"font-italic italic text-[15px] text-ink font-bold leading-none mt-0.5\" style=\"\">5</div></div></div><div class=\"absolute -translate-x-1/2 -translate-y-1/2\" style=\"left: 14%; top: 66%;\"><div class=\"relative w-[58px] h-[78px] bg-surface rounded-xl border flex flex-col items-center justify-center p-1 shadow-sm border-ink/10\" style=\"box-shadow: none;\"><div class=\"w-5 h-5 rounded-full bg-paper-dark flex items-center justify-center font-italic italic text-[10px] text-ink-soft mb-0.5\" style=\"\">MA</div><div class=\"font-display font-semibold text-[8px] text-ink truncate max-w-[48px] tracking-tight\" style=\"\">Maya</div><div class=\"font-italic italic text-[15px] text-ink font-bold leading-none mt-0.5\" style=\"\">3</div></div></div><div class=\"absolute -translate-x-1/2 -translate-y-1/2\" style=\"left: 14%; top: 38%;\"><div class=\"relative w-[58px] h-[78px] bg-surface rounded-xl border flex flex-col items-center justify-center p-1 shadow-sm border-mustard border-2\" style=\"box-shadow: none;\"><div class=\"w-5 h-5 rounded-full bg-paper-dark flex items-center justify-center font-italic italic text-[10px] text-ink-soft mb-0.5\" style=\"\">AR</div><div class=\"font-display font-semibold text-[8px] text-ink truncate max-w-[48px] tracking-tight\" style=\"\">Aria</div><div class=\"font-italic italic text-[15px] text-ink font-bold leading-none mt-0.5\" style=\"\">5</div></div></div><div class=\"absolute -translate-x-1/2 -translate-y-1/2\" style=\"left: 50%; top: 18%;\"><div class=\"relative w-[58px] h-[78px] bg-surface rounded-xl border flex flex-col items-center justify-center p-1 shadow-sm border-ink/10\" style=\"box-shadow: none;\"><span class=\"absolute top-0.5 right-1 text-mustard text-[9px] leading-none\" style=\"\">★</span><div class=\"w-5 h-5 rounded-full bg-paper-dark flex items-center justify-center font-italic italic text-[10px] text-ink-soft mb-0.5\" style=\"\">TH</div><div class=\"font-display font-semibold text-[8px] text-ink truncate max-w-[48px] tracking-tight\" style=\"\">Theo</div><div class=\"font-italic italic text-[15px] text-ink font-bold leading-none mt-0.5\" style=\"\">8</div></div></div><div class=\"absolute -translate-x-1/2 -translate-y-1/2\" style=\"left: 86%; top: 38%;\"><div class=\"relative w-[58px] h-[78px] bg-surface rounded-xl border flex flex-col items-center justify-center p-1 shadow-sm border-mustard border-2\" style=\"box-shadow: none;\"><div class=\"w-5 h-5 rounded-full bg-paper-dark flex items-center justify-center font-italic italic text-[10px] text-ink-soft mb-0.5\" style=\"\">LI</div><div class=\"font-display font-semibold text-[8px] text-ink truncate max-w-[48px] tracking-tight\" style=\"\">Lia</div><div class=\"font-italic italic text-[15px] text-ink font-bold leading-none mt-0.5\" style=\"\">5</div></div></div><div class=\"absolute -translate-x-1/2 -translate-y-1/2\" style=\"left: 86%; top: 66%;\"><div class=\"relative w-[58px] h-[78px] bg-surface rounded-xl border flex flex-col items-center justify-center p-1 shadow-sm border-ink/10\" style=\"box-shadow: none;\"><div class=\"w-5 h-5 rounded-full bg-paper-dark flex items-center justify-center font-italic italic text-[10px] text-ink-soft mb-0.5\" style=\"\">IV</div><div class=\"font-display font-semibold text-[8px] text-ink truncate max-w-[48px] tracking-tight\" style=\"\">Ivo</div><div class=\"font-italic italic text-[15px] text-ink font-bold leading-none mt-0.5\" style=\"\">8</div></div></div></div><div class=\"absolute bottom-3 left-3 right-3 flex justify-between items-center font-mono text-[8px] text-ink-faint uppercase tracking-[0.12em] z-20\"><span style=\"\">6 jogadores · 1 host</span><span style=\"\">Mostarda = mediana</span></div></div>",
+			"computedStyles": {
+				"font-family": "Inter, system-ui, -apple-system, sans-serif",
+				"font-size": "16px",
+				"font-weight": "400",
+				"line-height": "24px",
+				"color": "rgb(21, 20, 15)",
+				"background": "rgb(236, 228, 207) none repeat scroll 0% 0% / auto padding-box border-box",
+				"background-color": "rgb(236, 228, 207)",
+				"padding": "0px",
+				"margin": "0px",
+				"display": "block",
+				"position": "relative",
+				"gap": "normal",
+				"border-radius": "24px",
+				"box-shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(21, 20, 15, 0.15) 0px 30px 60px -30px"
+			},
+			"cssCustomProperties": {
+				"--tw-border-spacing-x": "0",
+				"--tw-border-spacing-y": "0",
+				"--tw-translate-x": "0",
+				"--tw-translate-y": "0",
+				"--tw-rotate": "0",
+				"--tw-skew-x": "0",
+				"--tw-skew-y": "0",
+				"--tw-scale-x": "1",
+				"--tw-scale-y": "1",
+				"--tw-scroll-snap-strictness": "proximity",
+				"--tw-ring-offset-width": "0px",
+				"--tw-ring-offset-color": "#fff",
+				"--tw-ring-color": "rgb(59 130 246 / 0.5)",
+				"--tw-ring-offset-shadow": "0 0 #0000",
+				"--tw-ring-shadow": "0 0 #0000",
+				"--tw-shadow": "0 30px 60px -30px rgba(21, 20, 15, 0.15)",
+				"--bg": "#efe7d2",
+				"--paper-warm": "#ece4cf",
+				"--paper-dark": "#ddd2b6",
+				"--surface": "#f7f1de",
+				"--fg": "#15140f",
+				"--fg-soft": "#2a2620",
+				"--fg-mute": "#3a352a",
+				"--fg-faint": "#4a4438",
+				"--accent": "#d24a2a",
+				"--coral-soft": "#e36747",
+				"--mustard": "#e9b94a",
+				"--olive": "#6e7448",
+				"--font-display-serif": "\"Instrument Serif\", \"Playfair Display\", Georgia, serif"
+			},
+			"parentContext": "<div class=\"w-full relative flex items-center justify-center\">",
+			"boundingRect": {
+				"width": 460,
+				"height": 460
+			}
+		}
+	},
+	"deliveryLease": null,
+	"checkpointRevision": 24,
+	"activeOwner": "65091801",
+	"sourceMarkers": {},
+	"fallbackMode": null,
+	"annotationArtifacts": [],
+	"diagnostics": [
+		{
+			"error": "stale_checkpoint_ignored",
+			"revision": 1
+		},
+		{
+			"error": "stale_checkpoint_ignored",
+			"revision": 2
+		},
+		{
+			"error": "stale_checkpoint_ignored",
+			"revision": 3
+		},
+		{
+			"error": "stale_checkpoint_ignored",
+			"revision": 4
+		},
+		{
+			"error": "stale_checkpoint_ignored",
+			"revision": 5
+		},
+		{
+			"error": "stale_checkpoint_ignored",
+			"revision": 1
+		},
+		{
+			"error": "stale_checkpoint_ignored",
+			"revision": 2
+		},
+		{
+			"error": "stale_checkpoint_ignored",
+			"revision": 6
+		},
+		{
+			"error": "stale_checkpoint_ignored",
+			"revision": 1
+		},
+		{
+			"error": "stale_checkpoint_ignored",
+			"revision": 1
+		},
+		{
+			"error": "stale_checkpoint_ignored",
+			"revision": 1
+		},
+		{
+			"error": "stale_checkpoint_ignored",
+			"revision": 7
+		},
+		{
+			"error": "stale_checkpoint_ignored",
+			"revision": 8
+		}
+	],
+	"updatedAt": "2026-07-15T02:05:14.648Z"
+}

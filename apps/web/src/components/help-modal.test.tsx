@@ -2,14 +2,12 @@
  * HelpModal component tests — ADR-007 / BUG-306 gate.
  */
 import { describe, expect, mock, test } from "bun:test";
-import { fireEvent, render, screen } from "./ui/test-helpers";
 import { HelpModal } from "./help-modal";
+import { fireEvent, render, screen } from "./ui/test-helpers";
 
 describe("HelpModal — render", () => {
 	test("não renderiza quando open=false", () => {
-		const { container } = render(
-			<HelpModal open={false} onClose={() => {}} />,
-		);
+		const { container } = render(<HelpModal open={false} onClose={() => {}} />);
 		expect(container.firstChild).toBeNull();
 	});
 

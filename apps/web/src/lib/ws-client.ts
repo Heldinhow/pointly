@@ -15,10 +15,10 @@
  */
 
 import {
-	ClientToServerEventSchema,
-	ServerToClientEventSchema,
 	type ClientToServerEvent,
+	ClientToServerEventSchema,
 	type ServerToClientEvent,
+	ServerToClientEventSchema,
 } from "@planning-poker/shared";
 
 // ---------------------------------------------------------------------------

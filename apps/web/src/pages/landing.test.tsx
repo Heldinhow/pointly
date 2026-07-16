@@ -13,7 +13,9 @@ import { Landing } from "./landing";
 
 function renderLanding() {
 	return render(
-		<MemoryRouter>
+		<MemoryRouter
+			future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+		>
 			<Landing />
 		</MemoryRouter>,
 	);
@@ -53,12 +55,19 @@ describe("Landing — T27", () => {
 		expect(h2s.length).toBeGreaterThanOrEqual(1);
 	});
 
-	test("renderiza 4 capability cards numerados", () => {
+	test("renderiza 3 capability cards numerados", () => {
 		renderLanding();
 		expect(screen.getByTestId("cap-card-01")).toBeInTheDocument();
 		expect(screen.getByTestId("cap-card-02")).toBeInTheDocument();
 		expect(screen.getByTestId("cap-card-03")).toBeInTheDocument();
-		expect(screen.getByTestId("cap-card-04")).toBeInTheDocument();
+		expect(screen.queryByTestId("cap-card-04")).not.toBeInTheDocument();
+	});
+
+	test("renderiza botão Entrar no Hero", () => {
+		renderLanding();
+		const button = screen.getByTestId("cta-join-room");
+		expect(button).toBeInTheDocument();
+		expect(button).toHaveTextContent(/entrar/i);
 	});
 
 	test("CTA ribbon 'Criar sala' também presente", () => {
@@ -67,27 +76,12 @@ describe("Landing — T27", () => {
 		expect(ctas.length).toBe(1);
 	});
 
-	test("campo 'Entrar com Código' inline e botão 'Entrar'", () => {
+	test("header CTAs visíveis", () => {
 		renderLanding();
-		const input = screen.getByTestId("landing-code-input") as HTMLInputElement;
-		const submitBtn = screen.getByTestId("landing-code-submit");
-		expect(input).toBeInTheDocument();
-		expect(submitBtn).toBeInTheDocument();
-		expect(submitBtn).toBeDisabled();
-
-		// Digita um código incompleto
-		fireEvent.change(input, { target: { value: "AB" } });
-		expect(input.value).toBe("AB");
-		expect(submitBtn).toBeDisabled();
-
-		// Digita caracteres inválidos e testa que filtra + uppercase
-		fireEvent.change(input, { target: { value: "ab-3" } });
-		expect(input.value).toBe("AB3"); // hifen removido, convertido pra maiúsculas
-		expect(submitBtn).toBeDisabled();
-
-		// Código completo
-		fireEvent.change(input, { target: { value: "a1b2" } });
-		expect(input.value).toBe("A1B2");
-		expect(submitBtn).toBeEnabled();
+		const headerCreateCta = screen.getByTestId("cta-nav-create-room");
+		const headerJoinCta = screen.getByTestId("cta-nav-join-room");
+		expect(headerCreateCta).toBeInTheDocument();
+		expect(headerJoinCta).toBeInTheDocument();
+		expect(headerCreateCta.className).toContain("border-coral");
 	});
 });

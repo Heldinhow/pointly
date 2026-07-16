@@ -2,8 +2,8 @@
  * Ellipse primitive tests — T26 verify (bonus test).
  */
 import { describe, expect, test } from "bun:test";
-import { render } from "./test-helpers";
 import { Ellipse } from "./ellipse";
+import { render } from "./test-helpers";
 
 describe("Ellipse", () => {
 	test("renderiza SVG com dimensões padrão e aria-label", () => {

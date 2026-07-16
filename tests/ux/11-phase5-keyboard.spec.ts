@@ -19,10 +19,7 @@ async function enterSoloArena(page: import("@playwright/test").Page) {
 		waitUntil: "domcontentloaded",
 	});
 	await page.waitForSelector('[data-testid="page-join"]');
-	await page.fill(
-		'[data-testid="nick-input"]',
-		`Keys${Date.now()}`,
-	);
+	await page.fill('[data-testid="nick-input"]', `Keys${Date.now()}`);
 	await page.click('[data-testid="join-submit"]');
 	await page.waitForSelector('[data-testid="arena-stage"]', {
 		timeout: 10_000,
@@ -57,9 +54,7 @@ test("`?` abre HelpModal; `Esc` fecha", async ({ browser }) => {
 	}
 });
 
-test("`/` (ABNT) também abre HelpModal via helpKey=?", async ({
-	browser,
-}) => {
+test("`/` (ABNT) também abre HelpModal via helpKey=?", async ({ browser }) => {
 	const ctx = await browser.newContext({
 		viewport: { width: 1440, height: 900 },
 	});

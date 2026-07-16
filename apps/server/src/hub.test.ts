@@ -82,9 +82,7 @@ describe("Hub — tickAllTimers", () => {
 
 	test("agrega per-room sem conflating (independência entre salas)", () => {
 		const { sala: sala1 } = hub.createSala(makePlayer("p1", "Ana", "host"));
-		const { sala: sala2 } = hub.createSala(
-			makePlayer("p3", "Carlos", "host"),
-		);
+		const { sala: sala2 } = hub.createSala(makePlayer("p3", "Carlos", "host"));
 
 		// sala1: idle → 'idle'
 		// sala2: 2 players, p3 vota → voting → 'ticking'
@@ -103,9 +101,7 @@ describe("Hub — tickAllTimers", () => {
 
 	test("agrega 'fired' e 'ticking' em tick único", () => {
 		const { sala: sala1 } = hub.createSala(makePlayer("p1", "Ana", "host"));
-		const { sala: sala2 } = hub.createSala(
-			makePlayer("p3", "Carlos", "host"),
-		);
+		const { sala: sala2 } = hub.createSala(makePlayer("p3", "Carlos", "host"));
 
 		// sala1: voting, pronta para fire
 		hub.addPlayer(sala1.code, makePlayer("p2", "Bob", "player"));

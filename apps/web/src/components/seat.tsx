@@ -1,3 +1,4 @@
+import type { Player, ProjectileType, Vote } from "@planning-poker/shared";
 /**
  * Seat — T31 (Phase 6).
  *
@@ -12,8 +13,7 @@
  *  - Cooldown visual de 5s após arremessar
  *  - Animações de impacto (Hit shake, Dodge slide, Deflect glow) e emojis flutuantes
  */
-import { useState, useEffect, useRef } from "react";
-import type { Player, Vote, ProjectileType } from "@planning-poker/shared";
+import { useEffect, useRef, useState } from "react";
 import { SeatPrimitive, type SeatPrimitiveState } from "./ui/seat";
 
 /** Props do Seat. `player` é o PlayerSchema canônico. */
@@ -31,7 +31,11 @@ export interface SeatProps {
 	onThrow?: (targetPlayerId: string, projectileType: ProjectileType) => void;
 }
 
-const PROJECTILES: Array<{ type: ProjectileType; emoji: string; title: string }> = [
+const PROJECTILES: Array<{
+	type: ProjectileType;
+	emoji: string;
+	title: string;
+}> = [
 	{ type: "paper_ball", emoji: "🏐", title: "Bola de Papel" },
 	{ type: "tomato", emoji: "🍅", title: "Tomate" },
 	{ type: "coffee", emoji: "☕", title: "Café" },
@@ -87,8 +91,13 @@ export function Seat({
 	// Estados de animação e interações
 	const [isHovered, setIsHovered] = useState(false);
 	const [showMenu, setShowMenu] = useState(false);
-	const [impact, setImpact] = useState<"hit" | "dodge" | "deflect" | null>(null);
-	const [floatingEmoji, setFloatingEmoji] = useState<{ emoji: string; key: number } | null>(null);
+	const [impact, setImpact] = useState<"hit" | "dodge" | "deflect" | null>(
+		null,
+	);
+	const [floatingEmoji, setFloatingEmoji] = useState<{
+		emoji: string;
+		key: number;
+	} | null>(null);
 	const [cooldownTime, setCooldownTime] = useState(0);
 
 	const menuRef = useRef<HTMLDivElement>(null);
@@ -116,7 +125,9 @@ export function Seat({
 
 			// Se for um acerto normal (hit), joga emoji flutuante
 			if (detail.outcome === "hit") {
-				const randomEmoji = EMOJI_REACTIONS[Math.floor(Math.random() * EMOJI_REACTIONS.length)] || "🤨";
+				const randomEmoji =
+					EMOJI_REACTIONS[Math.floor(Math.random() * EMOJI_REACTIONS.length)] ||
+					"🤨";
 				setFloatingEmoji({
 					emoji: randomEmoji,
 					key: Math.random(),
@@ -131,7 +142,8 @@ export function Seat({
 		};
 
 		window.addEventListener("pointly-projectile-impact", handleImpact);
-		return () => window.removeEventListener("pointly-projectile-impact", handleImpact);
+		return () =>
+			window.removeEventListener("pointly-projectile-impact", handleImpact);
 	}, [player.id]);
 
 	// Fechar menu de reações se clicar fora
@@ -153,7 +165,10 @@ export function Seat({
 		setShowMenu((prev) => !prev);
 	};
 
-	const handleProjectileSelect = (type: ProjectileType, e: React.MouseEvent) => {
+	const handleProjectileSelect = (
+		type: ProjectileType,
+		e: React.MouseEvent,
+	) => {
 		e.stopPropagation();
 		if (onThrow && cooldownTime === 0) {
 			// Ativa cooldown de 5 segundos
@@ -181,7 +196,7 @@ export function Seat({
 			? ({
 					"--dodge-x": player.seatIndex % 2 === 0 ? "40px" : "-40px",
 					"--dodge-y": "-10px",
-			  } as React.CSSProperties)
+				} as React.CSSProperties)
 			: undefined;
 
 	return (
@@ -223,7 +238,11 @@ export function Seat({
 									? "border-ink/5 text-ink-faint bg-paper-dark"
 									: "border-coral text-coral hover:bg-coral hover:text-white"
 							}`}
-							title={cooldownTime > 0 ? `Aguarde ${cooldownTime}s` : "Arremessar algo!"}
+							title={
+								cooldownTime > 0
+									? `Aguarde ${cooldownTime}s`
+									: "Arremessar algo!"
+							}
 						>
 							🎯
 						</button>
@@ -252,14 +271,14 @@ export function Seat({
 
 				{/* Cooldown overlay sobre o seu próprio assento */}
 				{isYou && cooldownTime > 0 && (
-					<div className="absolute -top-6 left-1/2 -translate-x-1/2 z-30 font-mono text-[9px] bg-ink text-white px-2 py-0.5 rounded-full shadow-sm animate-pulse tracking-wide select-none">
+					<div className="absolute -top-6 left-1/2 -translate-x-1/2 z-30 font-mono text-[9px] bg-ink text-white px-2 py-0.5 rounded-full shadow-sm motion-reduce:animate-none animate-pulse tracking-wide select-none">
 						RECARGA: {cooldownTime}s
 					</div>
 				)}
 
 				{/* Deflect Shield Indicator */}
 				{impact === "deflect" && (
-					<div className="absolute inset-0 bg-mustard/15 border-2 border-mustard rounded-card z-30 pointer-events-none flex items-center justify-center animate-pulse">
+					<div className="absolute inset-0 bg-mustard/15 border-2 border-mustard rounded-card z-30 pointer-events-none flex items-center justify-center motion-reduce:animate-none animate-pulse">
 						<span className="text-xl">🛡️</span>
 					</div>
 				)}

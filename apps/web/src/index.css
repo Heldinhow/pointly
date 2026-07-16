@@ -34,6 +34,52 @@
 	--coral-deep: #b8412f; /* coral AA — labels pequenos, hovers, ícones. 5.8:1 sobre paper. */
 	--mustard: #e9b94a; /* jewelry: estrela nav, dot */
 	--olive: #6e7448;
+	--header-height: 64px; /* site-header altura (fixed) — hero compensa com padding-top */
+
+	/* Theme-aware borders & shadows (light defaults)
+	 *
+	 * Dois tokens pra honrar a regra Border+Shadow sem matar o lift:
+	 *  - shadow-bone: 60px blur — p/ superfícies FLUTUANTES sem border
+	 *    (modais, popovers, toasts). Combina com surface-noise + tinta.
+	 *  - shadow-card: 8px blur — p/ containers COM border (cards, banners,
+	 *    seções). Combina com border-ink/5 sem virar fantasma.
+	 *
+	 * Bone Shadow era usado em Card (borda 1px ink/5 + sombra 60px) =
+	 * codex "ghost-card" tell. Card usa shadow-card agora. Bone fica
+	 * disponível pra overlays/menus que NÃO têm border.
+	 */
+	--shadow-bone: 0 30px 60px -30px rgba(21, 20, 15, 0.15);
+	--shadow-card: 0 4px 8px -1px rgba(21, 20, 15, 0.10);
+	--shadow-coral: 0 14px 26px -16px rgba(237, 111, 92, 0.6);
+	--border-header: rgba(21, 20, 15, 0.08);
+	--shadow-header: rgba(21, 20, 15, 0.08);
+	--border-rail: rgba(21, 20, 15, 0.05);
+	--border-rule: rgba(21, 20, 15, 0.16);
+}
+
+.dark {
+	--bg: #13120d; /* deep dark warm charcoal background */
+	--paper-warm: #1a1914; /* elevated dark background */
+	--paper-dark: #222019; /* container dark background */
+	--surface: #1b1a14; /* dark elevated surface */
+	--fg: #f7f1de; /* ink in dark mode is bleached ivory/off-white */
+	--fg-soft: #efe7d2;
+	--fg-mute: #ddd2b6;
+	--fg-faint: #96896b;
+	--accent: #f08e7c; /* coral for dark mode */
+	--coral-soft: #f4a596;
+	--coral-deep: #ed6f5c; /* accessible coral on dark bg */
+	--mustard: #f4cd68; /* jewelry in dark mode */
+	--olive: #8a9163; /* olive in dark mode */
+
+	/* Theme-aware borders & shadows (dark overrides) */
+	--shadow-bone: 0 30px 60px -30px rgba(0, 0, 0, 0.5);
+	--shadow-card: 0 4px 8px -1px rgba(0, 0, 0, 0.35);
+	--shadow-coral: 0 14px 26px -16px rgba(240, 142, 124, 0.4);
+	--border-header: rgba(247, 241, 222, 0.08);
+	--shadow-header: rgba(0, 0, 0, 0.4);
+	--border-rail: rgba(247, 241, 222, 0.05);
+	--border-rule: rgba(247, 241, 222, 0.08); /* hairline discreto em dark — antes 0.16 virava "linha branca" */
 }
 
 /* ---------------------------------------------------------------
@@ -53,6 +99,7 @@ body {
 	margin: 0;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+	transition: background-color 200ms ease, color 200ms ease;
 }
 
 /* Cursor coral quando hover em CTA */
@@ -96,6 +143,18 @@ a[role="button"] {
 	mix-blend-mode: multiply;
 	opacity: 0.07;
 	z-index: 0;
+}
+
+.dark .surface-noise::before {
+	mix-blend-mode: overlay;
+	opacity: 0.15;
+	background-image: radial-gradient(
+			at 20% 30%,
+			rgba(247, 241, 222, 0.015) 0px,
+			transparent 50%
+		),
+		radial-gradient(at 80% 70%, rgba(247, 241, 222, 0.015) 0px, transparent 50%),
+		url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
 
 /* ---------------------------------------------------------------
@@ -161,6 +220,21 @@ a[role="button"] {
 	stroke-dasharray: 40;
 }
 
+@keyframes fade-in-up {
+	0% {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.animate-fade-in-up {
+	animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 /* ---------------------------------------------------------------
  * Hero illustration — fade-in com stagger das cartas decorativas.
  * Respeita prefers-reduced-motion (regra global acima).
@@ -215,18 +289,6 @@ a[role="button"] {
 	}
 }
 
-
-/* ---------------------------------------------------------------
- * Phase 2 (T04 / BUG-103): sticky-nav coral CTA oculto em mobile.
- * ADR-004 — IntersectionObserver faz o hide-on-scroll no desktop.
- * Em ≤767px o hero já é o CTA dominante; sticky vira ruído.
- * --------------------------------------------------------------- */
-@media (max-width: 767px) {
-	.cta-sticky-nav {
-		display: none !important;
-	}
-}
-
 /* ---------------------------------------------------------------
  * Phase 3 (T05 / BUG-203 / ADR-005): deck é scroll horizontal no
  * mobile (<sm). Esconde scrollbar webkit pra peek ser o único
@@ -265,51 +327,120 @@ a[role="button"] {
  * Projectile throwing and reaction animations
  * --------------------------------------------------------------- */
 @keyframes projectile-x {
-  from { left: var(--from-x); }
-  to { left: var(--to-x); }
+	from {
+		left: var(--from-x);
+	}
+	to {
+		left: var(--to-x);
+	}
 }
 @keyframes projectile-y {
-  from { top: var(--from-y); }
-  to { top: var(--to-y); }
+	from {
+		top: var(--from-y);
+	}
+	to {
+		top: var(--to-y);
+	}
 }
 @keyframes projectile-arc {
-  0% { transform: translateY(0) scale(0.6); }
-  50% { transform: translateY(-120px) scale(1.5); }
-  100% { transform: translateY(0) scale(1); }
+	0% {
+		transform: translateY(0) scale(0.6);
+	}
+	50% {
+		transform: translateY(-120px) scale(1.5);
+	}
+	100% {
+		transform: translateY(0) scale(1);
+	}
 }
 
 .animate-proj-x {
-  animation: projectile-x var(--duration, 0.7s) linear forwards;
+	animation: projectile-x var(--duration, 0.7s) linear forwards;
 }
 .animate-proj-y {
-  animation: projectile-y var(--duration, 0.7s) linear forwards, projectile-arc var(--duration, 0.7s) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+	animation: projectile-y var(--duration, 0.7s) linear forwards, projectile-arc
+		var(--duration, 0.7s) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 @keyframes hit-shake {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  15%, 45%, 75% { transform: scale(0.92) rotate(-4deg); }
-  30%, 60% { transform: scale(1.08) rotate(4deg); }
+	0%,
+	100% {
+		transform: scale(1) rotate(0deg);
+	}
+	15%,
+	45%,
+	75% {
+		transform: scale(0.92) rotate(-4deg);
+	}
+	30%,
+	60% {
+		transform: scale(1.08) rotate(4deg);
+	}
 }
 .animate-hit-shake {
-  animation: hit-shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+	animation: hit-shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
 @keyframes dodge-slide {
-  0%, 100% { transform: translate(0, 0); }
-  25%, 75% { transform: translate(var(--dodge-x, 40px), var(--dodge-y, -10px)); }
+	0%,
+	100% {
+		transform: translate(0, 0);
+	}
+	25%,
+	75% {
+		transform: translate(var(--dodge-x, 40px), var(--dodge-y, -10px));
+	}
 }
 .animate-dodge-slide {
-  animation: dodge-slide 0.7s cubic-bezier(0.25, 0.8, 0.25, 1) both;
+	animation: dodge-slide 0.7s cubic-bezier(0.25, 0.8, 0.25, 1) both;
 }
 
 @keyframes reaction-fade-up {
-  0% { transform: translateY(10px) scale(0.5); opacity: 0; }
-  15% { transform: translateY(-10px) scale(1.3); opacity: 1; }
-  85% { transform: translateY(-25px) scale(1); opacity: 1; }
-  100% { transform: translateY(-35px) scale(0.8); opacity: 0; }
+	0% {
+		transform: translateY(10px) scale(0.5);
+		opacity: 0;
+	}
+	15% {
+		transform: translateY(-10px) scale(1.3);
+		opacity: 1;
+	}
+	85% {
+		transform: translateY(-25px) scale(1);
+		opacity: 1;
+	}
+	100% {
+		transform: translateY(-35px) scale(0.8);
+		opacity: 0;
+	}
 }
 .animate-reaction-fade-up {
-  animation: reaction-fade-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	animation: reaction-fade-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ---------------------------------------------------------------
+ * T7 — Elipse pulse (sala aguardando jogadores)
+ * --------------------------------------------------------------- */
+@keyframes ellipse-pulse {
+	0%,
+	100% {
+		opacity: 0.7;
+		stroke-width: 1;
+	}
+	50% {
+		opacity: 1;
+		stroke-width: 1.5;
+	}
+}
+
+.ellipse-pulse {
+	animation: ellipse-pulse 2.4s ease-in-out infinite;
+	transition: opacity 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ellipse-pulse {
+		animation: none;
+	}
 }
 
 /* ---------------------------------------------------------------
@@ -334,11 +465,11 @@ a[role="button"] {
 }
 .side-rail.right {
 	right: 0;
-	border-left: 1px solid rgba(21, 20, 15, 0.05);
+	border-left: 1px solid var(--border-rail);
 }
 .side-rail.left {
 	left: 0;
-	border-right: 1px solid rgba(21, 20, 15, 0.05);
+	border-right: 1px solid var(--border-rail);
 }
 .side-rail .rail-text {
 	font-family: "Inter Tight", "Inter", sans-serif;
@@ -362,7 +493,7 @@ a[role="button"] {
 	align-items: center;
 	gap: 18px;
 	padding: 18px 0;
-	border-top: 1px solid rgba(21, 20, 15, 0.16);
+	border-top: 1px solid var(--border-rule);
 	font-family: "JetBrains Mono", monospace;
 	font-size: 10.5px;
 	letter-spacing: 0.04em;
@@ -381,10 +512,6 @@ a[role="button"] {
 	flex: 1;
 	text-align: center;
 }
-.sec-rule .page {
-	font-family: "Inter Tight", sans-serif;
-	letter-spacing: 0.22em;
-}
 
 .mega {
 	font-family: "Playfair Display", Georgia, serif;
@@ -399,4 +526,22 @@ a[role="button"] {
 	color: var(--accent);
 }
 
-
+/* ---------------------------------------------------------------
+ * Site Header (Phase 6 — landing-header refactor, issue 02)
+ * Header fixo da landing. Default: transparente (deixa o hero
+ * aparecer sob o header). Após scroll > 8px: paper-warm sólido,
+ * border-bottom hairline + shadow sutil (≤8px blur, compatível
+ * com a regra Border+Shadow do Atelier Zero). Transição 240ms
+ * ease-out. Reduced-motion global (index.css:65-73) já neuta as
+ * transições.
+ * --------------------------------------------------------------- */
+.site-header {
+	background: transparent;
+	transition: background 240ms ease-out, border-color 240ms ease-out, box-shadow
+		240ms ease-out;
+}
+.site-header[data-scrolled="true"] {
+	background: var(--paper-warm);
+	border-bottom: 1px solid var(--border-header);
+	box-shadow: 0 6px 16px -8px var(--shadow-header);
+}

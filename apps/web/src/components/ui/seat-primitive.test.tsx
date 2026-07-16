@@ -4,8 +4,8 @@
  * Cobre estados visuais do Seat primitive: isYou, isHost, votedMedian, unanimous.
  */
 import { describe, expect, test } from "bun:test";
-import { render, screen } from "./test-helpers";
 import { SeatPrimitive } from "./seat";
+import { render, screen } from "./test-helpers";
 
 describe("SeatPrimitive", () => {
 	test("isYou=true aplica borda coral 2px (border-coral border-2)", () => {

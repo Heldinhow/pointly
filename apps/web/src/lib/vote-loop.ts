@@ -27,8 +27,8 @@
  * @see .specs/features/planning-poker-v1/spec.md F-009, F-010, F-011, F-017
  */
 import type {
-	VoteCastEvent,
 	ServerToClientEvent,
+	VoteCastEvent,
 } from "@planning-poker/shared";
 import type { SalaStore } from "../store/sala";
 import type { WSClient } from "./ws-client";

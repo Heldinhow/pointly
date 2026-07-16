@@ -1,3 +1,4 @@
+import { ThemeProvider } from "./components/theme-provider";
 /**
  * App — root component.
  *
@@ -13,9 +14,11 @@ import { AppRouter } from "./routes";
 
 export function App() {
 	return (
-		<ToastProvider>
-			<ToastQueue />
-			<AppRouter />
-		</ToastProvider>
+		<ThemeProvider>
+			<ToastProvider>
+				<ToastQueue />
+				<AppRouter />
+			</ToastProvider>
+		</ThemeProvider>
 	);
 }

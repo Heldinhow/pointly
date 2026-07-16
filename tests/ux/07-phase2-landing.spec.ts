@@ -64,7 +64,9 @@ test.describe("Phase 2 — Landing (BUG-103 + BUG-205 + BUG-206)", () => {
 			waitUntil: "domcontentloaded",
 		});
 		await page.waitForSelector('[data-testid="page-join"]');
-		const codeLabel = await page.locator('[data-testid="join-code-label"]').textContent();
+		const codeLabel = await page
+			.locator('[data-testid="join-code-label"]')
+			.textContent();
 		expect(codeLabel?.trim()).toBe("será gerada ao entrar");
 	});
 });

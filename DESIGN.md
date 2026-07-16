@@ -1,0 +1,194 @@
+---
+name: Pointly
+description: Planning Poker web app using the Atelier Zero design system.
+colors:
+  primary: "#ed6f5c"
+  primary-soft: "#f08e7c"
+  primary-deep: "#b8412f"
+  neutral-bg: "#efe7d2"
+  paper-warm: "#ece4cf"
+  paper-dark: "#ddd2b6"
+  neutral-surface: "#f7f1de"
+  neutral-text: "#15140f"
+  text-soft: "#2a2620"
+  text-mute: "#3a352a"
+  text-faint: "#4a4438"
+  jewelry-mustard: "#e9b94a"
+  jewelry-olive: "#6e7448"
+typography:
+  display:
+    fontFamily: "Inter Tight, system-ui, sans-serif"
+    fontSize: "clamp(2.5rem, 7vw, 4.5rem)"
+    fontWeight: 700
+    letterSpacing: "-0.04em"
+  brand-mark:
+    fontFamily: "Playfair Display, Georgia, serif"
+    fontStyle: "italic"
+    fontSize: "28px"
+    fontWeight: 500
+  logo:
+    fontFamily: "Inter Tight, system-ui, sans-serif"
+    fontSize: "24px"
+    fontWeight: 800
+    letterSpacing: "-0.03em"
+  body:
+    fontFamily: "Inter, system-ui, sans-serif"
+    fontSize: "1rem"
+    fontWeight: 400
+  label:
+    fontFamily: "JetBrains Mono, ui-monospace, monospace"
+    fontSize: "11px"
+    letterSpacing: "0.04em"
+    fontWeight: 400
+rounded:
+  card: "18px"
+  full: "9999px"
+spacing:
+  sm: "16px"
+  md: "28px"
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "#ffffff"
+    rounded: "{rounded.full}"
+    padding: "14px 22px"
+  button-primary-hover:
+    backgroundColor: "{colors.primary-soft}"
+  button-outline:
+    backgroundColor: "transparent"
+    textColor: "{colors.primary}"
+    rounded: "{rounded.full}"
+  button-default:
+    backgroundColor: "transparent"
+    textColor: "{colors.neutral-text}"
+    rounded: "{rounded.full}"
+  card-elevated:
+    backgroundColor: "{colors.neutral-surface}"
+    rounded: "{rounded.card}"
+    padding: "28px"
+---
+
+# Design System: Pointly
+
+## 1. Overview
+
+**Creative North Star: "The Atelier Zero Gallery"**
+
+Pointly's visual language is artisanal, restrained, and tactile. It treats the digital workspace like a physical gallery: structured around fine lines, clean margins, and an off-white warm paper canvas. Identity is driven by strategic typographic choices and a high-contrast ink hierarchy, rather than heavy background fills or elaborate UI frames.
+
+Every page features a fine SVG fractal noise filter to mimic the texture of heavy paper. The design deliberately rejects the cold, sterile conventions of modern software design: there are no generic blue CTAs, no soft grey boxes, and no glow/glassmorphism. 
+
+**Key Characteristics:**
+- **Paper & Ink Foundation**: The interface relies on warm paper tones and dark ink text, establishing immediate reading contrast.
+- **Micro-textured Surfaces**: All containers and full pages apply a subtle SVG turbulence noise in a radial gradient mask.
+- **Restrained Jewelry**: High-chroma color is strictly capped; primary coral is limited, and mustard yellow is reserved exclusively for highlights.
+
+## 2. Colors
+
+Pointly's colors follow the Atelier Zero palette, prioritizing warm neutrals and high contrast.
+
+### Primary
+- **Terracotta Coral** (`#ed6f5c` / `oklch(69% 0.17 32)`): Used exclusively for primary CTAs and active states.
+- **Coral Soft** (`#f08e7c`): Hover state for primary CTAs.
+- **Coral Deep** (`#b8412f`): Accessibility-safe coral (5.8:1 contrast) for small text labels, active icons, and secondary hover states.
+
+### Neutral
+- **Warm Parchment** (`#efe7d2` / `oklch(93% 0.02 85)`): Main body background. Imparts a physical, organic feel.
+- **Bleached Ivory** (`#f7f1de` / `oklch(96% 0.01 88)`): Elevated surface container color. Used for cards and overlays.
+- **Carbon Ink** (`#15140f` / `oklch(15% 0.005 85)`): Body text and high-priority solid UI boundaries.
+
+### Dark Mode overrides
+In dark mode, the color hierarchy shifts to a low-luminance warm palette to maintain reading comfort under low ambient light:
+- **Carbon Charcoal** (`#13120d`): Main dark background.
+- **Parchment Dark** (`#1a1914`): Elevated container surfaces.
+- **Ivory Soft** (`#f7f1de`): Body text color (inverted from Bleached Ivory).
+- **Coral Soft** (`#f08e7c`): CTA element active states.
+
+### Named Rules
+**The Single CTA Rule.** No more than one solid coral CTA may be visible within a single screen viewport. Secondary actions must use border outlines or ghost treatments.
+**The Jewelry Scale Rule.** High-chroma highlights like Antique Gold (`#e9b94a`) must cover less than 1% of any screen surface. They are jewelry, not structural color.
+
+## 3. Typography
+
+**Display Font:** Inter Tight (fallback: system-ui, sans-serif)
+**Body Font:** Inter (fallback: system-ui, sans-serif)
+**Italic Font:** Playfair Display (fallback: Georgia, serif)
+**Mono Font:** JetBrains Mono (fallback: ui-monospace, monospace)
+
+### Hierarchy
+
+A ramp inteira é twelve-step, intencional. Todo valor fora dela é tell de IA.
+
+| Token | Size | Line | Weight | Tracking | Uso |
+|---|---|---|---|---|---|
+| `display-xl` | clamp(70, 13vw, 200) | 0.95 | 500 | -0.04em | Mega footer `Pointly.`, display numbers |
+| `card-title` | 34 | 1.05 | 800 | -0.03em | h1 dentro de Card (Join, Arena) |
+| `card-mark` | 36 | 1 | 500 (italic) | 0 | Ø glyph dentro de Card |
+| `headline` | clamp(1.5, 3vw, 2) rem | 1.15 | 700 | -0.03em | Section title fora de Card (Landing) |
+| `brand-mark` | 28 | 1 | 500 (italic) | 0 | Ø no lockup primário (Landing nav) |
+| `logo` | 24 | 1 | 800 | -0.03em | Wordmark primário |
+| `nav-mark` | 22 | 1 | 500 (italic) | 0 | Ø no site-header lockup secundário |
+| `nav-wordmark` | 18 | 1 | 800 | -0.02em | Wordmark do site-header secundário |
+| `body` | 16 | 1.5 | 400 | 0 | Texto corrido, listas, tabelas, inputs |
+| `caption` | 14 | 1.55 | 400 | 0 | Micro-copy abaixo de headlines |
+| `label` | 11 | 1.4 | 500 (mono) | 0.04em | Labels uppercase em JetBrains Mono |
+| `micro-label` | 10 | 1.4 | 500 (mono) | 0.04em | Tags de header, contadores, FIG.## |
+
+### Named Rules
+
+**The Ramp Rule.** Use um token da tabela acima para qualquer texto. `text-[Npx]` solto é tell de IA — pare, escolha o token mais próximo, ou proponha extensão da ramp em PR.
+**The No-Condensed Display Rule.** Letter spacing on display headings must never go below -0.04em. Anything tighter makes the glyphs collide, hurting legibility and character.
+**The Playfair Highlight Rule.** The Playfair Display font is used exclusively in italics for the brand Ø glyph and numerical deck values (e.g., Fibonacci cards). Never use it for standard headings or body copy.
+
+## 4. Elevation
+
+Pointly uses a structural and tactile approach to depth. There is no heavy stacked shadowing. Depth is established through the juxtaposition of the main Warm Parchment background with Bleached Ivory surface cards, using subtle ink-tinted borders and a single ambient shadow.
+
+Two distinct tokens exist so bordered and borderless surfaces each get a shadow that fits:
+
+### Shadow Vocabulary
+
+- **Card Shadow** (`box-shadow: 0 4px 8px -1px rgba(21, 20, 15, 0.10)`): The default for bordered containers — `Card`, banners, sections that carry a 1px hairline. ≤8px blur, low opacity, slight negative spread. Deliberately small so it doesn't compete with the border.
+- **Bone Shadow** (`box-shadow: 0 30px 60px -30px rgba(21, 20, 15, 0.15)`): Reserved for **borderless** floating surfaces — modals, popovers, tooltips, toasts. The dramatic 60px blur carries the lift alone (no border needed).
+- **Coral Shadow** (`box-shadow: 0 14px 26px -16px rgba(237, 111, 92, 0.6)`): Applied to primary coral buttons to give them a tactile, active pressed feel. No border on the button — only shadow.
+
+### Named Rules
+
+**The Border-Plus-Shadow Rule.** Never combine a `border-ink/5` (or any 1px border) with `shadow-bone`. The pairing reads as a "ghost card" — soft wide drop shadow plus hairline border — and is a saturated Codex tell. Pick **one** elevation cue:
+- Bordered containers pair with `shadow-card` (≤8px blur).
+- Borderless floating surfaces use `shadow-bone` alone.
+- A single 1px border at ink/5 with no shadow is also fine.
+
+If a feature needs both a border AND dramatic lift, drop one or the other — not both.
+
+## 5. Components
+
+### Buttons
+- **Shape:** Full pill-shaped (rounded-full).
+- **Primary:** Solid Terracotta Coral background, white label, size md (h-10 px-5) or lg (h-12 px-7). Pairs with `shadow-coral` (no border).
+- **Hover / Focus:** Transitions to Coral Soft background, active state translate-y-px. Focus ring uses coral-deep at ~40% opacity with a offset-bg ring.
+- **Secondary / Default:** Transparent background, 1px border at ink/20, text color Carbon Ink. Hovers to border-ink/40.
+
+### Cards / Containers
+- **Corner Style:** Gently curved corners (18px radius).
+- **Background:** Bleached Ivory (`var(--surface)`) background.
+- **Shadow Strategy:** 1px border at ink/5 + `shadow-card` (≤8px blur). NOT `shadow-bone`.
+- **Internal Padding:** 28px padding by default (md scale).
+
+### Inputs / Fields
+- **Style:** Clean border at ink/10, rounded-lg, background `var(--paper)`.
+- **Focus:** Sharp transition to `border-coral` with a 2px focus-visible ring at `coral-deep/40` for AA contrast.
+- **A11y note:** small coral labels and error text below 14px must use `text-coral-deep` (5.8:1 contrast on paper). Never `text-coral` for size ≤13px.
+
+## 6. Do's and Don'ts
+
+### Do:
+- **Do** apply the `.surface-noise` class to all primary page roots and cards to maintain a unified tactile texture.
+- **Do** use Playfair Display italic for all Fibonacci cards and the brand Ø mark.
+- **Do** ensure small labels and icons in coral use the accessible Coral Deep (`#b8412f`) to meet AA contrast standards.
+
+### Don't:
+- **Don't** use border-left or border-right accent stripes on cards or lists.
+- **Don't** use gradient text or glassmorphism blurs.
+- **Don't** use standard sans-serif uppercase eyebrows on every section (use section rules `.sec-rule` instead).
+- **Don't** round cards or sections with border-radius larger than 18px (except for fully rounded buttons or tags).

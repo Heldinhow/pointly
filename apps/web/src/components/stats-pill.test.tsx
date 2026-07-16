@@ -2,8 +2,8 @@
  * StatsPill tests — T35 verify (≥2 of 5 minimum required).
  */
 import { describe, expect, test } from "bun:test";
-import { render, screen } from "./ui/test-helpers";
 import { StatsPill, formatMean, formatMedian, formatRange } from "./stats-pill";
+import { render, screen } from "./ui/test-helpers";
 
 describe("formatMean / formatMedian / formatRange — T35 pure", () => {
 	test("formatMean(null) → '—'", () => {

@@ -98,11 +98,7 @@ export function RevealButton({
 			aria-label={ariaLabel}
 			aria-disabled={disabled}
 			aria-keyshortcuts={
-				state === "ready"
-					? "R"
-					: state === "post-reveal"
-						? "N"
-						: undefined
+				state === "ready" ? "R" : state === "post-reveal" ? "N" : undefined
 			}
 			onClick={handleClick}
 			data-testid="reveal-button"

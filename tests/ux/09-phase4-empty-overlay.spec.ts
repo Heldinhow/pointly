@@ -19,10 +19,7 @@ async function enterSoloArena(page: import("@playwright/test").Page) {
 		waitUntil: "domcontentloaded",
 	});
 	await page.waitForSelector('[data-testid="page-join"]');
-	await page.fill(
-		'[data-testid="join-input-nick"]',
-		`Overlay${Date.now()}`,
-	);
+	await page.fill('[data-testid="join-input-nick"]', `Overlay${Date.now()}`);
 	await page.click('[data-testid="join-enter-room"]');
 	await page.waitForSelector('[data-testid="arena-stage"]', {
 		timeout: 10_000,
@@ -77,16 +74,16 @@ test("BUG-102: overlay re-aparece após dismiss + nova rodada (solo)", async ({
 		expect(dismissed).toBe("1");
 
 		// 4) Forçar nova rodada: revela, depois reseta.
-		await page.click('[data-testid="reveal-button"]', {
-			timeout: 5_000,
-		}).catch(() => {
-			// Se reveal falhar (timer expirando, etc), segue o teste.
-		});
+		await page
+			.click('[data-testid="reveal-button"]', {
+				timeout: 5_000,
+			})
+			.catch(() => {
+				// Se reveal falhar (timer expirando, etc), segue o teste.
+			});
 
 		// Tenta esperar que o botão de nova rodada apareça.
-		const newRoundBtn = page.locator(
-			'[data-testid="new-round-button"]',
-		);
+		const newRoundBtn = page.locator('[data-testid="new-round-button"]');
 		await newRoundBtn.waitFor({ state: "visible", timeout: 8_000 });
 		await newRoundBtn.click();
 

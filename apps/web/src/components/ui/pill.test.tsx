@@ -2,8 +2,8 @@
  * Pill primitive tests — T26 verify (1 of 5 minimum).
  */
 import { describe, expect, test } from "bun:test";
-import { render, screen } from "./test-helpers";
 import { Pill } from "./pill";
+import { render, screen } from "./test-helpers";
 
 describe("Pill — variants", () => {
 	test("variant critical aplica bg-coral-soft", () => {

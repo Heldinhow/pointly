@@ -62,10 +62,7 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
 			data-testid="help-modal"
 			className="absolute inset-0 bg-bg/92 backdrop-blur-[4px] flex items-center justify-center z-30 transition-opacity duration-200"
 		>
-			<Card
-				padding="lg"
-				className="w-[480px] flex flex-col gap-4 items-start"
-			>
+			<Card padding="lg" className="w-[480px] flex flex-col gap-4 items-start">
 				<div className="flex items-baseline gap-3">
 					<div className="font-italic italic text-coral text-[32px] leading-none">
 						Ø
@@ -82,10 +79,7 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
 					botões da arena (anunciados pelos leitores de tela).
 				</p>
 
-				<table
-					className="w-full mt-1"
-					data-testid="help-modal-shortcuts"
-				>
+				<table className="w-full mt-1" data-testid="help-modal-shortcuts">
 					<tbody>
 						{ROWS.map((row) => (
 							<tr

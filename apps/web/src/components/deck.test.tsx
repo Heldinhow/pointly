@@ -2,9 +2,9 @@
  * Deck tests — T32 verify (≥3 of 5 minimum required).
  */
 import { describe, expect, mock, test } from "bun:test";
-import { fireEvent, render, screen } from "./ui/test-helpers";
-import { Deck } from "./deck";
 import { DECK_VALUES } from "@planning-poker/shared";
+import { Deck } from "./deck";
+import { fireEvent, render, screen } from "./ui/test-helpers";
 
 describe("Deck — T32", () => {
 	test("renderiza 9 cartas Fibonacci em ordem", () => {
@@ -36,7 +36,11 @@ describe("Deck — T32", () => {
 			<Deck
 				currentVote={null}
 				disabled={false}
-				onSelect={onSelect as unknown as (v: import("@planning-poker/shared").Vote) => void}
+				onSelect={
+					onSelect as unknown as (
+						v: import("@planning-poker/shared").Vote,
+					) => void
+				}
 			/>,
 		);
 		fireEvent.click(screen.getByTestId("deck-card-8"));

@@ -2,8 +2,8 @@
  * Card primitive tests — T26 verify (1 of 5 minimum).
  */
 import { describe, expect, test } from "bun:test";
-import { render, screen } from "./test-helpers";
 import { Card, CardBody, CardFooter, CardHeader } from "./card";
+import { render, screen } from "./test-helpers";
 
 function getCardRoot(): HTMLElement {
 	return screen.getByTestId("card-root");

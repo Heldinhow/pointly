@@ -4,11 +4,11 @@
  * Testa que mudanças no Zustand store disparam toasts apropriados.
  */
 import { describe, expect, test } from "bun:test";
+import type { SalaState } from "@planning-poker/shared";
+import { useSalaStore } from "../store/sala";
+import { ToastQueue } from "./toast-queue";
 import { act, render, screen } from "./ui/test-helpers";
 import { ToastProvider } from "./ui/toast";
-import { ToastQueue } from "./toast-queue";
-import { useSalaStore } from "../store/sala";
-import type { SalaState } from "@planning-poker/shared";
 
 function makeSala(overrides: Partial<SalaState> = {}): SalaState {
 	return {

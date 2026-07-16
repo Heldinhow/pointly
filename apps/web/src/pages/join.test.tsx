@@ -19,7 +19,10 @@ import { Join, validateNick } from "./join";
 function renderJoin(initialEntry = "/join") {
 	return render(
 		<ToastProvider>
-			<MemoryRouter initialEntries={[initialEntry]}>
+			<MemoryRouter
+				future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+				initialEntries={[initialEntry]}
+			>
 				<Join />
 			</MemoryRouter>
 		</ToastProvider>,
@@ -36,13 +39,13 @@ describe("validateNick — T28 unit (pure function)", () => {
 	test("nick 1 char → erro 'Mínimo 2 caracteres.'", () => {
 		const r = validateNick("A");
 		expect(r.ok).toBe(false);
-		if (!r.ok) expect(r.error).toMatch(/mínimo 2/i);
+		if (!r.ok) expect(r.error).toMatch(/pelo menos 2/i);
 	});
 
 	test("nick 21 chars → erro 'Máximo 20 caracteres.'", () => {
 		const r = validateNick("a".repeat(21));
 		expect(r.ok).toBe(false);
-		if (!r.ok) expect(r.error).toMatch(/máximo 20/i);
+		if (!r.ok) expect(r.error).toMatch(/no máximo 20/i);
 	});
 
 	test("nick com espaço duplo → erro 'Sem espaços duplos.'", () => {
@@ -75,10 +78,10 @@ describe("validateNick — T28 unit (pure function)", () => {
 });
 
 describe("Join page — render", () => {
-	test("renderiza headline 'Seu nome na sala' + 'Entrar'", () => {
+	test("renderiza headline 'Entrar na sala' + 'Entrar'", () => {
 		renderJoin();
 		expect(
-			screen.getByRole("heading", { level: 1, name: /seu nome na sala/i }),
+			screen.getByRole("heading", { level: 1, name: /entrar na sala/i }),
 		).toBeInTheDocument();
 		expect(screen.getAllByText(/Entrar/i).length).toBeGreaterThan(0);
 	});
@@ -88,7 +91,7 @@ describe("Join page — render", () => {
 		const input = screen.getByTestId("nick-input");
 		expect(input).toBeInTheDocument();
 		expect(input.tagName).toBe("INPUT");
-		expect(screen.getByLabelText(/apelido/i)).toBe(input);
+		expect(screen.getByLabelText(/como você quer ser chamado/i)).toBe(input);
 	});
 
 	test("botão 'Entrar' começa disabled (nick vazio)", () => {
@@ -100,23 +103,23 @@ describe("Join page — render", () => {
 
 describe("Join page — validation inline", () => {
 	test("nick 1 char → erro inline 'Mínimo 2'", () => {
-		renderJoin();
+		renderJoin("/join?code=ABCD");
 		const input = screen.getByTestId("nick-input");
 		fireEvent.change(input, { target: { value: "A" } });
 		const error = screen.getByTestId("nick-error");
-		expect(error).toHaveTextContent(/mínimo 2/i);
+		expect(error).toHaveTextContent(/pelo menos 2/i);
 	});
 
 	test("nick 'Hel  der' (espaço duplo) → erro inline", () => {
-		renderJoin();
+		renderJoin("/join?code=ABCD");
 		const input = screen.getByTestId("nick-input");
 		fireEvent.change(input, { target: { value: "Hel  der" } });
 		const error = screen.getByTestId("nick-error");
 		expect(error).toHaveTextContent(/espaços duplos/i);
 	});
 
-	test("nick 'Helder' (válido) → botão habilita, erro vazio", () => {
-		renderJoin();
+	test("nick 'Helder' (válido) com código na URL → botão habilita, erro vazio", () => {
+		renderJoin("/join?code=ABCD");
 		const input = screen.getByTestId("nick-input");
 		fireEvent.change(input, { target: { value: "Helder" } });
 		const submit = screen.getByTestId("join-submit");
@@ -125,12 +128,48 @@ describe("Join page — validation inline", () => {
 	});
 
 	test("input tem aria-invalid=true em erro, false em válido", () => {
-		renderJoin();
+		renderJoin("/join?code=ABCD");
 		const input = screen.getByTestId("nick-input");
 		fireEvent.change(input, { target: { value: "A" } });
 		expect(input.getAttribute("aria-invalid")).toBe("true");
 		fireEvent.change(input, { target: { value: "Helder" } });
 		expect(input.getAttribute("aria-invalid")).toBe("false");
+	});
+});
+
+describe("Join page — manual code entry", () => {
+	test("renderiza campo de código no join sem parâmetros", () => {
+		renderJoin("/join");
+		expect(screen.getByTestId("join-code-input")).toBeInTheDocument();
+	});
+
+	test("NÃO renderiza campo de código no join com code na URL", () => {
+		renderJoin("/join?code=ABCD");
+		expect(screen.queryByTestId("join-code-input")).not.toBeInTheDocument();
+	});
+
+	test("NÃO renderiza campo de código no join como host", () => {
+		renderJoin("/join?host=1");
+		expect(screen.queryByTestId("join-code-input")).not.toBeInTheDocument();
+	});
+
+	test("botão só habilita com nick válido E código de 4 caracteres no join manual", () => {
+		renderJoin("/join");
+		const nickInput = screen.getByTestId("nick-input");
+		const codeInput = screen.getByTestId("join-code-input");
+		const submit = screen.getByTestId("join-submit");
+
+		// Apenas nick -> disabled
+		fireEvent.change(nickInput, { target: { value: "Helder" } });
+		expect(submit).toBeDisabled();
+
+		// Nick + código curto -> disabled
+		fireEvent.change(codeInput, { target: { value: "AB" } });
+		expect(submit).toBeDisabled();
+
+		// Nick + código 4 chars -> enabled
+		fireEvent.change(codeInput, { target: { value: "ABCD" } });
+		expect(submit).toBeEnabled();
 	});
 });
 
@@ -140,12 +179,9 @@ describe("Join page — querystring parsing", () => {
 		expect(screen.getByTestId("join-code-label")).toHaveTextContent("ABCD");
 	});
 
-	test("?host=1 mostra host note 'Você está criando esta sala'", () => {
+	test("?host=1 não mostra uma nota redundante", () => {
 		renderJoin("/join?host=1");
-		expect(screen.getByTestId("host-note")).toBeInTheDocument();
-		expect(screen.getByTestId("host-note")).toHaveTextContent(
-			/criando esta sala/i,
-		);
+		expect(screen.queryByTestId("host-note")).not.toBeInTheDocument();
 	});
 
 	test("sem ?host=1 NÃO mostra host note", () => {

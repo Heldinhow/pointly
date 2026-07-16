@@ -2,10 +2,10 @@
  * cast_vote loop tests — T38 verify (≥2 integration tests com mock WS).
  */
 import { beforeEach, describe, expect, test } from "bun:test";
+import type { SalaState, VoteCastEvent } from "@planning-poker/shared";
+import { useSalaStore } from "../store/sala";
 import { applyVoteCastEvent, castVote, createVoteLoop } from "./vote-loop";
 import type { WSClient } from "./ws-client";
-import { useSalaStore } from "../store/sala";
-import type { SalaState, VoteCastEvent } from "@planning-poker/shared";
 
 /** Mock minimal WSClient que captura `send` calls. */
 function makeMockWS(): WSClient & {

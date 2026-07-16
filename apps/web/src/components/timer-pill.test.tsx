@@ -2,8 +2,8 @@
  * TimerPill tests — T34 verify (≥2 of 5 minimum required).
  */
 import { describe, expect, test } from "bun:test";
-import { render, screen } from "./ui/test-helpers";
 import { TimerPill, formatRound, formatTimer } from "./timer-pill";
+import { render, screen } from "./ui/test-helpers";
 
 describe("formatTimer / formatRound — T34 pure helpers", () => {
 	test("formatTimer(60) → '60' (BUG-201: nunca '00:60')", () => {
@@ -65,7 +65,9 @@ describe("TimerPill — render (com props diretas, sem store)", () => {
 	test("renderiza '60' para timer=60 (nunca '00:60')", () => {
 		render(<TimerPill timer={60} round={1} />);
 		expect(screen.getByTestId("timer-value")).toHaveTextContent("60");
-		expect(screen.getByTestId("timer-value").textContent).not.toContain("00:60");
+		expect(screen.getByTestId("timer-value").textContent).not.toContain(
+			"00:60",
+		);
 	});
 
 	test("critical=true (timer ≤30) aplica bg-coral-soft + border coral", () => {
@@ -86,9 +88,9 @@ describe("TimerPill — render (com props diretas, sem store)", () => {
 	test("timer=30 (limite crítico) — aplica critical via regra interna", () => {
 		// timer=30 é o limite; a regra interna critical || timer <= 30 → true
 		render(<TimerPill timer={30} round={1} />);
-		expect(screen.getByTestId("timer-pill").getAttribute("data-timer-critical")).toBe(
-			"true",
-		);
+		expect(
+			screen.getByTestId("timer-pill").getAttribute("data-timer-critical"),
+		).toBe("true");
 	});
 
 	test("role='timer' + aria-label com segundos restantes", () => {
@@ -100,6 +102,8 @@ describe("TimerPill — render (com props diretas, sem store)", () => {
 
 	test("aria-live='off' (não anuncia cada segundo — evita ruído)", () => {
 		render(<TimerPill timer={42} round={3} />);
-		expect(screen.getByTestId("timer-pill").getAttribute("aria-live")).toBe("off");
+		expect(screen.getByTestId("timer-pill").getAttribute("aria-live")).toBe(
+			"off",
+		);
 	});
 });

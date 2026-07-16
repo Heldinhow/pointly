@@ -22,7 +22,7 @@
  * @see .compozy/tasks/pointly-ux-hardening/task_09.md
  * @see .compozy/tasks/pointly-ux-hardening/adrs/adr-007.md
  */
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 
 /** Handler de atalho. Recebe o evento original (pode usar `preventDefault`). */
 export type ShortcutHandler = (e: KeyboardEvent) => void;
@@ -44,9 +44,10 @@ export interface UseKeyboardShortcutsOptions {
  * @param opts Atalho map + gate + chave opcional de help
  * @returns `{ openHelp, setOpenHelp }` se `helpKey` foi fornecido, senão `null`
  */
-export function useKeyboardShortcuts(
-	opts: UseKeyboardShortcutsOptions,
-): { openHelp: boolean; setOpenHelp: Dispatch<SetStateAction<boolean>> } | null {
+export function useKeyboardShortcuts(opts: UseKeyboardShortcutsOptions): {
+	openHelp: boolean;
+	setOpenHelp: Dispatch<SetStateAction<boolean>>;
+} | null {
 	const { shortcuts, enabled = true, helpKey } = opts;
 	const [openHelp, setOpenHelp] = useState(false);
 
@@ -58,11 +59,7 @@ export function useKeyboardShortcuts(
 			const target = e.target;
 			if (target instanceof HTMLElement) {
 				const tag = target.tagName;
-				if (
-					tag === "INPUT" ||
-					tag === "TEXTAREA" ||
-					target.isContentEditable
-				) {
+				if (tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable) {
 					return;
 				}
 			} else if (target instanceof Element) {

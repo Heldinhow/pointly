@@ -36,23 +36,24 @@
  * @see .specs/features/planning-poker-v1/tasks.md T30
  * @see .specs/features/planning-poker-v1/spec.md F-007, F-053
  */
-import { useCallback, useMemo, useState, useEffect } from "react";
-import { useSearchParams, Link, useBlocker } from "react-router-dom";
-import { buildShareUrl } from "../components/empty-overlay";
-import { cn } from "../components/ui/utils";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useBlocker, useSearchParams } from "react-router-dom";
 import { Deck } from "../components/deck";
+import { buildShareUrl } from "../components/empty-overlay";
 import { EmptyOverlay } from "../components/empty-overlay";
-import { Ellipse } from "../components/ui/ellipse";
+import { HelpModal } from "../components/help-modal";
+import { ProjectileAnimator } from "../components/projectile-animator";
 import { RevealButton } from "../components/reveal-button";
 import { Seat } from "../components/seat";
-import { HelpModal } from "../components/help-modal";
-import { useKeyboardShortcuts } from "../lib/use-keyboard-shortcuts";
 import { StatsPill } from "../components/stats-pill";
+import { ThemeToggle } from "../components/theme-toggle";
 import { TimerPill } from "../components/timer-pill";
-import { useArenaLoop, getStoredUUID } from "../lib/use-arena-loop";
+import { Ellipse } from "../components/ui/ellipse";
+import { cn } from "../components/ui/utils";
 import { getNick } from "../lib/storage";
+import { getStoredUUID, useArenaLoop } from "../lib/use-arena-loop";
+import { useKeyboardShortcuts } from "../lib/use-keyboard-shortcuts";
 import { useSalaStore } from "../store/sala";
-import { ProjectileAnimator } from "../components/projectile-animator";
 
 /** Raio da mesa em pixels (vide arena.html R_x=420 R_y=240). */
 const TABLE_RX = 420;
@@ -120,7 +121,9 @@ function SharePill({ code }: { code: string }) {
 			<span className="font-sans text-[11px] leading-none" aria-hidden="true">
 				{copied ? "✓" : "📋"}
 			</span>
-			<span>{copied ? "Link copiado!" : `Convidar com código: ${code || "—"}`}</span>
+			<span>
+				{copied ? "Link copiado!" : `Convidar com código: ${code || "—"}`}
+			</span>
 		</button>
 	);
 }
@@ -171,11 +174,12 @@ export function Arena() {
 	const uuid = getStoredUUID();
 
 	// Conecta ao WS server via composition hook (T38-T41)
-	const { castVote, requestReveal, requestNewRound, throwProjectile } = useArenaLoop({
-		nick,
-		code: urlCode,
-		uuid,
-	});
+	const { castVote, requestReveal, requestNewRound, throwProjectile } =
+		useArenaLoop({
+			nick,
+			code: urlCode,
+			uuid,
+		});
 
 	const sala = useSalaStore((s) => s.sala);
 	const currentPlayerId = useSalaStore((s) => s.currentPlayerId);
@@ -299,7 +303,7 @@ export function Arena() {
 					<div className="flex items-center gap-4">
 						<span
 							aria-hidden="true"
-							className="inline-block w-1.5 h-1.5 rounded-full bg-coral animate-pulse"
+							className="inline-block w-1.5 h-1.5 rounded-full bg-coral motion-reduce:animate-none animate-pulse"
 						/>
 						<Link
 							to="/"
@@ -319,6 +323,7 @@ export function Arena() {
 						</span>
 					</div>
 					<div className="flex items-center gap-3">
+						<ThemeToggle />
 						<button
 							type="button"
 							onClick={() => setOpenHelp(true)}
@@ -373,60 +378,60 @@ export function Arena() {
 					aria-label="Mesa da rodada"
 				>
 					<div className="relative w-[960px] h-[500px] min-w-[960px]">
-					<Ellipse height={500} />
+						<Ellipse height={500} />
 
-					{/* Seats posicionados via trigonometria */}
-					{sala?.players.map((p) => {
-						const angle = seatAngles.get(p.id) ?? 0;
-						const pos = seatPosition(angle);
-						const isYou = p.id === currentPlayerId;
-						const isMedianVote =
-							faceUp &&
-							median !== null &&
-							p.value !== null &&
-							(() => {
-								const numericValue =
-									p.value === "½"
-										? 0.5
-										: p.value === "☕"
-											? null
-											: Number(p.value);
-								return numericValue === median;
-							})();
-						return (
-							<div
-								key={p.id}
-								className="absolute"
-								style={{
-									left: `${pos.left}px`,
-									top: `${pos.top}px`,
-									transform: "translate(-50%, -50%)",
-								}}
-								data-seat-angle={angle}
-							>
-								<Seat
-									player={p}
-									isYou={isYou}
-									faceUp={faceUp}
-									votedMedian={Boolean(isMedianVote)}
-									unanimous={unanimous}
-									onThrow={throwProjectile}
-								/>
-							</div>
-						);
-					})}
+						{/* Seats posicionados via trigonometria */}
+						{sala?.players.map((p) => {
+							const angle = seatAngles.get(p.id) ?? 0;
+							const pos = seatPosition(angle);
+							const isYou = p.id === currentPlayerId;
+							const isMedianVote =
+								faceUp &&
+								median !== null &&
+								p.value !== null &&
+								(() => {
+									const numericValue =
+										p.value === "½"
+											? 0.5
+											: p.value === "☕"
+												? null
+												: Number(p.value);
+									return numericValue === median;
+								})();
+							return (
+								<div
+									key={p.id}
+									className="absolute"
+									style={{
+										left: `${pos.left}px`,
+										top: `${pos.top}px`,
+										transform: "translate(-50%, -50%)",
+									}}
+									data-seat-angle={angle}
+								>
+									<Seat
+										player={p}
+										isYou={isYou}
+										faceUp={faceUp}
+										votedMedian={Boolean(isMedianVote)}
+										unanimous={unanimous}
+										onThrow={throwProjectile}
+									/>
+								</div>
+							);
+						})}
 
-					{/* RevealButton central */}
-					<RevealButton
-						phase={phase}
-						votedCount={votedCount}
-						totalPlayers={sala?.players.length ?? 0}
-						onReveal={handleReveal}
-						onNewRound={handleNewRound}
-					/>
+						{/* RevealButton central */}
+						<RevealButton
+							phase={phase}
+							votedCount={votedCount}
+							totalPlayers={sala?.players.length ?? 0}
+							onReveal={handleReveal}
+							onNewRound={handleNewRound}
+						/>
 
-					{/* Animações de arremessos */}
-					<ProjectileAnimator />
+						{/* Animações de arremessos */}
+						<ProjectileAnimator />
 					</div>
 				</div>
 
@@ -444,10 +449,7 @@ export function Arena() {
 
 				{/* Empty overlay (condicional: sala só com você) */}
 				{isOnlyPlayer && code && (
-					<EmptyOverlay
-						key={emptyOverlayNonce}
-						code={code}
-					/>
+					<EmptyOverlay key={emptyOverlayNonce} code={code} />
 				)}
 
 				{/* Help modal (atalhos de teclado) — abre com ? */}

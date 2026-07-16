@@ -25,9 +25,7 @@ test("BUG-104: /join tem apenas o botão 'Voltar' como navegação pra /", async
 	expect(await back.count()).toBe(1);
 
 	// Link "← criar outra sala" não presente.
-	const createAnother = await page
-		.locator("text=criar outra sala")
-		.count();
+	const createAnother = await page.locator("text=criar outra sala").count();
 	expect(createAnother).toBe(0);
 });
 

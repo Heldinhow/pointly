@@ -26,7 +26,9 @@ test.describe("Phase 1 — Timer (BUG-101 + BUG-201)", () => {
 		try {
 			await suite.createRoom(0);
 			await suite.waitForSala(0, (s) => s.players.length >= 1, 10_000);
-			await suite.clients[0]!.page.waitForSelector('[data-testid="page-arena"]');
+			await suite.clients[0]!.page.waitForSelector(
+				'[data-testid="page-arena"]',
+			);
 
 			// Dismiss o EmptyOverlay (solo)
 			const overlay = suite.clients[0]!.page.locator(
@@ -39,7 +41,7 @@ test.describe("Phase 1 — Timer (BUG-101 + BUG-201)", () => {
 			// Snapshot inicial antes do voto (timer deve estar em 60)
 			const initialTimer = await suite.clients[0]!.page.evaluate(() => {
 				const el = document.querySelector('[data-testid="timer-value"]');
-				return el ? el.textContent?.trim() ?? null : null;
+				return el ? (el.textContent?.trim() ?? null) : null;
 			});
 			expect(initialTimer).toBe("60");
 
@@ -64,14 +66,16 @@ test.describe("Phase 1 — Timer (BUG-101 + BUG-201)", () => {
 		try {
 			await suite.createRoom(0);
 			await suite.waitForSala(0, (s) => s.players.length >= 1, 10_000);
-			await suite.clients[0]!.page.waitForSelector('[data-testid="page-arena"]');
+			await suite.clients[0]!.page.waitForSelector(
+				'[data-testid="page-arena"]',
+			);
 
 			// Captura snapshots do timer-value ao longo de 2s.
 			const observed: string[] = [];
 			const collectOnce = async () => {
 				const txt = await suite.clients[0]!.page.evaluate(() => {
 					const el = document.querySelector('[data-testid="timer-value"]');
-					return el ? el.textContent?.trim() ?? "" : "";
+					return el ? (el.textContent?.trim() ?? "") : "";
 				});
 				observed.push(txt);
 			};
@@ -97,7 +101,9 @@ test.describe("Phase 1 — Timer (BUG-101 + BUG-201)", () => {
 		try {
 			await suite.createRoom(0);
 			await suite.waitForSala(0, (s) => s.players.length >= 1, 10_000);
-			await suite.clients[0]!.page.waitForSelector('[data-testid="page-arena"]');
+			await suite.clients[0]!.page.waitForSelector(
+				'[data-testid="page-arena"]',
+			);
 
 			// Estado inicial: critical=false
 			const initialCritical = await suite.clients[0]!.page.evaluate(() => {

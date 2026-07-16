@@ -1,0 +1,23 @@
+{
+	"id": "afbca669",
+	"phase": "steer",
+	"pageUrl": "http://localhost:5173/",
+	"sourceFile": null,
+	"previewFile": null,
+	"previewMode": null,
+	"expectedVariants": 0,
+	"arrivedVariants": 0,
+	"visibleVariant": null,
+	"paramValues": {},
+	"pendingEventSeq": null,
+	"pendingEvent": null,
+	"deliveryLease": null,
+	"checkpointRevision": 9,
+	"activeOwner": "781ebc02",
+	"sourceMarkers": {},
+	"fallbackMode": null,
+	"annotationArtifacts": [],
+	"diagnostics": [],
+	"updatedAt": "2026-07-14T23:40:30.291Z",
+	"message": "Layout and inputs polished."
+}

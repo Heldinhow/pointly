@@ -398,17 +398,13 @@ describe("useSalaStore — imutabilidade", () => {
 
 describe("useSalaStore — tickTimer (T02 / BUG-101)", () => {
 	test("decrementa timer em 1 quando phase === 'voting'", () => {
-		useSalaStore
-			.getState()
-			.setSala(makeSala({ phase: "voting", timer: 45 }));
+		useSalaStore.getState().setSala(makeSala({ phase: "voting", timer: 45 }));
 		useSalaStore.getState().tickTimer();
 		expect(useSalaStore.getState().sala!.timer).toBe(44);
 	});
 
 	test("recomputa critical = true quando timer cruza abaixo de 30", () => {
-		useSalaStore
-			.getState()
-			.setSala(makeSala({ phase: "voting", timer: 31 }));
+		useSalaStore.getState().setSala(makeSala({ phase: "voting", timer: 31 }));
 		expect(useSalaStore.getState().critical).toBe(false);
 		useSalaStore.getState().tickTimer();
 		expect(useSalaStore.getState().sala!.timer).toBe(30);
@@ -416,9 +412,7 @@ describe("useSalaStore — tickTimer (T02 / BUG-101)", () => {
 	});
 
 	test("recomputa critical = true em todos os valores ≤30 enquanto voting", () => {
-		useSalaStore
-			.getState()
-			.setSala(makeSala({ phase: "voting", timer: 30 }));
+		useSalaStore.getState().setSala(makeSala({ phase: "voting", timer: 30 }));
 		expect(useSalaStore.getState().critical).toBe(true);
 		useSalaStore.getState().tickTimer();
 		expect(useSalaStore.getState().sala!.timer).toBe(29);
@@ -434,9 +428,7 @@ describe("useSalaStore — tickTimer (T02 / BUG-101)", () => {
 	});
 
 	test("tickTimer é no-op quando phase === 'revealed'", () => {
-		useSalaStore
-			.getState()
-			.setSala(makeSala({ phase: "revealed", timer: 0 }));
+		useSalaStore.getState().setSala(makeSala({ phase: "revealed", timer: 0 }));
 		const before = useSalaStore.getState().sala;
 		useSalaStore.getState().tickTimer();
 		expect(useSalaStore.getState().sala).toBe(before);
@@ -467,9 +459,7 @@ describe("useSalaStore — tickTimer (T02 / BUG-101)", () => {
 	});
 
 	test("simulação: 60 ticks de timer=60 chegam a timer=0 e critical=false", () => {
-		useSalaStore
-			.getState()
-			.setSala(makeSala({ phase: "voting", timer: 60 }));
+		useSalaStore.getState().setSala(makeSala({ phase: "voting", timer: 60 }));
 		for (let i = 0; i < 60; i++) {
 			useSalaStore.getState().tickTimer();
 		}
@@ -487,17 +477,13 @@ describe("useSalaStore — tickTimer (T02 / BUG-101)", () => {
 	});
 
 	test("setSala após 30 ticks locais sobrescreve timer com valor do server (server wins)", () => {
-		useSalaStore
-			.getState()
-			.setSala(makeSala({ phase: "voting", timer: 60 }));
+		useSalaStore.getState().setSala(makeSala({ phase: "voting", timer: 60 }));
 		for (let i = 0; i < 30; i++) {
 			useSalaStore.getState().tickTimer();
 		}
 		expect(useSalaStore.getState().sala!.timer).toBe(30);
 		// Server reconcilia com timer=45 (ex.: clock drift)
-		useSalaStore
-			.getState()
-			.setSala(makeSala({ phase: "voting", timer: 45 }));
+		useSalaStore.getState().setSala(makeSala({ phase: "voting", timer: 45 }));
 		expect(useSalaStore.getState().sala!.timer).toBe(45);
 		expect(useSalaStore.getState().critical).toBe(false); // 45 > 30
 	});

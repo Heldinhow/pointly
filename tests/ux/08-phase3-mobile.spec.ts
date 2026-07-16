@@ -47,8 +47,9 @@ for (const vp of MOBILE_VIEWPORTS) {
 				.evaluate((el) => {
 					const parent = el.parentElement;
 					if (!parent) return 0;
-					return window.getComputedStyle(parent).gridTemplateColumns
-						.split(" ")
+					return window
+						.getComputedStyle(parent)
+						.gridTemplateColumns.split(" ")
 						.filter(Boolean).length;
 				});
 			expect(gridCols).toBe(1);
@@ -71,10 +72,7 @@ for (const vp of MOBILE_VIEWPORTS) {
 				waitUntil: "domcontentloaded",
 			});
 			await page.waitForSelector('[data-testid="page-join"]');
-			await page.fill(
-				'[data-testid="join-input-nick"]',
-				`Deck${vp.width}`,
-			);
+			await page.fill('[data-testid="join-input-nick"]', `Deck${vp.width}`);
 			await page.click('[data-testid="join-enter-room"]');
 
 			// Pode redirecionar para /arena/:code (host) ou cair em erro.
@@ -137,10 +135,7 @@ test("BUG-203 em desktop (1440): deck sem scroll horizontal", async ({
 			waitUntil: "domcontentloaded",
 		});
 		await page.waitForSelector('[data-testid="page-join"]');
-		await page.fill(
-			'[data-testid="join-input-nick"]',
-			"DeckDesktop",
-		);
+		await page.fill('[data-testid="join-input-nick"]', "DeckDesktop");
 		await page.click('[data-testid="join-enter-room"]');
 
 		await page.waitForLoadState("networkidle", { timeout: 10_000 });
@@ -154,9 +149,7 @@ test("BUG-203 em desktop (1440): deck sem scroll horizontal", async ({
 		}));
 		// Em ≥sm o container usa `sm:overflow-visible` ⇒ overflow visível,
 		// scrollWidth ≈ clientWidth.
-		expect(layout.scrollWidth).toBeLessThanOrEqual(
-			layout.clientWidth + 1,
-		);
+		expect(layout.scrollWidth).toBeLessThanOrEqual(layout.clientWidth + 1);
 
 		// Peek gradients escondidos em ≥sm.
 		const peekLeft = await page
@@ -180,10 +173,7 @@ test("BUG-302 em 390px: arena metadata strip Rodada visível", async ({
 			waitUntil: "domcontentloaded",
 		});
 		await page.waitForSelector('[data-testid="page-join"]');
-		await page.fill(
-			'[data-testid="join-input-nick"]',
-			"Meta390",
-		);
+		await page.fill('[data-testid="join-input-nick"]', "Meta390");
 		await page.click('[data-testid="join-enter-room"]');
 
 		await page.waitForLoadState("networkidle", { timeout: 10_000 });

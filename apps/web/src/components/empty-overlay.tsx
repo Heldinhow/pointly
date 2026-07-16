@@ -34,12 +34,9 @@
  * @see .compozy/tasks/pointly-ux-hardening/task_06.md
  */
 import { useCallback, useEffect, useState } from "react";
+import { getDismissedEmpty, setDismissedEmpty } from "../lib/storage";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import {
-	getDismissedEmpty,
-	setDismissedEmpty,
-} from "../lib/storage";
 
 /** Hook utilitário pra construir a share URL (SPA router). */
 export function buildShareUrl(origin: string, code: string): string {

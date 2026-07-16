@@ -2,8 +2,8 @@
  * EmptyOverlay tests — T36 verify (≥2 of 5 minimum required).
  */
 import { describe, expect, mock, test } from "bun:test";
-import { fireEvent, render, screen } from "./ui/test-helpers";
 import { EmptyOverlay, buildShareUrl } from "./empty-overlay";
+import { fireEvent, render, screen } from "./ui/test-helpers";
 
 describe("buildShareUrl — T36 pure", () => {
 	test("buildShareUrl('http://localhost:5173', '9B9F') → '.../join?code=9B9F'", () => {
@@ -130,9 +130,9 @@ describe("EmptyOverlay — render", () => {
 			// Overlay continua montado porque removemos o auto-dismiss.
 			expect(screen.getByTestId("empty-overlay")).toBeInTheDocument();
 			// Botão mostra feedback "Copiado ✓".
-			expect(
-				screen.getByTestId("empty-overlay-copy").textContent?.trim(),
-			).toBe("Copiado ✓");
+			expect(screen.getByTestId("empty-overlay-copy").textContent?.trim()).toBe(
+				"Copiado ✓",
+			);
 		} finally {
 			Object.defineProperty(navigator, "clipboard", {
 				configurable: true,

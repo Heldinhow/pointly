@@ -2,8 +2,13 @@
  * useKeyboardShortcuts unit tests — ADR-007 / BUG-306 gate.
  */
 import { describe, expect, mock, test } from "bun:test";
-import { act, fireEvent, render, renderHook } from "../components/ui/test-helpers";
 import { useState } from "react";
+import {
+	act,
+	fireEvent,
+	render,
+	renderHook,
+} from "../components/ui/test-helpers";
 import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
 
 function triggerKey(key: string, target?: Element | null) {
@@ -78,9 +83,7 @@ describe("useKeyboardShortcuts — input focus guard", () => {
 
 	test("pressionar 'r' com foco em <body> dispara handler normalmente", () => {
 		const r = mock(() => {});
-		renderHook(() =>
-			useKeyboardShortcuts({ shortcuts: { R: r } }),
-		);
+		renderHook(() => useKeyboardShortcuts({ shortcuts: { R: r } }));
 		act(() => triggerKey("r", document.body));
 		expect(r).toHaveBeenCalledTimes(1);
 	});

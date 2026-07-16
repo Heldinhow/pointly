@@ -16,21 +16,29 @@ test.describe("Track E — Arena UX", () => {
 		try {
 			const code = await suite.createRoom(0);
 			await suite.waitForSala(0, (s) => s.players.length >= 1, 10_000);
-			await suite.clients[0]!.page.waitForSelector('[data-testid="page-arena"]');
+			await suite.clients[0]!.page.waitForSelector(
+				'[data-testid="page-arena"]',
+			);
 
 			// Confere DOM via evaluate
 			const seatInfo = await suite.clients[0]!.page.evaluate(() => {
-				const seats = Array.from(document.querySelectorAll("[data-seat-angle]"));
+				const seats = Array.from(
+					document.querySelectorAll("[data-seat-angle]"),
+				);
 				return seats.map((s) => ({
 					angle: s.getAttribute("data-seat-angle"),
-					testId: s.querySelector("[data-testid^='seat-']")?.getAttribute("data-testid"),
+					testId: s
+						.querySelector("[data-testid^='seat-']")
+						?.getAttribute("data-testid"),
 				}));
 			});
 			console.log("[E1] seats:", seatInfo);
 			expect(seatInfo.length).toBeGreaterThanOrEqual(1);
 
 			// VOCÊ deve ter seat-voc-badge
-			const youSeat = await suite.clients[0]!.page.locator('[data-testid="seat-voc-badge"]').count();
+			const youSeat = await suite.clients[0]!.page.locator(
+				'[data-testid="seat-voc-badge"]',
+			).count();
 			expect(youSeat).toBe(1);
 		} finally {
 			await suite.dispose();
@@ -44,12 +52,18 @@ test.describe("Track E — Arena UX", () => {
 		try {
 			await suite.createRoom(0);
 			await suite.waitForSala(0, (s) => s.players.length >= 1, 10_000);
-			await suite.clients[0]!.page.waitForSelector('[data-testid="page-arena"]');
+			await suite.clients[0]!.page.waitForSelector(
+				'[data-testid="page-arena"]',
+			);
 
 			// EmptyOverlay aparece quando sozinho — dismissa primeiro
-			const overlay = suite.clients[0]!.page.locator('[data-testid="empty-overlay"]');
+			const overlay = suite.clients[0]!.page.locator(
+				'[data-testid="empty-overlay"]',
+			);
 			if (await overlay.isVisible({ timeout: 2000 }).catch(() => false)) {
-				await suite.clients[0]!.page.getByTestId("empty-overlay-dismiss").click();
+				await suite.clients[0]!.page.getByTestId(
+					"empty-overlay-dismiss",
+				).click();
 				await suite.clients[0]!.page.waitForTimeout(400);
 			}
 
@@ -81,12 +95,18 @@ test.describe("Track E — Arena UX", () => {
 		try {
 			await suite.createRoom(0);
 			await suite.waitForSala(0, (s) => s.players.length >= 1, 10_000);
-			await suite.clients[0]!.page.waitForSelector('[data-testid="page-arena"]');
+			await suite.clients[0]!.page.waitForSelector(
+				'[data-testid="page-arena"]',
+			);
 
 			// Dismissa overlay se presente
-			const overlay = suite.clients[0]!.page.locator('[data-testid="empty-overlay"]');
+			const overlay = suite.clients[0]!.page.locator(
+				'[data-testid="empty-overlay"]',
+			);
 			if (await overlay.isVisible({ timeout: 2000 }).catch(() => false)) {
-				await suite.clients[0]!.page.getByTestId("empty-overlay-dismiss").click();
+				await suite.clients[0]!.page.getByTestId(
+					"empty-overlay-dismiss",
+				).click();
 				await suite.clients[0]!.page.waitForTimeout(400);
 			}
 
@@ -122,10 +142,13 @@ test.describe("Track E — Arena UX", () => {
 			await suite.vote(1, "8");
 			await suite.reveal(0);
 
-			await suite.clients[0]!.page.waitForSelector('[data-testid="stats-pill"]');
+			await suite.clients[0]!.page.waitForSelector(
+				'[data-testid="stats-pill"]',
+			);
 			const text =
-				(await suite.clients[0]!.page.getByTestId("stats-pill").textContent()) ??
-				"";
+				(await suite.clients[0]!.page.getByTestId(
+					"stats-pill",
+				).textContent()) ?? "";
 			console.log(`[E10] stats: ${text}`);
 			expect(text.toLowerCase()).toContain("média");
 			expect(text.toLowerCase()).toContain("mediana");
@@ -140,19 +163,28 @@ test.describe("Track E — Arena UX", () => {
 		try {
 			await suite.createRoom(0);
 			await suite.waitForSala(0, (s) => s.players.length >= 1, 10_000);
-			await suite.clients[0]!.page.waitForSelector('[data-testid="page-arena"]');
+			await suite.clients[0]!.page.waitForSelector(
+				'[data-testid="page-arena"]',
+			);
 
 			// Dismissa overlay se presente
-			const overlay = suite.clients[0]!.page.locator('[data-testid="empty-overlay"]');
+			const overlay = suite.clients[0]!.page.locator(
+				'[data-testid="empty-overlay"]',
+			);
 			if (await overlay.isVisible({ timeout: 2000 }).catch(() => false)) {
-				await suite.clients[0]!.page.getByTestId("empty-overlay-dismiss").click();
+				await suite.clients[0]!.page.getByTestId(
+					"empty-overlay-dismiss",
+				).click();
 				await suite.clients[0]!.page.waitForTimeout(400);
 			}
 
-			await suite.clients[0]!.page.waitForSelector('[data-testid="timer-pill"]');
+			await suite.clients[0]!.page.waitForSelector(
+				'[data-testid="timer-pill"]',
+			);
 			const text =
-				(await suite.clients[0]!.page.getByTestId("timer-pill").textContent()) ??
-				"";
+				(await suite.clients[0]!.page.getByTestId(
+					"timer-pill",
+				).textContent()) ?? "";
 			console.log(`[E11] timer: ${text}`);
 			// Timer pode mostrar 00:60 ou :60; só checa formato geral
 			expect(text).toMatch(/\d{2}:\d{2}/);
@@ -161,21 +193,31 @@ test.describe("Track E — Arena UX", () => {
 		}
 	});
 
-	test("E12: Carta ☕ diferencia visualmente de numeral", async ({ browser }) => {
+	test("E12: Carta ☕ diferencia visualmente de numeral", async ({
+		browser,
+	}) => {
 		const suite = await multiClient(browser, { clientCount: 1 });
 		try {
 			await suite.createRoom(0);
 			await suite.waitForSala(0, (s) => s.players.length >= 1, 10_000);
-			await suite.clients[0]!.page.waitForSelector('[data-testid="page-arena"]');
+			await suite.clients[0]!.page.waitForSelector(
+				'[data-testid="page-arena"]',
+			);
 
 			// Dismissa overlay se presente
-			const overlay = suite.clients[0]!.page.locator('[data-testid="empty-overlay"]');
+			const overlay = suite.clients[0]!.page.locator(
+				'[data-testid="empty-overlay"]',
+			);
 			if (await overlay.isVisible({ timeout: 2000 }).catch(() => false)) {
-				await suite.clients[0]!.page.getByTestId("empty-overlay-dismiss").click();
+				await suite.clients[0]!.page.getByTestId(
+					"empty-overlay-dismiss",
+				).click();
 				await suite.clients[0]!.page.waitForTimeout(400);
 			}
 
-			await suite.clients[0]!.page.waitForSelector('[data-testid="deck-card-5"]');
+			await suite.clients[0]!.page.waitForSelector(
+				'[data-testid="deck-card-5"]',
+			);
 
 			const styles = await suite.clients[0]!.page.evaluate(() => {
 				const num5 = document.querySelector('[data-testid="deck-card-5"]');
@@ -202,9 +244,8 @@ test.describe("Track E — Arena UX", () => {
 			await suite.reveal(0);
 
 			await suite.clients[0]!.page.waitForTimeout(500);
-			const deckClass = await suite.clients[0]!.page
-				.getByTestId("deck")
-				.getAttribute("class");
+			const deckClass =
+				await suite.clients[0]!.page.getByTestId("deck").getAttribute("class");
 			console.log(`[E7] deck class pós-reveal: ${deckClass}`);
 			expect(deckClass).toContain("opacity-40");
 		} finally {

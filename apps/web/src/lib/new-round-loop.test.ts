@@ -2,14 +2,14 @@
  * start_new_round loop tests — T40 verify (≥1 integration test).
  */
 import { beforeEach, describe, expect, test } from "bun:test";
+import type { SalaState } from "@planning-poker/shared";
+import { useSalaStore } from "../store/sala";
 import {
 	applyRoundStartedEvent,
 	createNewRoundLoop,
 	requestNewRound,
 } from "./new-round-loop";
 import type { WSClient } from "./ws-client";
-import { useSalaStore } from "../store/sala";
-import type { SalaState } from "@planning-poker/shared";
 
 function makeMockWS(): WSClient & {
 	sent: Array<{ type: string; payload: unknown }>;

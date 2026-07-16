@@ -81,9 +81,9 @@ test.describe("T44: E2E sala cheia", () => {
 			expect(pageText).toContain("Sala cheia");
 			// Contagem 12/12
 			expect(pageText).toContain("12");
-			// Botão "Criar nova sala"
+			// Botão "Criar sala nova"
 			const createNewBtn = rejected.page.getByTestId("full-create-new");
-			expect(await createNewBtn.textContent()).toContain("Criar nova sala");
+			expect(await createNewBtn.textContent()).toContain("Criar sala nova");
 
 			// 6. Garantia: o host (A) ainda vê 12/12 — ninguém foi removido.
 			const salaAfter = await suite.salaState(0);

@@ -101,7 +101,6 @@ export class Sala {
 	 */
 	private readonly lastThrownAt: Map<string, number> = new Map();
 
-
 	constructor(code: string, firstPlayer: Player, now: number = Date.now()) {
 		if (firstPlayer.role !== "host") {
 			throw new Error("first player must have role: 'host'");
@@ -371,12 +370,11 @@ export class Sala {
 		if (now - last < 5000) {
 			throw new SalaError(
 				"invalid_phase",
-				"Aguarde o cooldown para arremessar novamente."
+				"Aguarde o cooldown para arremessar novamente.",
 			);
 		}
 		this.lastThrownAt.set(senderId, now);
 	}
-
 
 	/**
 	 * Qualquer player pode iniciar nova rodada (sem role check — ADR-0002).
@@ -448,7 +446,9 @@ export class Sala {
 			this.reveal("__auto_reveal__");
 			return "fired";
 		}
-		return (this.phase === "voting" || this.phase === "revealable") ? "ticking" : "idle";
+		return this.phase === "voting" || this.phase === "revealable"
+			? "ticking"
+			: "idle";
 	}
 
 	/**

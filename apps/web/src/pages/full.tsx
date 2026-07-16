@@ -18,7 +18,8 @@
  * @see .specs/features/planning-poker-v1/spec.md F-007 (F-ID US-1)
  */
 import { useCallback } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { ThemeToggle } from "../components/theme-toggle";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 
@@ -46,10 +47,11 @@ export function Full() {
 					<div className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-wider text-ink-faint">
 						<span
 							aria-hidden="true"
-							className="inline-block w-1.5 h-1.5 rounded-full bg-coral animate-pulse"
+							className="inline-block w-1.5 h-1.5 rounded-full bg-coral motion-reduce:animate-none animate-pulse"
 						/>
 						<Link
 							to="/"
+							data-testid="full-back"
 							className="font-display font-bold text-[15px] tracking-tight text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
 							aria-label="Pointly — página inicial"
 						>
@@ -59,8 +61,11 @@ export function Full() {
 							Pointly
 						</Link>
 					</div>
-					<div className="font-mono text-[10px] uppercase tracking-wider text-ink-faint">
-						Sala cheia
+					<div className="flex items-center gap-4">
+						<ThemeToggle />
+						<div className="font-mono text-[10px] uppercase tracking-wider text-ink-faint">
+							Sala cheia
+						</div>
 					</div>
 				</div>
 			</header>
@@ -102,9 +107,9 @@ export function Full() {
 
 					<p className="font-sans text-[14.5px] leading-[1.6] text-ink-mute max-w-[42ch]">
 						Esta sala já tem {MAX_PLAYERS} jogadores. Limitamos a mesa a
-						{MAX_PLAYERS} assentos para manter a votação síncrona e a
-						leitura do resultado clara. Crie uma sala nova ou volte para a
-						página inicial e tente um código diferente.
+						{MAX_PLAYERS} assentos para manter a votação síncrona e a leitura do
+						resultado clara. Crie uma sala nova ou volte para a página inicial e
+						tente um código diferente.
 					</p>
 
 					<p className="font-mono text-[10.5px] tracking-[0.04em] uppercase text-ink-faint -mt-2">

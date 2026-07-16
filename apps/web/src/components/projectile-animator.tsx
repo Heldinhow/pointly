@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef } from "react";
-import { useSalaStore } from "../store/sala";
-import { projectileEvents } from "../lib/projectile-events";
 import type { ProjectileType } from "@planning-poker/shared";
+import { useEffect, useRef, useState } from "react";
+import { projectileEvents } from "../lib/projectile-events";
+import { useSalaStore } from "../store/sala";
 
 // Mapa de emojis para cada tipo de projétil
 const PROJECTILE_EMOJIS: Record<ProjectileType, string> = {
@@ -39,7 +39,10 @@ function seatPosition(angleDeg: number): { left: number; top: number } {
 	};
 }
 
-function assignSeatAngles(mePlayerId: string | null, playerIds: string[]): Map<string, number> {
+function assignSeatAngles(
+	mePlayerId: string | null,
+	playerIds: string[],
+): Map<string, number> {
 	const map = new Map<string, number>();
 	if (mePlayerId) map.set(mePlayerId, 90);
 
@@ -54,7 +57,9 @@ function assignSeatAngles(mePlayerId: string | null, playerIds: string[]): Map<s
 const EMPTY_PLAYERS: any[] = [];
 
 export function ProjectileAnimator() {
-	const [activeAnimations, setActiveAnimations] = useState<ActiveAnimation[]>([]);
+	const [activeAnimations, setActiveAnimations] = useState<ActiveAnimation[]>(
+		[],
+	);
 	const players = useSalaStore((s) => s.sala?.players ?? EMPTY_PLAYERS);
 	const currentPlayerId = useSalaStore((s) => s.currentPlayerId);
 
@@ -111,7 +116,7 @@ export function ProjectileAnimator() {
 								outcome: "deflect",
 								projectileType: event.projectileType,
 							},
-						})
+						}),
 					);
 
 					// Começa o voo de volta (rebote)
@@ -125,9 +130,9 @@ export function ProjectileAnimator() {
 										toX: senderPos.left,
 										toY: senderPos.top,
 										isDeflecting: true,
-								  }
-								: anim
-						)
+									}
+								: anim,
+						),
 					);
 
 					// Final do rebote atinge o emissor original
@@ -139,10 +144,12 @@ export function ProjectileAnimator() {
 									outcome: "hit",
 									projectileType: event.projectileType,
 								},
-							})
+							}),
 						);
 						// Limpa animação
-						setActiveAnimations((prev) => prev.filter((anim) => anim.id !== animationId));
+						setActiveAnimations((prev) =>
+							prev.filter((anim) => anim.id !== animationId),
+						);
 					}, duration);
 				} else {
 					// Acerto ou desvio direto
@@ -153,10 +160,12 @@ export function ProjectileAnimator() {
 								outcome: event.outcome,
 								projectileType: event.projectileType,
 							},
-						})
+						}),
 					);
 					// Limpa animação
-					setActiveAnimations((prev) => prev.filter((anim) => anim.id !== animationId));
+					setActiveAnimations((prev) =>
+						prev.filter((anim) => anim.id !== animationId),
+					);
 				}
 			}, duration);
 		});
@@ -170,22 +179,26 @@ export function ProjectileAnimator() {
 				<div
 					key={anim.id}
 					className="absolute animate-proj-x"
-					style={{
-						"--from-x": `${anim.fromX}px`,
-						"--to-x": `${anim.toX}px`,
-						"--duration": `${anim.duration}ms`,
-						left: `${anim.fromX}px`,
-					} as React.CSSProperties}
+					style={
+						{
+							"--from-x": `${anim.fromX}px`,
+							"--to-x": `${anim.toX}px`,
+							"--duration": `${anim.duration}ms`,
+							left: `${anim.fromX}px`,
+						} as React.CSSProperties
+					}
 				>
 					<div
 						className="absolute animate-proj-y text-[28px] select-none pointer-events-none"
-						style={{
-							"--from-y": `${anim.fromY}px`,
-							"--to-y": `${anim.toY}px`,
-							"--duration": `${anim.duration}ms`,
-							top: `${anim.fromY}px`,
-							transform: "translate(-50%, -50%)",
-						} as React.CSSProperties}
+						style={
+							{
+								"--from-y": `${anim.fromY}px`,
+								"--to-y": `${anim.toY}px`,
+								"--duration": `${anim.duration}ms`,
+								top: `${anim.fromY}px`,
+								transform: "translate(-50%, -50%)",
+							} as React.CSSProperties
+						}
 					>
 						{anim.emoji}
 					</div>
