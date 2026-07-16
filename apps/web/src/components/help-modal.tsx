@@ -60,9 +60,9 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
 			aria-modal="true"
 			aria-labelledby="help-modal-title"
 			data-testid="help-modal"
-			className="absolute inset-0 bg-bg/92 backdrop-blur-[4px] flex items-center justify-center z-30 transition-opacity duration-200"
+			className="absolute inset-0 bg-bg/92 backdrop-blur-[4px] flex items-center justify-center z-30 transition-opacity duration-200 px-4 pb-[max(env(safe-area-inset-bottom),1rem)]"
 		>
-			<Card padding="lg" className="w-[480px] flex flex-col gap-4 items-start">
+			<Card padding="lg" className="w-full max-w-[480px] max-h-[calc(100dvh-2rem)] overflow-y-auto flex flex-col gap-4 items-start">
 				<div className="flex items-baseline gap-3">
 					<div className="font-italic italic text-coral text-brand-mark leading-none">
 						Ø

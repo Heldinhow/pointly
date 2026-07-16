@@ -43,11 +43,35 @@ export default defineConfig({
 				viewport: { width: 820, height: 1180 },
 			},
 		},
+		// Mobile portrait — um projeto por viewport do brief. Mantém
+		// `Desktop Chrome` (não devices[...]) porque emulamos por viewport
+		// puro: o engine de touch já é simulado via media queries.
 		{
-			name: "mobile",
+			name: "mobile-iphone-se",
+			use: {
+				...devices["Desktop Chrome"],
+				viewport: { width: 375, height: 667 },
+			},
+		},
+		{
+			name: "mobile-iphone-14",
 			use: {
 				...devices["Desktop Chrome"],
 				viewport: { width: 390, height: 844 },
+			},
+		},
+		{
+			name: "mobile-pixel-7",
+			use: {
+				...devices["Desktop Chrome"],
+				viewport: { width: 412, height: 915 },
+			},
+		},
+		{
+			name: "mobile-galaxy-s23",
+			use: {
+				...devices["Desktop Chrome"],
+				viewport: { width: 360, height: 800 },
 			},
 		},
 	],
