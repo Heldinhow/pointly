@@ -138,7 +138,7 @@ export function Landing() {
 						zero cadastro<span className="text-coral">.</span>
 					</h1>
 					<p
-						className="font-sans text-base sm:text-lg sm:text-xl leading-[1.5] text-ink-mute mt-6 max-w-[52ch] tracking-[-0.005em] text-pretty animate-fade-in-up"
+						className="font-sans text-base md:text-lg lg:text-xl leading-[1.5] text-ink-mute mt-6 max-w-[52ch] tracking-[-0.005em] text-pretty animate-fade-in-up"
 						style={{ animationDelay: "300ms" }}
 					>
 						Abra salas de estimativa instantâneas para o seu time. 100%
@@ -187,9 +187,13 @@ export function Landing() {
 			{/* COMO FUNCIONA */}
 			<section
 				id="como-funciona"
+				aria-labelledby="como-funciona-title"
 				className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 sm:py-24 relative"
 			>
-				<h2 className="font-display font-extrabold text-3xl sm:text-4xl tracking-[-0.03em] mb-16 text-center text-ink text-balance">
+				<h2
+					id="como-funciona-title"
+					className="font-display font-extrabold text-3xl sm:text-4xl tracking-[-0.03em] mb-16 text-center text-ink text-balance"
+				>
 					Como funciona em 3 passos
 				</h2>
 
