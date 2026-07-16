@@ -133,7 +133,7 @@ export function RevealButton({
 			<span
 				className={cn(
 					"font-mono text-[9.5px] tracking-[0.06em] uppercase font-normal",
-					state === "ready" ? "text-white/85" : "text-ink-faint",
+					state === "awaiting" ? "text-ink-faint" : "text-white/85",
 				)}
 			>
 				{hint}

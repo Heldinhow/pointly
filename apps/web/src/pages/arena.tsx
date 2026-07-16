@@ -54,13 +54,8 @@ import { getNick } from "../lib/storage";
 import { getStoredUUID, useArenaLoop } from "../lib/use-arena-loop";
 import { useKeyboardShortcuts } from "../lib/use-keyboard-shortcuts";
 import { useSalaStore } from "../store/sala";
-
-/** Raio da mesa em pixels (vide arena.html R_x=420 R_y=240). */
-const TABLE_RX = 420;
-const TABLE_RY = 210;
-/** Centro do Ellipse SVG (960×560). */
-const TABLE_CX = 480;
-const TABLE_CY = 250;
+import { assignSeatAngles, seatPosition } from "../lib/arena-geometry";
+export { seatPosition };
 
 /** Share pill — copia link da sala e mostra feedback destacado. */
 function SharePill({ code }: { code: string }) {
@@ -105,11 +100,11 @@ function SharePill({ code }: { code: string }) {
 			data-testid="share-pill"
 			disabled={!code}
 			className={cn(
-				"inline-flex items-center gap-2 rounded-full px-4 py-2 font-mono text-[10px] tracking-[0.06em] uppercase border transition-all duration-200 cursor-pointer shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral",
-				"disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-surface disabled:hover:text-coral",
+				"inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 font-mono text-micro-label tracking-[0.06em] uppercase border transition-all duration-150 cursor-pointer shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral",
+				"disabled:opacity-50 disabled:cursor-not-allowed",
 				copied
 					? "bg-olive border-transparent text-white"
-					: "bg-surface border-coral text-coral hover:bg-coral hover:text-white",
+					: "bg-surface border-ink/10 text-ink-soft hover:bg-paper-dark hover:border-ink/25 hover:text-ink",
 			)}
 			aria-label={
 				copied
@@ -118,43 +113,43 @@ function SharePill({ code }: { code: string }) {
 			}
 			title={!code ? "Código da sala ainda não está disponível" : undefined}
 		>
-			<span className="font-sans text-[11px] leading-none" aria-hidden="true">
-				{copied ? "✓" : "📋"}
-			</span>
+			{copied ? (
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2.5"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					className="w-3 h-3 text-white flex-shrink-0"
+					aria-hidden="true"
+				>
+					<path d="M20 6 9 17l-5-5" />
+				</svg>
+			) : (
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2.5"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					className="w-3 h-3 text-ink-soft hover:text-ink flex-shrink-0"
+					aria-hidden="true"
+				>
+					<rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+					<path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+				</svg>
+			)}
 			<span>
-				{copied ? "Link copiado!" : `Convidar com código: ${code || "—"}`}
+				{copied ? "Código copiado!" : `Código: ${code || "—"}`}
 			</span>
 		</button>
 	);
 }
 
-/** Calcula posição (left, top) para um assento dado seu ângulo (graus, 0=right, 90=bottom). */
-export function seatPosition(angleDeg: number): { left: number; top: number } {
-	const rad = (angleDeg * Math.PI) / 180;
-	return {
-		left: TABLE_CX + Math.cos(rad) * TABLE_RX,
-		top: TABLE_CY + Math.sin(rad) * TABLE_RY,
-	};
-}
-
-/** Distribui 12 assentos: VOCÊ no ângulo 90 (bottom); demais 11 em arco. */
-function assignSeatAngles(
-	mePlayerId: string | null,
-	playerIds: string[],
-): Map<string, number> {
-	const map = new Map<string, number>();
-	// VOCÊ travado em 90° (6h)
-	if (mePlayerId) map.set(mePlayerId, 90);
-
-	// Demais em arco: 11 assentos a 30° de espaçamento começando em 30°
-	const others = playerIds.filter((id) => id !== mePlayerId);
-	for (let i = 0; i < others.length; i++) {
-		// i=0 → 30°; i=10 → 330° (clockwise)
-		const angle = 30 + i * 30;
-		map.set(others[i]!, angle);
-	}
-	return map;
-}
 
 export function Arena() {
 	const [searchParams] = useSearchParams();
@@ -299,7 +294,7 @@ export function Arena() {
 		>
 			{/* Topbar metadata strip */}
 			<header className="border-b border-ink/10 py-2.5 flex-shrink-0">
-				<div className="w-full px-8 flex items-center justify-between font-mono text-[10px] tracking-[0.06em] uppercase text-ink-faint">
+				<div className="w-full px-8 flex items-center justify-between font-mono text-micro-label tracking-[0.06em] uppercase text-ink-faint">
 					<div className="flex items-center gap-4">
 						<span
 							aria-hidden="true"
@@ -307,10 +302,10 @@ export function Arena() {
 						/>
 						<Link
 							to="/"
-							className="font-display font-extrabold text-[15px] tracking-[-0.02em] text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
+							className="font-display font-extrabold text-nav-wordmark tracking-[-0.02em] text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
 							aria-label="Sair da sala e voltar para a página inicial"
 						>
-							<span className="font-italic italic text-coral text-[18px] leading-none">
+							<span className="font-italic italic text-coral text-nav-mark leading-none">
 								Ø
 							</span>
 							Pointly
@@ -324,16 +319,6 @@ export function Arena() {
 					</div>
 					<div className="flex items-center gap-3">
 						<ThemeToggle />
-						<button
-							type="button"
-							onClick={() => setOpenHelp(true)}
-							aria-label="Atalhos de teclado (pressione ?)"
-							title="Atalhos: ?, R, N"
-							className="font-mono text-[10px] uppercase tracking-wider text-ink-faint hover:text-coral hover:border-coral/40 transition-colors px-2 py-1 border border-ink/10 rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral focus-visible:border-coral"
-							data-testid="arena-help-button"
-						>
-							<span aria-hidden="true">?</span>
-						</button>
 						<SharePill code={code} />
 					</div>
 				</div>
@@ -370,15 +355,15 @@ export function Arena() {
 
 				{/* Mesa: Ellipse + 12 Seats + RevealButton central.
 				 * Container responsivo com scroll horizontal em mobile (a mesa
-				 * tem geometria fixa de 960×500 — não cabe em viewport estreito). */}
+				 * tem geometria fixa de 960×560 — não cabe em viewport estreito). */}
 				<div
 					className="relative w-full max-w-[960px] mt-4 sm:mt-6 lg:mt-8 overflow-x-auto overflow-y-hidden"
 					data-testid="arena-table"
 					role="group"
 					aria-label="Mesa da rodada"
 				>
-					<div className="relative w-[960px] h-[500px] min-w-[960px]">
-						<Ellipse height={500} />
+					<div className="relative w-[960px] h-[560px] min-w-[960px]">
+						<Ellipse width={920} height={500} className="absolute top-[30px] left-[20px]" />
 
 						{/* Seats posicionados via trigonometria */}
 						{sala?.players.map((p) => {

@@ -69,22 +69,22 @@ describe("seatPosition — T30 pure", () => {
 	test("angle=90 (VOCÊ) → bottom-center", () => {
 		const pos = seatPosition(90);
 		// 480 + cos(90)*420 = 480 + 0 = 480
-		// 250 + sin(90)*210 = 250 + 210 = 460
+		// 280 + sin(90)*210 = 280 + 210 = 490
 		expect(pos.left).toBeCloseTo(480);
-		expect(pos.top).toBeCloseTo(460);
+		expect(pos.top).toBeCloseTo(490);
 	});
 
 	test("angle=0 (right) → right edge", () => {
 		const pos = seatPosition(0);
-		// 480 + 1*420 = 900, 250 + 0 = 250
+		// 480 + 1*420 = 900, 280 + 0 = 280
 		expect(pos.left).toBeCloseTo(900);
-		expect(pos.top).toBeCloseTo(250);
+		expect(pos.top).toBeCloseTo(280);
 	});
 
 	test("angle=180 (left) → left edge", () => {
 		const pos = seatPosition(180);
 		expect(pos.left).toBeCloseTo(60);
-		expect(pos.top).toBeCloseTo(250);
+		expect(pos.top).toBeCloseTo(280);
 	});
 });
 

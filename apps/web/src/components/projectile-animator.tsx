@@ -2,6 +2,7 @@ import type { ProjectileType } from "@planning-poker/shared";
 import { useEffect, useRef, useState } from "react";
 import { projectileEvents } from "../lib/projectile-events";
 import { useSalaStore } from "../store/sala";
+import { assignSeatAngles, seatPosition } from "../lib/arena-geometry";
 
 // Mapa de emojis para cada tipo de projétil
 const PROJECTILE_EMOJIS: Record<ProjectileType, string> = {
@@ -25,34 +26,7 @@ interface ActiveAnimation {
 	isDeflecting: boolean;
 }
 
-// Constantes da mesa para calcular coordenadas idênticas às da Arena
-const TABLE_RX = 420;
-const TABLE_RY = 210;
-const TABLE_CX = 480;
-const TABLE_CY = 250;
 
-function seatPosition(angleDeg: number): { left: number; top: number } {
-	const rad = (angleDeg * Math.PI) / 180;
-	return {
-		left: TABLE_CX + Math.cos(rad) * TABLE_RX,
-		top: TABLE_CY + Math.sin(rad) * TABLE_RY,
-	};
-}
-
-function assignSeatAngles(
-	mePlayerId: string | null,
-	playerIds: string[],
-): Map<string, number> {
-	const map = new Map<string, number>();
-	if (mePlayerId) map.set(mePlayerId, 90);
-
-	const others = playerIds.filter((id) => id !== mePlayerId);
-	for (let i = 0; i < others.length; i++) {
-		const angle = 30 + i * 30;
-		map.set(others[i]!, angle);
-	}
-	return map;
-}
 
 const EMPTY_PLAYERS: any[] = [];
 
