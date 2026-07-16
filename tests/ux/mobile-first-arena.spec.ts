@@ -171,6 +171,15 @@ test.describe("Mobile-First Arena", () => {
 						await page.getByTestId("empty-overlay-dismiss").click();
 						await page.waitForTimeout(300);
 					}
+					// FMR-13 flake fix: aguarda os 8 assentos no DOM antes
+					// de medir. O ResizeObserver re-renderiza o arena-scale
+					// quando o overlay sai; medir antes da transição
+					// completa dá boxes em layout intermediário.
+					await page.waitForFunction(
+						() => document.querySelectorAll("[data-seat-angle]").length === 8,
+						undefined,
+						{ timeout: 10_000 },
+					);
 					const boxes = await page.evaluate(() => {
 						const seats = Array.from(
 							document.querySelectorAll("[data-seat-angle]"),
@@ -242,6 +251,16 @@ test.describe("Mobile-First Arena", () => {
 							await page.getByTestId("empty-overlay-dismiss").click();
 							await page.waitForTimeout(300);
 						}
+						// FMR-13b flake fix: aguarda os 12 assentos no DOM antes
+						// de medir. 12 clients via WS em viewport estreito tem
+						// latência maior; medir antes do React pintar dá boxes
+						// intermediários com overlap falso-positivo.
+						await page.waitForFunction(
+							() =>
+								document.querySelectorAll("[data-seat-angle]").length === 12,
+							undefined,
+							{ timeout: 20_000 },
+						);
 						const boxes = await page.evaluate(() => {
 							const seats = Array.from(
 								document.querySelectorAll("[data-seat-angle]"),
