@@ -217,6 +217,7 @@ This rule is mechanical, not aesthetic — violating it produces silent a11y reg
 - **Background:** Bleached Ivory (`var(--surface)`) background.
 - **Shadow Strategy:** 1px border at ink/5 + `shadow-card` (≤8px blur). NOT `shadow-bone`.
 - **Internal Padding:** 28px padding by default (md scale).
+- **Exception — pills (toast, projectile menu, IDLE/VOTED badge):** Compact floating pills (`rounded-full` with `border` AND `shadow-bone`) are exempt from the Border+Shadow Rule. The tight pill silhouette carries identity; without the border, the shadow defines a vague blob. See §4 "Pill exception" for the full rationale.
 
 ### Inputs / Fields
 - **Style:** Clean border at ink/10, rounded-lg, background `var(--paper)`.
