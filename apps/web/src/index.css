@@ -58,11 +58,20 @@
 }
 
 /* Auto-detect dark mode do SO quando o user ainda não escolheu
- * manualmente (classe .dark ausente). Quando o user toggla via
- * ThemeToggle, ele adiciona .dark e essa media query deixa de
- * aplicar — .dark sempre vence. */
+ * manualmente (data-theme ausente). Quando o user toggla via
+ * ThemeToggle, ele seta data-theme="dark"|"light" e a media query
+ * deixa de importar — o seletor explícito html[data-theme] vence.
+ *
+ * Bug fix (2026-07-16): o seletor antigo `:root:not(.dark)` falhava
+ * quando o user escolhia light em SO dark — `:root:not(.dark)` batia
+ * e sobrescrevia a escolha manual. data-theme="light"|"dark" como
+ * atributo explícito resolve porque:
+ *   - data-theme ausente → media query (auto-detect) decide
+ *   - data-theme="dark" → sempre dark, ignora SO
+ *   - data-theme="light" → sempre light, ignora SO (inclusive quando
+ *     o SO é dark) */
 @media (prefers-color-scheme: dark) {
-	:root:not(.dark) {
+	:root:not([data-theme]) {
 		--bg: #13120d;
 		--paper-warm: #1a1914;
 		--paper-dark: #222019;
@@ -86,7 +95,7 @@
 	}
 }
 
-.dark {
+html[data-theme="dark"] {
 	--bg: #13120d; /* deep dark warm charcoal background */
 	--paper-warm: #1a1914; /* elevated dark background */
 	--paper-dark: #222019; /* container dark background */
@@ -191,7 +200,7 @@ a[role="button"] {
 	z-index: 0;
 }
 
-.dark .surface-noise::before {
+html[data-theme="dark"] .surface-noise::before {
 	mix-blend-mode: overlay;
 	opacity: 0.15;
 	background-image: radial-gradient(
@@ -206,6 +215,24 @@ a[role="button"] {
 /* ---------------------------------------------------------------
  * Utility helpers que complementam Tailwind sem precisar de plugin.
  * --------------------------------------------------------------- */
+
+/* Auto-detect: noise overlay escuro quando o SO é dark E o user ainda
+ * não escolheu manualmente (data-theme ausente). Espelha a media query
+ * `:root:not([data-theme])` das tokens acima. */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme]) .surface-noise::before {
+		mix-blend-mode: overlay;
+		opacity: 0.15;
+		background-image: radial-gradient(
+				at 20% 30%,
+				rgba(247, 241, 222, 0.015) 0px,
+				transparent 50%
+			), radial-gradient(at 80% 70%, rgba(247, 241, 222, 0.015) 0px, transparent 50%),
+			url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+		background-size: auto, auto, 160px 160px;
+		background-repeat: repeat;
+	}
+}
 
 /* Brand Ø glyph — Playfair Italic */
 .brand-glyph {
