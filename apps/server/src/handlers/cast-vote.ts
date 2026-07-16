@@ -19,7 +19,14 @@ import type { Hub } from "../hub";
 import { SalaError } from "../sala";
 
 export type CastVoteOutcome =
-	| { ok: true; isFirstVoteOfRound: boolean }
+	| {
+			ok: true;
+			isFirstVoteOfRound: boolean;
+			/** EVR-03/EVR-14: false quando o voto é idêntico ao já registrado
+			 * (mesma carta clicada duas vezes). Handler usa para suprimir
+			 * broadcast integral (`vote_cast`, `votes_revealed`, `room_state`). */
+			changed: boolean;
+	  }
 	| {
 			ok: false;
 			code:
@@ -74,9 +81,10 @@ export function handleCastVote(
 	// 3. Marca "primeiro voto da rodada" se phase ainda é idle
 	const isFirstVoteOfRound = sala.phase === "idle";
 
-	// 4. Delega à Sala (validações de fase/deck)
+	// 4. Delega à Sala (validações de fase/deck + identity pre-check)
+	let result: { changed: boolean };
 	try {
-		sala.castVote(playerId, payload.value as Vote);
+		result = sala.castVote(playerId, payload.value as Vote);
 	} catch (e) {
 		if (e instanceof SalaError) {
 			return { ok: false, code: e.code, message: e.message };
@@ -92,5 +100,5 @@ export function handleCastVote(
 		// já configura o setInterval interno (60s timer self-managing).
 	}
 
-	return { ok: true, isFirstVoteOfRound };
+	return { ok: true, isFirstVoteOfRound, changed: result.changed };
 }
