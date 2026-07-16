@@ -168,11 +168,14 @@ export function RevealButton({
 			</span>
 			{/* Hint: micro-label sem uppercase pra hierarquia clara.
 			 * `tracking-normal` + lowercase = nitidamente secundário.
-			 * Em modo inline (mobile) o hint usa a mesma cor ink-faint pra não
-			 * competir com o CTA coral — desktop mantém white/75 sobre coral. */}
+			 * leading-[1.2]: 2 linhas de micro-label (10px) precisam caber
+			 * dentro da pill de 44px de altura sem competir com o CTA coral.
+			 * Token `micro-label` é 1.4 e renderiza 3 linhas em 12px — aqui
+			 * queremos 2 linhas em 10px, então apertamos 1.2. Anotar em
+			 * DESIGN.md como off-ramp intencional (Próximo PR de typog.). */}
 			<span
 				className={cn(
-					"font-mono text-micro-label leading-[1.3] font-normal",
+					"font-mono text-micro-label leading-[1.2] font-normal",
 					"normal-case",
 					state === "awaiting"
 						? "text-ink-faint/75"

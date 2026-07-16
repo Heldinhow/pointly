@@ -562,7 +562,7 @@ export function Join() {
 								id="nick-error"
 								role={!validation.ok && validation.error ? "alert" : undefined}
 								aria-live={!validation.ok && validation.error ? "assertive" : undefined}
-								className="font-sans text-caption text-coral-deep min-h-[22px] tracking-normal"
+								className="font-sans text-caption text-coral-deep min-h-[22px]"
 								data-testid="nick-error"
 							>
 								{!validation.ok && validation.error ? validation.error : ""}
