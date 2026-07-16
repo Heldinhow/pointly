@@ -340,7 +340,7 @@ export function Arena() {
 			className="surface-noise min-h-screen bg-bg text-ink flex flex-col overflow-hidden"
 		>
 			{/* Topbar metadata strip */}
-			<header className="border-b border-ink/10 py-2.5 flex-shrink-0">
+			<header className="border-b border-ink/10 py-2.5 flex-shrink-0 pt-[max(env(safe-area-inset-top),0.625rem)]">
 				<div className="w-full px-8 flex items-center justify-between font-mono text-micro-label tracking-[0.06em] uppercase text-ink-faint">
 					<div className="flex items-center gap-4">
 						<span

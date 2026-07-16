@@ -354,18 +354,21 @@ a[role="button"] {
 	pointer-events: none;
 	z-index: 1;
 }
+/* Peek gradients — bg de origem = --bg (parchment da página), NÃO paper-warm
+ * do deck interno. Sem isso o gradiente "corta" antes da borda do deck e
+ * vira uma faixa creme destacada flutuando no parchment. */
 .fib-deck-peek-left {
 	background: linear-gradient(
 		to right,
-		var(--paper-warm) 0%,
-		rgba(236, 228, 207, 0) 100%
+		var(--bg) 0%,
+		rgba(239, 231, 210, 0) 100%
 	);
 }
 .fib-deck-peek-right {
 	background: linear-gradient(
 		to left,
-		var(--paper-warm) 0%,
-		rgba(236, 228, 207, 0) 100%
+		var(--bg) 0%,
+		rgba(239, 231, 210, 0) 100%
 	);
 }
 
@@ -628,8 +631,10 @@ body {
  * pequeno (max-width: 639px) porque testes Playwright emulam viewport
  * sem necessarily simular `pointer: coarse`. */
 @media (pointer: coarse), (max-width: 639px) {
-	button[aria-label="Copiar link de compartilhamento da sala"],
-	button[aria-label="Mudar tema claro/escuro"],
+	/* SharePill aria-label inclui o código: 'Copiar link de compartilhamento
+	 * da sala ABCD'. CSS exact-match não funciona — usamos data-testid
+	 * (estável) ou ^= (starts-with) como fallback. */
+	button[aria-label^="Copiar link de compartilhamento da sala"],
 	button[data-testid="share-pill"],
 	[data-testid="timer-pill"],
 	[data-testid="deck-card-0"],

@@ -7,7 +7,11 @@ export function ThemeToggle() {
 		<button
 			type="button"
 			onClick={toggleTheme}
-			className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-ink/15 hover:border-ink/40 hover:bg-ink/5 transition-all text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral"
+			// WCAG 2.5.5 (Level AAA, recomendado pela Apple HIG e Material Design):
+	// tap target mínimo 44×44 CSS px. Theme toggle é 32×32 visual mas o
+	// `min-h-[44px] min-w-[44px]` cria uma hit-area invisível estendida pra
+	// 44 sem alterar a aparência do ícone (continua 14×14 dentro do botão).
+	className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] w-10 h-10 rounded-full border border-ink/15 hover:border-ink/40 hover:bg-ink/5 transition-all text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
 			aria-label={
 				theme === "dark" ? "Mudar para modo claro" : "Mudar para modo escuro"
 			}
