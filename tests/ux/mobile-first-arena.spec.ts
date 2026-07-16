@@ -36,10 +36,10 @@ test.describe("Mobile-First Arena", () => {
 			test.use({ viewport: { width: vp.width, height: vp.height } });
 
 			test.beforeAll(({ }, testInfo) => {
-				if (testInfo.project.name !== "mobile") {
+				if (!testInfo.project.name.startsWith("mobile")) {
 					test.skip(
 						true,
-						"mobile-first Arena spec roda só no project mobile (viewports customizados via test.use)",
+						"mobile-first Arena spec roda só em projects mobile* (viewports customizados via test.use)",
 					);
 				}
 			});

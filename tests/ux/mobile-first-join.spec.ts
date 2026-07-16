@@ -27,8 +27,11 @@ test.describe("Mobile-First Join", () => {
 			test.use({ viewport: { width: vp.width, height: vp.height } });
 
 			test.beforeAll(({ }, testInfo) => {
-				if (testInfo.project.name !== "mobile") {
-					test.skip(true, "mobile-first Join spec roda só no project mobile");
+				if (!testInfo.project.name.startsWith("mobile")) {
+					test.skip(
+						true,
+						"mobile-first Join spec roda só em projects mobile*",
+					);
 				}
 			});
 
