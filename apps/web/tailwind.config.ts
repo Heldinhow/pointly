@@ -63,6 +63,10 @@ const config: Config = {
 			// Os tokens abaixo correspondem 1:1 ao DESIGN.md §3 Hierarchy.
 			// Use-os no lugar de `text-[Npx]` solto — qualquer px fora
 			// desses tokens está fora da ramp e vira tell de IA.
+			//
+			// `display-hero` foi adicionado em impeccable landing
+			// (2026-07-16) — clamp editorial pra hero headline da landing,
+			// estende a ramp com step intencional sem introduzir px solto.
 			// ---------------------------------------------------------
 			fontSize: {
 				"display-xl": [
@@ -71,6 +75,14 @@ const config: Config = {
 						lineHeight: "0.95",
 						letterSpacing: "-0.04em",
 						fontWeight: "500",
+					},
+				],
+				"display-hero": [
+					"clamp(36px, 5vw, 72px)",
+					{
+						lineHeight: "1.02",
+						letterSpacing: "-0.04em",
+						fontWeight: "800",
 					},
 				],
 				"card-title": [
@@ -119,22 +131,29 @@ const config: Config = {
 			// ---------------------------------------------------------
 			// Letter spacing — extended ramp (DESIGN.md §3)
 			//
-			// `tracking-caps` 0.06em: extended ramp step para mono caps
-			// pequenos (label/micro-label uppercase). O default da ramp
-			// (`text-label`/`text-micro-label`) define 0.04em; 0.06em
-			// é o step adicional aprovado para legibilidade de mono
-			// caps em share pills, stats pills, mobile headers. Foi
-			// promovido de arbitrary value para token intencional em
-			// impeccable polish (2026-07-16) — vide DESIGN.md §3.
+			// Tokens promovidos de arbitrary values pra ramp intencional:
 			//
-			// `tracking-tight` -0.02em: extendido para uso em headings
-			// de modal/overlay (≤brand-mark). Coincide com
-			// `text-nav-wordmark` default; aprovado como step explícito
-			// para h2/h3 fora da nav.
+			// - `tracking-caps` 0.06em: mono caps pequenos (label/micro-
+			//   label uppercase) em pills/stats/mobile headers.
+			// - `tracking-tight` -0.02em: headings de modal/overlay ≤
+			//   brand-mark, fora da nav.
+			// - `tracking-tighter` -0.03em: h2/h3 medium-large (cards,
+			//   seção Como Funciona). Coincide com `text-card-title`
+			//   default; promove como step explícito.
+			// - `tracking-display` -0.04em: hero h1 / display headings
+			//   ≥36px. Coincide com `text-display-xl` default; step
+			//   explícito pra h1 fora da ramp clamped (e.g. landing hero).
+			// - `tracking-eyebrow` 0.18em: micro-caps editorial nas
+			//   eyebrows de landing ("● Pointly Agility", "● Comece agora").
+			//   Mais largo que `tracking-caps` (0.06em); step intencional
+			//   para hierarquia de seção acima de label/micro-label.
 			// ---------------------------------------------------------
 			letterSpacing: {
 				caps: "0.06em",
+				eyebrow: "0.18em",
 				tight: "-0.02em",
+				tighter: "-0.03em",
+				display: "-0.04em",
 			},
 
 			// ---------------------------------------------------------

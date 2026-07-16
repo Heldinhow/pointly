@@ -669,9 +669,14 @@ html[data-theme="dark"] .surface-noise::before {
 		240ms ease-out;
 }
 .site-header[data-scrolled="true"] {
+	/* Borderless floating (header é fixed/overlay) — usa o token
+	 * `shadow-card` (≤8px blur) consistente com o sistema de elevação
+	 * do DESIGN.md §4. Antes era `0 6px 16px -8px` arbitrary shadow
+	 * fora do ramp de tokens — promovido em impeccable landing
+	 * (2026-07-16). */
 	background: var(--paper-warm);
 	border-bottom: 1px solid var(--border-header);
-	box-shadow: 0 6px 16px -8px var(--shadow-header);
+	box-shadow: var(--shadow-card);
 }
 
 /* ---------------------------------------------------------------
