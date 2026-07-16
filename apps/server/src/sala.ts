@@ -20,6 +20,7 @@
 
 import {
 	DECK_VALUES,
+	type ConsensusStats,
 	type Player,
 	type Phase,
 	type SalaState,
@@ -100,6 +101,17 @@ export class Sala {
 	 * NÃO vai no wire format. Usado para validar o cooldown de 5 segundos.
 	 */
 	private readonly lastThrownAt: Map<string, number> = new Map();
+
+	/**
+	 * EVR-04/EVR-05: tracking primitive pra edições pós-reveal.
+	 * Marcado `true` em `castVote()` quando phase='revealed' e o voto
+	 * realmente mudou. `consumeConsensusDirty()` é chamado por
+	 * `broadcastRoomState` no WS handler, retornando E limpando
+	 * atomicamente. Comportamentalmente redundante com o broadcast
+	 * imediato já existente (T5); especificado para rastrear
+	 * "consenso precisa de re-broadcast" como flag explícita.
+	 */
+	private consensusDirty: boolean = false;
 
 	constructor(code: string, firstPlayer: Player, now: number = Date.now()) {
 		if (firstPlayer.role !== "host") {
@@ -323,6 +335,15 @@ export class Sala {
 		this.players.set(playerId, updated);
 		this.votes.set(playerId, value);
 
+		// EVR-04/EVR-05: edição pós-reveal marca consensus como dirty.
+		// `recomputeConsensus()` é side-effect-free (valor descartado) —
+		// só executamos pra forçar a checagem de invariantes e dar
+		// cobertura testável. WS handler consome o flag em T5.
+		if (this.phase === "revealed") {
+			this.recomputeConsensus();
+			this.markConsensusDirty();
+		}
+
 		// Primeira transição da rodada: idle → voting (F-013)
 		if (this.phase === "idle") {
 			this.phase = "voting";
@@ -492,6 +513,37 @@ export class Sala {
 			if (p.hasVoted) connectedVoted += 1;
 		}
 		return connectedCount > 0 && connectedCount === connectedVoted;
+	}
+
+	/**
+	 * EVR-04: recalcula consensus a partir do estado atual de `votes`.
+	 * Side-effect-free (apenas lê `this.votes` e devolve stats).
+	 * Exposto como helper público para testes unitários (T6) e como
+	 * ponto único de recompute pós-reveal.
+	 */
+	recomputeConsensus(): ConsensusStats & { unanimous: boolean } {
+		const voteList = Array.from(this.votes.values());
+		const stats = computeConsensus(voteList);
+		const unanimous = isUnanimous(voteList);
+		return { ...stats, unanimous };
+	}
+
+	/**
+	 * EVR-04: marca a flag `consensusDirty`. Idempotente.
+	 */
+	markConsensusDirty(): void {
+		this.consensusDirty = true;
+	}
+
+	/**
+	 * EVR-05: lê-e-limpa atomicamente. WS handler chama em cada
+	 * `broadcastRoomState` para rastreabilidade. Retorna o estado
+	 * anterior e zera a flag.
+	 */
+	consumeConsensusDirty(): boolean {
+		const was = this.consensusDirty;
+		this.consensusDirty = false;
+		return was;
 	}
 
 	// -----------------------------------------------------------------------
