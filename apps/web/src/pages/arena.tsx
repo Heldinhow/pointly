@@ -392,7 +392,11 @@ export function Arena() {
 			{/* Stage */}
 			<main
 				ref={stageRef}
-				className="flex-1 relative flex flex-col items-center justify-center px-4 sm:px-8 lg:px-12 overflow-hidden pt-[max(env(safe-area-inset-top),0.875rem)] pb-[max(env(safe-area-inset-bottom),1rem)]"
+				// pb-32 (128px) reserva espaço na base do stage pro deck dock
+				// (counter-scale preservado, ver arena-deck-wrapper). Sem esse
+				// padding o flex justify-center empurra a mesa pra baixo e o
+				// deck cobre o assento VOCÊ (90°, bottom-center). FMR-09.
+				className="flex-1 relative flex flex-col items-center justify-center px-4 sm:px-8 lg:px-12 overflow-hidden pt-[max(env(safe-area-inset-top),0.875rem)] pb-32 sm:pb-36 lg:pb-40"
 				data-testid="arena-stage"
 				style={{ minHeight: "60vh" }}
 			>
@@ -497,9 +501,11 @@ export function Arena() {
 				</div>
 
 				{/* Deck dock (bottom center) — counter-scale (1/arena-scale) pra
-				 * cartas manterem tap target ≥44px mesmo em escala 0.45. */}
+				 * cartas manterem tap target ≥44px mesmo em escala 0.45.
+				 * Encostado no canto inferior (bottom-2/3) pra maximizar a
+				 * distância visual da mesa e nunca encostar no assento VOCÊ. */}
 				<div
-					className="absolute bottom-4 sm:bottom-6 lg:bottom-10 left-1/2 z-10"
+					className="absolute bottom-2 sm:bottom-3 left-1/2 z-10"
 					data-testid="arena-deck-wrapper"
 					style={{
 						transform: `translate(-50%, 0) scale(calc(1 / var(--arena-scale, 1)))`,

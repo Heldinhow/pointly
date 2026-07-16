@@ -107,9 +107,9 @@ export function RevealButton({
 			className={cn(
 				"absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
 				"flex flex-col gap-[3px] items-center justify-center",
-				"w-auto min-w-[230px] px-6 py-3.5 rounded-full whitespace-nowrap",
+				"w-auto min-w-[200px] px-5 py-2.5 rounded-full whitespace-nowrap",
 				"min-h-[44px] min-h-[var(--tap-target-min,44px)]",
-				"font-display font-semibold text-caption tracking-[0.01em]",
+				"font-display font-semibold text-caption tracking-[-0.005em]",
 				"transition-all duration-200 select-none",
 				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
 				// awaiting (ghost, disabled)
@@ -123,7 +123,7 @@ export function RevealButton({
 					"bg-coral border border-coral text-white cursor-pointer shadow-coral hover:-translate-x-1/2 hover:-translate-y-[calc(50%+1px)] hover:bg-coral-soft shadow-md",
 			)}
 		>
-			<span className="inline-flex items-center gap-2">
+			<span className="inline-flex items-center gap-1.5 leading-none">
 				{label}
 				{state === "ready" && (
 					<span className="text-coral-deep" aria-hidden="true">
@@ -131,10 +131,13 @@ export function RevealButton({
 					</span>
 				)}
 			</span>
+			{/* Hint: micro-label sem uppercase pra hierarquia clara.
+			 * `tracking-[0.02em]` quase zero + lowercase = nitidamente secundário. */}
 			<span
 				className={cn(
-					"font-mono text-micro-label tracking-[0.06em] uppercase font-normal",
-					state === "awaiting" ? "text-ink-faint" : "text-white/85",
+					"font-mono text-micro-label leading-[1.3] font-normal",
+					"tracking-[0.02em] normal-case",
+					state === "awaiting" ? "text-ink-faint/75" : "text-white/75",
 				)}
 			>
 				{hint}
