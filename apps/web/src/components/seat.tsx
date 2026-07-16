@@ -233,7 +233,7 @@ export function Seat({
 							type="button"
 							onClick={handleTargetClick}
 							disabled={cooldownTime > 0}
-							className={`w-7 h-7 rounded-full flex items-center justify-center text-xs border bg-surface transition-all duration-200 cursor-pointer shadow-md hover:scale-110 active:scale-95 ${
+							className={`min-w-[44px] min-h-[44px] w-11 h-11 rounded-full flex items-center justify-center text-base border bg-surface transition-all duration-200 cursor-pointer shadow-md hover:scale-110 active:scale-95 ${
 								cooldownTime > 0
 									? "border-ink/5 text-ink-faint bg-paper-dark"
 									: "border-coral text-coral hover:bg-coral hover:text-white"
@@ -251,14 +251,14 @@ export function Seat({
 						{showMenu && (
 							<div
 								ref={menuRef}
-								className="absolute bottom-9 bg-surface/95 backdrop-blur-sm border border-ink/10 rounded-full py-1 px-2 shadow-xl flex items-center gap-1.5 transition-all duration-200 animate-in fade-in zoom-in-95"
+								className="absolute bottom-12 bg-surface/95 backdrop-blur-sm border border-ink/10 rounded-full py-1 px-2 shadow-xl flex items-center gap-1.5 transition-all duration-200 animate-in fade-in zoom-in-95"
 							>
 								{PROJECTILES.map((proj) => (
 									<button
 										key={proj.type}
 										type="button"
 										onClick={(e) => handleProjectileSelect(proj.type, e)}
-										className="w-7 h-7 rounded-full flex items-center justify-center text-lg hover:bg-ink/5 active:scale-90 transition-transform cursor-pointer"
+										className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-full flex items-center justify-center text-xl hover:bg-ink/5 active:scale-90 transition-transform cursor-pointer"
 										title={proj.title}
 									>
 										{proj.emoji}
