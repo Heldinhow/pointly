@@ -155,7 +155,7 @@ export class WSService {
 		this.connections.delete(ws);
 		this.byIP.delete(ws);
 
-		if (ctx.playerId) {
+		if (ctx?.playerId) {
 			this.logger.disconnect(
 				ctx.playerId,
 				ctx.code ?? undefined,
@@ -512,7 +512,7 @@ export class WSService {
 	}
 
 	private sendError(ws: BunWS, code: string, message: string): void {
-		this.logger.error(code, message, ws.data.playerId ?? undefined);
+		this.logger.error(code, message, ws.data?.playerId ?? undefined);
 		const errorEvent: ServerToClientEvent = {
 			type: "error",
 			payload: { code: code as never, message },

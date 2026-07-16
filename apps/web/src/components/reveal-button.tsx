@@ -108,6 +108,7 @@ export function RevealButton({
 				"absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
 				"flex flex-col gap-[3px] items-center justify-center",
 				"w-auto min-w-[230px] px-6 py-3.5 rounded-full whitespace-nowrap",
+				"min-h-[44px] min-h-[var(--tap-target-min,44px)]",
 				"font-display font-semibold text-[13px] tracking-[0.01em]",
 				"transition-all duration-200 select-none",
 				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-bg",

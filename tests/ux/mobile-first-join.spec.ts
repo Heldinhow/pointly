@@ -32,6 +32,11 @@ test.describe("Mobile-First Join", () => {
 				}
 			});
 
+			// Garante viewport mesmo se test.use for ignorado pelo runner.
+			test.beforeEach(async ({ page }) => {
+				await page.setViewportSize({ width: vp.width, height: vp.height });
+			});
+
 			test(`FMR-01/05: zero horizontal scroll + form completo visível`, async ({
 				page,
 			}) => {

@@ -100,7 +100,7 @@ function SharePill({ code }: { code: string }) {
 			data-testid="share-pill"
 			disabled={!code}
 			className={cn(
-				"inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-micro-label tracking-[0.06em] uppercase border transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral min-h-[36px] sm:min-h-[32px]",
+				"inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-micro-label tracking-[0.06em] uppercase border transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral min-h-[44px]",
 				"disabled:opacity-50 disabled:cursor-not-allowed",
 				copied
 					? "bg-olive border-transparent text-white"
@@ -397,8 +397,16 @@ export function Arena() {
 
 				{/* Timer pill (top-right, absolute) — SEMPRE visível (FMR-11).
 				 * Usuário precisa saber se está em estado crítico (≤30s) em
-				 * qualquer viewport. */}
-				<div className="absolute top-3.5 right-3 sm:right-8 lg:right-12 z-10 scale-90 sm:scale-100 origin-top-right">
+				 * qualquer viewport. Counter-scale (1/arena-scale) mantém o
+				 * tamanho visual real do pill mesmo quando o stage é
+				 * escalado pra caber na mesa (FMR-10: tap target ≥44). */}
+				<div
+					className="absolute top-3.5 right-3 sm:right-8 lg:right-12 z-10 origin-top-right"
+					style={{
+						transform: `scale(calc(0.9 / var(--arena-scale, 1)))`,
+						transformOrigin: "top right",
+					}}
+				>
 					<TimerPill />
 				</div>
 
@@ -459,7 +467,17 @@ export function Arena() {
 							);
 						})}
 
-						{/* RevealButton central */}
+						{/* RevealButton central — FORA do arena-table-inner (não escalado)
+						 * para garantir tap target ≥44px mesmo em escala 0.45 (mobile).
+						 * ProjectileAnimator fica DENTRO do scaled inner pra os
+						 * projéteis voarem entre assentos nas coords certas. */}
+						<ProjectileAnimator />
+					</div>
+
+					<div
+						className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
+						data-testid="arena-reveal-wrapper"
+					>
 						<RevealButton
 							phase={phase}
 							votedCount={votedCount}
@@ -467,16 +485,18 @@ export function Arena() {
 							onReveal={handleReveal}
 							onNewRound={handleNewRound}
 						/>
-
-						{/* Animações de arremessos */}
-						<ProjectileAnimator />
 					</div>
 				</div>
 
-				{/* Deck dock (bottom center) */}
+				{/* Deck dock (bottom center) — counter-scale (1/arena-scale) pra
+				 * cartas manterem tap target ≥44px mesmo em escala 0.45. */}
 				<div
-					className="absolute bottom-4 sm:bottom-6 lg:bottom-10 left-1/2 -translate-x-1/2 z-10"
+					className="absolute bottom-4 sm:bottom-6 lg:bottom-10 left-1/2 z-10"
 					data-testid="arena-deck-wrapper"
+					style={{
+						transform: `translate(-50%, 0) scale(calc(1 / var(--arena-scale, 1)))`,
+						transformOrigin: "center bottom",
+					}}
 				>
 					<Deck
 						currentVote={myVote}

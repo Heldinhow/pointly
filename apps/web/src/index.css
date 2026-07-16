@@ -595,13 +595,28 @@ body {
 /* Coarse pointer (mobile): reforça tap targets mínimos nos controles
  * críticos. Botões size="lg" já são 48px (✓); aqui reforçamos size="sm"
  * e ícones inline para que botões auxiliares (SharePill, theme toggle,
- * projectile) respeitem 44×44 WCAG em touch. */
-@media (pointer: coarse) {
+ * projectile) respeitem 44×44 WCAG em touch. Cobre também viewport
+ * pequeno (max-width: 639px) porque testes Playwright emulam viewport
+ * sem necessarily simular `pointer: coarse`. */
+@media (pointer: coarse), (max-width: 639px) {
 	button[aria-label="Copiar link de compartilhamento da sala"],
 	button[aria-label="Mudar tema claro/escuro"],
-	button[data-testid="share-pill"] {
-		min-height: 44px;
-		min-width: 44px;
+	button[data-testid="share-pill"],
+	[data-testid="timer-pill"],
+	[data-testid="deck-card-0"],
+	[data-testid="deck-card-half"],
+	[data-testid="deck-card-1"],
+	[data-testid="deck-card-2"],
+	[data-testid="deck-card-3"],
+	[data-testid="deck-card-5"],
+	[data-testid="deck-card-8"],
+	[data-testid="deck-card-13"],
+	[data-testid="deck-card-coffee"] {
+		min-height: 44px !important;
+		min-width: 44px !important;
+	}
+	[data-testid="reveal-button"] {
+		min-height: 44px !important;
 	}
 
 	/* Projectile throw button (emoji 🎯 no seat) — 28×28 vira ≥44×44. */
