@@ -651,3 +651,14 @@ body {
 		transition: none;
 	}
 }
+
+/* ---------------------------------------------------------------
+ * FMR-02 — Keyboard avoidance no Join.
+ * `--keyboard-inset` é setado pelo useEffect em pages/join.tsx via
+ * visualViewport.resize. Quando o teclado do iOS sobe, esse valor
+ * cresce e empurra o padding-bottom do stage, mantendo o CTA "Entrar"
+ * acima do teclado.
+ * --------------------------------------------------------------- */
+[data-testid="page-join"] main {
+	padding-bottom: max(env(safe-area-inset-bottom), calc(2rem + var(--keyboard-inset, 0px)));
+}

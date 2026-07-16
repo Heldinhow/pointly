@@ -190,6 +190,33 @@ export function Join() {
 		return () => window.removeEventListener("keydown", onKey);
 	}, [isConnecting, navigate]);
 
+	// FMR-02: keyboard avoidance via visualViewport.
+	// iOS Safari encolhe window.innerHeight quando teclado sobe, mas
+	// melhor usar `visualViewport.height` que é o "true visible" — algumas
+	// versões do iOS não atualizam window.innerHeight imediatamente.
+	// Quando shrink detectado, setamos `--keyboard-inset` que aumenta o
+	// padding-bottom do stage e mantém o CTA "Entrar" visível.
+	useEffect(() => {
+		if (typeof window === "undefined" || !window.visualViewport) return;
+		const vv = window.visualViewport;
+		const root = document.documentElement;
+		const update = () => {
+			const diff = window.innerHeight - vv.height;
+			root.style.setProperty(
+				"--keyboard-inset",
+				`${Math.max(0, diff)}px`,
+			);
+		};
+		update();
+		vv.addEventListener("resize", update);
+		vv.addEventListener("scroll", update);
+		return () => {
+			vv.removeEventListener("resize", update);
+			vv.removeEventListener("scroll", update);
+			root.style.setProperty("--keyboard-inset", "0px");
+		};
+	}, []);
+
 	const handleSubmit = useCallback(
 		async (e: FormEvent<HTMLFormElement>) => {
 			e.preventDefault();
@@ -311,13 +338,14 @@ export function Join() {
 	return (
 		<div
 			data-testid="page-join"
-			className="surface-noise min-h-screen bg-bg text-ink flex flex-col"
+			className="surface-noise min-h-[100dvh] bg-bg text-ink flex flex-col"
 		>
 			{/* Header topbar — superfície sólida (sem glassmorphism). Tela de
 			    formulário único não justifica sticky: o usuário percorre o card
 			    inteiro dentro de uma viewport cabeçudo+rodapé, e o sticky só
-			    comeria pixels verticais sem benefício. */}
-			<header className="border-b border-ink/10 py-4 flex-shrink-0 bg-bg">
+			    comeria pixels verticais sem benefício.
+			    pt com safe-area-inset-top respeita notch iOS. */}
+			<header className="border-b border-ink/10 py-4 flex-shrink-0 bg-bg pt-[max(env(safe-area-inset-top),1rem)]">
 				<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 flex items-center justify-between">
 					<Link
 						to="/"
@@ -362,8 +390,10 @@ export function Join() {
 				</div>
 			)}
 
-			{/* Stage */}
-			<main className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-16 py-8 sm:py-12">
+			{/* Stage
+			 * FMR-01/02: min-h dinâmico via 100dvh (lida com barra URL iOS),
+			 * padding-bottom com env(safe-area-inset-bottom) p/ home indicator. */}
+			<main className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-16 py-8 sm:py-12 pb-[max(env(safe-area-inset-bottom),2rem)]">
 				<Card
 					padding="lg"
 					className="w-full max-w-[520px] flex flex-col gap-7 sm:gap-8"
