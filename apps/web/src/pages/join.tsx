@@ -554,6 +554,10 @@ export function Join() {
 								className="font-sans text-body py-3.5 px-4 border border-ink/10 rounded-lg bg-paper-warm text-ink placeholder:text-caption placeholder:text-ink-faint focus:border-coral-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-1 focus-visible:ring-offset-bg transition-colors disabled:opacity-60 aria-[invalid=true]:border-coral-deep [&:-webkit-autofill]:bg-paper-warm [&:-webkit-autofill]:[-webkit-text-fill-color:var(--fg)] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_var(--paper-warm)_inset]"
 								data-testid="nick-input"
 							/>
+							{/* min-h-[22px] = 1 linha de `text-caption` (14px × 1.55
+							    = 21.7px). Reserva o slot pra evitar layout shift quando
+							    o erro aparece/some. Não está na ramp de typography
+							    porque é layout (height), não font-size. */}
 							<div
 								id="nick-error"
 								role={!validation.ok && validation.error ? "alert" : undefined}
