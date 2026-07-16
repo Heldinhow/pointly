@@ -500,7 +500,7 @@ export function Join() {
 										id="code-input-hint"
 										className="font-sans text-caption text-ink-mute"
 									>
-										Peça o código de 4 letras para quem criou a sala.
+										4 letras ou números · peça ao host que criou a sala.
 									</p>
 								)}
 							</div>
