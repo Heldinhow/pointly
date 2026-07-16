@@ -247,9 +247,16 @@ export function Arena() {
 				? V
 				: never,
 		): void => {
+			// EVR-03 / F-011: clicar na mesma carta que já está votada
+			// é no-op client-side. Mesmo com o servidor também
+			// suprimindo broadcasts em no-op (T5), este early-return
+			// evita o WS round-trip desnecessário (latência ~rede +
+			// processamento de handler). Single source of truth:
+			// `myVote` é o estado autoritativo pós-reconciliação.
+			if (value === myVote) return;
 			castVote(value);
 		},
-		[castVote],
+		[castVote, myVote],
 	);
 
 	const handleReveal = useCallback((): void => {
@@ -404,7 +411,7 @@ export function Arena() {
 						<MobileRevealDock
 							phase={phase}
 							myVote={myVote}
-							disabled={phase === "revealed"}
+							disabled={false}
 							votedCount={votedCount}
 							totalPlayers={sala?.players.length ?? 0}
 							onSelect={handleCardSelect}
