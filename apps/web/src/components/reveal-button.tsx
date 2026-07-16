@@ -126,14 +126,14 @@ export function RevealButton({
 			<span className="inline-flex items-center gap-2">
 				{label}
 				{state === "ready" && (
-					<span className="text-coral" aria-hidden="true">
+					<span className="text-coral-deep" aria-hidden="true">
 						.
 					</span>
 				)}
 			</span>
 			<span
 				className={cn(
-					"font-mono text-[9.5px] tracking-[0.06em] uppercase font-normal",
+					"font-mono text-micro-label tracking-[0.06em] uppercase font-normal",
 					state === "awaiting" ? "text-ink-faint" : "text-white/85",
 				)}
 			>

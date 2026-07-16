@@ -145,6 +145,27 @@ export function Join() {
 		reset();
 	}, [reset]);
 
+	// A11y (FMR UX-polish C2): foco automático no campo certo no mount.
+	// - Se o code veio via URL (?code=XXXX), o usuário só precisa digitar
+	//   o nick → foca no nickInputRef.
+	// - Se o code precisa ser digitado (showCodeInput=true), foca no
+	//   codeInputRef.
+	// - Se o nick já está pré-preenchido de sessionStorage (não vazio),
+	//   mantém foco no body — usuário provavelmente só quer revisar.
+	useEffect(() => {
+		// Skip em prefers-reduced-motion NÃO se aplica aqui — foco é
+		// diferente de animação. Mas respeitamos timing: defer pra próximo
+		// frame pra não brigar com autoFocus do browser.
+		const id = requestAnimationFrame(() => {
+			if (showCodeInput && !code) {
+				codeInputRef.current?.focus();
+			} else if (!nick) {
+				nickInputRef.current?.focus();
+			}
+		});
+		return () => cancelAnimationFrame(id);
+	}, [showCodeInput, code, nick]);
+
 	// -------------------------------------------------------------------------
 	// Handlers
 	// -------------------------------------------------------------------------
