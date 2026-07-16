@@ -314,7 +314,7 @@ export function Seat({
 					{/* Badge "VOCÊ" */}
 					{isYou && (
 						<div
-							className="font-mono text-micro-label tracking-[0.1em] text-coral uppercase py-0.5 px-1.5 border border-coral rounded transition-opacity duration-200"
+							className="font-mono text-micro-label tracking-[0.1em] text-coral-deep uppercase py-0.5 px-1.5 border border-coral-deep rounded transition-opacity duration-200"
 							data-testid="seat-voc-badge"
 							aria-label="Você está neste assento"
 						>
