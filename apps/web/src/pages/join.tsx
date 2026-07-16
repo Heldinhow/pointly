@@ -428,7 +428,6 @@ export function Join() {
 					<form
 						onSubmit={handleSubmit}
 						className="flex flex-col gap-1.5"
-						autoComplete="off"
 						data-testid="nick-form"
 					>
 						{showCodeInput && (
@@ -462,9 +461,8 @@ export function Join() {
 											localCode.length !== 4) ||
 										salaCheck === "not-found"
 									}
-									autoComplete="off"
 									disabled={isConnecting}
-									className="font-mono text-center text-body py-3.5 px-4 border border-ink/10 rounded-lg bg-paper-warm text-ink placeholder:text-caption placeholder:text-ink-faint focus:border-coral focus:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep/40 transition-colors disabled:opacity-60 tracking-widest uppercase aria-[invalid=true]:border-coral-deep [&:-webkit-autofill]:bg-paper-warm [&:-webkit-autofill]:[-webkit-text-fill-color:var(--fg)] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_var(--paper-warm)_inset]"
+									className="font-mono text-center text-body py-3.5 px-4 border border-ink/10 rounded-lg bg-paper-warm text-ink placeholder:text-caption placeholder:text-ink-faint focus:border-coral-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep/40 transition-colors disabled:opacity-60 tracking-widest uppercase aria-[invalid=true]:border-coral-deep [&:-webkit-autofill]:bg-paper-warm [&:-webkit-autofill]:[-webkit-text-fill-color:var(--fg)] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_var(--paper-warm)_inset]"
 									data-testid="join-code-input"
 								/>
 								{salaCheck === "not-found" ? (
@@ -472,14 +470,14 @@ export function Join() {
 										id="code-input-error"
 										role="alert"
 										data-testid="join-code-error"
-										className="font-sans text-caption text-coral-deep leading-[1.55]"
+										className="font-sans text-caption text-coral-deep"
 									>
 										Sala não encontrada. Confira o código.
 									</p>
 								) : (
 									<p
 										id="code-input-hint"
-										className="font-sans text-caption text-ink-mute leading-[1.55]"
+										className="font-sans text-caption text-ink-mute"
 									>
 										Peça o código de 4 letras para quem criou a sala.
 									</p>
@@ -498,7 +496,7 @@ export function Join() {
 							<p
 								role="alert"
 								data-testid="join-code-error"
-								className="font-sans text-caption text-coral-deep leading-[1.55] -mt-1"
+								className="font-sans text-caption text-coral-deep -mt-1"
 							>
 								Sala não encontrada. Confira o código.
 							</p>
@@ -525,13 +523,13 @@ export function Join() {
 										: "nick-hint"
 								}
 								disabled={isConnecting}
-								className="font-sans text-body py-3.5 px-4 border border-ink/10 rounded-lg bg-paper-warm text-ink placeholder:text-caption placeholder:text-ink-faint focus:border-coral focus:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep/40 transition-colors disabled:opacity-60 aria-[invalid=true]:border-coral-deep [&:-webkit-autofill]:bg-paper-warm [&:-webkit-autofill]:[-webkit-text-fill-color:var(--fg)] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_var(--paper-warm)_inset]"
+								className="font-sans text-body py-3.5 px-4 border border-ink/10 rounded-lg bg-paper-warm text-ink placeholder:text-caption placeholder:text-ink-faint focus:border-coral-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep/40 transition-colors disabled:opacity-60 aria-[invalid=true]:border-coral-deep [&:-webkit-autofill]:bg-paper-warm [&:-webkit-autofill]:[-webkit-text-fill-color:var(--fg)] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_var(--paper-warm)_inset]"
 								data-testid="nick-input"
 							/>
 							<div
 								id="nick-error"
 								role={!validation.ok && validation.error ? "alert" : undefined}
-								aria-live="polite"
+								aria-live={!validation.ok && validation.error ? "assertive" : undefined}
 								className="font-sans text-caption text-coral-deep min-h-[22px] tracking-normal"
 								data-testid="nick-error"
 							>
@@ -539,7 +537,7 @@ export function Join() {
 							</div>
 							<div
 								id="nick-hint"
-								className="font-sans text-caption text-ink-mute leading-[1.55] flex flex-wrap items-center justify-between gap-x-3 gap-y-1"
+								className="font-sans text-caption text-ink-mute flex flex-wrap items-center justify-between gap-x-3 gap-y-1"
 							>
 								<span>De 2 a 20 caracteres · como você quer ser chamado</span>
 								{validation.ok && (
