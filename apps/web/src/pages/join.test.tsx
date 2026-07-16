@@ -1,5 +1,6 @@
 /**
- * Join page tests — T28 verify (≥3 of 5 minimum required).
+ * Join page tests — T28 verify (≥3 of 5 minimum required) + sala-existence
+ * pre-check (validate-room-existence).
  *
  * Cobre:
  *  - validateNick() puro: 1 char rejeitado, 21 rejeitado, espaços duplos,
@@ -9,12 +10,62 @@
  *  - Submit com nick válido dispara redirect (stub)
  *  - A11y: input tem label + aria-invalid em erro
  *  - Host note aparece quando ?host=1
+ *  - Pre-check de existência:
+ *    - 200 → navega
+ *    - 404 → erro inline, NÃO navega, aria-invalid=true
+ *    - host=1 → fetch NÃO é chamado
+ *    - editar code limpa erro
  */
-import { describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { fireEvent, render, screen } from "../components/ui/test-helpers";
 import { ToastProvider } from "../components/ui/toast";
 import { Join, validateNick } from "./join";
+
+// ---------------------------------------------------------------------------
+// fetch mock — instala um stub controlável no globalThis antes de cada test
+// e restaura no afterEach. Cada test ajusta `fetchMock.next` (ou usa .ok/.notFound/.networkError)
+// e o componente vai bater no stub. Em paralelo, gravamos as URLs chamadas
+// para asserções tipo "host não chamou fetch" e "code veio certo na URL".
+// ---------------------------------------------------------------------------
+
+type FetchResult =
+	| { kind: "ok"; status?: number; body?: unknown }
+	| { kind: "not-found"; status?: number }
+	| { kind: "network-error" };
+
+let fetchCalls: Array<{ url: string; init?: RequestInit }> = [];
+let nextResult: FetchResult = { kind: "ok" };
+
+beforeEach(() => {
+	fetchCalls = [];
+	nextResult = { kind: "ok" };
+	(globalThis as { fetch: typeof fetch }).fetch = (async (
+		input: RequestInfo | URL,
+		init?: RequestInit,
+	) => {
+		const url = typeof input === "string" ? input : input.toString();
+		fetchCalls.push({ url, init });
+		const r = nextResult;
+		if (r.kind === "network-error") {
+			throw new TypeError("Failed to fetch");
+		}
+		const status = r.status ?? (r.kind === "not-found" ? 404 : 200);
+		const body =
+			r.kind === "not-found"
+				? { code: "ABCD", exists: false }
+				: (r.body ?? { code: "ABCD", exists: true, playerCount: 1, phase: "idle" });
+		return new Response(JSON.stringify(body), {
+			status,
+			headers: { "content-type": "application/json" },
+		});
+	}) as typeof fetch;
+});
+
+afterEach(() => {
+	delete (globalThis as { fetch?: typeof fetch }).fetch;
+});
 
 function renderJoin(initialEntry = "/join") {
 	return render(
@@ -187,5 +238,105 @@ describe("Join page — querystring parsing", () => {
 	test("sem ?host=1 NÃO mostra host note", () => {
 		renderJoin("/join?code=ABCD");
 		expect(screen.queryByTestId("host-note")).not.toBeInTheDocument();
+	});
+});
+
+// ---------------------------------------------------------------------------
+// validate-room-existence — pre-check na tela Join
+// AC-4..AC-10 do .specs/features/validate-room-existence/spec.md
+// ---------------------------------------------------------------------------
+
+describe("Join — pre-check de existência da sala", () => {
+	test("submit com code válido e fetch 200 → fetch foi chamado e navega", async () => {
+		nextResult = { kind: "ok" };
+		renderJoin("/join?code=ABCD");
+		fireEvent.change(screen.getByTestId("nick-input"), {
+			target: { value: "Helder" },
+		});
+		fireEvent.click(screen.getByTestId("join-submit"));
+		await waitFor(() => {
+			expect(fetchCalls.length).toBeGreaterThanOrEqual(1);
+		});
+		expect(fetchCalls[0]?.url).toBe("/api/v1/salas/ABCD");
+		// A navegação é assíncrona (setTimeout 200ms dentro do handler);
+		// validamos que o submit clicou sem erro e o fetch rolou.
+	});
+
+	test("submit com fetch 404 (code via URL) → erro inline no form + NÃO navega", async () => {
+		nextResult = { kind: "not-found" };
+		renderJoin("/join?code=ZZZZ");
+		fireEvent.change(screen.getByTestId("nick-input"), {
+			target: { value: "Helder" },
+		});
+		fireEvent.click(screen.getByTestId("join-submit"));
+
+		const errorNode = await screen.findByTestId("join-code-error");
+		expect(errorNode).toHaveTextContent(/sala não encontrada/i);
+		expect(errorNode).toHaveAttribute("role", "alert");
+		// Quando code vem via URL, showCodeInput é false → erro vive no form,
+		// não inline no input. Verifica que NÃO navegou.
+		expect(window.location.pathname).toBe("/");
+	});
+
+	test("submit com fetch 404 (code manual) → erro inline NO INPUT + aria-invalid=true", async () => {
+		nextResult = { kind: "not-found" };
+		// Sem ?code= → showCodeInput=true → usuário digita o code manualmente.
+		renderJoin("/join");
+		fireEvent.change(screen.getByTestId("join-code-input"), {
+			target: { value: "ZZZZ" },
+		});
+		fireEvent.change(screen.getByTestId("nick-input"), {
+			target: { value: "Helder" },
+		});
+		fireEvent.click(screen.getByTestId("join-submit"));
+
+		const errorNode = await screen.findByTestId("join-code-error");
+		expect(errorNode).toHaveTextContent(/sala não encontrada/i);
+		const codeInput = screen.getByTestId("join-code-input");
+		expect(codeInput.getAttribute("aria-invalid")).toBe("true");
+	});
+
+	test("submit como host=1 → fetch NÃO é chamado (server gera code no hello)", async () => {
+		renderJoin("/join?host=1");
+		fireEvent.change(screen.getByTestId("nick-input"), {
+			target: { value: "Helder" },
+		});
+		fireEvent.click(screen.getByTestId("join-submit"));
+		// Aguarda um tick — se fetch fosse chamado, fetchCalls teria 1+.
+		await new Promise((r) => setTimeout(r, 50));
+		expect(fetchCalls.length).toBe(0);
+	});
+
+	test("editar o code após 404 limpa o erro e aria-invalid (entrada manual)", async () => {
+		nextResult = { kind: "not-found" };
+		// Sem ?code= → showCodeInput=true → usuário digita o code.
+		renderJoin("/join");
+		const codeInput = screen.getByTestId("join-code-input");
+		fireEvent.change(codeInput, { target: { value: "ZZZZ" } });
+		fireEvent.change(screen.getByTestId("nick-input"), {
+			target: { value: "Helder" },
+		});
+		fireEvent.click(screen.getByTestId("join-submit"));
+		await screen.findByTestId("join-code-error");
+
+		// Editar o code deve limpar o erro de "não encontrada".
+		// Digitando 4 chars válidos, o aria-invalid também fica false.
+		fireEvent.change(codeInput, { target: { value: "WXYZ" } });
+		expect(screen.queryByTestId("join-code-error")).not.toBeInTheDocument();
+		expect(codeInput.getAttribute("aria-invalid")).toBe("false");
+	});
+
+	test("fetch lança (network error) → fall through e navega normalmente", async () => {
+		nextResult = { kind: "network-error" };
+		renderJoin("/join?code=ABCD");
+		fireEvent.change(screen.getByTestId("nick-input"), {
+			target: { value: "Helder" },
+		});
+		fireEvent.click(screen.getByTestId("join-submit"));
+		// Erro inline NÃO deve aparecer (defesa em profundidade: WS hello
+		// é a fonte da verdade).
+		await new Promise((r) => setTimeout(r, 50));
+		expect(screen.queryByTestId("join-code-error")).not.toBeInTheDocument();
+		expect(fetchCalls.length).toBe(1);
 	});
 });

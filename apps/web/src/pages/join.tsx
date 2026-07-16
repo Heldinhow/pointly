@@ -1,5 +1,5 @@
 /**
- * Join page — T28 (Phase 6).
+ * Join page — T28 (Phase 6) + sala-existence pre-check (validate-room-existence).
  *
  * Tela de entrada com prompt de apelido. Editorial-lite:
  *  - Topbar metadata strip
@@ -8,11 +8,16 @@
  *
  * **Flow**:
  *  1. User digita nick (2-20 chars, sem espaços duplos, sem ponta)
- *  2. Click 'Entrar' → ws.send({ type: 'hello', payload: { uuid, nick, code } })
- *  3. Server responde welcome → store.setCurrentPlayerId + setSala
- *  4. Redirect /arena?code=XXXX (T38 wire)
- *  5. error { code: 'sala_cheia' } → redirect /full
- *  6. error { code: 'sala_nao_encontrada' } → toast retry
+ *  2. Click 'Entrar' → pre-check `GET /api/v1/salas/:code` (somente em join com code).
+ *     - 200 → navega para `/arena?code=XXXX` (ws-client real abre WS e envia hello).
+ *     - 404 → inline error perto do code input; NÃO navega.
+ *     - 5xx / network → fall through: navega (defesa em profundidade via WS hello).
+ *  3. (Host=1) pula o pre-check — server gera code no `hello`.
+ *  4. ws.send({ type: 'hello', payload: { uuid, nick, code } })
+ *  5. Server responde welcome → store.setCurrentPlayerId + setSala
+ *  6. Redirect /arena?code=XXXX (T38 wire)
+ *  7. error { code: 'sala_cheia' } → redirect /full
+ *  8. error { code: 'sala_nao_encontrada' } (race após pre-check) → toast retry
  *
  * **UUID strategy** (ADR-0009): gerado client-side via `crypto.randomUUID()`,
  * persistido em localStorage para suportar reconnect (T37).
@@ -20,6 +25,7 @@
  * **A11y**: input com label associado, aria-invalid em erro, aria-live em
  * status (conexão), error com role='alert'.
  *
+ * @see .specs/features/validate-room-existence/spec.md
  * @see .specs/features/planning-poker-v1/tasks.md T28
  * @see .specs/features/planning-poker-v1/spec.md F-001, F-002, F-008
  */
@@ -46,6 +52,19 @@ const NICK_MAX = 20;
 export type NickValidation =
 	| { ok: true; value: string }
 	| { ok: false; error: string };
+
+/**
+ * Estado do pre-check de existência da sala (validate-room-existence).
+ *  - 'idle'         : estado inicial / após o usuário editar o code
+ *  - 'checking'     : fetch em voo (submit desabilitado, label "Verificando…")
+ *  - 'not-found'    : server respondeu 404 → erro inline, sem navegação
+ *  - 'ok'           : 200 (ou fallback) → navegação prossegue
+ *
+ * Mantido fora do store porque é puramente UI local e some quando o
+ * componente desmonta (sala-end-loop ou navigate). Sem valor de
+ * rehidratação entre páginas.
+ */
+export type SalaCheckState = "idle" | "checking" | "not-found" | "ok";
 
 /** Função pura exportada para uso em testes unitários (T28 done-when). */
 export function validateNick(input: string): NickValidation {
@@ -104,6 +123,10 @@ export function Join() {
 	const [connectionState, setConnectionState] = useState<
 		"idle" | "connecting" | "connected" | "error"
 	>("idle");
+	// Estado do pre-check de existência da sala (validate-room-existence).
+	// 'idle' = ainda não checou / usuário editou o code; 'checking' = fetch em voo;
+	// 'not-found' = 404 → erro inline; 'ok' = 200 (ou fallback) → navega.
+	const [salaCheck, setSalaCheck] = useState<SalaCheckState>("idle");
 
 	const showCodeInput = !code && !isHost;
 
@@ -137,7 +160,12 @@ export function Join() {
 			.slice(0, 4)
 			.toUpperCase();
 		setLocalCode(clean);
-	}, []);
+		// Editar o code limpa o erro de "sala não encontrada" — UX padrão
+		// de forms curtos: enquanto o usuário digita, o erro anterior morre.
+		// Não limpamos em `not-found` apenas para o caso dele apagar tudo e
+		// re-digitar; qualquer edit conta como tentativa nova.
+		if (salaCheck !== "idle") setSalaCheck("idle");
+	}, [salaCheck]);
 
 	// Ref para o setTimeout de redirect — cancela no unmount pra evitar
 	// setState em componente desmontado.
@@ -181,8 +209,43 @@ export function Join() {
 				return;
 			}
 
-			setIsConnecting(true);
-			setConnectionState("connecting");
+			// -----------------------------------------------------------------
+			// Pre-check de existência (validate-room-existence):
+			// Só roda quando o usuário está ENTRANDO em sala existente.
+			// Host=1 cria sala nova → server gera code no hello → pulamos.
+			// -----------------------------------------------------------------
+			if (!isHost && activeCode) {
+				setSalaCheck("checking");
+				setIsConnecting(true);
+				setConnectionState("connecting");
+				try {
+					const resp = await fetch(`/api/v1/salas/${activeCode}`);
+					if (resp.status === 404) {
+						// Bloqueia navegação e mostra erro inline no code input.
+						// Foco + select no campo pra editar sem apagar (mesmo
+						// padrão do "código inválido").
+						setSalaCheck("not-found");
+						setIsConnecting(false);
+						setConnectionState("idle");
+						codeInputRef.current?.focus();
+						codeInputRef.current?.select();
+						return;
+					}
+					// 200 ou qualquer outro status (5xx, etc) → fall through
+					// pra navega. WS `hello` é a defesa em profundidade: se a
+					// sala sumiu entre o GET e o hello, sala-end-loop mostra
+					// toast 'sala_nao_encontrada'.
+					setSalaCheck("ok");
+				} catch {
+					// Rede caiu, CORS, etc — não bloqueia o usuário. Segue
+					// pra arena; o WS vai lidar com a verdade.
+					setSalaCheck("ok");
+				}
+			} else {
+				// Host=1: pulou o pre-check.
+				setIsConnecting(true);
+				setConnectionState("connecting");
+			}
 
 			// Gera/recupera UUID persistente (ADR-0009). T08: sessionStorage.
 			// Será usado em T38 quando integrarmos com ws-client real.
@@ -346,25 +409,58 @@ export function Join() {
 									placeholder="ex. ABCD"
 									value={localCode}
 									onChange={(e) => handleCodeChange(e.target.value)}
-									aria-describedby="code-input-hint"
+									aria-describedby={
+										salaCheck === "not-found"
+											? "code-input-error"
+											: "code-input-hint"
+									}
 									aria-invalid={
-										!isHost &&
-										showCodeInput &&
-										localCode.length > 0 &&
-										localCode.length !== 4
+										(!isHost &&
+											showCodeInput &&
+											localCode.length > 0 &&
+											localCode.length !== 4) ||
+										salaCheck === "not-found"
 									}
 									autoComplete="off"
 									disabled={isConnecting}
-									className="font-mono text-center text-body py-3.5 px-4 border border-ink/10 rounded-lg bg-paper-warm text-ink placeholder:text-caption placeholder:text-ink-faint focus:border-coral focus:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep/40 transition-colors disabled:opacity-60 tracking-widest uppercase [&:-webkit-autofill]:bg-paper-warm [&:-webkit-autofill]:[-webkit-text-fill-color:var(--fg)] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_var(--paper-warm)_inset]"
+									className="font-mono text-center text-body py-3.5 px-4 border border-ink/10 rounded-lg bg-paper-warm text-ink placeholder:text-caption placeholder:text-ink-faint focus:border-coral focus:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep/40 transition-colors disabled:opacity-60 tracking-widest uppercase aria-[invalid=true]:border-coral-deep [&:-webkit-autofill]:bg-paper-warm [&:-webkit-autofill]:[-webkit-text-fill-color:var(--fg)] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_var(--paper-warm)_inset]"
 									data-testid="join-code-input"
 								/>
-								<p
-									id="code-input-hint"
-									className="font-sans text-caption text-ink-mute leading-[1.55]"
-								>
-									Peça o código de 4 letras para quem criou a sala.
-								</p>
+								{salaCheck === "not-found" ? (
+									<p
+										id="code-input-error"
+										role="alert"
+										data-testid="join-code-error"
+										className="font-sans text-caption text-coral-deep leading-[1.55]"
+									>
+										Sala não encontrada. Confira o código.
+									</p>
+								) : (
+									<p
+										id="code-input-hint"
+										className="font-sans text-caption text-ink-mute leading-[1.55]"
+									>
+										Peça o código de 4 letras para quem criou a sala.
+									</p>
+								)}
 							</div>
+						)}
+
+						{/* Erro de "sala não encontrada" para o caso ?code=XXXX na URL.
+						    Quando o code vem digitado pelo usuário (showCodeInput=true),
+						    o erro já aparece logo abaixo do input acima. Quando o code
+						    vem via querystring, o input não existe — então o erro é
+						    renderizado aqui, no nível do form, com a mesma copy e
+						    role='alert' pra feedback acessível. A11y: aria-describedby
+						    do botão submit aponta pra cá também (futuro). */}
+						{!showCodeInput && salaCheck === "not-found" && (
+							<p
+								role="alert"
+								data-testid="join-code-error"
+								className="font-sans text-caption text-coral-deep leading-[1.55] -mt-1"
+							>
+								Sala não encontrada. Confira o código.
+							</p>
 						)}
 
 						<fieldset className="contents m-0 min-w-0 p-0 border-0">
@@ -425,14 +521,21 @@ export function Join() {
 								disabled={
 									!validation.ok ||
 									isConnecting ||
+									salaCheck === "checking" ||
 									(showCodeInput && localCode.length !== 4)
 								}
-								aria-busy={isConnecting}
+								aria-busy={isConnecting || salaCheck === "checking"}
 								className="w-full sm:w-auto"
 								data-testid="join-submit"
 							>
-								{isConnecting ? "Conectando…" : "Entrar"}
-								{!isConnecting && <span aria-hidden="true">↗</span>}
+								{salaCheck === "checking"
+									? "Verificando…"
+									: isConnecting
+										? "Conectando…"
+										: "Entrar"}
+								{!isConnecting && salaCheck !== "checking" && (
+									<span aria-hidden="true">↗</span>
+								)}
 							</Button>
 							<Button
 								type="button"

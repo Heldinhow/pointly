@@ -30,6 +30,25 @@ import { CleanupService, installSignalHandlers } from "./cleanup";
 // HTTP (Hono)
 // ---------------------------------------------------------------------------
 
+/**
+ * Hub singleton do processo. Levantado no module scope (não dentro do
+ * `if (import.meta.main)`) para que a rota `GET /api/v1/salas/:code`
+ * possa fechar sobre a mesma instância — e para que testes importem
+ * `hub` e façam mutações (createSala/addPlayer) sem precisar injetar.
+ *
+ * O `Bun.serve` e os serviços pesados (`WSService`, `CleanupService`)
+ * continuam restritos ao runtime `import.meta.main`.
+ */
+export const hub = new Hub();
+
+/**
+ * Reseta estado in-memory entre testes. Mantido neste módulo para evitar
+ * testes terem que conhecer internals do Hub.
+ */
+export function __resetHubForTests(): void {
+	hub.shutdown();
+}
+
 export const app = new Hono();
 
 app.get("/health", (c) =>
@@ -49,6 +68,38 @@ app.get("/api/v1/health", (c) =>
 	}),
 );
 
+/**
+ * `GET /api/v1/salas/:code` — pre-check de existência pra tela Join.
+ *
+ *  - 200 `{ code, exists: true, playerCount, phase }` quando a sala existe.
+ *  - 404 `{ code, exists: false }` quando não existe.
+ *  - 400 `{ error: 'invalid_code' }` quando code não bate `[A-Z0-9]{4}`.
+ *
+ * Defesa em profundidade: o handler WS `hello` ainda lança
+ * `sala_nao_encontrada` se a sala sumir entre este check e o `hello`
+ * (race). Custo: 1 GET por submit; resposta cacheável por segundo
+ * pelo browser, mas rooms são efêmeras então cache não vale o bytes.
+ *
+ * @see .specs/features/validate-room-existence/spec.md AC-1..AC-3
+ */
+app.get("/api/v1/salas/:code", (c) => {
+	const code = c.req.param("code").toUpperCase();
+	if (!/^[A-Z0-9]{4}$/.test(code)) {
+		return c.json({ error: "invalid_code" }, 400);
+	}
+	const sala = hub.getSala(code);
+	if (!sala) {
+		return c.json({ code, exists: false }, 404);
+	}
+	const state = sala.toState();
+	return c.json({
+		code,
+		exists: true,
+		playerCount: state.players.length,
+		phase: state.phase,
+	});
+});
+
 app.notFound((c) => c.json({ error: "not_found" }, 404));
 
 app.onError((err, c) => {
@@ -63,7 +114,6 @@ app.onError((err, c) => {
 const PORT = Number(process.env.PORT ?? 3001);
 
 if (import.meta.main) {
-	const hub = new Hub();
 	const logger = new Logger();
 	const wsService = new WSService(hub, logger);
 
