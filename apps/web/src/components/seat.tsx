@@ -271,7 +271,7 @@ export function Seat({
 
 				{/* Cooldown overlay sobre o seu próprio assento */}
 				{isYou && cooldownTime > 0 && (
-					<div className="absolute -top-6 left-1/2 -translate-x-1/2 z-30 font-mono text-[9px] bg-ink text-white px-2 py-0.5 rounded-full shadow-sm motion-reduce:animate-none animate-pulse tracking-wide select-none">
+					<div className="absolute -top-6 left-1/2 -translate-x-1/2 z-30 font-mono text-micro-label bg-ink text-white px-2 py-0.5 rounded-full shadow-sm motion-reduce:animate-none animate-pulse tracking-[0.06em] select-none">
 						RECARGA: {cooldownTime}s
 					</div>
 				)}
@@ -304,7 +304,7 @@ export function Seat({
 
 					{/* Nick (truncado) */}
 					<div
-						className="font-display font-semibold text-[11.5px] text-ink max-w-[80px] truncate tracking-[-0.01em] transition-opacity duration-200"
+						className="font-display font-semibold text-label text-ink max-w-[80px] truncate tracking-[-0.01em] transition-opacity duration-200"
 						title={player.nick}
 						data-testid="seat-nick"
 					>
@@ -314,7 +314,7 @@ export function Seat({
 					{/* Badge "VOCÊ" */}
 					{isYou && (
 						<div
-							className="font-mono text-[8.5px] tracking-[0.1em] text-coral uppercase py-0.5 px-1.5 border border-coral rounded transition-opacity duration-200"
+							className="font-mono text-micro-label tracking-[0.1em] text-coral uppercase py-0.5 px-1.5 border border-coral rounded transition-opacity duration-200"
 							data-testid="seat-voc-badge"
 							aria-label="Você está neste assento"
 						>
@@ -325,7 +325,7 @@ export function Seat({
 					{/* State pill: IDLE / VOTED / face-num */}
 					{showFaceNum ? (
 						<div
-							className="font-italic italic text-[24px] text-ink font-bold leading-none mt-1"
+							className="font-italic italic text-vote-mark text-ink font-bold leading-none mt-1"
 							aria-label={`Voto: ${player.value as Vote}`}
 							data-testid="seat-face-num"
 						>
@@ -333,7 +333,7 @@ export function Seat({
 						</div>
 					) : (
 						<span
-							className={`font-mono text-[9.5px] tracking-[0.06em] uppercase py-[3px] px-2 border rounded-full bg-paper ${
+							className={`font-mono text-micro-label tracking-[0.06em] uppercase py-[3px] px-2 border rounded-full bg-paper ${
 								player.hasVoted
 									? "text-ink border-ink/15"
 									: "text-ink-faint border-ink/5"

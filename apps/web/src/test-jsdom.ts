@@ -56,7 +56,7 @@ if (typeof globalThis.document === "undefined") {
 	// nem deixar timers pendentes que vazem entre casos.
 	if (typeof globalThis.requestAnimationFrame === "undefined") {
 		g.requestAnimationFrame = ((cb: FrameRequestCallback) => {
-			return setTimeout(() => cb(performance.now()), 0);
+			return setTimeout(() => cb(performance.now()), 0) as unknown as number;
 		}) as typeof globalThis.requestAnimationFrame;
 		g.cancelAnimationFrame = ((id: number) => {
 			clearTimeout(id);
