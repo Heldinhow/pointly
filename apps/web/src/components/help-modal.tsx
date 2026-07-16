@@ -112,6 +112,7 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
 					size="md"
 					onClick={onClose}
 					data-testid="help-modal-close"
+					className="min-h-[44px]"
 				>
 					Fechar
 					<span aria-hidden="true">×</span>
