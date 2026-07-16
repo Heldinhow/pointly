@@ -99,6 +99,9 @@ export type MultiClientOptions = {
 	captureLogs?: boolean;
 	/** Trace em caso de erro. Default: 'retain-on-failure'. */
 	traceMode?: "on" | "off" | "retain-on-failure";
+	/** Viewport dos contexts. Default: 1440×900 (desktop). Specs mobile passam
+	 *  o viewport desejado (ex: 320×568). Sobrepõe o default do project Playwright. */
+	viewport?: { width: number; height: number };
 };
 
 /** Suite com 2+ clients + helpers de produto. */
@@ -146,6 +149,7 @@ export async function multiClient(
 	const count = options.clientCount ?? 2;
 	const nicks = options.nicks ?? DEFAULT_NICKS.slice(0, count);
 	const captureLogs = options.captureLogs ?? true;
+	const viewport = options.viewport ?? { width: 1440, height: 900 };
 
 	if (nicks.length < count) {
 		throw new Error(
@@ -157,7 +161,7 @@ export async function multiClient(
 
 	for (let i = 0; i < count; i++) {
 		const context = await browser.newContext({
-			viewport: { width: 1440, height: 900 },
+			viewport,
 			locale: "pt-BR",
 		});
 		const page = await context.newPage();

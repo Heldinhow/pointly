@@ -1,47 +1,34 @@
 /**
- * Arena shell — T30 (Phase 6).
+ * Arena shell — T30 (Phase 6) + mobile-first redesign (Phase 7).
  *
- * Composição da arena: header + timer/stats pills + mesa (Ellipse + 12 Seats) +
- * deck (dock inferior) + reveal button central + empty overlay condicional.
+ * **Composição**:
+ *  - Header (topbar: wordmark + ThemeToggle + SharePill) — sempre
+ *  - Stage (main): branch em viewport
+ *    - Mobile (<sm, 640px): TimerPill em fluxo + MobilePlayerList
+ *      (vertical scroll) + MobileRevealDock (sticky bottom-0)
+ *    - Desktop (≥sm): StatsPill + TimerPill counter-scaled + Round-table
+ *      trigonométrico + Deck counter-scaled + RevealButton central
+ *  - EmptyOverlay (só quando isOnlyPlayer) + HelpModal — sibling
  *
- * **Estrutura visual** (vide design/arena.html):
- *  - Topbar metadata strip (mono, fig, code)
- *  - Arena head: "FIG. 03 · ROUND 0X" + nick local
- *  - Stage: position relative
- *    - Stats pill (top-left, absoluto)
- *    - Timer pill (top-right, absoluto)
- *    - Ellipse SVG 960×560 com 12 assentos via (cos θ, sin θ) × R
- *    - RevealButton central (absolute, top-1/2 left-1/2)
- *    - Deck dock bottom-center (absolute)
- *    - EmptyOverlay (absolute, full stage) — condicional
+ * **Counter-Scale Rule (DESIGN.md §4)**: desktop usa `transform: scale()`
+ * no arena-table-inner + counter-scale em TimerPill/Deck pra tap targets.
+ * Mobile dispensa o scale inteiro (round-table é removido) — Counter-Scale
+ * Rule é exclusiva do layout desktop.
  *
- * **Posicionamento dos assentos** (vide plan.md 6.4):
- *  - 12 assentos distribuídos via trig
- *  - VOCÊ travado em 6h (bottom-center)
- *  - Demais 11 em arco (30° de espaçamento)
- *  - R_x=420, R_y=240 (relativo ao centro do Ellipse 960×560)
- *
- * **WS wire-up** (Phase 7 — T38/T41):
- *  - Por enquanto stub: aceita props `sala` para testar render
- *  - `useSalaStore` é a single source of truth
- *  - Deck onSelect → log (T38 vai conectar com ws.send cast_vote)
- *  - RevealButton onReveal/onNewRound → log (T39/T40 vão conectar)
- *
- * **A11y**:
- *  - Topbar com fig + code em aria-label
- *  - Timer (role="timer") + Stats (role="status") com aria-live
- *  - Mesa com role="group" + aria-label="Mesa da rodada"
- *  - Deck com role="group" (delegado)
+ * **WS wire-up** (Phase 7 — T38/T41): useArenaLoop conecta WS + setSala
+ * + castVote / requestReveal / requestNewRound / throwProjectile.
  *
  * @see .specs/features/planning-poker-v1/tasks.md T30
  * @see .specs/features/planning-poker-v1/spec.md F-007, F-053
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useBlocker, useSearchParams } from "react-router-dom";
 import { Deck } from "../components/deck";
 import { buildShareUrl } from "../components/empty-overlay";
 import { EmptyOverlay } from "../components/empty-overlay";
 import { HelpModal } from "../components/help-modal";
+import { MobilePlayerList } from "../components/mobile-arena/MobilePlayerList";
+import { MobileRevealDock } from "../components/mobile-arena/MobileRevealDock";
 import { ProjectileAnimator } from "../components/projectile-animator";
 import { RevealButton } from "../components/reveal-button";
 import { Seat } from "../components/seat";
@@ -52,6 +39,7 @@ import { Ellipse } from "../components/ui/ellipse";
 import { cn } from "../components/ui/utils";
 import { getNick } from "../lib/storage";
 import { getStoredUUID, useArenaLoop } from "../lib/use-arena-loop";
+import { useIsMobile } from "../lib/use-is-mobile";
 import { useKeyboardShortcuts } from "../lib/use-keyboard-shortcuts";
 import { useSalaStore } from "../store/sala";
 import { assignSeatAngles, seatPosition } from "../lib/arena-geometry";
@@ -100,7 +88,7 @@ function SharePill({ code }: { code: string }) {
 			data-testid="share-pill"
 			disabled={!code}
 			className={cn(
-				"inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-mono text-micro-label tracking-[0.06em] uppercase border transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral",
+				"inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-micro-label tracking-caps uppercase border transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-1 focus-visible:ring-offset-bg min-h-[44px]",
 				"disabled:opacity-50 disabled:cursor-not-allowed",
 				copied
 					? "bg-olive border-transparent text-white"
@@ -109,7 +97,9 @@ function SharePill({ code }: { code: string }) {
 			aria-label={
 				copied
 					? "Link copiado com sucesso"
-					: "Copiar link de compartilhamento da sala"
+					: code
+						? `Copiar link de compartilhamento da sala ${code}`
+						: "Aguardando código da sala para copiar link"
 			}
 			title={!code ? "Código da sala ainda não está disponível" : undefined}
 		>
@@ -184,6 +174,12 @@ export function Arena() {
 		return players.length === 1 && players[0]?.id === s.currentPlayerId;
 	});
 
+	// Mobile-first branch: abaixo de 640px (Tailwind sm) usa o layout de
+	// lista + dock sticky. Default `false` no SSR / primeira hidratação —
+	// `useEffect` no hook sincroniza com matchMedia no mount sem flicker
+	// perceptível (o conteúdo da Arena é absolute/scale-driven).
+	const isMobile = useIsMobile();
+
 	// O EmptyOverlay agora permanece ocultado após o primeiro dismiss do usuário na mesma sessão.
 	const [emptyOverlayNonce] = useState(0);
 
@@ -251,29 +247,76 @@ export function Arena() {
 				? V
 				: never,
 		): void => {
-			// T38: envia cast_vote via WS
+			// EVR-03 / F-011: clicar na mesma carta que já está votada
+			// é no-op client-side. Mesmo com o servidor também
+			// suprimindo broadcasts em no-op (T5), este early-return
+			// evita o WS round-trip desnecessário (latência ~rede +
+			// processamento de handler). Single source of truth:
+			// `myVote` é o estado autoritativo pós-reconciliação.
+			if (value === myVote) return;
 			castVote(value);
 		},
-		[castVote],
+		[castVote, myVote],
 	);
 
 	const handleReveal = useCallback((): void => {
-		// T39: envia reveal_votes via WS
 		requestReveal();
 	}, [requestReveal]);
 
 	const handleNewRound = useCallback((): void => {
-		// T40: envia start_new_round via WS
 		requestNewRound();
 	}, [requestNewRound]);
 
-	// T09 / BUG-306 / ADR-007 — atalhos de teclado.
-	// `R` revela (qualquer player, fase voting, ≥1 voto),
-	// `N` inicia nova rodada (qualquer player, fase revealed),
-	// `?` / `/` abre help modal, `Esc` fecha modais/overlays.
-	// Sem host-gate: ADR-0002 diz que reveal/new-round são ações de
-	// qualquer player (regra democratizada).
 	const [openHelp, setOpenHelp] = useState(false);
+
+	// FMR-08/09/22: ResizeObserver mede o stage container e computa
+	// `--arena-scale` para a mesa fixa 960×560 caber em qualquer
+	// viewport (mobile portrait, landscape, fold). MIN_SCALE 0.45 evita
+	// tap targets ficarem inviáveis em viewports extremos.
+	//
+	// IMPORTANTE: no branch mobile (lista + dock), o round-table NÃO é
+	// renderizado. Mesmo assim mantemos o setter de `--arena-scale` para
+	// preservar compatibilidade com regras CSS em `index.css` que possam
+	// referenciar a var (ex: PulsingDot no header). Mobile não sofre
+	// com o valor porque nenhum elemento depende de escala no branch.
+	const stageRef = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		const stage = stageRef.current;
+		if (!stage) return;
+
+		const TABLE_W = 960;
+		const TABLE_H = 560;
+		const MIN_SCALE = 0.45;
+		const VERTICAL_RESERVE = 220; // header + timer + stats pills + deck
+
+		let raf = 0;
+		const compute = () => {
+			const sw = stage.clientWidth;
+			const sh = stage.clientHeight;
+			if (sw === 0 || sh === 0) return;
+			const availW = Math.max(0, sw - 32); // px-4 padding each side
+			const availH = Math.max(0, sh - VERTICAL_RESERVE);
+			const scale = Math.max(
+				MIN_SCALE,
+				Math.min(1, availW / TABLE_W, availH / TABLE_H),
+			);
+			stage.style.setProperty("--arena-scale", String(scale));
+		};
+
+		const schedule = () => {
+			cancelAnimationFrame(raf);
+			raf = requestAnimationFrame(compute);
+		};
+
+		schedule();
+		const ro = new ResizeObserver(schedule);
+		ro.observe(stage);
+		return () => {
+			cancelAnimationFrame(raf);
+			ro.disconnect();
+		};
+	}, []);
+
 	useKeyboardShortcuts({
 		helpKey: "?",
 		shortcuts: {
@@ -290,11 +333,14 @@ export function Arena() {
 	return (
 		<div
 			data-testid="page-arena"
-			className="surface-noise min-h-screen bg-bg text-ink flex flex-col overflow-hidden"
+			className="surface-noise min-h-[100dvh] bg-bg text-ink flex flex-col overflow-hidden"
 		>
-			{/* Topbar metadata strip */}
-			<header className="border-b border-ink/10 py-2.5 flex-shrink-0">
-				<div className="w-full px-8 flex items-center justify-between font-mono text-micro-label tracking-[0.06em] uppercase text-ink-faint">
+			{/* Topbar — sempre presente, igual nos dois layouts. pt respeita
+			    safe-area iOS via env(). `surface-noise` iguala a textura
+			    da página (sem isso o topbar fica flat e aparece como uma
+			    "lista" mais escura no meio da página texturizada). */}
+			<header className="border-b border-ink/10 py-2.5 flex-shrink-0 pt-[max(env(safe-area-inset-top),0.625rem)] surface-noise">
+				<div className="w-full px-4 sm:px-8 flex items-center justify-between font-mono text-micro-label tracking-caps uppercase text-ink-faint">
 					<div className="flex items-center gap-4">
 						<span
 							aria-hidden="true"
@@ -302,7 +348,7 @@ export function Arena() {
 						/>
 						<Link
 							to="/"
-							className="font-display font-extrabold text-nav-wordmark tracking-[-0.02em] text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
+							className="font-display font-extrabold text-nav-wordmark text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
 							aria-label="Sair da sala e voltar para a página inicial"
 						>
 							<span className="font-italic italic text-coral text-nav-mark leading-none">
@@ -310,7 +356,7 @@ export function Arena() {
 							</span>
 							Pointly
 						</Link>
-						<span className="hidden">
+						<span className="sr-only">
 							Sala{" "}
 							<span className="text-ink font-medium" data-testid="arena-code">
 								{code || "—"}
@@ -324,8 +370,6 @@ export function Arena() {
 				</div>
 			</header>
 
-			{/* Arena head: rodape removido — info já vive no Topbar (timer/stats pills).
-			 * Strip "Rodada NN" e "Você · {nick}" ficaram ruidosos sem info nova. */}
 			<h1 className="sr-only">
 				Sala {code || "—"} · rodada {String(sala?.round ?? 1).padStart(2, "0")}
 			</h1>
@@ -338,106 +382,152 @@ export function Arena() {
 				</span>
 			</div>
 
-			{/* Stage */}
+			{/* Stage — branch mobile/desktop */}
 			<main
-				className="flex-1 relative flex flex-col items-center justify-center px-4 sm:px-8 lg:px-12 overflow-hidden"
+				ref={stageRef}
 				data-testid="arena-stage"
+				className={
+					isMobile
+						? // Mobile: flex-col sem centering vertical — MobilePlayerList
+							// faz flex-1 e scrolla internamente, MobileRevealDock sticky
+							// fica ancorado no bottom safe-area. Sem arena-scale math.
+							"flex-1 relative flex flex-col overflow-hidden pt-[max(env(safe-area-inset-top),0.5rem)]"
+						: // Desktop: mantém layout round-table existente com counter-scale.
+							"flex-1 relative flex flex-col items-center justify-center px-4 sm:px-8 lg:px-12 overflow-hidden pt-[max(env(safe-area-inset-top),0.875rem)] pb-32 sm:pb-36 lg:pb-40"
+				}
+				style={isMobile ? { minHeight: "60dvh" } : { minHeight: "60vh" }}
 			>
-				{/* Stats pill (top-left, absolute) */}
-				<div className="absolute top-3.5 left-3 sm:left-8 lg:left-12 z-10">
-					<StatsPill consensus={consensus} />
-				</div>
-
-				{/* Timer pill (top-right, absolute) */}
-				<div className="hidden md:block absolute top-3.5 right-3 sm:right-8 lg:right-12 z-10">
-					<TimerPill />
-				</div>
-
-				{/* Mesa: Ellipse + 12 Seats + RevealButton central.
-				 * Container responsivo com scroll horizontal em mobile (a mesa
-				 * tem geometria fixa de 960×560 — não cabe em viewport estreito). */}
-				<div
-					className="relative w-full max-w-[960px] mt-4 sm:mt-6 lg:mt-8 overflow-x-auto overflow-y-hidden"
-					data-testid="arena-table"
-					role="group"
-					aria-label="Mesa da rodada"
-				>
-					<div className="relative w-[960px] h-[560px] min-w-[960px]">
-						<Ellipse width={920} height={500} className="absolute top-[30px] left-[20px]" />
-
-						{/* Seats posicionados via trigonometria */}
-						{sala?.players.map((p) => {
-							const angle = seatAngles.get(p.id) ?? 0;
-							const pos = seatPosition(angle);
-							const isYou = p.id === currentPlayerId;
-							const isMedianVote =
-								faceUp &&
-								median !== null &&
-								p.value !== null &&
-								(() => {
-									const numericValue =
-										p.value === "½"
-											? 0.5
-											: p.value === "☕"
-												? null
-												: Number(p.value);
-									return numericValue === median;
-								})();
-							return (
-								<div
-									key={p.id}
-									className="absolute"
-									style={{
-										left: `${pos.left}px`,
-										top: `${pos.top}px`,
-										transform: "translate(-50%, -50%)",
-									}}
-									data-seat-angle={angle}
-								>
-									<Seat
-										player={p}
-										isYou={isYou}
-										faceUp={faceUp}
-										votedMedian={Boolean(isMedianVote)}
-										unanimous={unanimous}
-										onThrow={throwProjectile}
-									/>
-								</div>
-							);
-						})}
-
-						{/* RevealButton central */}
-						<RevealButton
+				{isMobile ? (
+					<>
+						{/* PlayerList carrega o TimerPill in-flow dentro do
+						    header strip — absoluto colide com o contador de
+						    players. Counter-Scale Rule é exclusiva do desktop. */}
+						<MobilePlayerList
+							players={sala?.players ?? []}
+							currentPlayerId={currentPlayerId}
+							faceUp={faceUp}
+							median={median}
+						/>
+						<MobileRevealDock
 							phase={phase}
+							myVote={myVote}
+							disabled={false}
 							votedCount={votedCount}
 							totalPlayers={sala?.players.length ?? 0}
+							onSelect={handleCardSelect}
 							onReveal={handleReveal}
 							onNewRound={handleNewRound}
 						/>
+					</>
+				) : (
+					<>
+						{/* Desktop round-table — layout existente preservado */}
+						<div className="hidden sm:block absolute top-3.5 left-3 sm:left-8 lg:left-12 z-10">
+							<StatsPill consensus={consensus} />
+						</div>
 
-						{/* Animações de arremessos */}
-						<ProjectileAnimator />
-					</div>
-				</div>
+						<div
+							className="absolute top-3.5 right-3 sm:right-8 lg:right-12 z-10 origin-top-right"
+							style={{
+								transform: `scale(calc(0.9 / var(--arena-scale, 1)))`,
+								transformOrigin: "top right",
+							}}
+						>
+							<TimerPill />
+						</div>
 
-				{/* Deck dock (bottom center) */}
-				<div
-					className="absolute bottom-4 sm:bottom-6 lg:bottom-10 left-1/2 -translate-x-1/2 z-10"
-					data-testid="arena-deck-wrapper"
-				>
-					<Deck
-						currentVote={myVote}
-						disabled={false}
-						onSelect={handleCardSelect}
-					/>
-				</div>
+						<div
+							className="relative w-full max-w-[960px] mt-4 sm:mt-6 lg:mt-8 overflow-visible"
+							data-testid="arena-table"
+							role="group"
+							aria-label="Mesa da rodada"
+						>
+							<div
+								className="relative w-[960px] h-[560px] min-w-[960px]"
+								data-testid="arena-table-inner"
+							>
+								<Ellipse width={920} height={500} className="absolute top-[30px] left-[20px]" />
 
-				{/* Empty overlay (condicional: sala só com você) */}
+								{sala?.players.map((p) => {
+									const angle = seatAngles.get(p.id) ?? 0;
+									const pos = seatPosition(angle);
+									const isYou = p.id === currentPlayerId;
+									const isMedianVote =
+										faceUp &&
+										median !== null &&
+										p.value !== null &&
+										(() => {
+											const numericValue =
+												p.value === "½"
+													? 0.5
+													: p.value === "☕"
+														? null
+														: Number(p.value);
+											return numericValue === median;
+										})();
+									return (
+										<div
+											key={p.id}
+											className="absolute"
+											style={{
+												left: `${pos.left}px`,
+												top: `${pos.top}px`,
+												transform: "translate(-50%, -50%)",
+											}}
+											data-seat-angle={angle}
+										>
+											<Seat
+												player={p}
+												isYou={isYou}
+												faceUp={faceUp}
+												votedMedian={Boolean(isMedianVote)}
+												unanimous={unanimous}
+												onThrow={throwProjectile}
+											/>
+										</div>
+									);
+								})}
+
+								<ProjectileAnimator />
+							</div>
+
+							<div
+								className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
+								data-testid="arena-reveal-wrapper"
+							>
+								<RevealButton
+									phase={phase}
+									votedCount={votedCount}
+									totalPlayers={sala?.players.length ?? 0}
+									onReveal={handleReveal}
+									onNewRound={handleNewRound}
+								/>
+							</div>
+						</div>
+
+						<div
+							className="absolute bottom-2 sm:bottom-3 left-1/2 z-10"
+							data-testid="arena-deck-wrapper"
+							style={{
+								transform: `translate(-50%, 0) scale(calc(1 / var(--arena-scale, 1)))`,
+								transformOrigin: "center bottom",
+							}}
+						>
+							<Deck
+								currentVote={myVote}
+								disabled={false}
+								onSelect={handleCardSelect}
+							/>
+						</div>
+					</>
+				)}
+
+				{/* Empty overlay (condicional: sala só com você) — sibling
+				    comum dos dois branches, z-20 sobre tudo */}
 				{isOnlyPlayer && code && (
 					<EmptyOverlay key={emptyOverlayNonce} code={code} />
 				)}
 
-				{/* Help modal (atalhos de teclado) — abre com ? */}
 				<HelpModal open={openHelp} onClose={() => setOpenHelp(false)} />
 			</main>
 		</div>

@@ -57,7 +57,45 @@
 	--border-rule: rgba(21, 20, 15, 0.16);
 }
 
-.dark {
+/* Auto-detect dark mode do SO quando o user ainda não escolheu
+ * manualmente (data-theme ausente). Quando o user toggla via
+ * ThemeToggle, ele seta data-theme="dark"|"light" e a media query
+ * deixa de importar — o seletor explícito html[data-theme] vence.
+ *
+ * Bug fix (2026-07-16): o seletor antigo `:root:not(.dark)` falhava
+ * quando o user escolhia light em SO dark — `:root:not(.dark)` batia
+ * e sobrescrevia a escolha manual. data-theme="light"|"dark" como
+ * atributo explícito resolve porque:
+ *   - data-theme ausente → media query (auto-detect) decide
+ *   - data-theme="dark" → sempre dark, ignora SO
+ *   - data-theme="light" → sempre light, ignora SO (inclusive quando
+ *     o SO é dark) */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme]) {
+		--bg: #13120d;
+		--paper-warm: #1a1914;
+		--paper-dark: #222019;
+		--surface: #1b1a14;
+		--fg: #f7f1de;
+		--fg-soft: #efe7d2;
+		--fg-mute: #ddd2b6;
+		--fg-faint: #96896b;
+		--accent: #f08e7c;
+		--coral-soft: #f4a596;
+		--coral-deep: #ed6f5c;
+		--mustard: #f4cd68;
+		--olive: #8a9163;
+		--shadow-bone: 0 30px 60px -30px rgba(0, 0, 0, 0.5);
+		--shadow-card: 0 4px 8px -1px rgba(0, 0, 0, 0.35);
+		--shadow-coral: 0 14px 26px -16px rgba(240, 142, 124, 0.4);
+		--border-header: rgba(247, 241, 222, 0.08);
+		--shadow-header: rgba(0, 0, 0, 0.4);
+		--border-rail: rgba(247, 241, 222, 0.05);
+		--border-rule: rgba(247, 241, 222, 0.16);
+	}
+}
+
+html[data-theme="dark"] {
 	--bg: #13120d; /* deep dark warm charcoal background */
 	--paper-warm: #1a1914; /* elevated dark background */
 	--paper-dark: #222019; /* container dark background */
@@ -91,6 +129,11 @@ body,
 	min-height: 100%;
 }
 
+html {
+	/* iOS: evita zoom no refocus quando keyboard sobe */
+	-webkit-text-size-adjust: 100%;
+}
+
 body {
 	background-color: var(--bg);
 	color: var(--fg);
@@ -100,6 +143,18 @@ body {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	transition: background-color 200ms ease, color 200ms ease;
+	/* Respeita safe-areas (iOS notch, Android punch-hole). */
+	padding-left: env(safe-area-inset-left);
+	padding-right: env(safe-area-inset-right);
+}
+
+/* Mobile-first: força ≥16px nos inputs pra iOS não aplicar zoom no focus. */
+@supports (-webkit-touch-callout: none) {
+	input,
+	textarea,
+	select {
+		font-size: 16px;
+	}
 }
 
 /* Cursor coral quando hover em CTA */
@@ -145,7 +200,7 @@ a[role="button"] {
 	z-index: 0;
 }
 
-.dark .surface-noise::before {
+html[data-theme="dark"] .surface-noise::before {
 	mix-blend-mode: overlay;
 	opacity: 0.15;
 	background-image: radial-gradient(
@@ -160,6 +215,24 @@ a[role="button"] {
 /* ---------------------------------------------------------------
  * Utility helpers que complementam Tailwind sem precisar de plugin.
  * --------------------------------------------------------------- */
+
+/* Auto-detect: noise overlay escuro quando o SO é dark E o user ainda
+ * não escolheu manualmente (data-theme ausente). Espelha a media query
+ * `:root:not([data-theme])` das tokens acima. */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme]) .surface-noise::before {
+		mix-blend-mode: overlay;
+		opacity: 0.15;
+		background-image: radial-gradient(
+				at 20% 30%,
+				rgba(247, 241, 222, 0.015) 0px,
+				transparent 50%
+			), radial-gradient(at 80% 70%, rgba(247, 241, 222, 0.015) 0px, transparent 50%),
+			url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+		background-size: auto, auto, 160px 160px;
+		background-repeat: repeat;
+	}
+}
 
 /* Brand Ø glyph — Playfair Italic */
 .brand-glyph {
@@ -303,24 +376,79 @@ a[role="button"] {
 	display: none;
 }
 
-/* Peek gradients — esquerda/direita no mobile indicam "tem mais". */
+/* Mobile-first (Phase 7): deck é scroll horizontal em <sm. O scrollbar
+ * webkit é escondido pra peek ser affordance. Mas peek via linear-gradient
+ * de var(--bg)→transparente é fraco em dark mode (var(--bg) charcoal sobre
+ * bg-paper-warm parchment-dark → contraste mínimo). Em mobile-first deck
+ * adicionamos DOIS sinais de scroll:
+ *  1. peek gradiente mais largo + box-shadow inset na borda visível
+ *  2. thin scrollbar nativo (overlay sutil) — affordance adicional
+ */
+@media (max-width: 639px) {
+	[data-testid="deck"] {
+		/* thin branded scrollbar — só visível em <sm */
+		scrollbar-width: thin;
+		scrollbar-color: var(--coral-deep) transparent;
+	}
+	[data-testid="deck"]::-webkit-scrollbar {
+		display: block;
+		height: 4px;
+	}
+	[data-testid="deck"]::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	[data-testid="deck"]::-webkit-scrollbar-thumb {
+		background: var(--coral-deep);
+		border-radius: 999px;
+		opacity: 0.6;
+	}
+}
+
+/* Peek gradients — esquerda/direita no mobile indicam "tem mais".
+ * Phase 7 (mobile-first): gradiente mais largo e com parada mais opaca
+ * pra ser inequívoco tanto em light quanto dark mode. Conserva a origem
+ * var(--bg) pra fazer fade com o parchment da página (não paper-warm
+ * do deck interno — isso viraria uma faixa creme destacada flutuando
+ * no parchment, "floating cream strip" tell). */
 .fib-deck-peek {
 	pointer-events: none;
-	z-index: 1;
+	z-index: 2;
 }
 .fib-deck-peek-left {
 	background: linear-gradient(
 		to right,
-		var(--paper-warm) 0%,
-		rgba(236, 228, 207, 0) 100%
+		var(--bg) 0%,
+		rgba(21, 20, 15, 0.55) 40%,
+		transparent 100%
 	);
 }
 .fib-deck-peek-right {
 	background: linear-gradient(
 		to left,
-		var(--paper-warm) 0%,
-		rgba(236, 228, 207, 0) 100%
+		var(--bg) 0%,
+		rgba(21, 20, 15, 0.55) 40%,
+		transparent 100%
 	);
+}
+/* Border accent adicional: shadow lateral no deck pra reforçar "tem mais" */
+@media (max-width: 639px) {
+	[data-testid="deck"] {
+		box-shadow:
+			inset 12px 0 8px -8px var(--bg),
+			inset -12px 0 8px -8px var(--bg);
+	}
+	[data-testid="deck"][data-deck-scrollable-left="true"] {
+		box-shadow:
+			12px 0 8px -8px var(--bg),
+			inset 12px 0 8px -8px var(--bg),
+			inset -12px 0 8px -8px var(--bg);
+	}
+	[data-testid="deck"][data-deck-scrollable-right="true"] {
+		box-shadow:
+			-12px 0 8px -8px var(--bg),
+			inset 12px 0 8px -8px var(--bg),
+			inset -12px 0 8px -8px var(--bg);
+	}
 }
 
 /* ---------------------------------------------------------------
@@ -541,7 +669,129 @@ a[role="button"] {
 		240ms ease-out;
 }
 .site-header[data-scrolled="true"] {
+	/* Borderless floating (header é fixed/overlay) — usa o token
+	 * `shadow-card` (≤8px blur) consistente com o sistema de elevação
+	 * do DESIGN.md §4. Antes era `0 6px 16px -8px` arbitrary shadow
+	 * fora do ramp de tokens — promovido em impeccable landing
+	 * (2026-07-16). */
 	background: var(--paper-warm);
 	border-bottom: 1px solid var(--border-header);
-	box-shadow: 0 6px 16px -8px var(--shadow-header);
+	box-shadow: var(--shadow-card);
+}
+
+/* ---------------------------------------------------------------
+ * Mobile-first support (Phase 8 — mobile-first redesign)
+ * FMR-09 / FMR-19 / FMR-20.
+ *
+ * - Safe-area: respeita notch iOS + home indicator via env().
+ * - arena-scale: variável CSS consumida pela mesa fixa 960×560
+ *   para escalar via transform: scale() em viewports estreitos.
+ * - Coarse pointer: reforça tap targets ≥44×44 em mobile.
+ * - Landscape mobile: reorganiza deck + arena stage.
+ * --------------------------------------------------------------- */
+:root {
+	--arena-scale: 1;
+}
+
+/* Safe-area horizontal (notch lateral em landscape). */
+body {
+	padding-left: env(safe-area-inset-left);
+	padding-right: env(safe-area-inset-right);
+}
+
+/* Mesa Arena: aplica transform: scale(var(--arena-scale)).
+ * `center top` mantém o topo da mesa alinhado — evita que o reveal
+ * button (centro vertical) "suba" demais em escala < 1. */
+[data-testid="arena-table-inner"] {
+	transform: scale(var(--arena-scale, 1));
+	transform-origin: center top;
+	transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Coarse pointer (mobile): reforça tap targets mínimos nos controles
+ * críticos. Botões size="lg" já são 48px (✓); aqui reforçamos size="sm"
+ * e ícones inline para que botões auxiliares (SharePill, theme toggle,
+ * projectile) respeitem 44×44 WCAG em touch. Cobre também viewport
+ * pequeno (max-width: 639px) porque testes Playwright emulam viewport
+ * sem necessarily simular `pointer: coarse`. */
+@media (pointer: coarse), (max-width: 639px) {
+	/* SharePill aria-label inclui o código: 'Copiar link de compartilhamento
+	 * da sala ABCD'. CSS exact-match não funciona — usamos data-testid
+	 * (estável) ou ^= (starts-with) como fallback. */
+	button[aria-label^="Copiar link de compartilhamento da sala"],
+	button[data-testid="share-pill"],
+	[data-testid="timer-pill"],
+	[data-testid="deck-card-0"],
+	[data-testid="deck-card-half"],
+	[data-testid="deck-card-1"],
+	[data-testid="deck-card-2"],
+	[data-testid="deck-card-3"],
+	[data-testid="deck-card-5"],
+	[data-testid="deck-card-8"],
+	[data-testid="deck-card-13"],
+	[data-testid="deck-card-coffee"] {
+		min-height: 44px !important;
+		min-width: 44px !important;
+	}
+	[data-testid="reveal-button"] {
+		min-height: 44px !important;
+	}
+
+	/* Projectile throw button (emoji 🎯 no seat) — 28×28 vira ≥44×44. */
+	[data-testid^="seat-"] button[title*="Arremessar"],
+	[data-testid^="seat-"] button[title^="Aguarde"] {
+		min-height: 44px;
+		min-width: 44px;
+	}
+
+	/* Projectile menu items (7 emojis). */
+	[data-testid^="seat-"] button[title^="Bola"],
+	[data-testid^="seat-"] button[title^="Tomate"],
+	[data-testid^="seat-"] button[title^="Café"],
+	[data-testid^="seat-"] button[title^="Patinho"],
+	[data-testid^="seat-"] button[title^="Estrela"],
+	[data-testid^="seat-"] button[title^="Coração"],
+	[data-testid^="seat-"] button[title^="Palmas"] {
+		min-height: 44px;
+		min-width: 44px;
+	}
+}
+
+/* Mobile portrait (<sm): stats pill oculta (info crítica pós-reveal
+ * é redundante com destaque visual dos assentos mediana). Timer SEMPRE
+ * visível (regra FMR-11). */
+@media (max-width: 639px) {
+	[data-testid="stats-pill"] {
+		display: none;
+	}
+}
+
+/* Landscape mobile (altura < 500px): deck dock mais próximo da base,
+ * arena table escala com folga vertical. */
+@media (max-height: 499px) {
+	[data-testid="arena-deck-wrapper"] {
+		bottom: 0.5rem !important;
+	}
+	[data-testid="arena-stage"] {
+		padding-top: 0.25rem !important;
+		padding-bottom: 0.25rem !important;
+	}
+}
+
+/* Reduce-motion: desabilita a transição de scale. */
+@media (prefers-reduced-motion: reduce) {
+	[data-testid="arena-table-inner"] {
+		transition: none;
+	}
+}
+
+/* ---------------------------------------------------------------
+ * FMR-02 — Keyboard avoidance no Join.
+ * `--keyboard-inset` é setado pelo useEffect em pages/join.tsx via
+ * visualViewport.resize. Quando o teclado do iOS sobe, esse valor
+ * cresce e empurra o padding-bottom do stage, mantendo o CTA "Entrar"
+ * acima do teclado.
+ * --------------------------------------------------------------- */
+[data-testid="page-join"] main {
+	padding-bottom: max(env(safe-area-inset-bottom), calc(2rem + var(--keyboard-inset, 0px)));
 }

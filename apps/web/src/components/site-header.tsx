@@ -92,10 +92,10 @@ export function SiteHeader({ onCreateRoom, onJoinRoom }: SiteHeaderProps) {
 			<nav className="max-w-[1360px] mx-auto min-h-16 py-3 px-6 lg:px-16 flex justify-between items-center gap-4">
 				<Link
 					to="/"
-					className="font-display font-extrabold text-[24px] tracking-[-0.03em] flex items-baseline gap-2 hover:text-coral-deep transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+					className="font-display font-extrabold text-logo flex items-baseline gap-2 hover:text-coral-deep transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
 					aria-label="Pointly — página inicial"
 				>
-					<span className="font-italic italic text-coral text-[28px] leading-none">
+					<span className="font-italic italic text-coral text-brand-mark leading-none">
 						Ø
 					</span>
 					Pointly

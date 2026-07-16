@@ -20,6 +20,7 @@
 
 import {
 	DECK_VALUES,
+	type ConsensusStats,
 	type Player,
 	type Phase,
 	type SalaState,
@@ -100,6 +101,17 @@ export class Sala {
 	 * NÃO vai no wire format. Usado para validar o cooldown de 5 segundos.
 	 */
 	private readonly lastThrownAt: Map<string, number> = new Map();
+
+	/**
+	 * EVR-04/EVR-05: tracking primitive pra edições pós-reveal.
+	 * Marcado `true` em `castVote()` quando phase='revealed' e o voto
+	 * realmente mudou. `consumeConsensusDirty()` é chamado por
+	 * `broadcastRoomState` no WS handler, retornando E limpando
+	 * atomicamente. Comportamentalmente redundante com o broadcast
+	 * imediato já existente (T5); especificado para rastrear
+	 * "consenso precisa de re-broadcast" como flag explícita.
+	 */
+	private consensusDirty: boolean = false;
 
 	constructor(code: string, firstPlayer: Player, now: number = Date.now()) {
 		if (firstPlayer.role !== "host") {
@@ -279,9 +291,12 @@ export class Sala {
 	 *  - Se primeiro voto da rodada, inicia timer 60s (F-013) e phase → 'voting'
 	 *  - Se todos os conectados votaram, phase → 'revealable'
 	 *
-	 * @returns void on success; lança SalaError em falha
+	 * @returns `{ changed: boolean }` — `false` quando o voto é idêntico
+	 *   ao já registrado (F-011 + EVR-14). Útil para o handler
+	 *   suprimir broadcasts em no-op. Lança `SalaError` em falha de
+	 *   validação.
 	 */
-	castVote(playerId: string, value: Vote | null): void {
+	castVote(playerId: string, value: Vote | null): { changed: boolean } {
 		if (value === null) {
 			throw new SalaError("invalid_vote", "Un-vote (value=null) é proibido.");
 		}
@@ -308,18 +323,39 @@ export class Sala {
 			);
 		}
 
+		// EVR-14: idempotência servidor-side — clicar na mesma carta
+		// duas vezes não deve disparar mutação nem broadcast.
+		const previous = player.value;
+		if (previous === value) {
+			return { changed: false };
+		}
+
 		// Update in-place (F-011 idempotência)
 		const updated: Player = { ...player, value, hasVoted: true };
 		this.players.set(playerId, updated);
 		this.votes.set(playerId, value);
+
+		// EVR-04/EVR-05: edição pós-reveal marca consensus como dirty.
+		// `recomputeConsensus()` é side-effect-free (valor descartado) —
+		// só executamos pra forçar a checagem de invariantes e dar
+		// cobertura testável. WS handler consome o flag em T5.
+		if (this.phase === "revealed") {
+			this.recomputeConsensus();
+			this.markConsensusDirty();
+		}
 
 		// Primeira transição da rodada: idle → voting (F-013)
 		if (this.phase === "idle") {
 			this.phase = "voting";
 		}
 
-		// Inicia timer no primeiro voto da rodada (F-013)
-		if (!this.timerActive) {
+		// Inicia timer no primeiro voto da rodada (F-013).
+		// EVR-01 (edit-vote-after-reveal): em fase 'revealed' o timer já
+		// foi parado por `reveal()`. Re-iniciar aqui reinjetaria o
+		// countdown de 60s inadvertidamente, e o tick subsequente
+		// chamaria `reveal("__auto_reveal__")` numa sala que já está
+		// revelada → `invalid_phase`. Gate explícito por fase.
+		if (this.phase !== "revealed" && !this.timerActive) {
 			this.startTimer();
 		}
 
@@ -327,6 +363,8 @@ export class Sala {
 		if (this.allConnectedVoted() && this.phase === "voting") {
 			this.phase = "revealable";
 		}
+
+		return { changed: true };
 	}
 
 	/**
@@ -475,6 +513,37 @@ export class Sala {
 			if (p.hasVoted) connectedVoted += 1;
 		}
 		return connectedCount > 0 && connectedCount === connectedVoted;
+	}
+
+	/**
+	 * EVR-04: recalcula consensus a partir do estado atual de `votes`.
+	 * Side-effect-free (apenas lê `this.votes` e devolve stats).
+	 * Exposto como helper público para testes unitários (T6) e como
+	 * ponto único de recompute pós-reveal.
+	 */
+	recomputeConsensus(): ConsensusStats & { unanimous: boolean } {
+		const voteList = Array.from(this.votes.values());
+		const stats = computeConsensus(voteList);
+		const unanimous = isUnanimous(voteList);
+		return { ...stats, unanimous };
+	}
+
+	/**
+	 * EVR-04: marca a flag `consensusDirty`. Idempotente.
+	 */
+	markConsensusDirty(): void {
+		this.consensusDirty = true;
+	}
+
+	/**
+	 * EVR-05: lê-e-limpa atomicamente. WS handler chama em cada
+	 * `broadcastRoomState` para rastreabilidade. Retorna o estado
+	 * anterior e zera a flag.
+	 */
+	consumeConsensusDirty(): boolean {
+		const was = this.consensusDirty;
+		this.consensusDirty = false;
+		return was;
 	}
 
 	// -----------------------------------------------------------------------

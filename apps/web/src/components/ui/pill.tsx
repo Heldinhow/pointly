@@ -10,7 +10,11 @@
  *  - gold: bg mustard/15 (transparência via opacity utility), label ink
  *  - ghost: border 1px ink-at-20%, label ink
  *
- * Sizes: sm (h-6, text-xs), md (h-8, text-sm).
+ * Sizes: sm (h-6, text-micro-label), md (h-8, text-caption).
+ *
+ * **Off-ramp zero (DESIGN.md §3 Ramp Rule)** — `text-micro-label`/`text-caption`
+ * substituem qualquer `text-xs`/`text-[Npx]`. sm usa micro-label (10px/1.4)
+ * porque a altura de 24px é apertada; md usa caption (14px/1.55).
  */
 import { type VariantProps, cva } from "class-variance-authority";
 import type * as React from "react";
@@ -27,8 +31,8 @@ const pillVariants = cva(
 				ghost: "bg-transparent text-ink border border-ink/20",
 			},
 			size: {
-				sm: "h-6 px-2.5 text-[10px]",
-				md: "h-8 px-3 text-xs",
+				sm: "h-6 px-2.5 text-micro-label",
+				md: "h-8 px-3 text-caption",
 			},
 		},
 		defaultVariants: {

@@ -37,4 +37,29 @@ if (typeof globalThis.document === "undefined") {
 		unobserve() {}
 		disconnect() {}
 	};
+
+	// ResizeObserver polyfill — jsdom não expõe no globalThis, mas o
+	// Arena componente (e RevealButton, deck) usa pra recalcular layout.
+	// Mock no-op é suficiente: tests não medem geometria, só markup.
+	if (typeof globalThis.ResizeObserver === "undefined") {
+		g.ResizeObserver = class ResizeObserver {
+			observe() {}
+			unobserve() {}
+			disconnect() {}
+		};
+	}
+
+	// requestAnimationFrame polyfill — jsdom não expõe rAF no globalThis,
+	// mas componentes focam com `requestAnimationFrame(() => el.focus())`
+	// pra não brigar com autoFocus do browser. Em tests, executa
+	// sincronamente (cb no próximo microtask) pra não bloquear testes
+	// nem deixar timers pendentes que vazem entre casos.
+	if (typeof globalThis.requestAnimationFrame === "undefined") {
+		g.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+			return setTimeout(() => cb(performance.now()), 0) as unknown as number;
+		}) as typeof globalThis.requestAnimationFrame;
+		g.cancelAnimationFrame = ((id: number) => {
+			clearTimeout(id);
+		}) as typeof globalThis.cancelAnimationFrame;
+	}
 }

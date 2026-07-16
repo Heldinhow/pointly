@@ -68,24 +68,36 @@ export function TimerPill(props: TimerPillProps = {}) {
 			data-od-id="timer-pill"
 			data-timer-critical={isCritical ? "true" : "false"}
 			className={cn(
-				"inline-flex items-center gap-3.5 px-4 py-2.5 rounded-full",
+				// Pill mais compacto: py-2 + gap-2.5 (antes py-2.5 + gap-3.5)
+				"inline-flex items-center gap-2.5 px-3.5 py-2 rounded-full",
 				"border transition-colors duration-200",
-				"font-mono text-[11px] tracking-[0.06em] uppercase",
+				"font-mono tracking-caps uppercase",
 				isCritical
 					? "bg-coral-soft border-coral/40 text-ink"
 					: "bg-surface border-ink/5 text-ink-faint",
 			)}
 		>
+			{/* Timer (número) — text-label, weight medium → info primária */}
 			<span
 				className={cn(
-					"font-variant-numeric",
+					"text-label font-medium font-variant-numeric",
 					isCritical ? "text-ink" : "text-ink",
 				)}
 				data-testid="timer-value"
 			>
 				{formatTimer(timer)}
 			</span>
-			<span data-testid="timer-round">{formatRound(round)}</span>
+			{/* ROUND — micro-label, hairline separator, weight normal → info secundária */}
+			<span
+				aria-hidden="true"
+				className="inline-block w-px h-2.5 bg-ink/15"
+			/>
+			<span
+				className="text-micro-label font-normal text-ink-faint/80"
+				data-testid="timer-round"
+			>
+				{formatRound(round)}
+			</span>
 		</div>
 	);
 }

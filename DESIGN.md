@@ -93,16 +93,30 @@ Pointly's colors follow the Atelier Zero palette, prioritizing warm neutrals and
 - **Coral Deep** (`#b8412f`): Accessibility-safe coral (5.8:1 contrast) for small text labels, active icons, and secondary hover states.
 
 ### Neutral
-- **Warm Parchment** (`#efe7d2` / `oklch(93% 0.02 85)`): Main body background. Imparts a physical, organic feel.
-- **Bleached Ivory** (`#f7f1de` / `oklch(96% 0.01 88)`): Elevated surface container color. Used for cards and overlays.
-- **Carbon Ink** (`#15140f` / `oklch(15% 0.005 85)`): Body text and high-priority solid UI boundaries.
+- **Warm Parchment** (`#efe7d2` / `oklch(93% 0.02 85)`): Main body background (`--bg`). Imparts a physical, organic feel.
+- **Bleached Ivory** (`#f7f1de` / `oklch(96% 0.01 88)`): Elevated surface container color (`--surface`). Used for cards and overlays.
+- **Carbon Ink** (`#15140f` / `oklch(15% 0.005 85)`): Body text and high-priority solid UI boundaries (`--fg`).
+- **Paper Warm** (`#ece4cf`): Subtle warm tint for input/field backgrounds (`--paper-warm`). Distinguishes form fields from card surfaces without adding visual weight.
+- **Paper Dark** (`#ddd2b6`): Container/avatar backgrounds on the parchment surface (`--paper-dark`). Used for non-elevated tiles inside a bone card.
+- **Ink Soft** (`#2a2620`): Secondary text — links, helper copy.
+- **Ink Mute** (`#3a352a`): Tertiary text — labels, captions.
+- **Ink Faint** (`#4a4438`): Quaternary text — micro-copy, uppercase tags, helper annotation.
+
+### Accent (jewelry)
+- **Antique Gold / Mustard** (`#e9b94a`): Jewelry highlight for nav dot, vote-mediana underline, stars. Never covers >1% of any screen.
+- **Olive** (`#6e7448`): Confirmation state — copy success, checkmark, optimistic feedback. Never as a CTA.
 
 ### Dark Mode overrides
 In dark mode, the color hierarchy shifts to a low-luminance warm palette to maintain reading comfort under low ambient light:
-- **Carbon Charcoal** (`#13120d`): Main dark background.
-- **Parchment Dark** (`#1a1914`): Elevated container surfaces.
-- **Ivory Soft** (`#f7f1de`): Body text color (inverted from Bleached Ivory).
-- **Coral Soft** (`#f08e7c`): CTA element active states.
+- **Carbon Charcoal** (`#13120d`): Main dark background (`--bg`).
+- **Parchment Dark** (`#1a1914`): Elevated container surfaces (`--paper-warm`).
+- **Container Dark** (`#222019`): Avatar/tile background (`--paper-dark`).
+- **Dark Surface** (`#1b1a14`): Card surface (`--surface`).
+- **Ivory Soft** (`#f7f1de`): Body text color (inverted from Bleached Ivory, `--fg`).
+- **Coral Soft** (`#f08e7c`): Dark-mode primary CTA (`--accent`). Brighter than light-mode coral to maintain contrast against charcoal.
+- **Coral Deep** (`#ed6f5c`): Accessible coral for small labels in dark mode (`--coral-deep`). Different value than light mode because light-mode `--coral-deep` is too dark on charcoal.
+- **Mustard Bright** (`#f4cd68`): Jewelry in dark mode (`--mustard`).
+- **Olive Bright** (`#8a9163`): Confirmation in dark mode (`--olive`).
 
 ### Named Rules
 **The Single CTA Rule.** No more than one solid coral CTA may be visible within a single screen viewport. Secondary actions must use border outlines or ghost treatments.
@@ -129,6 +143,8 @@ A ramp inteira é twelve-step, intencional. Todo valor fora dela é tell de IA.
 | `logo` | 24 | 1 | 800 | -0.03em | Wordmark primário |
 | `nav-mark` | 22 | 1 | 500 (italic) | 0 | Ø no site-header lockup secundário |
 | `nav-wordmark` | 18 | 1 | 800 | -0.02em | Wordmark do site-header secundário |
+| `vote-mark` | 20 | 1 | 500 (italic) | 0 | Glyph Fibonacci em vote card (Seat face-up) |
+| `vote-numeral` | 18 | 1 | 500 (italic) | 0 | Glyph Fibonacci em cards compactos (Seat trigger, /full) |
 | `body` | 16 | 1.5 | 400 | 0 | Texto corrido, listas, tabelas, inputs |
 | `caption` | 14 | 1.55 | 400 | 0 | Micro-copy abaixo de headlines |
 | `label` | 11 | 1.4 | 500 (mono) | 0.04em | Labels uppercase em JetBrains Mono |
@@ -171,7 +187,22 @@ The rule and the two-token system are inseparable. They are the same architectur
 - Borderless floating surfaces use `shadow-bone` alone.
 - A single 1px border at ink/5 with no shadow is also fine.
 
+**Exception — pills (toast, projectile menu).** Compact floating pills (`rounded-full` with `border` AND `shadow-bone`) are exempt from this rule. The pill silhouette carries identity; without the border, the shadow defines a vague blob. The pairing reads as a tactile object (e.g. confetti-like toast) — not a ghost card — because the radius is tight (`rounded-full`, not `rounded-card`). Document these as `pill archetype` in component code so reviewers know the rule was considered.
+
 If a feature needs both a border AND dramatic lift, drop one or the other — not both.
+
+### Counter-Scale Rule (Arena)
+
+The Arena's table (960×560) is **scaled** to fit any viewport via `--arena-scale` (ResizeObserver, range 0.45–1). `transform: scale()` shrinks the parent's bounding box — including tap targets inside it. Anything interactive must counteract the scale.
+
+**Two acceptable patterns:**
+
+1. **Relocate** the interactive element OUTSIDE the scaled container. Example: RevealButton lives in `arena-reveal-wrapper`, not `arena-table-inner`. Its bounding box is read in CSS pixels and stays ≥44×44 regardless of `--arena-scale`.
+2. **Counter-scale** the element with `transform: scale(calc(1 / var(--arena-scale, 1)))` so it visually appears unchanged. Example: TimerPill wrapper, deck wrapper. The wrapper's outer bounding box is the **inverse** of the parent's, so `getBoundingClientRect()` reports the visual size.
+
+**Forbidden pattern:** placing interactive elements inside a scaled container without counter-scaling. Their reported tap targets will report the scaled (smaller) size, failing the 44×44 WCAG minimum in mobile viewports.
+
+This rule is mechanical, not aesthetic — violating it produces silent a11y regressions on small screens.
 
 ## 5. Components
 
@@ -186,6 +217,7 @@ If a feature needs both a border AND dramatic lift, drop one or the other — no
 - **Background:** Bleached Ivory (`var(--surface)`) background.
 - **Shadow Strategy:** 1px border at ink/5 + `shadow-card` (≤8px blur). NOT `shadow-bone`.
 - **Internal Padding:** 28px padding by default (md scale).
+- **Exception — pills (toast, projectile menu, IDLE/VOTED badge):** Compact floating pills (`rounded-full` with `border` AND `shadow-bone`) are exempt from the Border+Shadow Rule. The tight pill silhouette carries identity; without the border, the shadow defines a vague blob. See §4 "Pill exception" for the full rationale.
 
 ### Inputs / Fields
 - **Style:** Clean border at ink/10, rounded-lg, background `var(--paper)`.

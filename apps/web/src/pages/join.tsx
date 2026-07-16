@@ -145,6 +145,27 @@ export function Join() {
 		reset();
 	}, [reset]);
 
+	// A11y (FMR UX-polish C2): foco automático no campo certo no mount.
+	// - Se o code veio via URL (?code=XXXX), o usuário só precisa digitar
+	//   o nick → foca no nickInputRef.
+	// - Se o code precisa ser digitado (showCodeInput=true), foca no
+	//   codeInputRef.
+	// - Se o nick já está pré-preenchido de sessionStorage (não vazio),
+	//   mantém foco no body — usuário provavelmente só quer revisar.
+	useEffect(() => {
+		// Skip em prefers-reduced-motion NÃO se aplica aqui — foco é
+		// diferente de animação. Mas respeitamos timing: defer pra próximo
+		// frame pra não brigar com autoFocus do browser.
+		const id = requestAnimationFrame(() => {
+			if (showCodeInput && !code) {
+				codeInputRef.current?.focus();
+			} else if (!nick) {
+				nickInputRef.current?.focus();
+			}
+		});
+		return () => cancelAnimationFrame(id);
+	}, [showCodeInput, code, nick]);
+
 	// -------------------------------------------------------------------------
 	// Handlers
 	// -------------------------------------------------------------------------
@@ -189,6 +210,33 @@ export function Join() {
 		window.addEventListener("keydown", onKey);
 		return () => window.removeEventListener("keydown", onKey);
 	}, [isConnecting, navigate]);
+
+	// FMR-02: keyboard avoidance via visualViewport.
+	// iOS Safari encolhe window.innerHeight quando teclado sobe, mas
+	// melhor usar `visualViewport.height` que é o "true visible" — algumas
+	// versões do iOS não atualizam window.innerHeight imediatamente.
+	// Quando shrink detectado, setamos `--keyboard-inset` que aumenta o
+	// padding-bottom do stage e mantém o CTA "Entrar" visível.
+	useEffect(() => {
+		if (typeof window === "undefined" || !window.visualViewport) return;
+		const vv = window.visualViewport;
+		const root = document.documentElement;
+		const update = () => {
+			const diff = window.innerHeight - vv.height;
+			root.style.setProperty(
+				"--keyboard-inset",
+				`${Math.max(0, diff)}px`,
+			);
+		};
+		update();
+		vv.addEventListener("resize", update);
+		vv.addEventListener("scroll", update);
+		return () => {
+			vv.removeEventListener("resize", update);
+			vv.removeEventListener("scroll", update);
+			root.style.setProperty("--keyboard-inset", "0px");
+		};
+	}, []);
 
 	const handleSubmit = useCallback(
 		async (e: FormEvent<HTMLFormElement>) => {
@@ -311,17 +359,18 @@ export function Join() {
 	return (
 		<div
 			data-testid="page-join"
-			className="surface-noise min-h-screen bg-bg text-ink flex flex-col"
+			className="surface-noise min-h-[100dvh] bg-bg text-ink flex flex-col"
 		>
 			{/* Header topbar — superfície sólida (sem glassmorphism). Tela de
 			    formulário único não justifica sticky: o usuário percorre o card
 			    inteiro dentro de uma viewport cabeçudo+rodapé, e o sticky só
-			    comeria pixels verticais sem benefício. */}
-			<header className="border-b border-ink/10 py-4 flex-shrink-0 bg-bg">
+			    comeria pixels verticais sem benefício.
+			    pt com safe-area-inset-top respeita notch iOS. */}
+			<header className="border-b border-ink/10 py-4 flex-shrink-0 bg-bg pt-[max(env(safe-area-inset-top),1rem)]">
 				<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 flex items-center justify-between">
 					<Link
 						to="/"
-						className="font-display font-extrabold text-nav-wordmark tracking-[-0.02em] flex items-baseline gap-2 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep/40 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+						className="font-display font-extrabold text-nav-wordmark flex items-baseline gap-2 hover:text-coral-deep transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
 						aria-label="Pointly — página inicial"
 					>
 						<span className="font-italic italic text-coral text-nav-mark">
@@ -351,8 +400,12 @@ export function Join() {
 				<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 w-full py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 text-caption text-ink-mute">
 					<span>
 						Sala{" "}
+						{/* tracking 0 — text-body não tem tracking próprio. Code label
+						    é tipograficamente "dado", não "tag mono upper"; o font-mono
+						    já entrega a identidade de código sem precisar do tracking
+						    apertado (que era off-ramp: arbitrary value). */}
 						<span
-							className="font-mono text-body font-medium tracking-[0.08em] text-ink"
+							className="font-mono text-body font-medium text-ink"
 							data-testid="join-code-label"
 						>
 							{codeDisplay}
@@ -362,8 +415,10 @@ export function Join() {
 				</div>
 			)}
 
-			{/* Stage */}
-			<main className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-16 py-8 sm:py-12">
+			{/* Stage
+			 * FMR-01/02: min-h dinâmico via 100dvh (lida com barra URL iOS),
+			 * padding-bottom com env(safe-area-inset-bottom) p/ home indicator. */}
+			<main className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-16 py-8 sm:py-12 pb-[max(env(safe-area-inset-bottom),2rem)]">
 				<Card
 					padding="lg"
 					className="w-full max-w-[520px] flex flex-col gap-7 sm:gap-8"
@@ -374,11 +429,14 @@ export function Join() {
 					    (card-title 34px) — antes text-card-mark 36px deixava o
 					    Ø visualmente MAIOR que o h1, invertendo a hierarquia. */}
 					<div className="font-italic italic text-coral text-brand-mark">Ø</div>
-					<h1 className="font-display font-extrabold text-card-title tracking-[-0.03em] text-balance">
+					<h1 className="font-display font-extrabold text-card-title text-balance">
 						Entrar na sala<span className="text-coral-deep">.</span>
 					</h1>
 
-					<p className="max-w-[36ch] font-sans text-body leading-[1.55] text-ink-mute">
+					{/* leading do token text-body (1.5) — leading-[1.55] era
+					    off-ramp arbitrary value. O ganho era marginal e não justifica
+					    quebrar a Ramp Rule (§3 DESIGN.md). */}
+					<p className="max-w-[36ch] font-sans text-body text-ink-mute">
 						Escolha como você quer aparecer para o time. Não precisa de conta.
 					</p>
 
@@ -398,7 +456,6 @@ export function Join() {
 					<form
 						onSubmit={handleSubmit}
 						className="flex flex-col gap-1.5"
-						autoComplete="off"
 						data-testid="nick-form"
 					>
 						{showCodeInput && (
@@ -432,9 +489,8 @@ export function Join() {
 											localCode.length !== 4) ||
 										salaCheck === "not-found"
 									}
-									autoComplete="off"
 									disabled={isConnecting}
-									className="font-mono text-center text-body py-3.5 px-4 border border-ink/10 rounded-lg bg-paper-warm text-ink placeholder:text-caption placeholder:text-ink-faint focus:border-coral focus:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep/40 transition-colors disabled:opacity-60 tracking-widest uppercase aria-[invalid=true]:border-coral-deep [&:-webkit-autofill]:bg-paper-warm [&:-webkit-autofill]:[-webkit-text-fill-color:var(--fg)] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_var(--paper-warm)_inset]"
+									className="font-mono text-center text-body py-3.5 px-4 border border-ink/10 rounded-lg bg-paper-warm text-ink placeholder:text-caption placeholder:text-ink-faint focus:border-coral-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-1 focus-visible:ring-offset-bg transition-colors disabled:opacity-60 tracking-widest uppercase aria-[invalid=true]:border-coral-deep [&:-webkit-autofill]:bg-paper-warm [&:-webkit-autofill]:[-webkit-text-fill-color:var(--fg)] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_var(--paper-warm)_inset]"
 									data-testid="join-code-input"
 								/>
 								{salaCheck === "not-found" ? (
@@ -442,16 +498,16 @@ export function Join() {
 										id="code-input-error"
 										role="alert"
 										data-testid="join-code-error"
-										className="font-sans text-caption text-coral-deep leading-[1.55]"
+										className="font-sans text-caption text-coral-deep"
 									>
 										Sala não encontrada. Confira o código.
 									</p>
 								) : (
 									<p
 										id="code-input-hint"
-										className="font-sans text-caption text-ink-mute leading-[1.55]"
+										className="font-sans text-caption text-ink-mute"
 									>
-										Peça o código de 4 letras para quem criou a sala.
+										4 letras ou números · peça ao host que criou a sala.
 									</p>
 								)}
 							</div>
@@ -468,7 +524,7 @@ export function Join() {
 							<p
 								role="alert"
 								data-testid="join-code-error"
-								className="font-sans text-caption text-coral-deep leading-[1.55] -mt-1"
+								className="font-sans text-caption text-coral-deep -mt-1"
 							>
 								Sala não encontrada. Confira o código.
 							</p>
@@ -495,21 +551,25 @@ export function Join() {
 										: "nick-hint"
 								}
 								disabled={isConnecting}
-								className="font-sans text-body py-3.5 px-4 border border-ink/10 rounded-lg bg-paper-warm text-ink placeholder:text-caption placeholder:text-ink-faint focus:border-coral focus:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep/40 transition-colors disabled:opacity-60 aria-[invalid=true]:border-coral-deep [&:-webkit-autofill]:bg-paper-warm [&:-webkit-autofill]:[-webkit-text-fill-color:var(--fg)] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_var(--paper-warm)_inset]"
+								className="font-sans text-body py-3.5 px-4 border border-ink/10 rounded-lg bg-paper-warm text-ink placeholder:text-caption placeholder:text-ink-faint focus:border-coral-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-1 focus-visible:ring-offset-bg transition-colors disabled:opacity-60 aria-[invalid=true]:border-coral-deep [&:-webkit-autofill]:bg-paper-warm [&:-webkit-autofill]:[-webkit-text-fill-color:var(--fg)] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_var(--paper-warm)_inset]"
 								data-testid="nick-input"
 							/>
+							{/* min-h-[22px] = 1 linha de `text-caption` (14px × 1.55
+							    = 21.7px). Reserva o slot pra evitar layout shift quando
+							    o erro aparece/some. Não está na ramp de typography
+							    porque é layout (height), não font-size. */}
 							<div
 								id="nick-error"
 								role={!validation.ok && validation.error ? "alert" : undefined}
-								aria-live="polite"
-								className="font-sans text-caption text-coral-deep min-h-[22px] tracking-normal"
+								aria-live={!validation.ok && validation.error ? "assertive" : undefined}
+								className="font-sans text-caption text-coral-deep min-h-[22px]"
 								data-testid="nick-error"
 							>
 								{!validation.ok && validation.error ? validation.error : ""}
 							</div>
 							<div
 								id="nick-hint"
-								className="font-sans text-caption text-ink-mute leading-[1.55] flex flex-wrap items-center justify-between gap-x-3 gap-y-1"
+								className="font-sans text-caption text-ink-mute flex flex-wrap items-center justify-between gap-x-3 gap-y-1"
 							>
 								<span>De 2 a 20 caracteres · como você quer ser chamado</span>
 								{validation.ok && (

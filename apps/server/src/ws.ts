@@ -155,7 +155,7 @@ export class WSService {
 		this.connections.delete(ws);
 		this.byIP.delete(ws);
 
-		if (ctx.playerId) {
+		if (ctx?.playerId) {
 			this.logger.disconnect(
 				ctx.playerId,
 				ctx.code ?? undefined,
@@ -182,7 +182,20 @@ export class WSService {
 			}
 		}
 		// 2. Sala timers (auto-reveal + reconciliation cadence)
-		const results = this.hub.tickAllTimers(now);
+		let results: Array<{ code: string; tick: "idle" | "ticking" | "fired"; sala: import("./sala").Sala }> = [];
+		try {
+			results = this.hub.tickAllTimers(now);
+		} catch (e) {
+			// EVR-01 hardening: tick pode disparar 'invalid_phase' se
+			// houver race entre edição pós-reveal e heartbeat (fix BUG A
+			// em Sala.castVote elimina a causa raiz; este guard é
+			// defense-in-depth pra nunca derrubar o hub por um bug
+			// futuro análogo). Loga e segue — a próxima tick de 1s
+			// retoma naturalmente.
+			const msg = e instanceof Error ? e.message : String(e);
+			this.logger.error("tick_error", msg);
+			// Continua para grace period cleanup mesmo se timers explodiram.
+		}
 		for (const { code, tick, sala } of results) {
 			if (tick === "fired") {
 				const salaState = sala.toState();
@@ -325,6 +338,16 @@ export class WSService {
 			this.sendError(ws, outcome.code, outcome.message);
 			return;
 		}
+
+		// EVR-03 / EVR-14: no-op short-circuit. Mesma carta clicada duas
+		// vezes (em qualquer fase, inclusive pós-reveal) = zero packets,
+		// zero broadcasts. O cliente já fez early-return em
+		// `handleCardSelect` (T8), mas server-side é source-of-truth
+		// para clientes que violem F-011 (ex: 2 janelas, double-click).
+		if (!outcome.changed) {
+			return;
+		}
+
 		const code = ws.data.code!;
 		const sala = this.hub.getSala(code);
 		if (!sala) return;
@@ -498,6 +521,19 @@ export class WSService {
 	private broadcastRoomState(code: string, except?: BunWS): void {
 		const sala = this.hub.getSala(code);
 		if (!sala) return;
+		// EVR-04/EVR-05: consome a flag atomicamente. Comportamentalmente
+		// ainda broadcastamos sempre (handler já envia síncrono em
+		// handleCastVoteEvent); flag serve para rastreabilidade/
+		// observabilidade e prepara terreno para um futuro throttle de
+		// coalescing em votações rápidas. Loga em debug quando dirty=true.
+		if (sala.consumeConsensusDirty()) {
+			this.logger.log({
+				type: "ws.event",
+				direction: "s2c",
+				event: "room_state_dirty",
+				salaCode: code,
+			}, "debug");
+		}
 		const state = sala.toState();
 		const salaPayload = stripCritical(state);
 		const event: ServerToClientEvent = state.critical
@@ -512,7 +548,7 @@ export class WSService {
 	}
 
 	private sendError(ws: BunWS, code: string, message: string): void {
-		this.logger.error(code, message, ws.data.playerId ?? undefined);
+		this.logger.error(code, message, ws.data?.playerId ?? undefined);
 		const errorEvent: ServerToClientEvent = {
 			type: "error",
 			payload: { code: code as never, message },

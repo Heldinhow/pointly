@@ -107,7 +107,7 @@ export function Landing() {
 	return (
 		<div
 			data-testid="page-landing"
-			className="surface-noise min-h-screen bg-bg text-ink relative overflow-x-hidden pt-16"
+			className="surface-noise min-h-[100dvh] bg-bg text-ink relative overflow-x-hidden pt-16"
 		>
 			{/* Sticky Navigation */}
 			<SiteHeader onCreateRoom={handleCreateRoom} onJoinRoom={handleJoinRoom} />
@@ -122,14 +122,14 @@ export function Landing() {
 			>
 				<div className="flex flex-col items-center text-center max-w-[840px] mx-auto">
 					<div
-						className="font-mono text-xs tracking-[0.18em] uppercase text-coral-deep mb-4 animate-fade-in-up"
+						className="font-mono text-xs tracking-eyebrow uppercase text-coral-deep mb-4 animate-fade-in-up"
 						style={{ animationDelay: "100ms" }}
 					>
 						● Pointly Agility
 					</div>
 					<h1
 						data-testid="hero-headline"
-						className="font-display font-extrabold text-[clamp(36px,5vw,72px)] leading-[1.02] tracking-[-0.04em] text-balance animate-fade-in-up"
+						className="font-display font-extrabold text-display-hero text-balance animate-fade-in-up"
 						style={{ animationDelay: "200ms" }}
 					>
 						Planning Poker com{" "}
@@ -138,7 +138,7 @@ export function Landing() {
 						zero cadastro<span className="text-coral">.</span>
 					</h1>
 					<p
-						className="font-sans text-base sm:text-lg sm:text-xl leading-[1.5] text-ink-mute mt-6 max-w-[52ch] tracking-[-0.005em] text-pretty animate-fade-in-up"
+						className="font-sans text-base md:text-lg lg:text-xl leading-[1.5] text-ink-mute mt-6 max-w-[52ch] text-pretty animate-fade-in-up"
 						style={{ animationDelay: "300ms" }}
 					>
 						Abra salas de estimativa instantâneas para o seu time. 100%
@@ -173,7 +173,7 @@ export function Landing() {
 						</Button>
 					</div>
 					<span
-						className="font-mono text-xs text-ink-faint uppercase tracking-wider mt-4 animate-fade-in-up"
+						className="font-mono text-xs text-ink-faint uppercase tracking-caps mt-4 animate-fade-in-up"
 						style={{ animationDelay: "500ms" }}
 					>
 						Sem e-mail · Salas efêmeras em memória{" "}
@@ -187,9 +187,13 @@ export function Landing() {
 			{/* COMO FUNCIONA */}
 			<section
 				id="como-funciona"
+				aria-labelledby="como-funciona-title"
 				className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 sm:py-24 relative"
 			>
-				<h2 className="font-display font-extrabold text-3xl sm:text-4xl tracking-[-0.03em] mb-16 text-center text-ink text-balance">
+				<h2
+					id="como-funciona-title"
+					className="font-display font-extrabold text-3xl sm:text-4xl tracking-tighter mb-16 text-center text-ink text-balance"
+				>
 					Como funciona em 3 passos
 				</h2>
 
@@ -233,10 +237,10 @@ export function Landing() {
 				className="bg-bg text-ink px-6 lg:px-16 py-16 sm:py-20 relative"
 			>
 				<div className="max-w-[1360px] mx-auto text-center flex flex-col items-center">
-					<div className="font-mono text-xs tracking-[0.18em] uppercase text-coral-deep mb-4">
+					<div className="font-mono text-xs tracking-eyebrow uppercase text-coral-deep mb-4">
 						● Comece agora
 					</div>
-					<h2 className="font-display font-extrabold text-3xl sm:text-5xl leading-[1.1] tracking-[-0.04em] max-w-[20ch] text-balance">
+					<h2 className="font-display font-extrabold text-3xl sm:text-5xl leading-[1.1] tracking-display max-w-[20ch] text-balance">
 						Pronto para estimar com seu time?
 					</h2>
 					<p className="font-sans text-ink-mute text-sm sm:text-base leading-[1.5] max-w-[40ch] mt-4">
@@ -248,7 +252,7 @@ export function Landing() {
 							size="lg"
 							onClick={handleCreateRoom}
 							data-testid="cta-ribbon-create"
-							className="w-full sm:w-auto border-ink/25 text-ink hover:border-coral hover:text-coral transition-colors"
+							className="w-full sm:w-auto border-ink/25 text-ink hover:border-coral-deep hover:text-coral-deep transition-colors"
 						>
 							Criar sala grátis
 							<span aria-hidden="true">↗</span>
@@ -266,7 +270,7 @@ export function Landing() {
 					<div className="md:col-span-4 flex flex-col items-start gap-2">
 						<Link
 							to="/"
-							className="font-display font-extrabold text-xl tracking-[-0.03em] flex items-baseline gap-2 hover:text-coral transition-colors"
+							className="font-display font-extrabold text-xl tracking-tighter flex items-baseline gap-2 hover:text-coral-deep transition-colors"
 						>
 							<span className="font-italic italic text-coral text-2xl leading-none">
 								Ø
@@ -282,7 +286,7 @@ export function Landing() {
 					<div className="md:col-span-8 flex flex-wrap justify-start md:justify-end gap-x-8 gap-y-4">
 						<a
 							href="mailto:hello@pointly.dev"
-							className="font-mono text-xs text-ink-mute hover:text-coral transition-colors"
+							className="font-mono text-xs text-ink-mute hover:text-coral-deep transition-colors"
 						>
 							Suporte / Contato
 						</a>

@@ -327,6 +327,87 @@ describe("Sala — toState", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Post-reveal edit (EVR-01 / EVR-04 / EVR-06 / EVR-13 / EVR-14)
+// ---------------------------------------------------------------------------
+
+describe("Sala — post-reveal edit", () => {
+	test("EVR-01: castVote em revealed NÃO reinicia timer (BUG A fix)", () => {
+		// Setup: 2 players, voting → reveal
+		sala.addPlayer(makePlayer("p2", "Bia"));
+		sala.castVote("p1", "5");
+		sala.castVote("p2", "5");
+		expect(sala.phase).toBe("revealable");
+		sala.reveal("p1");
+		expect(sala.phase).toBe("revealed");
+		const timerBefore = sala.timer;
+		// Act: edit pós-reveal
+		const result = sala.castVote("p1", "8");
+		// Assert
+		expect(result).toEqual({ changed: true });
+		expect(sala.timer).toBe(timerBefore); // timer NÃO mudou
+	});
+
+	test("EVR-14: castVote em revealed com mesmo valor retorna { changed: false } sem mutação", () => {
+		sala.addPlayer(makePlayer("p2", "Bia"));
+		sala.castVote("p1", "5");
+		sala.castVote("p2", "5");
+		sala.reveal("p1");
+		const voteBefore = sala.getPlayer("p1")?.value;
+		expect(voteBefore).toBe("5");
+		// Act: clicar a mesma carta
+		const result = sala.castVote("p1", "5");
+		// Assert
+		expect(result).toEqual({ changed: false });
+		expect(sala.getPlayer("p1")?.value).toBe("5");
+	});
+
+	test("EVR-04: castVote em revealed com valor diferente retorna { changed: true } e marca consensusDirty", () => {
+		sala.addPlayer(makePlayer("p2", "Bia"));
+		sala.castVote("p1", "5");
+		sala.castVote("p2", "5");
+		sala.reveal("p1");
+		// Primeira chamada após revelar marca dirty
+		const result = sala.castVote("p1", "8");
+		expect(result).toEqual({ changed: true });
+		// consume retorna true uma vez
+		expect(sala.consumeConsensusDirty()).toBe(true);
+		// segunda chamada retorna false (foi limpo)
+		expect(sala.consumeConsensusDirty()).toBe(false);
+	});
+
+	test("EVR-06: recomputeConsensus reflete unanimidade quebrada após edição", () => {
+		sala.addPlayer(makePlayer("p2", "Bia"));
+		sala.castVote("p1", "5");
+		sala.castVote("p2", "5");
+		sala.reveal("p1");
+		// Antes: unanimous
+		const before = sala.recomputeConsensus();
+		expect(before.unanimous).toBe(true);
+		expect(before.median).toBe(5);
+		// Edit quebra unanimidade
+		sala.castVote("p1", "8");
+		const after = sala.recomputeConsensus();
+		expect(after.unanimous).toBe(false);
+		expect(after.median).toBe(6.5);
+		expect(after.range).toEqual([5, 8]);
+	});
+
+	test("EVR-13: auto-reveal não dispara após edit pós-reveal (defesa contra bug silencioso)", () => {
+		sala.addPlayer(makePlayer("p2", "Bia"));
+		sala.castVote("p1", "5");
+		sala.castVote("p2", "5");
+		sala.reveal("p1");
+		expect(sala.phase).toBe("revealed");
+		// Edit pós-reveal
+		sala.castVote("p1", "8");
+		// 1 tick NÃO dispara auto-reveal nem joga invalid_phase
+		// (gate em T1 evita o tick → startTimer → reveal("__auto_reveal__") loop)
+		expect(() => sala.tick()).not.toThrow();
+		expect(sala.phase).toBe("revealed");
+	});
+});
+
+// ---------------------------------------------------------------------------
 // Constantes exportadas
 // ---------------------------------------------------------------------------
 

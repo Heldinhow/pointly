@@ -3,11 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Mobile-first viewport: viewport-fit=cover ativa env(safe-area-inset-*)
+         em iOS notch/home indicator. Maximum-scale=5 impede zoom-in
+         acidental do browser quando o user double-tapa um botão (WCAG
+         reflow não é afetado porque user-zoom continua ativo). -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5"
+    />
+    <meta name="theme-color" content="#efe7d2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#13120d" media="(prefers-color-scheme: dark)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="format-detection" content="telephone=no" />
     <meta
       name="description"
       content="Pointly — Planning Poker web para times ágeis."
     />
+    <!-- Preconnect com WS server (mesmo host:port para ws:// e http://).
+         Reduz latência do handshake inicial — handshake TCP/TLS em paralelo
+         enquanto o JS bundle baixa. Em dev, ws://localhost:3001; em prod,
+         o dokploy injeta VITE_WS_URL via build. -->
+    <link rel="preconnect" href="http://localhost:3001" crossorigin />
     <title>Pointly</title>
   </head>
   <body>

@@ -163,7 +163,7 @@ export function ProjectileAnimator() {
 					}
 				>
 					<div
-						className="absolute animate-proj-y text-[28px] select-none pointer-events-none"
+						className="absolute animate-proj-y text-brand-mark select-none pointer-events-none"
 						style={
 							{
 								"--from-y": `${anim.fromY}px`,

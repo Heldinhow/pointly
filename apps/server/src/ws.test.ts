@@ -234,6 +234,61 @@ describe("WSService — onMessage (hello + cast_vote + reveal + new_round)", () 
 		expect(pongs).toHaveLength(1);
 		expect(ws.data.lastPongAt).toBeGreaterThanOrEqual(before);
 	});
+
+	test("EVR-03: cast_vote em revealed com mesmo valor NÃO envia nenhum broadcast", () => {
+		// Setup: 2 players, vote, reveal (phase revealed)
+		service.onOpen(ws);
+		service.onMessage(
+			ws,
+			JSON.stringify({
+				type: "hello",
+				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+			}),
+		);
+		const ws2 = new MockBunWS("127.0.0.2");
+		service.onOpen(ws2);
+		service.onMessage(
+			ws2,
+			JSON.stringify({
+				type: "hello",
+				payload: {
+					uuid: "00000000-0000-4000-8000-000000000002",
+					nick: "Bob",
+					code: ws.data.code,
+				},
+			}),
+		);
+		service.onMessage(
+			ws,
+			JSON.stringify({ type: "cast_vote", payload: { value: "5" } }),
+		);
+		service.onMessage(
+			ws2,
+			JSON.stringify({ type: "cast_vote", payload: { value: "5" } }),
+		);
+		service.onMessage(
+			ws,
+			JSON.stringify({ type: "reveal_votes", payload: {} }),
+		);
+		const sala = hub.getSalaForPlayer(ws.data.playerId!)!;
+		expect(sala.phase).toBe("revealed");
+
+		// Baseline: contar broadcasts após o reveal
+		const roomStateBeforeRe = ws.eventsOfType("room_state").length;
+		const votesRevealedBeforeRe = ws.eventsOfType("votes_revealed").length;
+		const voteCastBefore = ws.eventsOfType("vote_cast").length;
+
+		// Act: Ana re-clica na MESMA carta "5"
+		service.onMessage(
+			ws,
+			JSON.stringify({ type: "cast_vote", payload: { value: "5" } }),
+		);
+
+		// Assert: ZERO broadcasts novos (no-op path early-return)
+		expect(ws.eventsOfType("room_state").length).toBe(roomStateBeforeRe);
+		expect(ws.eventsOfType("votes_revealed").length).toBe(votesRevealedBeforeRe);
+		expect(ws.eventsOfType("vote_cast").length).toBe(voteCastBefore);
+	});
 });
 
 // ---------------------------------------------------------------------------

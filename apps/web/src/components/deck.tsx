@@ -60,6 +60,33 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 		}
 	}, [phase]);
 
+	// Phase 7 (mobile-first): atribui data-deck-scrollable-left/right no
+	// container de scroll baseado em scrollLeft vs scrollWidth. O CSS
+	// [index.css] usa esses attrs pra reforçar o side-shadow "tem mais"
+	// só na direção que ainda tem conteúdo (não desperdiça affordance).
+	// Marque scrollWidth > clientWidth + 1 (tolerância sub-pixel iOS).
+	useEffect(() => {
+		const el = scrollRef.current;
+		if (!el) return;
+		const update = () => {
+			const maxScroll = el.scrollWidth - el.clientWidth;
+			const canScroll = maxScroll > 1;
+			el.dataset.deckScrollable = canScroll ? "true" : "false";
+			el.dataset.deckScrollableLeft =
+				canScroll && el.scrollLeft > 1 ? "true" : "false";
+			el.dataset.deckScrollableRight =
+				canScroll && el.scrollLeft < maxScroll - 1 ? "true" : "false";
+		};
+		update();
+		el.addEventListener("scroll", update, { passive: true });
+		const ro = new ResizeObserver(update);
+		ro.observe(el);
+		return () => {
+			el.removeEventListener("scroll", update);
+			ro.disconnect();
+		};
+	}, []);
+
 	function handleKeyDown(e: KeyboardEvent<HTMLButtonElement>, value: Vote) {
 		if (disabled) return;
 		// <button> já lida com Enter/Space; nada extra necessário.
@@ -72,14 +99,16 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 
 	return (
 		<div className="relative fib-deck-wrapper" data-testid="deck-wrapper">
-			{/* Peek gradientes — só no mobile (escondidos em ≥sm) */}
+			{/* Peek gradientes — só no mobile (escondidos em ≥sm).
+			    Phase 7: w-12 (48px) e [index.css] gradiente mais opaco pra
+			    ser inequívoco em dark mode. */}
 			<div
 				aria-hidden="true"
-				className="fib-deck-peek fib-deck-peek-left pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:hidden"
+				className="fib-deck-peek fib-deck-peek-left pointer-events-none absolute left-0 top-0 bottom-0 w-12 sm:hidden"
 			/>
 			<div
 				aria-hidden="true"
-				className="fib-deck-peek fib-deck-peek-right pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:hidden"
+				className="fib-deck-peek fib-deck-peek-right pointer-events-none absolute right-0 top-0 bottom-0 w-12 sm:hidden"
 			/>
 			<div
 				ref={scrollRef}
@@ -120,7 +149,7 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 								"w-[48px] h-[68px] flex-shrink-0 bg-surface rounded-xl",
 								"flex items-center justify-center select-none",
 								"transition-all duration-150 cursor-pointer",
-								"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
+								"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
 								// default border (1px ink)
 								!selected && "border border-ink/15",
 								// selected: coral ring + soft bg + coral ink
@@ -128,21 +157,21 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 								// hover (só quando não disabled e não selected)
 								!disabled &&
 									!selected &&
-									"hover:-translate-y-[3px] hover:border-coral",
+									"hover:-translate-y-[3px] hover:border-coral-deep",
 								// disabled: opacity 0.4 (deck pai também aplica, aqui no botão individual)
 								disabled && "pointer-events-none opacity-40 cursor-not-allowed",
 							)}
 						>
 							{isCoffee ? (
 								<span
-									className="font-display text-[16px] text-ink"
+									className="font-display text-body text-ink"
 									aria-hidden="true"
 								>
 									☕
 								</span>
 							) : (
 								<span
-									className="font-italic italic text-[20px] text-ink leading-none"
+									className="font-italic italic text-vote-mark text-ink leading-none"
 									aria-hidden="true"
 								>
 									{value}

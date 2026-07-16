@@ -37,6 +37,7 @@ import { type SalaEndHooks, createSalaEndLoop } from "./sala-end-loop";
 import { getUUID } from "./storage";
 import { createVoteLoop } from "./vote-loop";
 import { type WSClient, createWSClient } from "./ws-client";
+import type { SalaState } from "@planning-poker/shared";
 
 /** Parâmetros do hook. */
 export interface UseArenaLoopParams {
@@ -199,6 +200,16 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 		w.__POINTLY_SALA__ = initial.sala ?? undefined;
 		w.__POINTLY_CONSENSUS__ = initial.consensus ?? undefined;
 		w.__POINTLY_PLAYER_ID__ = initial.currentPlayerId;
+
+		// DEV-only test handle: permite injetar sala sintética (ex: 12
+		// jogadores pra validar layout mobile) sem depender do WS real.
+		// Gated em import.meta.env.DEV — stripado pelo Vite em prod build.
+		if (import.meta.env.DEV) {
+			(w as Record<string, unknown>).__POINTLY_TEST__ = {
+				setSala: (sala: SalaState) => store.getState().setSala(sala),
+				reset: () => store.getState().reset(),
+			};
+		}
 
 		wsClient.connect();
 
