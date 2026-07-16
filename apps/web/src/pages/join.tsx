@@ -336,9 +336,19 @@ export function Join() {
 				</div>
 			</header>
 
-			{/* Header strip — só renderiza quando existe code de fato. */}
+			{/* Header strip — só renderiza quando existe code de fato.
+			    Helper copy à direita ("Do link compartilhado pelo host") explica
+			    a origem do código: o usuário abriu esta tela a partir de um link
+			    /join?code=ABCD que veio do criador da sala. Sem esse caption o
+			    número parece aleatório e o usuário hesita antes de digitar o nick
+			    (a "parede do Jordan"). Text-ink-faint pra hierarquia secundária.
+
+			    host=1 intencionalmente NÃO renderiza strip nem input: o servidor
+			    gera o código no `hello`. Mostrar uma nota "você vai criar uma sala"
+			    duplicaria a affordance do botão CTA (que já diz "Entrar") —
+			    colapso decidido a favor do CTA único (Single CTA Rule). */}
 			{!isHost && code && (
-				<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 w-full py-3 sm:py-4 flex items-center justify-between text-caption text-ink-mute">
+				<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 w-full py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 text-caption text-ink-mute">
 					<span>
 						Sala{" "}
 						<span
@@ -348,6 +358,7 @@ export function Join() {
 							{codeDisplay}
 						</span>
 					</span>
+					<span className="text-ink-faint">Do link compartilhado pelo host.</span>
 				</div>
 			)}
 

@@ -144,7 +144,19 @@ A ramp inteira é twelve-step, intencional. Todo valor fora dela é tell de IA.
 
 Pointly uses a structural and tactile approach to depth. There is no heavy stacked shadowing. Depth is established through the juxtaposition of the main Warm Parchment background with Bleached Ivory surface cards, using subtle ink-tinted borders and a single ambient shadow.
 
-Two distinct tokens exist so bordered and borderless surfaces each get a shadow that fits:
+### Decision: why two shadow tokens
+
+**Two tokens exist because two surface archetypes coexist in the product.** A bordered container (Card, banner, section) carries its elevation in the hairline itself — the shadow is just an ambient nudge. A borderless floating surface (modal, popover, toast) has no border to carry the lift, so the shadow has to do all the work — hence the wider blur.
+
+| Surface archetype | Border | Shadow | Examples |
+|---|---|---|---|
+| Container (in-flow) | `border-ink/5` (1px) | `shadow-card` (≤8px blur) | `Card`, banners, sections |
+| Floating (overlay) | none | `shadow-bone` (~60px blur) | modals, popovers, tooltips, toasts |
+| Coral CTA | none | `shadow-coral` (~26px blur) | primary buttons (coral) |
+
+**Do not collapse the two tokens into one.** If `shadow-bone` were tightened to ≤8px to match `shadow-card`, floating overlays would lose all their lift and visually recede into the surface below. If the Border+Shadow Rule were loosened (allow `border-ink/5 + shadow-bone` together), every Card becomes a "ghost card" — the saturated Codex tell.
+
+The rule and the two-token system are inseparable. They are the same architectural decision, not two competing ones.
 
 ### Shadow Vocabulary
 

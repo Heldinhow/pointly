@@ -100,7 +100,7 @@ function SharePill({ code }: { code: string }) {
 			data-testid="share-pill"
 			disabled={!code}
 			className={cn(
-				"inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 font-mono text-micro-label tracking-[0.06em] uppercase border transition-all duration-150 cursor-pointer shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral",
+				"inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-mono text-micro-label tracking-[0.06em] uppercase border transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral",
 				"disabled:opacity-50 disabled:cursor-not-allowed",
 				copied
 					? "bg-olive border-transparent text-white"
@@ -144,7 +144,7 @@ function SharePill({ code }: { code: string }) {
 				</svg>
 			)}
 			<span>
-				{copied ? "Código copiado!" : `Código: ${code || "—"}`}
+				{copied ? "Copiado!" : code || "—"}
 			</span>
 		</button>
 	);

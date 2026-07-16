@@ -5,13 +5,19 @@
  *
  * Base: `bg-surface rounded-card shadow-card border border-ink/5 surface-noise relative`.
  *
- * Usa `shadow-card` (≤8px blur), NÃO `shadow-bone` (60px blur).
- * Bone fica reservada pra superfícies flutuantes sem border (modais,
- * popovers, tooltips). Combinar border 1px + shadow-bone é codex
- * "ghost-card" tell — vide Border+Plus-Shadow Rule em DESIGN.md.
+ * Arquitetura de dois tokens (vide DESIGN.md §4 "Decision: why two tokens"):
+ *  - Card = container in-flow COM border → `shadow-card` (≤8px blur).
+ *  - Floating overlay SEM border → `shadow-bone` (~60px blur).
  *
- * O `relative` + `z-10` no conteúdo garante que a noise ::before não
- * escureça o children.
+ * Esta escolha arquitetural (dois tokens, regra rígida de não-combine)
+ * é o que mantém o sistema sem cair no codex "ghost-card" tell. Bone
+ * não pode ser apertada pra ≤8px (overlays perdem o lift) e a Border+
+ * Shadow Rule não pode ser afrouxada (Cards viram fantasma).
+ *
+ * Para overlays sem border (popovers, menus suspensos, toasts), prefira
+ * uma `<div>` comum com `shadow-bone` — Card é só pra containers com
+ * hairline. O `relative` + `z-10` no conteúdo garante que a noise
+ * ::before não escureça o children.
  *
  * Padding variants: `sm` (p-4), `md` (p-7, default), `lg` (p-10).
  */
