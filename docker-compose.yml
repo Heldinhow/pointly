@@ -24,6 +24,48 @@ services:
       retries: 3
     expose:
       - "3001"
+    # Traefik routing for /api and /ws — these MUST take precedence over
+    # the catch-all `Host(...)` routers on `web` so the Browser Upgrade
+    # request for wss://…/ws reaches Bun.serve's websocket handler instead
+    # of falling into the static file server's SPA fallback (which returns
+    # index.html for any unknown path — Safari then prompts for Local
+    # Network Access and silently blocks subsequent connections).
+    #
+    # The `web` Traefik routers are still managed by Dokploy's UI (attached
+    # when the pointly.space / www.pointly.space domains were created), so
+    # we deliberately do NOT touch them here. priority=30 on these routers
+    # is higher than the ~21 that Dokploy assigns by default for `Host()`
+    # alone, so /api and /ws win.
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      # /api (web → 80) — redirect to https
+      - traefik.http.routers.pointly-api-web.rule=Host(`pointly.space`) && PathPrefix(`/api`)
+      - traefik.http.routers.pointly-api-web.entrypoints=web
+      - traefik.http.routers.pointly-api-web.service=pointly-server
+      - traefik.http.routers.pointly-api-web.priority=30
+      - traefik.http.routers.pointly-api-web.middlewares=redirect-to-https@file
+      # /api (websecure → 443) — TLS + ACME
+      - traefik.http.routers.pointly-api-websecure.rule=Host(`pointly.space`) && PathPrefix(`/api`)
+      - traefik.http.routers.pointly-api-websecure.entrypoints=websecure
+      - traefik.http.routers.pointly-api-websecure.service=pointly-server
+      - traefik.http.routers.pointly-api-websecure.priority=30
+      - traefik.http.routers.pointly-api-websecure.tls.certresolver=letsencrypt
+      # /ws (web → 80) — redirect to https; WebSocket upgrade happens once
+      # the Upgrade request hits Bun.serve's `websocket:` handler.
+      - traefik.http.routers.pointly-ws-web.rule=Host(`pointly.space`) && PathPrefix(`/ws`)
+      - traefik.http.routers.pointly-ws-web.entrypoints=web
+      - traefik.http.routers.pointly-ws-web.service=pointly-server
+      - traefik.http.routers.pointly-ws-web.priority=30
+      - traefik.http.routers.pointly-ws-web.middlewares=redirect-to-https@file
+      # /ws (websecure → 443) — TLS + ACME + WS upgrade
+      - traefik.http.routers.pointly-ws-websecure.rule=Host(`pointly.space`) && PathPrefix(`/ws`)
+      - traefik.http.routers.pointly-ws-websecure.entrypoints=websecure
+      - traefik.http.routers.pointly-ws-websecure.service=pointly-server
+      - traefik.http.routers.pointly-ws-websecure.priority=30
+      - traefik.http.routers.pointly-ws-websecure.tls.certresolver=letsencrypt
+      # Service — backend is the Bun+Hono+WS server on :3001
+      - traefik.http.services.pointly-server.loadbalancer.server.port=3001
 
   web:
     <<: *app-base
