@@ -182,7 +182,20 @@ export class WSService {
 			}
 		}
 		// 2. Sala timers (auto-reveal + reconciliation cadence)
-		const results = this.hub.tickAllTimers(now);
+		let results: Array<{ code: string; tick: "idle" | "ticking" | "fired"; sala: import("./sala").Sala }> = [];
+		try {
+			results = this.hub.tickAllTimers(now);
+		} catch (e) {
+			// EVR-01 hardening: tick pode disparar 'invalid_phase' se
+			// houver race entre edição pós-reveal e heartbeat (fix BUG A
+			// em Sala.castVote elimina a causa raiz; este guard é
+			// defense-in-depth pra nunca derrubar o hub por um bug
+			// futuro análogo). Loga e segue — a próxima tick de 1s
+			// retoma naturalmente.
+			const msg = e instanceof Error ? e.message : String(e);
+			this.logger.error("tick_error", msg);
+			// Continua para grace period cleanup mesmo se timers explodiram.
+		}
 		for (const { code, tick, sala } of results) {
 			if (tick === "fired") {
 				const salaState = sala.toState();

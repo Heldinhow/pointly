@@ -318,8 +318,13 @@ export class Sala {
 			this.phase = "voting";
 		}
 
-		// Inicia timer no primeiro voto da rodada (F-013)
-		if (!this.timerActive) {
+		// Inicia timer no primeiro voto da rodada (F-013).
+		// EVR-01 (edit-vote-after-reveal): em fase 'revealed' o timer já
+		// foi parado por `reveal()`. Re-iniciar aqui reinjetaria o
+		// countdown de 60s inadvertidamente, e o tick subsequente
+		// chamaria `reveal("__auto_reveal__")` numa sala que já está
+		// revelada → `invalid_phase`. Gate explícito por fase.
+		if (this.phase !== "revealed" && !this.timerActive) {
 			this.startTimer();
 		}
 
