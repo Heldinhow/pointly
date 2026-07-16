@@ -279,9 +279,12 @@ export class Sala {
 	 *  - Se primeiro voto da rodada, inicia timer 60s (F-013) e phase → 'voting'
 	 *  - Se todos os conectados votaram, phase → 'revealable'
 	 *
-	 * @returns void on success; lança SalaError em falha
+	 * @returns `{ changed: boolean }` — `false` quando o voto é idêntico
+	 *   ao já registrado (F-011 + EVR-14). Útil para o handler
+	 *   suprimir broadcasts em no-op. Lança `SalaError` em falha de
+	 *   validação.
 	 */
-	castVote(playerId: string, value: Vote | null): void {
+	castVote(playerId: string, value: Vote | null): { changed: boolean } {
 		if (value === null) {
 			throw new SalaError("invalid_vote", "Un-vote (value=null) é proibido.");
 		}
@@ -308,6 +311,13 @@ export class Sala {
 			);
 		}
 
+		// EVR-14: idempotência servidor-side — clicar na mesma carta
+		// duas vezes não deve disparar mutação nem broadcast.
+		const previous = player.value;
+		if (previous === value) {
+			return { changed: false };
+		}
+
 		// Update in-place (F-011 idempotência)
 		const updated: Player = { ...player, value, hasVoted: true };
 		this.players.set(playerId, updated);
@@ -332,6 +342,8 @@ export class Sala {
 		if (this.allConnectedVoted() && this.phase === "voting") {
 			this.phase = "revealable";
 		}
+
+		return { changed: true };
 	}
 
 	/**
