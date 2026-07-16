@@ -39,12 +39,12 @@ export function Full() {
 	return (
 		<div
 			data-testid="page-full"
-			className="surface-noise min-h-screen bg-bg text-ink flex flex-col"
+			className="surface-noise min-h-[100dvh] bg-bg text-ink flex flex-col"
 		>
 			{/* Metadata strip top */}
 			<header className="border-b border-ink/10 py-2.5 flex-shrink-0">
 				<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 flex items-center justify-between">
-					<div className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-wider text-ink-faint">
+					<div className="flex items-center gap-4 font-mono text-micro-label uppercase tracking-wider text-ink-faint">
 						<span
 							aria-hidden="true"
 							className="inline-block w-1.5 h-1.5 rounded-full bg-coral motion-reduce:animate-none animate-pulse"
@@ -63,7 +63,7 @@ export function Full() {
 					</div>
 					<div className="flex items-center gap-4">
 						<ThemeToggle />
-						<div className="font-mono text-[10px] uppercase tracking-wider text-ink-faint">
+						<div className="font-mono text-micro-label uppercase tracking-wider text-ink-faint">
 							Sala cheia
 						</div>
 					</div>
@@ -71,13 +71,13 @@ export function Full() {
 			</header>
 
 			{/* Header strip */}
-			<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 w-full py-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-ink-faint">
+			<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 w-full py-4 flex items-center justify-between font-mono text-micro-label uppercase tracking-wider text-ink-faint">
 				<span>Sala lotada</span>
 				<span>Esta sala atingiu o limite</span>
 			</div>
 
 			{/* Stage */}
-			<main className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-16 py-8 sm:py-12">
+			<main className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-16 py-8 sm:py-12 pb-[max(env(safe-area-inset-bottom),2rem)]">
 				<Card
 					padding="lg"
 					className="w-full max-w-[560px] flex flex-col gap-6 transition-shadow duration-200"
@@ -88,32 +88,32 @@ export function Full() {
 					<div className="font-italic italic text-coral text-card-mark leading-none">
 						Ø
 					</div>
-					<h1 className="font-display font-extrabold text-[34px] leading-[1.05] tracking-[-0.03em] text-balance">
-						Sala cheia<span className="text-coral">.</span>
+					<h1 className="font-display font-extrabold text-card-title text-balance">
+						Sala cheia<span className="text-coral-deep">.</span>
 					</h1>
 
 					{/* Contagem 12/12 */}
 					<div className="flex items-baseline gap-3 py-3.5 border-y border-coral/20 w-full">
 						<span
-							className="font-italic italic text-coral text-[42px] leading-none"
+							className="font-italic italic text-coral text-display-xl leading-none"
 							data-testid="full-count"
 						>
 							{MAX_PLAYERS}
 						</span>
-						<span className="font-mono text-[11px] tracking-wider uppercase text-ink-faint">
+						<span className="font-mono text-label tracking-wider uppercase text-ink-faint">
 							/ {MAX_PLAYERS} · máximo atingido
 						</span>
 					</div>
 
-					<p className="font-sans text-[14.5px] leading-[1.6] text-ink-mute max-w-[42ch]">
+					<p className="font-sans text-caption text-ink-mute max-w-[42ch]">
 						Esta sala já tem {MAX_PLAYERS} jogadores. Limitamos a mesa a
 						{MAX_PLAYERS} assentos para manter a votação síncrona e a leitura do
 						resultado clara. Crie uma sala nova ou volte para a página inicial e
 						tente um código diferente.
 					</p>
 
-					<p className="font-mono text-[10.5px] tracking-[0.04em] uppercase text-ink-faint -mt-2">
-						<q className="font-italic italic text-ink-mute normal-case tracking-normal text-[12.5px] mr-1.5">
+					<p className="font-mono text-micro-label tracking-[0.04em] uppercase text-ink-faint -mt-2">
+						<q className="font-italic italic text-ink-mute normal-case tracking-normal text-caption mr-1.5">
 							Doze cabeças pensam melhor que três.
 						</q>
 						mesas lotadas rendem mais
@@ -123,7 +123,7 @@ export function Full() {
 					<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5 mt-1">
 						<Button
 							variant="coral"
-							size="md"
+							size="lg"
 							onClick={goHome}
 							className="w-full sm:w-auto"
 							data-testid="full-create-new"
@@ -133,13 +133,13 @@ export function Full() {
 						</Button>
 						<Button
 							variant="default"
-							size="md"
-							onClick={() => window.location.reload()}
+							size="lg"
+							onClick={() => navigate("/")}
 							className="w-full sm:w-auto"
 							data-testid="full-retry"
-							aria-label="Tentar entrar novamente na mesma sala"
+							aria-label="Voltar para a página inicial"
 						>
-							Esperar um assento
+							Voltar
 						</Button>
 					</div>
 				</Card>

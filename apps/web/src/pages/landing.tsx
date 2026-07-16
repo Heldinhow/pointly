@@ -107,7 +107,7 @@ export function Landing() {
 	return (
 		<div
 			data-testid="page-landing"
-			className="surface-noise min-h-screen bg-bg text-ink relative overflow-x-hidden pt-16"
+			className="surface-noise min-h-[100dvh] bg-bg text-ink relative overflow-x-hidden pt-16"
 		>
 			{/* Sticky Navigation */}
 			<SiteHeader onCreateRoom={handleCreateRoom} onJoinRoom={handleJoinRoom} />
@@ -248,7 +248,7 @@ export function Landing() {
 							size="lg"
 							onClick={handleCreateRoom}
 							data-testid="cta-ribbon-create"
-							className="w-full sm:w-auto border-ink/25 text-ink hover:border-coral hover:text-coral transition-colors"
+							className="w-full sm:w-auto border-ink/25 text-ink hover:border-coral-deep hover:text-coral-deep transition-colors"
 						>
 							Criar sala grátis
 							<span aria-hidden="true">↗</span>
@@ -266,7 +266,7 @@ export function Landing() {
 					<div className="md:col-span-4 flex flex-col items-start gap-2">
 						<Link
 							to="/"
-							className="font-display font-extrabold text-xl tracking-[-0.03em] flex items-baseline gap-2 hover:text-coral transition-colors"
+							className="font-display font-extrabold text-xl tracking-[-0.03em] flex items-baseline gap-2 hover:text-coral-deep transition-colors"
 						>
 							<span className="font-italic italic text-coral text-2xl leading-none">
 								Ø
@@ -282,7 +282,7 @@ export function Landing() {
 					<div className="md:col-span-8 flex flex-wrap justify-start md:justify-end gap-x-8 gap-y-4">
 						<a
 							href="mailto:hello@pointly.dev"
-							className="font-mono text-xs text-ink-mute hover:text-coral transition-colors"
+							className="font-mono text-xs text-ink-mute hover:text-coral-deep transition-colors"
 						>
 							Suporte / Contato
 						</a>

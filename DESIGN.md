@@ -93,16 +93,30 @@ Pointly's colors follow the Atelier Zero palette, prioritizing warm neutrals and
 - **Coral Deep** (`#b8412f`): Accessibility-safe coral (5.8:1 contrast) for small text labels, active icons, and secondary hover states.
 
 ### Neutral
-- **Warm Parchment** (`#efe7d2` / `oklch(93% 0.02 85)`): Main body background. Imparts a physical, organic feel.
-- **Bleached Ivory** (`#f7f1de` / `oklch(96% 0.01 88)`): Elevated surface container color. Used for cards and overlays.
-- **Carbon Ink** (`#15140f` / `oklch(15% 0.005 85)`): Body text and high-priority solid UI boundaries.
+- **Warm Parchment** (`#efe7d2` / `oklch(93% 0.02 85)`): Main body background (`--bg`). Imparts a physical, organic feel.
+- **Bleached Ivory** (`#f7f1de` / `oklch(96% 0.01 88)`): Elevated surface container color (`--surface`). Used for cards and overlays.
+- **Carbon Ink** (`#15140f` / `oklch(15% 0.005 85)`): Body text and high-priority solid UI boundaries (`--fg`).
+- **Paper Warm** (`#ece4cf`): Subtle warm tint for input/field backgrounds (`--paper-warm`). Distinguishes form fields from card surfaces without adding visual weight.
+- **Paper Dark** (`#ddd2b6`): Container/avatar backgrounds on the parchment surface (`--paper-dark`). Used for non-elevated tiles inside a bone card.
+- **Ink Soft** (`#2a2620`): Secondary text — links, helper copy.
+- **Ink Mute** (`#3a352a`): Tertiary text — labels, captions.
+- **Ink Faint** (`#4a4438`): Quaternary text — micro-copy, uppercase tags, helper annotation.
+
+### Accent (jewelry)
+- **Antique Gold / Mustard** (`#e9b94a`): Jewelry highlight for nav dot, vote-mediana underline, stars. Never covers >1% of any screen.
+- **Olive** (`#6e7448`): Confirmation state — copy success, checkmark, optimistic feedback. Never as a CTA.
 
 ### Dark Mode overrides
 In dark mode, the color hierarchy shifts to a low-luminance warm palette to maintain reading comfort under low ambient light:
-- **Carbon Charcoal** (`#13120d`): Main dark background.
-- **Parchment Dark** (`#1a1914`): Elevated container surfaces.
-- **Ivory Soft** (`#f7f1de`): Body text color (inverted from Bleached Ivory).
-- **Coral Soft** (`#f08e7c`): CTA element active states.
+- **Carbon Charcoal** (`#13120d`): Main dark background (`--bg`).
+- **Parchment Dark** (`#1a1914`): Elevated container surfaces (`--paper-warm`).
+- **Container Dark** (`#222019`): Avatar/tile background (`--paper-dark`).
+- **Dark Surface** (`#1b1a14`): Card surface (`--surface`).
+- **Ivory Soft** (`#f7f1de`): Body text color (inverted from Bleached Ivory, `--fg`).
+- **Coral Soft** (`#f08e7c`): Dark-mode primary CTA (`--accent`). Brighter than light-mode coral to maintain contrast against charcoal.
+- **Coral Deep** (`#ed6f5c`): Accessible coral for small labels in dark mode (`--coral-deep`). Different value than light mode because light-mode `--coral-deep` is too dark on charcoal.
+- **Mustard Bright** (`#f4cd68`): Jewelry in dark mode (`--mustard`).
+- **Olive Bright** (`#8a9163`): Confirmation in dark mode (`--olive`).
 
 ### Named Rules
 **The Single CTA Rule.** No more than one solid coral CTA may be visible within a single screen viewport. Secondary actions must use border outlines or ghost treatments.
