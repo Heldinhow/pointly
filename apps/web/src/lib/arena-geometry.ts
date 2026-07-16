@@ -36,8 +36,15 @@ export function assignSeatAngles(
 	if (mePlayerId) map.set(mePlayerId, 90);
 
 	const others = playerIds.filter((id) => id !== mePlayerId);
-	// Available angles avoiding 90° to prevent overlaps, filled clockwise starting at 60°
-	const otherAngles = [60, 30, 0, 330, 300, 270, 240, 210, 180, 150, 120];
+	// Available angles avoiding 90° (reserved for VOCÊ when locked).
+	// 12 entries — one per max player slot. When mePlayerId is set, the
+	// 90° slot is held aside and `others.length` maxes at 11, so angles[11]
+	// is never reached (preserves the "VOCÊ always at 6 o'clock" invariant).
+	// When mePlayerId is null, all 12 angles are available — without this
+	// fix `others[11] % 11` wraps to angle 60° and collides with player 1.
+	const otherAngles = [
+		60, 30, 0, 330, 300, 270, 240, 210, 180, 150, 120, 105,
+	];
 
 	for (let i = 0; i < others.length; i++) {
 		const angle = otherAngles[i % otherAngles.length]!;

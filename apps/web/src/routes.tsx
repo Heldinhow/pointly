@@ -83,14 +83,14 @@ const router = createBrowserRouter(
 		// RR v7 future flags — silencia os 6 warnings de console ao usar
 		// createBrowserRouter com a API do RR 6.28. Quando migrarmos pra
 		// RR v7, esses flags passam a ser default e essa config sai.
-		// Todas as flags suportadas ficam ativas para manter o console limpo.
+		// `v7_skipTrailingSlashRedirect` só existe no RR v6.30+; estamos
+		// em 6.28 então omitimos (1 warning de console aceitável até migrar).
 		future: {
 			v7_fetcherPersist: true,
 			v7_relativeSplatPath: true,
 			v7_skipActionErrorRevalidation: true,
 			v7_normalizeFormMethod: true,
 			v7_partialHydration: true,
-			v7_skipTrailingSlashRedirect: true,
 		},
 	},
 );

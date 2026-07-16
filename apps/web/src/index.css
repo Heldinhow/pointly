@@ -349,27 +349,79 @@ a[role="button"] {
 	display: none;
 }
 
-/* Peek gradients — esquerda/direita no mobile indicam "tem mais". */
+/* Mobile-first (Phase 7): deck é scroll horizontal em <sm. O scrollbar
+ * webkit é escondido pra peek ser affordance. Mas peek via linear-gradient
+ * de var(--bg)→transparente é fraco em dark mode (var(--bg) charcoal sobre
+ * bg-paper-warm parchment-dark → contraste mínimo). Em mobile-first deck
+ * adicionamos DOIS sinais de scroll:
+ *  1. peek gradiente mais largo + box-shadow inset na borda visível
+ *  2. thin scrollbar nativo (overlay sutil) — affordance adicional
+ */
+@media (max-width: 639px) {
+	[data-testid="deck"] {
+		/* thin branded scrollbar — só visível em <sm */
+		scrollbar-width: thin;
+		scrollbar-color: var(--coral-deep) transparent;
+	}
+	[data-testid="deck"]::-webkit-scrollbar {
+		display: block;
+		height: 4px;
+	}
+	[data-testid="deck"]::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	[data-testid="deck"]::-webkit-scrollbar-thumb {
+		background: var(--coral-deep);
+		border-radius: 999px;
+		opacity: 0.6;
+	}
+}
+
+/* Peek gradients — esquerda/direita no mobile indicam "tem mais".
+ * Phase 7 (mobile-first): gradiente mais largo e com parada mais opaca
+ * pra ser inequívoco tanto em light quanto dark mode. Conserva a origem
+ * var(--bg) pra fazer fade com o parchment da página (não paper-warm
+ * do deck interno — isso viraria uma faixa creme destacada flutuando
+ * no parchment, "floating cream strip" tell). */
 .fib-deck-peek {
 	pointer-events: none;
-	z-index: 1;
+	z-index: 2;
 }
-/* Peek gradients — bg de origem = --bg (parchment da página), NÃO paper-warm
- * do deck interno. Sem isso o gradiente "corta" antes da borda do deck e
- * vira uma faixa creme destacada flutuando no parchment. */
 .fib-deck-peek-left {
 	background: linear-gradient(
 		to right,
 		var(--bg) 0%,
-		rgba(239, 231, 210, 0) 100%
+		rgba(21, 20, 15, 0.55) 40%,
+		transparent 100%
 	);
 }
 .fib-deck-peek-right {
 	background: linear-gradient(
 		to left,
 		var(--bg) 0%,
-		rgba(239, 231, 210, 0) 100%
+		rgba(21, 20, 15, 0.55) 40%,
+		transparent 100%
 	);
+}
+/* Border accent adicional: shadow lateral no deck pra reforçar "tem mais" */
+@media (max-width: 639px) {
+	[data-testid="deck"] {
+		box-shadow:
+			inset 12px 0 8px -8px var(--bg),
+			inset -12px 0 8px -8px var(--bg);
+	}
+	[data-testid="deck"][data-deck-scrollable-left="true"] {
+		box-shadow:
+			12px 0 8px -8px var(--bg),
+			inset 12px 0 8px -8px var(--bg),
+			inset -12px 0 8px -8px var(--bg);
+	}
+	[data-testid="deck"][data-deck-scrollable-right="true"] {
+		box-shadow:
+			-12px 0 8px -8px var(--bg),
+			inset 12px 0 8px -8px var(--bg),
+			inset -12px 0 8px -8px var(--bg);
+	}
 }
 
 /* ---------------------------------------------------------------

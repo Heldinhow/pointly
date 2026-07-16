@@ -400,8 +400,12 @@ export function Join() {
 				<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 w-full py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 text-caption text-ink-mute">
 					<span>
 						Sala{" "}
+						{/* tracking 0 — text-body não tem tracking próprio. Code label
+						    é tipograficamente "dado", não "tag mono upper"; o font-mono
+						    já entrega a identidade de código sem precisar do tracking
+						    apertado (que era off-ramp: arbitrary value). */}
 						<span
-							className="font-mono text-body font-medium tracking-[0.08em] text-ink"
+							className="font-mono text-body font-medium text-ink"
 							data-testid="join-code-label"
 						>
 							{codeDisplay}
@@ -429,7 +433,10 @@ export function Join() {
 						Entrar na sala<span className="text-coral-deep">.</span>
 					</h1>
 
-					<p className="max-w-[36ch] font-sans text-body leading-[1.55] text-ink-mute">
+					{/* leading do token text-body (1.5) — leading-[1.55] era
+					    off-ramp arbitrary value. O ganho era marginal e não justifica
+					    quebrar a Ramp Rule (§3 DESIGN.md). */}
+					<p className="max-w-[36ch] font-sans text-body text-ink-mute">
 						Escolha como você quer aparecer para o time. Não precisa de conta.
 					</p>
 

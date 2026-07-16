@@ -29,7 +29,7 @@ describe("RevealButton — deriveButtonState (pure)", () => {
 });
 
 describe("RevealButton — render", () => {
-	test("estado awaiting: 'Aguardando N jogadores…' + disabled", () => {
+	test("estado awaiting: 'Aguardando jogadores…' (sem contador) + disabled", () => {
 		render(
 			<RevealButton
 				phase="idle"
@@ -42,7 +42,7 @@ describe("RevealButton — render", () => {
 		const btn = screen.getByTestId("reveal-button");
 		expect(btn.getAttribute("data-reveal-state")).toBe("awaiting");
 		expect(btn).toBeDisabled();
-		expect(btn).toHaveTextContent(/Aguardando 12 jogadores/i);
+		expect(btn).toHaveTextContent(/Aguardando jogadores/i);
 	});
 
 	test("estado ready: 'Revelar votos.' enabled + bg-coral", () => {
@@ -79,7 +79,7 @@ describe("RevealButton — render", () => {
 		expect(btn).toHaveTextContent(/Nova rodada/i);
 	});
 
-	test("singular vs plural no hint: 1 jogador", () => {
+	test("singular: hint não cita count mesmo com 1 jogador (UX consistente)", () => {
 		render(
 			<RevealButton
 				phase="idle"
@@ -90,7 +90,7 @@ describe("RevealButton — render", () => {
 			/>,
 		);
 		expect(screen.getByTestId("reveal-button")).toHaveTextContent(
-			/Aguardando 1 jogador…/i,
+			/Aguardando jogadores/i,
 		);
 	});
 });

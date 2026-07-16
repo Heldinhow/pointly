@@ -1,8 +1,8 @@
 /**
  * RevealButton + NewRoundButton (morphing) — T33 (Phase 6).
  *
- * Botão central da arena com 3 estados morphing:
- *  1. `awaiting` (ghost, disabled): "Aguardando N jogadores…"
+ * Botão da arena com 3 estados morphing:
+ *  1. `awaiting` (ghost, disabled): "Aguardando jogadores…"
  *     Mostrado quando phase !== 'revealed' && votes === 0
  *  2. `ready` (coral pill): "Revelar votos." com coral dot
  *     Mostrado quando ≥1 voto entrou && phase !== 'revealed'
@@ -18,6 +18,14 @@
  *  - `state = 'ready'` quando votedCount >= 1 && phase !== 'revealed'
  *  - `state = 'post-reveal'` quando phase === 'revealed'
  *
+ * **Modes**:
+ *  - `centered` (default): posicionamento `absolute top-1/2 left-1/2` —
+ *    usado pelo round-table desktop. Morphing hover translada para
+ *    compensar a centralização.
+ *  - `inline`: width-full + posição natural do fluxo — usado pelo
+ *    MobileRevealDock sticky-bottom (mobile-first). Sem compensação
+ *    de translação no hover.
+ *
  * **A11y**:
  *  - aria-label contextual ao estado
  *  - aria-disabled no estado awaiting
@@ -30,17 +38,23 @@ import type { Phase } from "@planning-poker/shared";
 import { cn } from "./ui/utils";
 
 export type RevealButtonState = "awaiting" | "ready" | "post-reveal";
+export type RevealButtonMode = "centered" | "inline";
 
 export interface RevealButtonProps {
 	phase: Phase;
 	/** Número de jogadores que votaram nesta rodada. */
 	votedCount: number;
-	/** Total de jogadores na sala (computa o N do "Aguardando N jogadores"). */
+	/** Total de jogadores na sala (referência: o contador é só pra você, não aparece no hint). */
 	totalPlayers: number;
 	/** Callback: clicar no estado ready → envia `reveal_votes`. */
 	onReveal: () => void;
 	/** Callback: clicar no estado post-reveal → envia `start_new_round`. */
 	onNewRound: () => void;
+	/**
+	 * `centered` (default): absolute centrado no parent (round-table desktop).
+	 * `inline`: width-full dentro de um sticky dock (mobile-first).
+	 */
+	mode?: RevealButtonMode;
 }
 
 /** Decide o estado do botão baseado na phase + votedCount. */
@@ -59,16 +73,22 @@ export function RevealButton({
 	totalPlayers,
 	onReveal,
 	onNewRound,
+	mode = "centered",
 }: RevealButtonProps) {
 	const state = deriveButtonState(phase, votedCount);
+	const centered = mode === "centered";
 
-	const awaiting = totalPlayers - votedCount;
+	// Hint só renderiza quando há algo pra comunicar. Sala vazia
+	// (totalPlayers=0): o MobilePlayerList (ou o empty state desktop) já
+	// mostra "Aguardando jogadores…" — exibir de novo aqui duplicaria.
 	const hint =
-		state === "awaiting"
-			? `Aguardando ${awaiting} jogador${awaiting === 1 ? "" : "es"}…`
+		state === "awaiting" && totalPlayers > 0
+			? "Aguardando jogadores…"
 			: state === "ready"
 				? "Todos podem revelar."
-				: "Limpa votos · reinicia timer.";
+				: state === "post-reveal"
+					? "Limpa votos · reinicia timer."
+					: "";
 
 	const label =
 		state === "awaiting"
@@ -104,10 +124,15 @@ export function RevealButton({
 			data-testid="reveal-button"
 			data-od-id="reveal-button"
 			data-reveal-state={state}
+			data-reveal-mode={mode}
 			className={cn(
-				"absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+				// Layout: vertical stack (label + hint)
 				"flex flex-col gap-[3px] items-center justify-center",
-				"w-auto min-w-[200px] px-5 py-2.5 rounded-full whitespace-nowrap",
+				// Positioning: centered (desktop) vs inline (mobile dock)
+				centered
+					? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-auto min-w-[200px] px-5"
+					: "relative w-full px-6",
+				"py-2.5 rounded-full whitespace-nowrap",
 				"min-h-[44px] min-h-[var(--tap-target-min,44px)]",
 				"font-display font-semibold text-caption tracking-[-0.005em]",
 				"transition-all duration-200 select-none",
@@ -117,10 +142,20 @@ export function RevealButton({
 					"bg-paper-dark border border-ink/15 text-ink-faint cursor-not-allowed",
 				// ready (coral pill, enabled)
 				state === "ready" &&
-					"bg-coral border border-coral text-white cursor-pointer shadow-coral hover:-translate-x-1/2 hover:-translate-y-[calc(50%+1px)] hover:bg-coral-soft",
+					cn(
+						"bg-coral border border-coral text-white cursor-pointer shadow-coral hover:bg-coral-soft",
+						centered
+							? "hover:-translate-x-1/2 hover:-translate-y-[calc(50%+1px)]"
+							: "",
+					),
 				// post-reveal (primary coral, enabled)
 				state === "post-reveal" &&
-					"bg-coral border border-coral text-white cursor-pointer shadow-coral hover:-translate-x-1/2 hover:-translate-y-[calc(50%+1px)] hover:bg-coral-soft shadow-md",
+					cn(
+						"bg-coral border border-coral text-white cursor-pointer shadow-coral hover:bg-coral-soft shadow-md",
+						centered
+							? "hover:-translate-x-1/2 hover:-translate-y-[calc(50%+1px)]"
+							: "",
+					),
 			)}
 		>
 			<span className="inline-flex items-center gap-1.5 leading-none">
@@ -132,12 +167,18 @@ export function RevealButton({
 				)}
 			</span>
 			{/* Hint: micro-label sem uppercase pra hierarquia clara.
-			 * `tracking-[0.02em]` quase zero + lowercase = nitidamente secundário. */}
+			 * `tracking-[0.02em]` quase zero + lowercase = nitidamente secundário.
+			 * Em modo inline (mobile) o hint usa a mesma cor ink-faint pra não
+			 * competir com o CTA coral — desktop mantém white/75 sobre coral. */}
 			<span
 				className={cn(
 					"font-mono text-micro-label leading-[1.3] font-normal",
 					"tracking-[0.02em] normal-case",
-					state === "awaiting" ? "text-ink-faint/75" : "text-white/75",
+					state === "awaiting"
+						? "text-ink-faint/75"
+						: centered
+							? "text-white/75"
+							: "text-white/80",
 				)}
 			>
 				{hint}

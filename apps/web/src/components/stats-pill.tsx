@@ -66,7 +66,10 @@ export function StatsPill({ consensus }: StatsPillProps) {
 			data-od-id="stats-pill"
 			data-stats-unanimous={showUnanimous ? "true" : "false"}
 			className={cn(
-				"inline-flex items-center gap-3.5 px-4 py-2.5 rounded-full",
+				// pill compacto (Atelier Zero): ocupa 1 linha discreta no topo,
+				// não compete com a Ø wordmark à esquerda. py-2 era exagerado
+				// pra um strip pós-reveal — encolhido pra py-1.5.
+				"inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full",
 				"bg-surface border border-ink/5",
 				"font-mono text-label tracking-[0.06em] uppercase text-ink-faint",
 				"transition-opacity duration-300",
