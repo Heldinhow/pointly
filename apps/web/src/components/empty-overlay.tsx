@@ -109,9 +109,12 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 			aria-label="Convide outros para começar a rodada"
 			data-testid="empty-overlay"
 			data-od-id="empty-overlay"
-			className="absolute inset-0 bg-bg/92 backdrop-blur-[4px] flex items-center justify-center z-20 transition-opacity duration-200"
+			className="absolute inset-0 bg-bg/92 backdrop-blur-[4px] flex items-center justify-center z-20 transition-opacity duration-200 px-4 pb-[max(env(safe-area-inset-bottom),1rem)]"
 		>
-			<Card padding="lg" className="w-[560px] flex flex-col gap-5 items-start">
+			<Card
+				padding="lg"
+				className="w-full max-w-[560px] max-h-[calc(100dvh-2rem)] overflow-y-auto flex flex-col gap-5 items-start"
+			>
 				<div className="font-italic italic text-coral text-[36px] leading-none">
 					Ø
 				</div>
@@ -134,13 +137,13 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 						readOnly
 						value={url}
 						aria-label="URL de compartilhamento"
-						className="flex-1 border-0 bg-transparent py-3.5 px-4 font-mono text-[12px] text-ink outline-none tracking-[0.02em]"
+						className="flex-1 border-0 bg-transparent py-3.5 px-4 font-mono text-[12px] text-ink outline-none tracking-[0.02em] min-w-0"
 						data-testid="empty-overlay-share-url"
 					/>
 					<button
 						type="button"
 						onClick={handleCopy}
-						className="border-0 bg-coral text-white font-display font-semibold text-[13px] py-3.5 px-5 cursor-pointer hover:bg-coral-soft transition-colors"
+						className="border-0 bg-coral text-white font-display font-semibold text-[13px] py-3.5 px-5 cursor-pointer hover:bg-coral-soft transition-colors min-h-[44px] flex-shrink-0"
 						data-testid="empty-overlay-copy"
 						aria-label="Copiar link de compartilhamento"
 					>
@@ -153,6 +156,7 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 					size="md"
 					onClick={handleDismiss}
 					data-testid="empty-overlay-dismiss"
+					className="min-h-[44px]"
 				>
 					Entrar na mesa mesmo assim
 					<span aria-hidden="true">→</span>
