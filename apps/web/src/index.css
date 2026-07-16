@@ -91,6 +91,11 @@ body,
 	min-height: 100%;
 }
 
+html {
+	/* iOS: evita zoom no refocus quando keyboard sobe */
+	-webkit-text-size-adjust: 100%;
+}
+
 body {
 	background-color: var(--bg);
 	color: var(--fg);
@@ -100,6 +105,18 @@ body {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	transition: background-color 200ms ease, color 200ms ease;
+	/* Respeita safe-areas (iOS notch, Android punch-hole). */
+	padding-left: env(safe-area-inset-left);
+	padding-right: env(safe-area-inset-right);
+}
+
+/* Mobile-first: força ≥16px nos inputs pra iOS não aplicar zoom no focus. */
+@supports (-webkit-touch-callout: none) {
+	input,
+	textarea,
+	select {
+		font-size: 16px;
+	}
 }
 
 /* Cursor coral quando hover em CTA */
@@ -544,4 +561,93 @@ a[role="button"] {
 	background: var(--paper-warm);
 	border-bottom: 1px solid var(--border-header);
 	box-shadow: 0 6px 16px -8px var(--shadow-header);
+}
+
+/* ---------------------------------------------------------------
+ * Mobile-first support (Phase 8 — mobile-first redesign)
+ * FMR-09 / FMR-19 / FMR-20.
+ *
+ * - Safe-area: respeita notch iOS + home indicator via env().
+ * - arena-scale: variável CSS consumida pela mesa fixa 960×560
+ *   para escalar via transform: scale() em viewports estreitos.
+ * - Coarse pointer: reforça tap targets ≥44×44 em mobile.
+ * - Landscape mobile: reorganiza deck + arena stage.
+ * --------------------------------------------------------------- */
+:root {
+	--arena-scale: 1;
+}
+
+/* Safe-area horizontal (notch lateral em landscape). */
+body {
+	padding-left: env(safe-area-inset-left);
+	padding-right: env(safe-area-inset-right);
+}
+
+/* Mesa Arena: aplica transform: scale(var(--arena-scale)).
+ * `center top` mantém o topo da mesa alinhado — evita que o reveal
+ * button (centro vertical) "suba" demais em escala < 1. */
+[data-testid="arena-table-inner"] {
+	transform: scale(var(--arena-scale, 1));
+	transform-origin: center top;
+	transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Coarse pointer (mobile): reforça tap targets mínimos nos controles
+ * críticos. Botões size="lg" já são 48px (✓); aqui reforçamos size="sm"
+ * e ícones inline para que botões auxiliares (SharePill, theme toggle,
+ * projectile) respeitem 44×44 WCAG em touch. */
+@media (pointer: coarse) {
+	button[aria-label="Copiar link de compartilhamento da sala"],
+	button[aria-label="Mudar tema claro/escuro"],
+	button[data-testid="share-pill"] {
+		min-height: 44px;
+		min-width: 44px;
+	}
+
+	/* Projectile throw button (emoji 🎯 no seat) — 28×28 vira ≥44×44. */
+	[data-testid^="seat-"] button[title*="Arremessar"],
+	[data-testid^="seat-"] button[title^="Aguarde"] {
+		min-height: 44px;
+		min-width: 44px;
+	}
+
+	/* Projectile menu items (7 emojis). */
+	[data-testid^="seat-"] button[title^="Bola"],
+	[data-testid^="seat-"] button[title^="Tomate"],
+	[data-testid^="seat-"] button[title^="Café"],
+	[data-testid^="seat-"] button[title^="Patinho"],
+	[data-testid^="seat-"] button[title^="Estrela"],
+	[data-testid^="seat-"] button[title^="Coração"],
+	[data-testid^="seat-"] button[title^="Palmas"] {
+		min-height: 44px;
+		min-width: 44px;
+	}
+}
+
+/* Mobile portrait (<sm): stats pill oculta (info crítica pós-reveal
+ * é redundante com destaque visual dos assentos mediana). Timer SEMPRE
+ * visível (regra FMR-11). */
+@media (max-width: 639px) {
+	[data-testid="stats-pill"] {
+		display: none;
+	}
+}
+
+/* Landscape mobile (altura < 500px): deck dock mais próximo da base,
+ * arena table escala com folga vertical. */
+@media (max-height: 499px) {
+	[data-testid="arena-deck-wrapper"] {
+		bottom: 0.5rem !important;
+	}
+	[data-testid="arena-stage"] {
+		padding-top: 0.25rem !important;
+		padding-bottom: 0.25rem !important;
+	}
+}
+
+/* Reduce-motion: desabilita a transição de scale. */
+@media (prefers-reduced-motion: reduce) {
+	[data-testid="arena-table-inner"] {
+		transition: none;
+	}
 }
