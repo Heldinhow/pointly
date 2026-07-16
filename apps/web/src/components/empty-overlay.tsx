@@ -115,13 +115,13 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 				padding="lg"
 				className="w-full max-w-[560px] max-h-[calc(100dvh-2rem)] overflow-y-auto flex flex-col gap-5 items-start"
 			>
-				<div className="font-italic italic text-coral text-[36px] leading-none">
+				<div className="font-italic italic text-coral text-card-mark leading-none">
 					Ø
 				</div>
-				<h2 className="font-display font-extrabold text-[28px] tracking-[-0.025em]">
-					Convide outros<span className="text-coral">.</span>
+				<h2 className="font-display font-extrabold text-brand-mark tracking-[-0.025em]">
+					Convide outros<span className="text-coral-deep">.</span>
 				</h2>
-				<p className="font-sans text-[14px] leading-[1.55] text-ink-mute">
+				<p className="font-sans text-caption text-ink-mute">
 					Você é o único na sala agora. Compartilhe o link abaixo — quando
 					alguém entrar, vocês podem votar juntos.
 				</p>
@@ -137,13 +137,13 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 						readOnly
 						value={url}
 						aria-label="URL de compartilhamento"
-						className="flex-1 border-0 bg-transparent py-3.5 px-4 font-mono text-[12px] text-ink outline-none tracking-[0.02em] min-w-0"
+						className="flex-1 border-0 bg-transparent py-3.5 px-4 font-mono text-caption text-ink outline-none tracking-[0.02em] min-w-0"
 						data-testid="empty-overlay-share-url"
 					/>
 					<button
 						type="button"
 						onClick={handleCopy}
-						className="border-0 bg-coral text-white font-display font-semibold text-[13px] py-3.5 px-5 cursor-pointer hover:bg-coral-soft transition-colors min-h-[44px] flex-shrink-0"
+						className="border-0 bg-coral text-white font-display font-semibold text-caption py-3.5 px-5 cursor-pointer hover:bg-coral-soft transition-colors min-h-[44px] flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
 						data-testid="empty-overlay-copy"
 						aria-label="Copiar link de compartilhamento"
 					>

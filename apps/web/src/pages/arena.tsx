@@ -100,7 +100,7 @@ function SharePill({ code }: { code: string }) {
 			data-testid="share-pill"
 			disabled={!code}
 			className={cn(
-				"inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-micro-label tracking-[0.06em] uppercase border transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral min-h-[44px]",
+				"inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-micro-label tracking-[0.06em] uppercase border transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-1 focus-visible:ring-offset-bg min-h-[44px]",
 				"disabled:opacity-50 disabled:cursor-not-allowed",
 				copied
 					? "bg-olive border-transparent text-white"
@@ -109,7 +109,9 @@ function SharePill({ code }: { code: string }) {
 			aria-label={
 				copied
 					? "Link copiado com sucesso"
-					: "Copiar link de compartilhamento da sala"
+					: code
+						? `Copiar link de compartilhamento da sala ${code}`
+						: "Aguardando código da sala para copiar link"
 			}
 			title={!code ? "Código da sala ainda não está disponível" : undefined}
 		>
@@ -345,7 +347,7 @@ export function Arena() {
 						/>
 						<Link
 							to="/"
-							className="font-display font-extrabold text-nav-wordmark tracking-[-0.02em] text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
+							className="font-display font-extrabold text-nav-wordmark tracking-[-0.02em] text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral-deep focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
 							aria-label="Sair da sala e voltar para a página inicial"
 						>
 							<span className="font-italic italic text-coral text-nav-mark leading-none">
@@ -353,7 +355,11 @@ export function Arena() {
 							</span>
 							Pointly
 						</Link>
-						<span className="hidden">
+						{/* Código da sala: oculto visualmente, exposto a SR + testes.
+						 * O código é mostrado pelo SharePill adjacente para o
+						 * usuário copiar. Mantemos este nó pra que o leitor de
+						 * tela anuncie o código ao focar o topbar. */}
+						<span className="sr-only">
 							Sala{" "}
 							<span className="text-ink font-medium" data-testid="arena-code">
 								{code || "—"}

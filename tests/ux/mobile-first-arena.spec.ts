@@ -205,7 +205,88 @@ test.describe("Mobile-First Arena", () => {
 				}
 			});
 
-			test(`FMR-03/10: tap targets ≥44×44 (CTA, deck, share)`, async ({
+			test(`FMR-13b: stress 12 jogadores em viewport estreito`, async ({
+					browser,
+				}) => {
+					// Skip em viewports onde 12 clients causariam WS server crash
+					// em landscape (latência alta + 360px altura). Limitado a
+					// portrait iPhone 14 / Pixel 7 — sweet spot de altura ≥800px.
+					test.skip(
+						vp.isLandscape || vp.height < 800,
+						"FMR-13b roda só em portrait com altura ≥800 (evita WS crash em viewport muito estreito)",
+					);
+
+					const suite = await multiClient(browser, {
+						clientCount: 12,
+						viewport: { width: vp.width, height: vp.height },
+						nicks: [
+							"Helder", "Luna", "Rui", "Maya",
+							"Aria", "Theo", "Lia", "Ivo",
+							"Nina", "Otto", "Pia", "Quinn",
+						],
+					});
+					try {
+						const code = await suite.createRoom(0);
+						await Promise.all(
+							Array.from({ length: 11 }, (_, i) => suite.joinRoom(code, i + 1)),
+						);
+						await suite.waitForSala(
+							0,
+							(s) => s.players.length === 12,
+							60_000,
+						);
+						const page = suite.clients[0]!.page;
+						await page.waitForSelector('[data-testid="page-arena"]');
+						const overlay = page.locator('[data-testid="empty-overlay"]');
+						if (await overlay.isVisible({ timeout: 1500 }).catch(() => false)) {
+							await page.getByTestId("empty-overlay-dismiss").click();
+							await page.waitForTimeout(300);
+						}
+						const boxes = await page.evaluate(() => {
+							const seats = Array.from(
+								document.querySelectorAll("[data-seat-angle]"),
+							);
+							return seats.map((s) => {
+								const r = (s as HTMLElement).getBoundingClientRect();
+								return { x: r.left, y: r.top, w: r.width, h: r.height };
+							});
+						});
+						expect(boxes.length).toBe(12);
+
+						const overlapPct = (a: typeof boxes[number], b: typeof boxes[number]) => {
+							const ix = Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x));
+							const iy = Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+							const inter = ix * iy;
+							const areaA = a.w * a.h;
+							const areaB = b.w * b.h;
+							const minArea = Math.min(areaA, areaB);
+							if (minArea === 0) return 0;
+							return inter / minArea;
+						};
+						let maxOverlap = 0;
+						for (let i = 0; i < boxes.length; i++) {
+							for (let j = i + 1; j < boxes.length; j++) {
+								maxOverlap = Math.max(maxOverlap, overlapPct(boxes[i]!, boxes[j]!));
+							}
+						}
+						expect(maxOverlap, `max overlap = ${maxOverlap.toFixed(3)}`).toBeLessThan(0.1);
+
+						// Tap target mínimo no RevealButton (que fica fora do scale)
+						await suite.vote(0, "5");
+						await page.waitForTimeout(200);
+						const reveal = page.locator('[data-testid="reveal-button"]');
+						const box = await reveal.boundingBox();
+						expect(box, "RevealButton tem bounding box com 12 players").not.toBeNull();
+						if (box) {
+							expect(box.width).toBeGreaterThanOrEqual(44);
+							expect(box.height).toBeGreaterThanOrEqual(44);
+						}
+					} finally {
+						await suite.dispose();
+					}
+				});
+
+				test(`FMR-03/10: tap targets ≥44×44 (CTA, deck, share)`, async ({
 				browser,
 			}) => {
 				const suite = await multiClient(browser, {

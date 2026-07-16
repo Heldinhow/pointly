@@ -70,7 +70,7 @@ export function TimerPill(props: TimerPillProps = {}) {
 			className={cn(
 				"inline-flex items-center gap-3.5 px-4 py-2.5 rounded-full",
 				"border transition-colors duration-200",
-				"font-mono text-[11px] tracking-[0.06em] uppercase",
+				"font-mono text-label tracking-[0.06em] uppercase",
 				isCritical
 					? "bg-coral-soft border-coral/40 text-ink"
 					: "bg-surface border-ink/5 text-ink-faint",

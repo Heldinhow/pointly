@@ -120,7 +120,7 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 								"w-[48px] h-[68px] flex-shrink-0 bg-surface rounded-xl",
 								"flex items-center justify-center select-none",
 								"transition-all duration-150 cursor-pointer",
-								"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
+								"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
 								// default border (1px ink)
 								!selected && "border border-ink/15",
 								// selected: coral ring + soft bg + coral ink
@@ -128,21 +128,21 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 								// hover (só quando não disabled e não selected)
 								!disabled &&
 									!selected &&
-									"hover:-translate-y-[3px] hover:border-coral",
+									"hover:-translate-y-[3px] hover:border-coral-deep",
 								// disabled: opacity 0.4 (deck pai também aplica, aqui no botão individual)
 								disabled && "pointer-events-none opacity-40 cursor-not-allowed",
 							)}
 						>
 							{isCoffee ? (
 								<span
-									className="font-display text-[16px] text-ink"
+									className="font-display text-body text-ink"
 									aria-hidden="true"
 								>
 									☕
 								</span>
 							) : (
 								<span
-									className="font-italic italic text-[20px] text-ink leading-none"
+									className="font-italic italic text-vote-mark text-ink leading-none"
 									aria-hidden="true"
 								>
 									{value}

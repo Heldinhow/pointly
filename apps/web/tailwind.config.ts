@@ -92,6 +92,10 @@ const config: Config = {
 						fontWeight: "800",
 					},
 				],
+				// 20px Fibonacci glyph dentro de vote card (Seat face-up)
+				"vote-mark": ["20px", { lineHeight: "1", fontWeight: "500" }],
+				// 18px Fibonacci glyph em cards menores (Seat projectile trigger)
+				"vote-numeral": ["18px", { lineHeight: "1", fontWeight: "500" }],
 				caption: ["14px", { lineHeight: "1.55" }],
 				body: ["16px", { lineHeight: "1.5" }],
 				label: [

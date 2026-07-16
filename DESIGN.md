@@ -129,6 +129,8 @@ A ramp inteira é twelve-step, intencional. Todo valor fora dela é tell de IA.
 | `logo` | 24 | 1 | 800 | -0.03em | Wordmark primário |
 | `nav-mark` | 22 | 1 | 500 (italic) | 0 | Ø no site-header lockup secundário |
 | `nav-wordmark` | 18 | 1 | 800 | -0.02em | Wordmark do site-header secundário |
+| `vote-mark` | 20 | 1 | 500 (italic) | 0 | Glyph Fibonacci em vote card (Seat face-up) |
+| `vote-numeral` | 18 | 1 | 500 (italic) | 0 | Glyph Fibonacci em cards compactos (Seat trigger, /full) |
 | `body` | 16 | 1.5 | 400 | 0 | Texto corrido, listas, tabelas, inputs |
 | `caption` | 14 | 1.55 | 400 | 0 | Micro-copy abaixo de headlines |
 | `label` | 11 | 1.4 | 500 (mono) | 0.04em | Labels uppercase em JetBrains Mono |
@@ -171,7 +173,22 @@ The rule and the two-token system are inseparable. They are the same architectur
 - Borderless floating surfaces use `shadow-bone` alone.
 - A single 1px border at ink/5 with no shadow is also fine.
 
+**Exception — pills (toast, projectile menu).** Compact floating pills (`rounded-full` with `border` AND `shadow-bone`) are exempt from this rule. The pill silhouette carries identity; without the border, the shadow defines a vague blob. The pairing reads as a tactile object (e.g. confetti-like toast) — not a ghost card — because the radius is tight (`rounded-full`, not `rounded-card`). Document these as `pill archetype` in component code so reviewers know the rule was considered.
+
 If a feature needs both a border AND dramatic lift, drop one or the other — not both.
+
+### Counter-Scale Rule (Arena)
+
+The Arena's table (960×560) is **scaled** to fit any viewport via `--arena-scale` (ResizeObserver, range 0.45–1). `transform: scale()` shrinks the parent's bounding box — including tap targets inside it. Anything interactive must counteract the scale.
+
+**Two acceptable patterns:**
+
+1. **Relocate** the interactive element OUTSIDE the scaled container. Example: RevealButton lives in `arena-reveal-wrapper`, not `arena-table-inner`. Its bounding box is read in CSS pixels and stays ≥44×44 regardless of `--arena-scale`.
+2. **Counter-scale** the element with `transform: scale(calc(1 / var(--arena-scale, 1)))` so it visually appears unchanged. Example: TimerPill wrapper, deck wrapper. The wrapper's outer bounding box is the **inverse** of the parent's, so `getBoundingClientRect()` reports the visual size.
+
+**Forbidden pattern:** placing interactive elements inside a scaled container without counter-scaling. Their reported tap targets will report the scaled (smaller) size, failing the 44×44 WCAG minimum in mobile viewports.
+
+This rule is mechanical, not aesthetic — violating it produces silent a11y regressions on small screens.
 
 ## 5. Components
 

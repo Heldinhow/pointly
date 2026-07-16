@@ -295,7 +295,7 @@ export function Seat({
 				>
 					{/* Avatar circular */}
 					<div
-						className="w-9 h-9 rounded-full bg-paper-dark flex items-center justify-center font-italic italic text-[18px] text-ink-soft flex-shrink-0 transition-opacity duration-200"
+						className="w-9 h-9 rounded-full bg-paper-dark flex items-center justify-center font-italic italic text-vote-numeral text-ink-soft flex-shrink-0 transition-opacity duration-200"
 						aria-hidden="true"
 						data-testid="seat-avatar"
 					>

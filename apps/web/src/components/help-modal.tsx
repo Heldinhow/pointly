@@ -64,17 +64,17 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
 		>
 			<Card padding="lg" className="w-[480px] flex flex-col gap-4 items-start">
 				<div className="flex items-baseline gap-3">
-					<div className="font-italic italic text-coral text-[32px] leading-none">
+					<div className="font-italic italic text-coral text-brand-mark leading-none">
 						Ø
 					</div>
 					<h2
 						id="help-modal-title"
-						className="font-display font-extrabold text-[22px] tracking-[-0.025em]"
+						className="font-display font-extrabold text-nav-mark tracking-[-0.025em]"
 					>
-						Atalhos<span className="text-coral">.</span>
+						Atalhos<span className="text-coral-deep">.</span>
 					</h2>
 				</div>
-				<p className="font-sans text-[13px] leading-[1.55] text-ink-mute">
+				<p className="font-sans text-caption text-ink-mute">
 					Navegação rápida pelo teclado. Atalhos também ficam indicados nos
 					botões da arena (anunciados pelos leitores de tela).
 				</p>
@@ -91,7 +91,7 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
 										{row.keys.map((k) => (
 											<kbd
 												key={k}
-												className="font-mono text-[11px] uppercase tracking-[0.04em] border border-ink/15 bg-paper rounded-md px-2 py-1 text-ink-soft"
+												className="font-mono text-label uppercase tracking-[0.04em] border border-ink/15 bg-paper rounded-md px-2 py-1 text-ink-soft"
 												aria-label={`Tecla ${k}`}
 											>
 												{k}
@@ -99,7 +99,7 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
 										))}
 									</div>
 								</td>
-								<td className="py-2.5 font-sans text-[13.5px] text-ink-mute">
+								<td className="py-2.5 font-sans text-caption text-ink-mute">
 									{row.label}
 								</td>
 							</tr>

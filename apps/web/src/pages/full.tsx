@@ -52,10 +52,10 @@ export function Full() {
 						<Link
 							to="/"
 							data-testid="full-back"
-							className="font-display font-bold text-[15px] tracking-tight text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
+							className="font-display font-bold text-caption tracking-tight text-ink normal-case flex items-baseline gap-1.5 hover:text-coral-deep transition-colors rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral-deep focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
 							aria-label="Pointly — página inicial"
 						>
-							<span className="font-italic italic text-coral text-[18px] leading-none">
+							<span className="font-italic italic text-coral text-vote-numeral leading-none">
 								Ø
 							</span>
 							Pointly
@@ -85,7 +85,7 @@ export function Full() {
 					aria-label="Sala cheia"
 					data-od-id="full-card"
 				>
-					<div className="font-italic italic text-coral text-[36px] leading-none">
+					<div className="font-italic italic text-coral text-card-mark leading-none">
 						Ø
 					</div>
 					<h1 className="font-display font-extrabold text-[34px] leading-[1.05] tracking-[-0.03em] text-balance">
