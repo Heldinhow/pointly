@@ -46,7 +46,7 @@ export function NetworkBanner() {
 				"fixed top-0 left-0 right-0 z-50",
 				"bg-coral-soft border-b border-coral/30",
 				"flex items-center justify-center gap-2",
-				"py-2 px-4 font-mono text-label uppercase tracking-[0.06em] text-coral-deep",
+				"py-2 px-4 font-mono text-label uppercase tracking-caps text-coral-deep",
 				"pt-[max(env(safe-area-inset-top),0.5rem)]",
 			)}
 		>

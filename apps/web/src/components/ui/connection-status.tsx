@@ -18,7 +18,7 @@ const statusVariants = cva(
 	// text-micro-label = 10px token (ramp Atelier Zero §3 Hierarchy).
 	// Antes era `text-[10px]` arbitrário; token existe precisamente pra
 	// esse uso em small caps mono labels (timer / connection state pills).
-	"inline-flex items-center gap-2 px-3 py-1 rounded-full font-mono text-micro-label uppercase tracking-[0.04em] border",
+	"inline-flex items-center gap-2 px-3 py-1 rounded-full font-mono text-micro-label uppercase tracking-caps border",
 	{
 		variants: {
 			variant: {

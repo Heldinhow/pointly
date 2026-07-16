@@ -118,7 +118,7 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 				<div className="font-italic italic text-coral text-card-mark leading-none">
 					Ø
 				</div>
-				<h2 className="font-display font-extrabold text-brand-mark tracking-[-0.025em]">
+				<h2 className="font-display font-extrabold text-brand-mark tracking-tight">
 					Convide outros<span className="text-coral-deep">.</span>
 				</h2>
 				<p className="font-sans text-caption text-ink-mute">
@@ -137,7 +137,7 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 						readOnly
 						value={url}
 						aria-label="URL de compartilhamento"
-						className="flex-1 border-0 bg-transparent py-3.5 px-4 font-mono text-caption text-ink outline-none tracking-[0.02em] min-w-0"
+						className="flex-1 border-0 bg-transparent py-3.5 px-4 font-mono text-caption text-ink outline-none min-w-0"
 						data-testid="empty-overlay-share-url"
 					/>
 					<button

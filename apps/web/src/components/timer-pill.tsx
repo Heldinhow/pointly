@@ -71,7 +71,7 @@ export function TimerPill(props: TimerPillProps = {}) {
 				// Pill mais compacto: py-2 + gap-2.5 (antes py-2.5 + gap-3.5)
 				"inline-flex items-center gap-2.5 px-3.5 py-2 rounded-full",
 				"border transition-colors duration-200",
-				"font-mono tracking-[0.06em] uppercase",
+				"font-mono tracking-caps uppercase",
 				isCritical
 					? "bg-coral-soft border-coral/40 text-ink"
 					: "bg-surface border-ink/5 text-ink-faint",

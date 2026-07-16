@@ -71,7 +71,7 @@ export function StatsPill({ consensus }: StatsPillProps) {
 				// pra um strip pós-reveal — encolhido pra py-1.5.
 				"inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full",
 				"bg-surface border border-ink/5",
-				"font-mono text-label tracking-[0.06em] uppercase text-ink-faint",
+				"font-mono text-label tracking-caps uppercase text-ink-faint",
 				"transition-opacity duration-300",
 			)}
 		>
@@ -87,7 +87,7 @@ export function StatsPill({ consensus }: StatsPillProps) {
 			{showUnanimous ? (
 				<span
 					data-testid="stats-unanimous-badge"
-					className="font-mono text-micro-label tracking-[0.06em] uppercase text-mustard font-semibold inline-flex items-center gap-1"
+					className="font-mono text-micro-label tracking-caps uppercase text-mustard font-semibold inline-flex items-center gap-1"
 				>
 					<span aria-hidden="true" className="inline-block">
 						★
@@ -95,7 +95,7 @@ export function StatsPill({ consensus }: StatsPillProps) {
 					Unanimous
 					<span
 						aria-hidden="true"
-						className="inline-block text-mustard/70 text-micro-label -ml-0.5"
+						className="inline-block text-mustard/70 text-micro-label tracking-caps -ml-0.5"
 					>
 						✦
 					</span>

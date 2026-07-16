@@ -117,6 +117,27 @@ const config: Config = {
 			},
 
 			// ---------------------------------------------------------
+			// Letter spacing — extended ramp (DESIGN.md §3)
+			//
+			// `tracking-caps` 0.06em: extended ramp step para mono caps
+			// pequenos (label/micro-label uppercase). O default da ramp
+			// (`text-label`/`text-micro-label`) define 0.04em; 0.06em
+			// é o step adicional aprovado para legibilidade de mono
+			// caps em share pills, stats pills, mobile headers. Foi
+			// promovido de arbitrary value para token intencional em
+			// impeccable polish (2026-07-16) — vide DESIGN.md §3.
+			//
+			// `tracking-tight` -0.02em: extendido para uso em headings
+			// de modal/overlay (≤brand-mark). Coincide com
+			// `text-nav-wordmark` default; aprovado como step explícito
+			// para h2/h3 fora da nav.
+			// ---------------------------------------------------------
+			letterSpacing: {
+				caps: "0.06em",
+				tight: "-0.02em",
+			},
+
+			// ---------------------------------------------------------
 			// Box shadows — bone-card noise shadow
 			// ---------------------------------------------------------
 			boxShadow: {

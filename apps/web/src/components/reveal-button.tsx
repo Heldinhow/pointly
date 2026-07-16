@@ -134,7 +134,7 @@ export function RevealButton({
 					: "relative w-full px-6",
 				"py-2.5 rounded-full whitespace-nowrap",
 				"min-h-[44px] min-h-[var(--tap-target-min,44px)]",
-				"font-display font-semibold text-caption tracking-[-0.005em]",
+				"font-display font-semibold text-caption",
 				"transition-all duration-200 select-none",
 				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
 				// awaiting (ghost, disabled)
@@ -167,13 +167,13 @@ export function RevealButton({
 				)}
 			</span>
 			{/* Hint: micro-label sem uppercase pra hierarquia clara.
-			 * `tracking-[0.02em]` quase zero + lowercase = nitidamente secundário.
+			 * `tracking-normal` + lowercase = nitidamente secundário.
 			 * Em modo inline (mobile) o hint usa a mesma cor ink-faint pra não
 			 * competir com o CTA coral — desktop mantém white/75 sobre coral. */}
 			<span
 				className={cn(
 					"font-mono text-micro-label leading-[1.3] font-normal",
-					"tracking-[0.02em] normal-case",
+					"normal-case",
 					state === "awaiting"
 						? "text-ink-faint/75"
 						: centered

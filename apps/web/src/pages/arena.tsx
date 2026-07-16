@@ -88,7 +88,7 @@ function SharePill({ code }: { code: string }) {
 			data-testid="share-pill"
 			disabled={!code}
 			className={cn(
-				"inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-micro-label tracking-[0.06em] uppercase border transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-1 focus-visible:ring-offset-bg min-h-[44px]",
+				"inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-micro-label tracking-caps uppercase border transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-1 focus-visible:ring-offset-bg min-h-[44px]",
 				"disabled:opacity-50 disabled:cursor-not-allowed",
 				copied
 					? "bg-olive border-transparent text-white"
@@ -340,7 +340,7 @@ export function Arena() {
 			    da página (sem isso o topbar fica flat e aparece como uma
 			    "lista" mais escura no meio da página texturizada). */}
 			<header className="border-b border-ink/10 py-2.5 flex-shrink-0 pt-[max(env(safe-area-inset-top),0.625rem)] surface-noise">
-				<div className="w-full px-4 sm:px-8 flex items-center justify-between font-mono text-micro-label tracking-[0.06em] uppercase text-ink-faint">
+				<div className="w-full px-4 sm:px-8 flex items-center justify-between font-mono text-micro-label tracking-caps uppercase text-ink-faint">
 					<div className="flex items-center gap-4">
 						<span
 							aria-hidden="true"
@@ -348,7 +348,7 @@ export function Arena() {
 						/>
 						<Link
 							to="/"
-							className="font-display font-extrabold text-nav-wordmark tracking-[-0.02em] text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral-deep focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
+							className="font-display font-extrabold text-nav-wordmark text-ink normal-case flex items-baseline gap-1.5 hover:text-coral transition-colors rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral-deep focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
 							aria-label="Sair da sala e voltar para a página inicial"
 						>
 							<span className="font-italic italic text-coral text-nav-mark leading-none">

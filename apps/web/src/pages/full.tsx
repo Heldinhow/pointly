@@ -112,7 +112,7 @@ export function Full() {
 						tente um código diferente.
 					</p>
 
-					<p className="font-mono text-micro-label tracking-[0.04em] uppercase text-ink-faint -mt-2">
+					<p className="font-mono text-micro-label tracking-caps uppercase text-ink-faint -mt-2">
 						<q className="font-italic italic text-ink-mute normal-case tracking-normal text-caption mr-1.5">
 							Doze cabeças pensam melhor que três.
 						</q>

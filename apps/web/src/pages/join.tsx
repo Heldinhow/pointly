@@ -370,7 +370,7 @@ export function Join() {
 				<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 flex items-center justify-between">
 					<Link
 						to="/"
-						className="font-display font-extrabold text-nav-wordmark tracking-[-0.02em] flex items-baseline gap-2 hover:text-coral-deep transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+						className="font-display font-extrabold text-nav-wordmark flex items-baseline gap-2 hover:text-coral-deep transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
 						aria-label="Pointly — página inicial"
 					>
 						<span className="font-italic italic text-coral text-nav-mark">
@@ -429,7 +429,7 @@ export function Join() {
 					    (card-title 34px) — antes text-card-mark 36px deixava o
 					    Ø visualmente MAIOR que o h1, invertendo a hierarquia. */}
 					<div className="font-italic italic text-coral text-brand-mark">Ø</div>
-					<h1 className="font-display font-extrabold text-card-title tracking-[-0.03em] text-balance">
+					<h1 className="font-display font-extrabold text-card-title text-balance">
 						Entrar na sala<span className="text-coral-deep">.</span>
 					</h1>
 

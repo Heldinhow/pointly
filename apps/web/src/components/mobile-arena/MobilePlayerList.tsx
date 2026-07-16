@@ -97,7 +97,7 @@ export function MobilePlayerList({
 					<div className="flex flex-col leading-tight">
 						<span
 							data-testid="mobile-player-count-label"
-							className="font-mono text-micro-label tracking-[0.06em] uppercase text-ink-faint"
+							className="font-mono text-micro-label tracking-caps uppercase text-ink-faint"
 						>
 							Players
 						</span>
@@ -113,7 +113,7 @@ export function MobilePlayerList({
 					{faceUp && median !== null && (
 						<span
 							data-testid="mobile-player-median"
-							className="font-mono text-micro-label tracking-[0.06em] uppercase inline-flex items-center gap-1 text-ink-faint"
+							className="font-mono text-micro-label tracking-caps uppercase inline-flex items-center gap-1 text-ink-faint"
 						>
 							<span className="text-ink-faint">Mediana</span>
 							<span className="text-ink font-semibold border-b border-mustard">
@@ -135,7 +135,7 @@ export function MobilePlayerList({
 					>
 						Aguardando jogadores…
 						<br />
-						<span className="text-ink-faint text-micro-label tracking-[0.06em] uppercase">
+						<span className="text-ink-faint text-micro-label tracking-caps uppercase">
 							Compartilhe o link pra começar
 						</span>
 					</p>

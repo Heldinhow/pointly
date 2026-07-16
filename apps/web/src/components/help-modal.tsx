@@ -69,7 +69,7 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
 					</div>
 					<h2
 						id="help-modal-title"
-						className="font-display font-extrabold text-nav-mark tracking-[-0.025em]"
+						className="font-display font-extrabold text-nav-mark tracking-tight"
 					>
 						Atalhos<span className="text-coral-deep">.</span>
 					</h2>
@@ -91,7 +91,7 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
 										{row.keys.map((k) => (
 											<kbd
 												key={k}
-												className="font-mono text-label uppercase tracking-[0.04em] border border-ink/15 bg-paper rounded-md px-2 py-1 text-ink-soft"
+												className="font-mono text-label uppercase tracking-caps border border-ink/15 bg-paper rounded-md px-2 py-1 text-ink-soft"
 												aria-label={`Tecla ${k}`}
 											>
 												{k}

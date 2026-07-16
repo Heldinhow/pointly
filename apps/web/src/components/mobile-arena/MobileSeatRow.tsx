@@ -130,7 +130,6 @@ export function MobileSeatRow({
 					title={player.nick}
 					className={cn(
 						"font-display font-semibold text-body text-ink truncate",
-						"tracking-[-0.01em]",
 						isDisconnected && "text-ink-mute",
 					)}
 				>
@@ -159,7 +158,7 @@ export function MobileSeatRow({
 				<span
 					data-testid="mobile-seat-state"
 					className={cn(
-						"font-mono text-micro-label tracking-[0.06em] uppercase",
+						"font-mono text-micro-label tracking-caps uppercase",
 						"py-[3px] px-2 rounded-full border flex-shrink-0",
 						state === "voted"
 							? "text-ink border-ink/15 bg-paper"
