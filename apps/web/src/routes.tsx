@@ -9,6 +9,7 @@
 
 import { Suspense, lazy } from "react";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { NetworkBanner } from "./components/network-banner";
 
 const Landing = lazy(() =>
 	import("./pages/landing").then((m) => ({ default: m.Landing })),
@@ -99,7 +100,10 @@ const router = createBrowserRouter(
  */
 export function AppRouter() {
 	return (
-		<RouterProvider router={router} future={{ v7_startTransition: true }} />
+		<>
+			<NetworkBanner />
+			<RouterProvider router={router} future={{ v7_startTransition: true }} />
+		</>
 	);
 }
 
