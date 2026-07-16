@@ -31,14 +31,18 @@ const VIEWPORTS = [
  * Para mobile, executa para cada viewport customizado.
  */
 test.describe("Mobile-First Arena", () => {
-	test.skip(
-		({ }, testInfo) => testInfo.project.name !== "mobile",
-		"mobile-first Arena spec roda só no project mobile (viewports customizados via test.use)",
-	);
-
 	for (const vp of VIEWPORTS) {
 		test.describe(`viewport ${vp.name} (${vp.width}×${vp.height})`, () => {
 			test.use({ viewport: { width: vp.width, height: vp.height } });
+
+			test.beforeAll(({ }, testInfo) => {
+				if (testInfo.project.name !== "mobile") {
+					test.skip(
+						true,
+						"mobile-first Arena spec roda só no project mobile (viewports customizados via test.use)",
+					);
+				}
+			});
 
 			test(`FMR-08/09: zero horizontal scroll + mesa escalada`, async ({
 				browser,

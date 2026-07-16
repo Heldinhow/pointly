@@ -22,14 +22,15 @@ const VIEWPORTS = [
 ] as const;
 
 test.describe("Mobile-First Join", () => {
-	test.skip(
-		({ }, testInfo) => testInfo.project.name !== "mobile",
-		"mobile-first Join spec roda só no project mobile",
-	);
-
 	for (const vp of VIEWPORTS) {
 		test.describe(`viewport ${vp.name} (${vp.width}×${vp.height})`, () => {
 			test.use({ viewport: { width: vp.width, height: vp.height } });
+
+			test.beforeAll(({ }, testInfo) => {
+				if (testInfo.project.name !== "mobile") {
+					test.skip(true, "mobile-first Join spec roda só no project mobile");
+				}
+			});
 
 			test(`FMR-01/05: zero horizontal scroll + form completo visível`, async ({
 				page,
@@ -118,7 +119,10 @@ test.describe("Mobile-First Join", () => {
 			test(`FMR-07: Tab order Apelido → Entrar → Voltar`, async ({ page }) => {
 				await page.goto("/join?code=ABCD");
 				await page.waitForSelector('[data-testid="page-join"]');
-				// Foca o nick input primeiro
+				// Preenche o nick pra destravar o submit (FMR-07 só faz sentido
+				// com form válido — submit desabilitado é pulado no Tab).
+				await page.getByTestId("nick-input").fill("Helder");
+				await page.waitForTimeout(100);
 				await page.getByTestId("nick-input").focus();
 				await page.keyboard.press("Tab");
 				// O próximo focável deve ser o submit Entrar
@@ -126,13 +130,13 @@ test.describe("Mobile-First Join", () => {
 					const el = document.activeElement as HTMLElement | null;
 					return el ? el.getAttribute("data-testid") : null;
 				});
-				expect(focused).toBe("join-submit");
+				expect(focused, "first Tab from nick-input").toBe("join-submit");
 				await page.keyboard.press("Tab");
 				const focused2 = await page.evaluate(() => {
 					const el = document.activeElement as HTMLElement | null;
 					return el ? el.getAttribute("data-testid") : null;
 				});
-				expect(focused2).toBe("join-back");
+				expect(focused2, "second Tab").toBe("join-back");
 			});
 
 			test(`screenshot ${vp.name}`, async ({ page }) => {
