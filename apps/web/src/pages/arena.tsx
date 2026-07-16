@@ -36,7 +36,7 @@
  * @see .specs/features/planning-poker-v1/tasks.md T30
  * @see .specs/features/planning-poker-v1/spec.md F-007, F-053
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useBlocker, useSearchParams } from "react-router-dom";
 import { Deck } from "../components/deck";
 import { buildShareUrl } from "../components/empty-overlay";
@@ -274,6 +274,49 @@ export function Arena() {
 	// Sem host-gate: ADR-0002 diz que reveal/new-round são ações de
 	// qualquer player (regra democratizada).
 	const [openHelp, setOpenHelp] = useState(false);
+
+	// FMR-08/09/22: ResizeObserver mede o stage container e computa
+	// `--arena-scale` para a mesa fixa 960×560 caber em qualquer
+	// viewport (mobile portrait, landscape, fold). MIN_SCALE 0.45 evita
+	// tap targets ficarem inviáveis em viewports extremos.
+	const stageRef = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		const stage = stageRef.current;
+		if (!stage) return;
+
+		const TABLE_W = 960;
+		const TABLE_H = 560;
+		const MIN_SCALE = 0.45;
+		const VERTICAL_RESERVE = 220; // header + timer + stats pills + deck
+
+		let raf = 0;
+		const compute = () => {
+			const sw = stage.clientWidth;
+			const sh = stage.clientHeight;
+			if (sw === 0 || sh === 0) return;
+			const availW = Math.max(0, sw - 32); // px-4 padding each side
+			const availH = Math.max(0, sh - VERTICAL_RESERVE);
+			const scale = Math.max(
+				MIN_SCALE,
+				Math.min(1, availW / TABLE_W, availH / TABLE_H),
+			);
+			stage.style.setProperty("--arena-scale", String(scale));
+		};
+
+		const schedule = () => {
+			cancelAnimationFrame(raf);
+			raf = requestAnimationFrame(compute);
+		};
+
+		schedule();
+		const ro = new ResizeObserver(schedule);
+		ro.observe(stage);
+		return () => {
+			cancelAnimationFrame(raf);
+			ro.disconnect();
+		};
+	}, []);
+
 	useKeyboardShortcuts({
 		helpKey: "?",
 		shortcuts: {
@@ -340,29 +383,39 @@ export function Arena() {
 
 			{/* Stage */}
 			<main
-				className="flex-1 relative flex flex-col items-center justify-center px-4 sm:px-8 lg:px-12 overflow-hidden"
+				ref={stageRef}
+				className="flex-1 relative flex flex-col items-center justify-center px-4 sm:px-8 lg:px-12 overflow-hidden pt-[max(env(safe-area-inset-top),0.875rem)] pb-[max(env(safe-area-inset-bottom),1rem)]"
 				data-testid="arena-stage"
+				style={{ minHeight: "60vh" }}
 			>
-				{/* Stats pill (top-left, absolute) */}
-				<div className="absolute top-3.5 left-3 sm:left-8 lg:left-12 z-10">
+				{/* Stats pill (top-left, absolute) — oculta em mobile <sm.
+				 * Info crítica pós-reveal também aparece no destaque visual
+				 * dos assentos mediana, então não há perda de informação. */}
+				<div className="hidden sm:block absolute top-3.5 left-3 sm:left-8 lg:left-12 z-10">
 					<StatsPill consensus={consensus} />
 				</div>
 
-				{/* Timer pill (top-right, absolute) */}
-				<div className="hidden md:block absolute top-3.5 right-3 sm:right-8 lg:right-12 z-10">
+				{/* Timer pill (top-right, absolute) — SEMPRE visível (FMR-11).
+				 * Usuário precisa saber se está em estado crítico (≤30s) em
+				 * qualquer viewport. */}
+				<div className="absolute top-3.5 right-3 sm:right-8 lg:right-12 z-10 scale-90 sm:scale-100 origin-top-right">
 					<TimerPill />
 				</div>
 
 				{/* Mesa: Ellipse + 12 Seats + RevealButton central.
-				 * Container responsivo com scroll horizontal em mobile (a mesa
-				 * tem geometria fixa de 960×560 — não cabe em viewport estreito). */}
+				 * Container responsivo. A mesa interna tem tamanho fixo
+				 * 960×560 mas é escalada via `transform: scale(var(--arena-scale))`
+				 * (computado por ResizeObserver no stage). FMR-08/09. */}
 				<div
-					className="relative w-full max-w-[960px] mt-4 sm:mt-6 lg:mt-8 overflow-x-auto overflow-y-hidden"
+					className="relative w-full max-w-[960px] mt-4 sm:mt-6 lg:mt-8 overflow-visible"
 					data-testid="arena-table"
 					role="group"
 					aria-label="Mesa da rodada"
 				>
-					<div className="relative w-[960px] h-[560px] min-w-[960px]">
+					<div
+						className="relative w-[960px] h-[560px] min-w-[960px]"
+						data-testid="arena-table-inner"
+					>
 						<Ellipse width={920} height={500} className="absolute top-[30px] left-[20px]" />
 
 						{/* Seats posicionados via trigonometria */}
