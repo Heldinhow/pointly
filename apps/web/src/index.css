@@ -57,6 +57,35 @@
 	--border-rule: rgba(21, 20, 15, 0.16);
 }
 
+/* Auto-detect dark mode do SO quando o user ainda não escolheu
+ * manualmente (classe .dark ausente). Quando o user toggla via
+ * ThemeToggle, ele adiciona .dark e essa media query deixa de
+ * aplicar — .dark sempre vence. */
+@media (prefers-color-scheme: dark) {
+	:root:not(.dark) {
+		--bg: #13120d;
+		--paper-warm: #1a1914;
+		--paper-dark: #222019;
+		--surface: #1b1a14;
+		--fg: #f7f1de;
+		--fg-soft: #efe7d2;
+		--fg-mute: #ddd2b6;
+		--fg-faint: #96896b;
+		--accent: #f08e7c;
+		--coral-soft: #f4a596;
+		--coral-deep: #ed6f5c;
+		--mustard: #f4cd68;
+		--olive: #8a9163;
+		--shadow-bone: 0 30px 60px -30px rgba(0, 0, 0, 0.5);
+		--shadow-card: 0 4px 8px -1px rgba(0, 0, 0, 0.35);
+		--shadow-coral: 0 14px 26px -16px rgba(240, 142, 124, 0.4);
+		--border-header: rgba(247, 241, 222, 0.08);
+		--shadow-header: rgba(0, 0, 0, 0.4);
+		--border-rail: rgba(247, 241, 222, 0.05);
+		--border-rule: rgba(247, 241, 222, 0.16);
+	}
+}
+
 .dark {
 	--bg: #13120d; /* deep dark warm charcoal background */
 	--paper-warm: #1a1914; /* elevated dark background */
