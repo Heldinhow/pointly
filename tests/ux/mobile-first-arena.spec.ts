@@ -416,6 +416,206 @@ test.describe("Mobile-First Arena", () => {
 				}
 			});
 
+			test(`FMR-21: timer ≤30s critical (coral-soft bg + data-timer-critical=true)`, async ({
+				browser,
+			}) => {
+				test.setTimeout(60_000);
+				// Skip em landscape: o TimerPill existe no header do
+				// MobilePlayerList e no top do arena desktop, mas a
+				// condição "≤30s critical" é UX de polegar no top do
+				// viewport — em landscape 800×360 o alerta competiria com
+				// o conteúdo principal. Foco do teste é portrait.
+				test.skip(
+					vp.isLandscape,
+					"FMR-21 só roda em portrait (alerta critical é UX mobile)",
+				);
+
+				const suite = await multiClient(browser, {
+					clientCount: 1,
+					viewport: { width: vp.width, height: vp.height },
+				});
+				try {
+					await suite.createRoom(0);
+					await suite.waitForSala(0, (s) => s.players.length >= 1, 10_000);
+					const page = suite.clients[0]!.page;
+					await page.waitForSelector('[data-testid="page-arena"]');
+					const overlay = page.locator('[data-testid="empty-overlay"]');
+					if (await overlay.isVisible({ timeout: 1500 }).catch(() => false)) {
+						await page.getByTestId("empty-overlay-dismiss").click();
+						await page.waitForTimeout(300);
+					}
+
+					// TimerPill existe nos 2 branches: MobilePlayerList (mobile)
+					// e arena desktop. Só esperamos o testid.
+					await page.waitForSelector('[data-testid="timer-pill"]');
+
+					// Estado inicial: não-crítico.
+					const initial = await page.evaluate(() => {
+						const pill = document.querySelector('[data-testid="timer-pill"]');
+						return pill?.getAttribute("data-timer-critical");
+					});
+					expect(initial, "estado inicial deve ser não-crítico").toBe("false");
+
+					// Injeta sala sintética com timer = 25s + critical=true.
+					// __POINTLY_TEST__ é DEV-only (gate em import.meta.env.DEV),
+					// exposto em apps/web/src/lib/use-arena-loop.ts:208-212.
+					await page.evaluate(() => {
+						const w = window as unknown as {
+							__POINTLY_SALA__?: {
+								timer: number;
+								critical?: boolean;
+								phase?: string;
+								round?: number;
+							};
+							__POINTLY_TEST__?: {
+								setSala: (s: unknown) => void;
+							};
+						};
+						const current = w.__POINTLY_SALA__;
+						if (!current || !w.__POINTLY_TEST__) {
+							throw new Error(
+								"DEV hooks ausentes — Vite dev server deve estar rodando",
+							);
+						}
+						w.__POINTLY_TEST__.setSala({
+							...current,
+							timer: 25,
+							critical: true,
+							phase: "voting",
+						});
+					});
+
+					// Aguarda o TimerPill reagir (1 tick do React render).
+					const pill = page.locator(
+						'[data-testid="timer-pill"][data-timer-critical="true"]',
+					);
+					await pill.waitFor({ state: "attached", timeout: 5_000 });
+					await expect(pill).toBeVisible();
+
+					// Confirma visual: bg-coral-soft (não bg-surface) no estado crítico.
+					const classes = await pill.getAttribute("class");
+					expect(classes, "TimerPill deve ter bg-coral-soft").toContain(
+						"bg-coral-soft",
+					);
+					expect(classes, "TimerPill NÃO deve ter bg-surface").not.toContain(
+						"bg-surface",
+					);
+				} finally {
+					await suite.dispose();
+				}
+			});
+
+			test(`FMR-22: orientation change não quebra arena mobile (sem overflow, sem colapso)`, async ({
+				browser,
+			}) => {
+				test.setTimeout(60_000);
+				// FMR-22 só faz sentido como swap portrait→landscape. Se o
+				// viewport já é landscape (galaxy-s23-landscape 800×360),
+				// pula — o teste parte do pressuposto portrait inicial.
+				test.skip(
+					vp.isLandscape,
+					"FMR-22 parte do portrait e rotaciona pra landscape (não roda em viewport já landscape)",
+				);
+
+				const suite = await multiClient(browser, {
+					clientCount: 1,
+					viewport: { width: vp.width, height: vp.height },
+				});
+				try {
+					await suite.createRoom(0);
+					await suite.waitForSala(0, (s) => s.players.length >= 1, 10_000);
+					const page = suite.clients[0]!.page;
+					await page.waitForSelector('[data-testid="page-arena"]');
+					const overlay = page.locator('[data-testid="empty-overlay"]');
+					if (await overlay.isVisible({ timeout: 1500 }).catch(() => false)) {
+						await page.getByTestId("empty-overlay-dismiss").click();
+						await page.waitForTimeout(300);
+					}
+
+					const measureArena = () =>
+						page.evaluate(() => {
+							const isMobile =
+								window.matchMedia("(max-width: 639px)").matches;
+							// mobile branch: <li data-player-id>; desktop branch:
+							// <div data-seat-angle>. Swap portrait↔landscape pode
+							// cruzar o breakpoint 640px → componente muda mas o
+							// jogador precisa continuar visível em alguma forma.
+							const playerRows = Array.from(
+								document.querySelectorAll("[data-player-id]"),
+							);
+							const seatCells = Array.from(
+								document.querySelectorAll("[data-seat-angle]"),
+							);
+							const stage = document.querySelector(
+								'[data-testid="arena-stage"]',
+							) as HTMLElement | null;
+							const arenaScale = stage
+								? parseFloat(
+										getComputedStyle(stage).getPropertyValue("--arena-scale"),
+									) || null
+								: null;
+							const all = [...playerRows, ...seatCells];
+							return {
+								branch: isMobile ? "mobile" : "desktop",
+								scrollWidth: document.documentElement.scrollWidth,
+								innerWidth: window.innerWidth,
+								playerCount: all.length,
+								zeroPlayerRows: all.filter((s) => {
+									const r = (s as HTMLElement).getBoundingClientRect();
+									return r.width === 0 || r.height === 0;
+								}).length,
+								arenaScale,
+							};
+						});
+
+					// Portrait inicial: lê baseline.
+					const portrait = await measureArena();
+					expect(
+						portrait.scrollWidth,
+						`portrait scrollWidth ${portrait.scrollWidth} > innerWidth ${portrait.innerWidth}`,
+					).toBeLessThanOrEqual(portrait.innerWidth);
+					expect(
+						portrait.zeroPlayerRows,
+						`portrait: ${portrait.zeroPlayerRows} linhas colapsadas (devia ser 0)`,
+					).toBe(0);
+					expect(portrait.playerCount, "portrait deve ter ≥1 jogador").toBeGreaterThanOrEqual(1);
+
+					// Swap portrait → landscape (rotaciona 90°).
+					await page.setViewportSize({ width: vp.height, height: vp.width });
+					// React re-render + resize listeners: 250ms sobra.
+					await page.waitForTimeout(250);
+
+					const landscape = await measureArena();
+					expect(
+						landscape.scrollWidth,
+						`landscape scrollWidth ${landscape.scrollWidth} > innerWidth ${landscape.innerWidth}`,
+					).toBeLessThanOrEqual(landscape.innerWidth);
+					expect(
+						landscape.zeroPlayerRows,
+						`landscape: ${landscape.zeroPlayerRows} linhas colapsadas (devia ser 0)`,
+					).toBe(0);
+					// Mesma quantidade de jogadores continua renderizada —
+					// pode ser em data-player-id (mobile) OU data-seat-angle
+					// (desktop), dependendo se a rotação cruzou o breakpoint.
+					expect(
+						landscape.playerCount,
+						`landscape playerCount ${landscape.playerCount} !== portrait ${portrait.playerCount}`,
+					).toBe(portrait.playerCount);
+
+					// Re-escala do branch desktop (≥640px) — verificável.
+					// Em branch mobile (MobilePlayerList) não aplica:
+					// arenaScale fica null. Nesse caso pulamos a checagem.
+					if (portrait.branch === "desktop" && landscape.arenaScale !== null) {
+						expect(
+							landscape.arenaScale,
+							`scale landscape (${landscape.arenaScale}) deve ser < portrait (${portrait.arenaScale})`,
+						).toBeLessThan(portrait.arenaScale!);
+					}
+				} finally {
+					await suite.dispose();
+				}
+			});
+
 			test(`screenshot ${vp.name}`, async ({ browser }) => {
 				const suite = await multiClient(browser, {
 					clientCount: 1,
