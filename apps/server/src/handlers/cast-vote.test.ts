@@ -114,9 +114,10 @@ describe("handleCastVote — rejeições", () => {
 		sala.castVote(id, "5");
 		sala.reveal(id);
 		expect(sala.phase).toBe("revealed");
-		// tentar votar pós-reveal
+		// tentar votar pós-reveal (valor diferente)
 		const result = handleCastVote(hub, id, { value: "8" });
 		expect(result.ok).toBe(true);
+		if (result.ok) expect(result.changed).toBe(true); // EVR-04
 		expect(sala.getPlayer(id)!.value).toBe("8");
 	});
 
@@ -124,5 +125,28 @@ describe("handleCastVote — rejeições", () => {
 		const result = handleCastVote(hub, "ghost", { value: "5" });
 		expect(result.ok).toBe(false);
 		if (!result.ok) expect(result.code).toBe("invalid_vote");
+	});
+});
+
+// ---------------------------------------------------------------------------
+// EVR-14: idempotência pós-reveal (clicou na mesma carta duas vezes)
+// ---------------------------------------------------------------------------
+
+describe("handleCastVote — pós-reveal idempotente (EVR-14)", () => {
+	test("cast_vote idempotente pós-reveal retorna changed=false sem mutação", () => {
+		const { id, code } = addPlayer(
+			"00000000-0000-4000-8000-000000000001",
+			"Ana",
+		);
+		const sala = hub.getSala(code)!;
+		sala.castVote(id, "5");
+		sala.reveal(id);
+		expect(sala.phase).toBe("revealed");
+		// Act: Ana clica na MESMA carta após o reveal
+		const result = handleCastVote(hub, id, { value: "5" });
+		expect(result.ok).toBe(true);
+		if (result.ok) expect(result.changed).toBe(false);
+		// Voto permanece "5" sem mutação adicional
+		expect(sala.getPlayer(id)!.value).toBe("5");
 	});
 });
