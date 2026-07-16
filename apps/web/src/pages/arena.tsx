@@ -19,7 +19,9 @@
  *  - 12 assentos distribuídos via trig
  *  - VOCÊ travado em 6h (bottom-center)
  *  - Demais 11 em arco (30° de espaçamento)
- *  - R_x=420, R_y=240 (relativo ao centro do Ellipse 960×560)
+ *  - R_x=420, R_y=210 (single source of truth em lib/arena-geometry.ts;
+ *    `Ellipse 920×500` reserva 40px de folga em cada eixo → rx=(920-80)/2=420,
+ *    ry=(500-80)/2=210)
  *
  * **WS wire-up** (Phase 7 — T38/T41):
  *  - Por enquanto stub: aceita props `sala` para testar render
