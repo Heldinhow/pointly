@@ -1,0 +1,53 @@
+coverage:
+  precision: 2
+  round: down
+  range: "70...90"
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        if_ci_failed: error
+        only_pulls: false
+    patch:
+      default:
+        target: 80%
+        if_ci_failed: error
+    changes:
+      default:
+        if_ci_failed: error
+
+comment:
+  layout: "header, diff, flags, components, footer"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+flag_management:
+  default_rules:
+    carryforward: true
+    statuses:
+      - type: project
+        target: auto
+        threshold: 1%
+      - type: patch
+        target: 80%
+
+component_management:
+  individual_components:
+    - component_id: web
+      name: "apps/web"
+      paths:
+        - apps/web/**
+    - component_id: server
+      name: "apps/server"
+      paths:
+        - apps/server/**
+    - component_id: shared
+      name: "packages/shared"
+      paths:
+        - packages/shared/**
+
+github_checks:
+  annotations: true

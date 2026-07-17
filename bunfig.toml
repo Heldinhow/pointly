@@ -16,3 +16,10 @@ linker = "hoisted"
 
 [run]
 bun = true
+
+[test]
+# Cobertura desligada por default; `bun run test:coverage` liga.
+# Reporters: text (humano) + lcov (Codecov) + html (artifact local).
+coverage = false
+coverageReporter = ["text", "lcov", "html"]
+coverageDir = "coverage"
