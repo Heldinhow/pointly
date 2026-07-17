@@ -40,26 +40,26 @@ services:
       - traefik.enable=true
       - traefik.docker.network=dokploy-network
       # /api (web → 80) — redirect to https
-      - traefik.http.routers.pointly-api-web.rule=Host(`pointly.space`) && PathPrefix(`/api`)
+      - traefik.http.routers.pointly-api-web.rule=(Host(`pointly.space`) || Host(`www.pointly.space`)) && PathPrefix(`/api`)
       - traefik.http.routers.pointly-api-web.entrypoints=web
       - traefik.http.routers.pointly-api-web.service=pointly-server
       - traefik.http.routers.pointly-api-web.priority=30
       - traefik.http.routers.pointly-api-web.middlewares=redirect-to-https@file
       # /api (websecure → 443) — TLS + ACME
-      - traefik.http.routers.pointly-api-websecure.rule=Host(`pointly.space`) && PathPrefix(`/api`)
+      - traefik.http.routers.pointly-api-websecure.rule=(Host(`pointly.space`) || Host(`www.pointly.space`)) && PathPrefix(`/api`)
       - traefik.http.routers.pointly-api-websecure.entrypoints=websecure
       - traefik.http.routers.pointly-api-websecure.service=pointly-server
       - traefik.http.routers.pointly-api-websecure.priority=30
       - traefik.http.routers.pointly-api-websecure.tls.certresolver=letsencrypt
       # /ws (web → 80) — redirect to https; WebSocket upgrade happens once
       # the Upgrade request hits Bun.serve's `websocket:` handler.
-      - traefik.http.routers.pointly-ws-web.rule=Host(`pointly.space`) && PathPrefix(`/ws`)
+      - traefik.http.routers.pointly-ws-web.rule=(Host(`pointly.space`) || Host(`www.pointly.space`)) && PathPrefix(`/ws`)
       - traefik.http.routers.pointly-ws-web.entrypoints=web
       - traefik.http.routers.pointly-ws-web.service=pointly-server
       - traefik.http.routers.pointly-ws-web.priority=30
       - traefik.http.routers.pointly-ws-web.middlewares=redirect-to-https@file
       # /ws (websecure → 443) — TLS + ACME + WS upgrade
-      - traefik.http.routers.pointly-ws-websecure.rule=Host(`pointly.space`) && PathPrefix(`/ws`)
+      - traefik.http.routers.pointly-ws-websecure.rule=(Host(`pointly.space`) || Host(`www.pointly.space`)) && PathPrefix(`/ws`)
       - traefik.http.routers.pointly-ws-websecure.entrypoints=websecure
       - traefik.http.routers.pointly-ws-websecure.service=pointly-server
       - traefik.http.routers.pointly-ws-websecure.priority=30
