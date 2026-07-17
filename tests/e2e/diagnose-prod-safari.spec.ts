@@ -25,11 +25,10 @@ interface CapturedFrame {
 	data?: string;
 }
 
-test("prod criar-sala — webkit captures WS + console + network", async ({
+test("prod criar-sala — captures WS + console + network (chromium + webkit)", async ({
 	page,
 	browserName,
 }) => {
-	test.skip(browserName !== "webkit", "this is the Safari reproducer");
 
 	const consoleMsgs: { type: string; text: string }[] = [];
 	const pageErrors: string[] = [];
@@ -77,20 +76,23 @@ test("prod criar-sala — webkit captures WS + console + network", async ({
 	await page.locator('[data-testid="join-submit"]').click();
 	await page.waitForURL(/\/arena/, { timeout: 10000 });
 
-	// 4. Wait up to 8s for either:
-	//    - window.__POINTLY_SALA__ populated (success)
-	//    - share-pill visible (success contract)
-	//    - OR a /ws close + no sala (failure)
+	// 4. Wait up to 8s for the SALA to be fully populated (code in share-pill
+	//    + __POINTLY_SALA__ set). Capturing share-pill textContent too early
+	//    yields the placeholder "—" before the code is rendered.
 	const result = await page.evaluate(async () => {
 		const start = Date.now();
-		const ok = await new Promise<"sala" | "ws-closed" | "timeout">((resolve) => {
+		const ok = await new Promise<"sala" | "timeout">((resolve) => {
 			const tick = () => {
-				const w = window as unknown as { __POINTLY_SALA__?: unknown };
-				if (w.__POINTLY_SALA__) return resolve("sala");
-				// Check if share-pill (success contract) is present.
-				if (document.querySelector('[data-testid="share-pill"]')) return resolve("sala");
+				const w = window as unknown as { __POINTLY_SALA__?: { code?: string } };
+				const pill = document.querySelector('[data-testid="share-pill"]');
+				const pillText = pill?.textContent?.trim() ?? "";
+				const salaCode = w.__POINTLY_SALA__?.code;
+				// Success: share-pill shows a 4-char code AND window state matches.
+				if (/^[A-Z0-9]{4}$/.test(pillText) && salaCode && salaCode === pillText) {
+					return resolve("sala");
+				}
 				if (Date.now() - start > 8000) return resolve("timeout");
-				setTimeout(tick, 200);
+				setTimeout(tick, 100);
 			};
 			tick();
 		});
@@ -123,7 +125,7 @@ test("prod criar-sala — webkit captures WS + console + network", async ({
 	});
 
 	// Surface the most actionable signals in the test output.
-	console.log("=== prod-safari verdict ===");
+	console.log(`=== ${browserName} verdict ===`);
 	console.log(JSON.stringify(result, null, 2));
 	console.log(`=== WS frames (${wsFrames.length}) ===`);
 	for (const f of wsFrames) {
@@ -139,10 +141,6 @@ test("prod criar-sala — webkit captures WS + console + network", async ({
 	for (const e of pageErrors) console.log(e);
 	console.log(`=== console (${consoleMsgs.length}) ===`);
 	for (const m of consoleMsgs.slice(0, 30)) console.log(`[${m.type}] ${m.text}`);
-	console.log(`=== ALL requests (${requests.length}) ===`);
-	for (const r of requests) {
-		console.log(`${r.status ?? "??"} ${r.method} ${r.url}`);
-	}
 
 	// Hard assertions — capture the real failure mode.
 	expect(result.salaCode, `sala.code missing — WS didn't populate state`).toMatch(/^[A-Z0-9]{4}$/);
