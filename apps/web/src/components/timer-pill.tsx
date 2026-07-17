@@ -68,10 +68,15 @@ export function TimerPill(props: TimerPillProps = {}) {
 			data-od-id="timer-pill"
 			data-timer-critical={isCritical ? "true" : "false"}
 			className={cn(
-				// Pill mais compacto: py-2 + gap-2.5 (antes py-2.5 + gap-3.5)
-				"inline-flex items-center gap-2.5 px-3.5 py-2 rounded-full",
+				// Pill compacto (Atelier Zero): py-1 + gap-2 (antes py-2 + gap-2.5).
+				// Stats-pill (esquerda) já usa py-1 + `text-micro-label` (10px)
+				// — espelhar aqui pros dois strips do header terem a mesma
+				// altura visual E o mesmo peso tipográfico. Antes timer value
+				// era `text-label` (11px), um passo acima — visualmente
+				// competia com o Seat face-up (20px Playfair) sem motivo.
+				"inline-flex items-center gap-2 px-3 py-1 rounded-full",
 				"border transition-colors duration-200",
-				"font-mono tracking-caps uppercase",
+				"font-mono text-micro-label tracking-caps uppercase",
 				isCritical
 					? "bg-coral-soft border-coral/40 text-ink"
 					: "bg-surface border-ink/5 text-ink-faint",

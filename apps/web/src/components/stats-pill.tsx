@@ -68,10 +68,14 @@ export function StatsPill({ consensus }: StatsPillProps) {
 			className={cn(
 				// pill compacto (Atelier Zero): ocupa 1 linha discreta no topo,
 				// não compete com a Ø wordmark à esquerda. py-2 era exagerado
-				// pra um strip pós-reveal — encolhido pra py-1.5.
-				"inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full",
+				// pra um strip pós-reveal — encolhido pra py-1; gap-2.5 → 2 pra
+				// acompanhar (sem isso fica visualmente "arejado demais" perto
+				// do card-title do header). Texto usa `text-micro-label`
+				// (10px) — `text-label` (11px) era grande demais pra um strip
+				// pós-reveal que compete com o Seat face-up (20px Playfair).
+				"inline-flex items-center gap-2 px-3 py-1 rounded-full",
 				"bg-surface border border-ink/5",
-				"font-mono text-label tracking-caps uppercase text-ink-faint",
+				"font-mono text-micro-label tracking-caps uppercase text-ink-faint",
 				"transition-opacity duration-300",
 			)}
 		>
@@ -111,6 +115,10 @@ export function StatsPill({ consensus }: StatsPillProps) {
 					</span>
 				</span>
 			)}
+
+			{/* Média + Mediana estão em `text-micro-label` (10px) via pill
+			    root. Valor da mediana ganha `font-semibold` para hierarquia
+			    sobre o número — borda gold (border-b border-mustard) reforça. */}
 
 			{/* Intervalo */}
 			<span data-testid="stats-range">

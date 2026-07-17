@@ -130,9 +130,9 @@ export function RevealButton({
 				"flex flex-col gap-[3px] items-center justify-center",
 				// Positioning: centered (desktop) vs inline (mobile dock)
 				centered
-					? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-auto min-w-[200px] px-5"
+					? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-auto min-w-[180px] px-5"
 					: "relative w-full px-6",
-				"py-2.5 rounded-full whitespace-nowrap",
+				"py-2 rounded-full whitespace-nowrap",
 				"min-h-[44px] min-h-[var(--tap-target-min,44px)]",
 				"font-display font-semibold text-caption",
 				"transition-all duration-200 select-none",
