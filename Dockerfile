@@ -25,7 +25,13 @@ RUN bun install --frozen-lockfile
 # ----------------------------------------------------------------------------
 FROM oven/bun:${BUN_VERSION}-alpine AS web-build
 WORKDIR /app
-ENV NODE_ENV=development
+# CRITICAL: NODE_ENV=production. With NODE_ENV=development, Vite keeps
+# `import.meta.env.DEV` as a runtime check (true at runtime), which
+# makes the prod bundle execute the dev branch and try to connect to
+# ws://localhost:3001/ws. Browsers then block it as mixed content.
+# `node_modules` is copied from `deps` (which installed everything with
+# devDeps), so vite is available even though NODE_ENV=production.
+ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json bun.lockb bunfig.toml ./
 COPY tsconfig.base.json ./
