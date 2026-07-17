@@ -6,7 +6,8 @@
  *  - valida cada evento recebido com Zod (rejeita malformed → `console.warn`, drop)
  *  - expõe `send(event)` que valida com Zod antes de enviar
  *  - auto-reconnect com backoff exponencial (1s, 2s, 4s, …, max 30s)
- *  - heartbeat: envia `ping` a cada 30s; se `pong` não chega em 5s, fecha + reconnect
+ *  - heartbeat: envia `ping` a cada 5s; se `pong` não chega em 5s, fecha + reconnect
+ *    → detection time máximo client-side: 10s (vs. 35s antes)
  *  - `status: 'idle' | 'connecting' | 'open' | 'closed' | 'error'`
  *  - `close()` para heartbeat e fecha WS sem reconnect
  *
@@ -52,7 +53,7 @@ export type CreateWSClientOptions = {
 	 * Cap de retries de reconnect. `Infinity` (default) = reconecta sempre.
 	 */
 	maxReconnectRetries?: number;
-	/** Override do intervalo de heartbeat (ms). Default: 30000. */
+	/** Override do intervalo de heartbeat (ms). Default: 5000. */
 	heartbeatIntervalMs?: number;
 	/** Override do timeout pra esperar pong (ms). Default: 5000. */
 	heartbeatTimeoutMs?: number;
@@ -72,8 +73,13 @@ export type WSClient = {
 /** Backoff exponencial: 1s, 2s, 4s, 8s, 16s, 30s (cap). */
 const RECONNECT_BASE_MS = 1_000;
 const RECONNECT_MAX_MS = 30_000;
-/** Heartbeat ping a cada 30s. */
-const DEFAULT_HEARTBEAT_INTERVAL_MS = 30_000;
+/**
+ * Heartbeat ping a cada 5s.
+ *
+ * Reduzido de 30s → 5s para detecção mais rápida de queda (fev/2026).
+ * Custo: 12 pings/min por conexão — trivial em planning poker (≤12 seats).
+ */
+const DEFAULT_HEARTBEAT_INTERVAL_MS = 5_000;
 /** Se pong não chega em 5s, fecha + reconnect. */
 const DEFAULT_HEARTBEAT_TIMEOUT_MS = 5_000;
 

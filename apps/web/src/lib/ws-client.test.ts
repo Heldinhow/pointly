@@ -511,11 +511,11 @@ describe("createWSClient — reconnect on close", () => {
 });
 
 // ---------------------------------------------------------------------------
-// T23.6 — heartbeat: ping enviado após 30s
+// T23.6 — heartbeat: ping enviado após 5s
 // ---------------------------------------------------------------------------
 
 describe("createWSClient — heartbeat", () => {
-	test("ping enviado após heartbeatIntervalMs (default 30s)", () => {
+	test("ping enviado após heartbeatIntervalMs (default 5s)", () => {
 		const scheduled: Array<{ ms: number; fn: () => void }> = [];
 		const fakeSetTimeout = ((fn: () => void, ms: number) => {
 			scheduled.push({ ms, fn });
@@ -533,11 +533,11 @@ describe("createWSClient — heartbeat", () => {
 		client.connect();
 		MockWebSocket.instances[0]!.simulateOpen();
 
-		// open() agendou heartbeat
-		expect(scheduled.some((s) => s.ms === 30_000)).toBe(true);
+		// open() agendou heartbeat em 5s (default — fev/2026: era 30s)
+		expect(scheduled.some((s) => s.ms === 5_000)).toBe(true);
 
 		// Dispara o callback de heartbeat
-		const hb = scheduled.find((s) => s.ms === 30_000)!;
+		const hb = scheduled.find((s) => s.ms === 5_000)!;
 		hb.fn();
 
 		// ping deve ter sido enviado
@@ -579,8 +579,8 @@ describe("createWSClient — heartbeat", () => {
 			payload: {},
 		});
 
-		// Deve ter re-agendado heartbeat em 30s
-		expect(scheduled.some((s) => s.ms === 30_000)).toBe(true);
+		// Deve ter re-agendado heartbeat em 5s (default)
+		expect(scheduled.some((s) => s.ms === 5_000)).toBe(true);
 	});
 
 	test("intervalo customizado respeitado", () => {
@@ -596,14 +596,14 @@ describe("createWSClient — heartbeat", () => {
 			onEvent: () => {},
 			setTimeoutFn: fakeSetTimeout,
 			clearTimeoutFn: fakeClearTimeout,
-			heartbeatIntervalMs: 5_000,
+			heartbeatIntervalMs: 7_500, // override ≠ default (5s) — prova que override é respeitado
 		});
 
 		client.connect();
 		MockWebSocket.instances[0]!.simulateOpen();
 
-		expect(scheduled.some((s) => s.ms === 5_000)).toBe(true);
-		expect(scheduled.some((s) => s.ms === 30_000)).toBe(false);
+		expect(scheduled.some((s) => s.ms === 7_500)).toBe(true);
+		expect(scheduled.some((s) => s.ms === 5_000)).toBe(false);
 	});
 });
 

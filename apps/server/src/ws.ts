@@ -2,7 +2,7 @@
  * WebSocket handler — Phase 3 / T17
  *
  * Bun.serve() com upgrade em /ws. Dispatch de eventos por `event.type`
- * para os handlers T13/T14/T15/T16. Heartbeat ping/pong com timeout 60s.
+ * para os handlers T13/T14/T15/T16. Heartbeat ping/pong com timeout 15s.
  *
  * Wire format (C↔S) validado por Zod schemas em @planning-poker/shared.
  *
@@ -57,7 +57,7 @@ export type BunWS = {
 	unsubscribe(topic: string): void;
 };
 
-const HEARTBEAT_TIMEOUT_MS = 60_000;
+const HEARTBEAT_TIMEOUT_MS = 15_000;
 const RECONCILE_INTERVAL_MS = 10_000;
 
 /**
