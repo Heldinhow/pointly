@@ -20,11 +20,10 @@
       name="description"
       content="Pointly — Planning Poker web para times ágeis."
     />
-    <!-- Preconnect com WS server (mesmo host:port para ws:// e http://).
-         Reduz latência do handshake inicial — handshake TCP/TLS em paralelo
-         enquanto o JS bundle baixa. Em dev, ws://localhost:3001; em prod,
-         o dokploy injeta VITE_WS_URL via build. -->
-    <link rel="preconnect" href="http://localhost:3001" crossorigin />
+    <!-- (preconnect removido em 2026-07-17 — era hardcoded p/ localhost:3001,
+         o que (a) batia no servidor errado em prod e (b) mascarava o bug real
+         do WS URL hardcoded no bundle. Ganho de latência marginal não compensa
+         o risco. O browser abre WS + HTTP no mesmo origin naturalmente.) -->
     <title>Pointly</title>
   </head>
   <body>

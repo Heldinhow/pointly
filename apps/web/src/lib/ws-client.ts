@@ -87,29 +87,34 @@ function reconnectDelay(attempt: number): number {
 	return Math.min(exp, RECONNECT_MAX_MS);
 }
 
-/** Lê env var com fallback (Vite injeta `import.meta.env.VITE_*`). */
+/** Lê env var com fallback (Vite injeta `import.meta.env.VITE_*`).
+ *
+ * IMPORTANTE: usa acesso direto a `import.meta.env.*` — nunca alias pra
+ * variável local. O define plugin do Vite (Rollup) substitui essas
+ * expressões em build; se você colocar `const env = import.meta.env` antes,
+ * Vite não acompanha o alias e deixa o check de runtime intacto no bundle.
+ * Resultado histórico (2026-07-16): `if (env?.DEV)` rodava em prod,
+ * devolvia `ws://localhost:3001/ws`, Safari bloqueava mixed content e
+ * "Criar sala" parecia não criar salas.
+ *
+ * @see https://vitejs.dev/guide/env-and-mode.html#env-variables
+ */
 function defaultURL(): string {
 	try {
-		// `import.meta.env` é resolvido por Vite em build; em testes Bun, pode
-		// ser `undefined`. Try/catch protege.
-		const env = (import.meta as { env?: Record<string, string | undefined> })
-			.env;
-		const fromEnv = env?.VITE_WS_URL;
+		// 1. Override explícito via VITE_WS_URL no build (Dokploy injeta).
+		//    Acesso direto: Vite substitui pela string injetada em prod.
+		const fromEnv = import.meta.env.VITE_WS_URL;
 		if (typeof fromEnv === "string" && fromEnv.length > 0) return fromEnv;
-		// Em dev, o Vite roda em :5173 e o server Bun em :3001. Conexão WS
-		// relativa (`/ws`) é resolvida pelo Vite proxy, mas o proxy de WS
-		// do Vite 6 é instável — pode deixar conexões penduradas em
-		// "connecting" se o target não responde rápido. Solução pragmática:
-		// conectar direto em `ws://localhost:3001/ws` no dev (WS não tem
-		// CORS). Em prod (server serve estáticos), mesma origin resolve.
-		const devFlag = env?.DEV;
-		if (devFlag) {
+		// 2. Dev local: Vite roda em :5173 e o server Bun em :3001. WS via
+		//    proxy do Vite é instável em WS upgrades — conectar direto.
+		//    Acesso direto: Vite substitui DEV por `false` em prod build.
+		if (import.meta.env.DEV) {
 			return "ws://localhost:3001/ws";
 		}
 	} catch {
-		// ignore — import.meta indisponível
+		// ignore — import.meta indisponível em testes Bun
 	}
-	// Default prod: URL relativa `/ws` no mesmo origin.
+	// 3. Default prod: URL relativa `/ws` no mesmo origin (wss://<host>/ws).
 	if (typeof window !== "undefined" && window.location) {
 		const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
 		return `${proto}//${window.location.host}/ws`;
