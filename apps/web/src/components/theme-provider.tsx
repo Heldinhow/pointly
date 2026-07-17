@@ -5,12 +5,18 @@ type Theme = "light" | "dark";
 
 interface ThemeContextType {
 	/**
-	 * Tema efetivo aplicado.
-	 * `null` = sem escolha manual; o CSS respeita `prefers-color-scheme`.
-	 * `"light" | "dark"` = user togglou via ThemeToggle; escolha fixada.
+	 * Modo de tema selecionado.
+	 * `null` = modo **Sistema**: o CSS respeita `prefers-color-scheme` e o app
+	 * espelha o SO ao vivo (dark↔light). `"light" | "dark"` = escolha fixa,
+	 * ignora o SO.
 	 */
 	theme: Theme | null;
-	toggleTheme: () => void;
+	/**
+	 * Cicla o modo: Sistema (null) → Claro → Escuro → Sistema.
+	 * Voltar a `null` reativa o auto-detect do SO (remove data-theme e limpa
+	 * a persistência) — é o caminho de volta pro "seguir o sistema".
+	 */
+	cycleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -21,8 +27,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 			const saved = localStorage.getItem("theme");
 			if (saved === "light" || saved === "dark") return saved;
 		} catch {}
-		// Sem escolha manual: respeita prefers-color-scheme via media query
-		// do CSS. Não setamos `theme` aqui pra deixar o auto-detect livre.
+		// Sem escolha manual: modo Sistema. Não fixamos `theme` aqui pra deixar
+		// o auto-detect (`@media (prefers-color-scheme: dark)`) livre.
 		return null;
 	});
 
@@ -30,8 +36,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 		const root = window.document.documentElement;
 
 		if (theme === null) {
-			// Auto-detect: remove data-theme pra que
-			// `@media (prefers-color-scheme: dark)` do CSS tome a decisão.
+			// Modo Sistema: remove data-theme pra que o
+			// `@media (prefers-color-scheme: dark)` do CSS decida, e limpa o
+			// localStorage pra não re-fixar uma escolha antiga no próximo load.
 			root.removeAttribute("data-theme");
 			try {
 				localStorage.removeItem("theme");
@@ -40,34 +47,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 		}
 
 		// Escolha manual: fixa tema independente do SO.
-		// `html[data-theme="dark"|"light"]` tem precedência sobre a media
-		// query no CSS — bug antigo (`.dark` class) ignorava isso e o auto-
-		// detect virava a página dark de novo ao escolher light em SO dark.
+		// `html[data-theme="dark"|"light"]` tem precedência sobre a media query
+		// no CSS, então a escolha vale mesmo contra o `prefers-color-scheme`.
 		root.setAttribute("data-theme", theme);
 		try {
 			localStorage.setItem("theme", theme);
 		} catch {}
 	}, [theme]);
 
-	const toggleTheme = () => {
+	const cycleTheme = () => {
+		// Sistema (null) → Claro → Escuro → Sistema. O 3º clique devolve o
+		// controle pro SO — sem esse retorno, o toggle antigo travava numa
+		// escolha manual pra sempre e o app parava de seguir o sistema.
 		setTheme((prev) => {
-			// Toggle a partir do estado atual. Se `null` (auto-detect),
-			// decide com base no prefers-color-scheme atual: se o SO é dark,
-			// o estado efetivo é dark, então toggla pra light (e fixa).
-			// Se SO é light, toggla pra dark.
-			const effective: Theme =
-				prev ??
-				(typeof window !== "undefined" &&
-				window.matchMedia &&
-				window.matchMedia("(prefers-color-scheme: dark)").matches
-					? "dark"
-					: "light");
-			return effective === "dark" ? "light" : "dark";
+			if (prev === null) return "light";
+			if (prev === "light") return "dark";
+			return null;
 		});
 	};
 
 	return (
-		<ThemeContext.Provider value={{ theme, toggleTheme }}>
+		<ThemeContext.Provider value={{ theme, cycleTheme }}>
 			{children}
 		</ThemeContext.Provider>
 	);
