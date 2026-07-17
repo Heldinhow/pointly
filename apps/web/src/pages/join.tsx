@@ -152,11 +152,29 @@ export function Join() {
 	//   codeInputRef.
 	// - Se o nick já está pré-preenchido de sessionStorage (não vazio),
 	//   mantém foco no body — usuário provavelmente só quer revisar.
+	//
+	// IMPORTANTE: `nick` NÃO entra nas deps (ver comentário abaixo). E,
+	// independente do trigger, ANTES de roubar foco checamos se o usuário
+	// já focou algum input dentro do nosso card — caso contrário, o rAF
+	// agendado no mount dispara tarde (depois do usuário já ter focado o
+	// nick manualmente) e o caret pula pra o input errado.
 	useEffect(() => {
 		// Skip em prefers-reduced-motion NÃO se aplica aqui — foco é
 		// diferente de animação. Mas respeitamos timing: defer pra próximo
 		// frame pra não brigar com autoFocus do browser.
 		const id = requestAnimationFrame(() => {
+			const active = document.activeElement;
+			// Se o usuário já focou qualquer input dentro do nosso form/card,
+			// respeitamos — não roubamos foco. Evita o bug do caret pulando
+			// entre campos em /join (sem ?code), onde a condição
+			// `showCodeInput && !code` permanece verdadeira enquanto o
+			// usuário digita o nick.
+			if (
+				active instanceof HTMLElement &&
+				(active === codeInputRef.current || active === nickInputRef.current)
+			) {
+				return;
+			}
 			if (showCodeInput && !code) {
 				codeInputRef.current?.focus();
 			} else if (!nick) {
@@ -164,7 +182,9 @@ export function Join() {
 			}
 		});
 		return () => cancelAnimationFrame(id);
-	}, [showCodeInput, code, nick]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps -- auto-foco
+		// só no mount; nick/code-from-URL não justificam re-foco.
+	}, [showCodeInput, code]);
 
 	// -------------------------------------------------------------------------
 	// Handlers

@@ -194,6 +194,34 @@ describe("Join page — manual code entry", () => {
 		expect(screen.getByTestId("join-code-input")).toBeInTheDocument();
 	});
 
+	test("digitar no nick NÃO rouba foco para o input de código", async () => {
+		// /join (sem ?code, sem ?host) → showCodeInput=true, code=''.
+		// Bug: o useEffect de auto-foco agendava um rAF no mount que
+		// disparava tarde (depois do usuário já ter focado o nick
+		// manualmente) e roubava foco pra o code input, OU re-rodava a
+		// cada keystroke de nick via dep, fazendo o caret pular entre
+		// campos a cada letra. O usuário não conseguia digitar o nick.
+		renderJoin("/join");
+		const codeInput = screen.getByTestId("join-code-input");
+		const nickInput = screen.getByTestId("nick-input");
+
+		// Preenche o código (4 chars válidos) — habilita o submit depois.
+		fireEvent.change(codeInput, { target: { value: "ABCD" } });
+
+		// Usuário foca o nick e digita. O foco deve permanecer no nick
+		// input mesmo após o rAF do auto-foco disparar.
+		nickInput.focus();
+		expect(document.activeElement).toBe(nickInput);
+
+		fireEvent.change(nickInput, { target: { value: "H" } });
+		await new Promise((r) => requestAnimationFrame(() => r(null)));
+		expect(document.activeElement).toBe(nickInput);
+
+		fireEvent.change(nickInput, { target: { value: "He" } });
+		await new Promise((r) => requestAnimationFrame(() => r(null)));
+		expect(document.activeElement).toBe(nickInput);
+	});
+
 	test("NÃO renderiza campo de código no join com code na URL", () => {
 		renderJoin("/join?code=ABCD");
 		expect(screen.queryByTestId("join-code-input")).not.toBeInTheDocument();
