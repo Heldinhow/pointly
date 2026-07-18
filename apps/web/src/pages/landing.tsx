@@ -103,7 +103,7 @@ export function Landing() {
 		ref: stepsRef,
 		hidden: stepsHidden,
 		animate: stepsAnimate,
-	} = useStaggerReveal<HTMLDivElement>();
+	} = useStaggerReveal<HTMLOListElement>();
 
 	return (
 		<div
@@ -198,12 +198,12 @@ export function Landing() {
 					Como funciona em 3 passos
 				</h2>
 
-				<div
+				<ol
 					ref={stepsRef}
-					className="mt-12 border-t border-ink/15 divide-y divide-ink/10"
+					className="mt-12 border-t border-ink/15 divide-y divide-ink/10 list-none"
 				>
 					{HOW_IT_WORKS.map((step, i) => (
-						<div
+						<li
 							key={step.n}
 							data-testid={`cap-card-0${i + 1}`}
 							className={`group grid grid-cols-1 md:grid-cols-12 gap-x-8 gap-y-1.5 py-9 sm:py-10 -mx-4 px-4 sm:-mx-6 sm:px-6 items-baseline transition-colors duration-200 hover:bg-ink/[0.03] ${
@@ -224,9 +224,9 @@ export function Landing() {
 							<p className="md:col-span-6 font-sans text-base leading-relaxed text-ink-mute max-w-[54ch]">
 								{step.body}
 							</p>
-						</div>
+						</li>
 					))}
-				</div>
+				</ol>
 			</section>
 
 			{/* Section Rule III - CTA Final */}
@@ -262,8 +262,132 @@ export function Landing() {
 				</div>
 			</section>
 
-			{/* Section Rule IV - Footer */}
-			<SectionRule roman="IV." title="INFORMAÇÕES · CRÉDITOS" />
+			{/* Section Rule IV - FAQ */}
+			<SectionRule roman="IV." title="PERGUNTAS · FAQ INDEXÁVEL" />
+
+			{/* FAQ — English so aeo.js's detectFaqPatterns picks up
+			    `How…? / What…? / Is…?` triggers (regex is English-only) and
+			    auto-injects FAQPage schema into schema.json. Portuguese-only
+			    QA would not trigger. The DOM stays PT-BR friendly via the
+			    surrounding context, but questions/answers are intentionally in
+			    English for SEO crawler compatibility. */}
+			<section
+				id="faq"
+				aria-labelledby="faq-title"
+				className="max-w-[1360px] mx-auto px-6 lg:px-16 py-16 sm:py-24 relative"
+			>
+				<h2
+					id="faq-title"
+					className="font-display font-extrabold text-3xl sm:text-4xl tracking-tighter mb-16 text-center text-ink text-balance"
+				>
+					Perguntas frequentes
+				</h2>
+
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 max-w-[1080px] mx-auto">
+					<div>
+						<h3 className="font-display font-bold text-lg sm:text-xl leading-snug text-ink text-balance mb-3">
+							Is Pointly really free?
+						</h3>
+						<p className="font-sans text-base leading-relaxed text-ink-mute max-w-[54ch]">
+							Yes. No freemium tiers, no paywall, no card required. Each
+							room runs entirely in-memory on the backend and disappears
+							when the last player leaves — there is no database to bill
+							against, which is the only reason the service can stay
+							free.
+						</p>
+					</div>
+
+					<div>
+						<h3 className="font-display font-bold text-lg sm:text-xl leading-snug text-ink text-balance mb-3">
+							How many players fit in one room?
+						</h3>
+						<p className="font-sans text-base leading-relaxed text-ink-mute max-w-[54ch]">
+							Up to 12 participants per room — sized for typical agile
+							teams of 4 to 9 people plus 1 to 3 observers. Rooms that
+							hit the cap receive a dedicated /full page instead of
+							throwing a runtime error.
+						</p>
+					</div>
+
+					<div>
+						<h3 className="font-display font-bold text-lg sm:text-xl leading-snug text-ink text-balance mb-3">
+							How fast can I create a room?
+						</h3>
+						<p className="font-sans text-base leading-relaxed text-ink-mute max-w-[54ch]">
+							About 100 milliseconds from click to room-open-ready. There
+							are no intermediate steps: you click Create, choose a
+							nickname, and the room is ready for the rest of the team to
+							join via a 6-character code.
+						</p>
+					</div>
+
+					<div>
+						<h3 className="font-display font-bold text-lg sm:text-xl leading-snug text-ink text-balance mb-3">
+							Does Pointly save my retrospective data?
+						</h3>
+						<p className="font-sans text-base leading-relaxed text-ink-mute max-w-[54ch]">
+							No. Every room is ephemeral: votes, chat messages and
+							timers exist only while the room is open. When the last
+							player exits, the entire state is discarded — this is the
+							design, not a bug.
+						</p>
+					</div>
+
+					<div>
+						<h3 className="font-display font-bold text-lg sm:text-xl leading-snug text-ink text-balance mb-3">
+							Does Pointly work on mobile?
+						</h3>
+						<p className="font-sans text-base leading-relaxed text-ink-mute max-w-[54ch]">
+							Yes. The landing page and arena are responsive and tested
+							on iPhone SE, iPad, and Android. The arena uses the
+							standard Fibonacci deck (0, ½, 1, 2, 3, 5, 8, 13, 21, ?, ☕)
+							rendered as large tappable cards optimized for small
+							screens.
+						</p>
+					</div>
+
+					<div>
+						<h3 className="font-display font-bold text-lg sm:text-xl leading-snug text-ink text-balance mb-3">
+							Can I integrate Pointly with Jira, Linear or Azure DevOps?
+						</h3>
+						<p className="font-sans text-base leading-relaxed text-ink-mute max-w-[54ch]">
+							Not today. Pointly focuses on speed of the session — vote,
+							reveal, decide — and does not export to external trackers.
+							The revealed round is visible on screen and can be
+							transcribed manually. Native integration is on the public
+							roadmap.
+						</p>
+					</div>
+
+					<div>
+						<h3 className="font-display font-bold text-lg sm:text-xl leading-snug text-ink text-balance mb-3">
+							Are AI bots and crawlers allowed to index Pointly?
+						</h3>
+						<p className="font-sans text-base leading-relaxed text-ink-mute max-w-[54ch]">
+							Yes. The site publishes llms.txt, sitemap.xml, schema.json
+							and robots.txt at https://pointly.space/ — all major
+							models (GPTBot, ClaudeBot, PerplexityBot, Google-Extended)
+							can cite and reference the tool with structured
+							metadata.
+						</p>
+					</div>
+
+					<div>
+						<h3 className="font-display font-bold text-lg sm:text-xl leading-snug text-ink text-balance mb-3">
+							What deck sizes are supported?
+						</h3>
+						<p className="font-sans text-base leading-relaxed text-ink-mute max-w-[54ch]">
+							The default Fibonacci deck (0, ½, 1, 2, 3, 5, 8, 13, 21,
+							“?”, ☕). Hosts pick the active subset per round, and votes
+							are median-aggregated (not averaged) to avoid outlier bias
+							from single estimators.
+						</p>
+					</div>
+				</div>
+			</section>
+
+			{/* Section Rule V - Footer */}
+			<SectionRule roman="V." title="INFORMAÇÕES · CRÉDITOS" />
 
 			{/* Footer */}
 			<footer className="max-w-[1360px] mx-auto px-6 lg:px-16 py-12 relative">

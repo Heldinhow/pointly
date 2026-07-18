@@ -86,6 +86,89 @@ describe("aeo.js — Vite build emits 4 SEO files (AEO-01..04)", () => {
 	});
 });
 
+describe("aeo.js — AEO audit gates (audit fixes 2026-07-18)", () => {
+	// Audit issue #7: Organization must have a real `logo` URL so Google /
+	// AI crawlers display it in the knowledge panel.
+	test("schema.organization has logo URL on pointly.space", () => {
+		const html = readFileSync(
+			join(import.meta.dir, "index.html"),
+			"utf-8",
+		);
+		// The plugin emits `logo` into schema.json from config.schema.organization,
+		// not from index.html — read the built artifact instead.
+		const json = JSON.parse(
+			readFileSync(join(SCRATCH, "schema.json"), "utf-8"),
+		) as {
+			site: Array<{ "@type": string; logo?: string }>;
+		};
+		const org = json.site.find((s) => s["@type"] === "Organization");
+		expect(org).toBeDefined();
+		expect(org?.logo).toMatch(/^https:\/\/pointly\.space\/.*\.png$/);
+	});
+
+	test("FAQPage is auto-detected on / and lists all 8 Q&A items", () => {
+		const json = JSON.parse(
+			readFileSync(join(SCRATCH, "schema.json"), "utf-8"),
+		) as {
+			pages: Record<
+				string,
+				Array<{
+					"@type": string;
+					mainEntity?: Array<{ name: string; acceptedAnswer: { text: string } }>;
+				}>
+			>;
+		};
+		const root = json.pages["/"];
+		const faq = root?.find((s) => s["@type"] === "FAQPage");
+		expect(faq).toBeDefined();
+		expect(faq?.mainEntity?.length).toBe(8);
+		// Every Q&A must have a non-trivial answer (≥20 words).
+		for (const q of faq?.mainEntity ?? []) {
+			const words = q.acceptedAnswer.text.trim().split(/\s+/).length;
+			expect(words).toBeGreaterThanOrEqual(20);
+		}
+	});
+
+	// Audit issues #1 (title 10–70 chars) and #2 (description 50–200 chars).
+	test("index.html title is 10–70 chars and description is 50–200", () => {
+		const html = readFileSync(
+			join(import.meta.dir, "index.html"),
+			"utf-8",
+		);
+		const title = html.match(/<title>([^<]+)<\/title>/)?.[1] ?? "";
+		const desc =
+			html.match(/name="description"\s+content="([^"]+)"/)?.[1] ?? "";
+		expect(title.length).toBeGreaterThanOrEqual(10);
+		expect(title.length).toBeLessThanOrEqual(70);
+		expect(desc.length).toBeGreaterThanOrEqual(50);
+		expect(desc.length).toBeLessThanOrEqual(200);
+	});
+
+	// Audit issue #3: OG + Twitter meta tags present for social previews.
+	test("index.html declares Open Graph + Twitter card meta tags", () => {
+		const html = readFileSync(
+			join(import.meta.dir, "index.html"),
+			"utf-8",
+		);
+		for (const tag of [
+			'property="og:title"',
+			'property="og:description"',
+			'property="og:image"',
+			'property="og:type"',
+			'property="og:url"',
+			'property="og:locale"',
+			'name="twitter:card"',
+			'name="twitter:title"',
+			'name="twitter:description"',
+			'name="twitter:image"',
+		]) {
+			expect(html).toContain(tag);
+		}
+		// og:image must point to the OG cover (1200×630) we ship.
+		expect(html).toContain('content="https://pointly.space/og-cover.png"');
+	});
+});
+
 describe("aeo.js — landing bundle (AEO-09)", () => {
 	test("landing-*.js stays under +10 KB gzipped vs baseline", () => {
 		// Baseline = landing chunk gzipped BEFORE <AeoWidget /> landed.

@@ -21,7 +21,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { defineConfig, type PluginOption } from "vite";
 
-type AeoPage = { pathname: string; title: string; description: string };
+type AeoPage = { pathname: string; title: string; description: string; content?: string };
 type AeoConfig = {
 	title: string;
 	description: string;
@@ -64,8 +64,53 @@ const aeoConfig: AeoConfig = {
 		"Pointly is a free, real-time planning poker app for agile teams. Create a room, share the code, vote on story points together. No signup, no install, no DB — in-memory only.",
 	url: "https://pointly.space",
 	// 4 public SPA routes. Salas dinâmicas (?code=) ficam fora do sitemap.
+	// `content` on `/` carries the FAQ in markdown so aeo.js's
+	// `detectFaqPatterns` picks up `How…? / What…? / Is…? / Does…?`
+	// triggers and emits a real FAQPage into schema.json. (The
+	// detectFaqPatterns regex is English-only — see vite.config.ts
+	// notes about the visual FAQ in landing.tsx being a sibling render
+	// of the same Q&A list.)
 	pages: [
-		{ pathname: "/", title: "Pointly", description: "Planning poker for agile teams." },
+		{
+			pathname: "/",
+			title: "Pointly — Free Real-Time Planning Poker for Agile Teams",
+			description:
+				"Pointly is a free, real-time planning poker app for agile teams. Create a room in 100ms, share a 6-character code, vote on story points together, and reveal in one click. No signup, no install, in-memory only.",
+			content: `# Pointly — Free Real-Time Planning Poker
+
+## Is Pointly really free?
+
+Yes. No freemium tiers, no paywall, no card required. Each room runs entirely in memory on the backend and disappears when the last player leaves — there is no database to bill against.
+
+## How many players fit in one room?
+
+Up to 12 participants per room, sized for typical agile teams of 4 to 9 estimators plus 1 to 3 observers, and rooms that hit the cap redirect to a dedicated /full page instead of throwing an error.
+
+## How fast can I create a room?
+
+About 100 milliseconds from click to room-open-ready. There are no intermediate steps: click Create, choose a nickname, and the room is ready for the rest of the team to join via a 6-character code.
+
+## Does Pointly save my retrospective data?
+
+No. Every room is ephemeral: votes, chat messages and timers exist only while the room is open. When the last player exits, the entire state is discarded — this is the design, not a bug.
+
+## Does Pointly work on mobile?
+
+Yes. The arena uses the standard Fibonacci deck (0, 0.5, 1, 2, 3, 5, 8, 13, 21, ?, coffee) rendered as large tappable cards.
+
+## Can I integrate Pointly with Jira, Linear or Azure DevOps?
+
+Not today. Pointly focuses on speed of the session — vote, reveal, decide — and does not export to external trackers. The revealed round is visible on screen and can be transcribed manually.
+
+## Are AI bots and crawlers allowed to index Pointly?
+
+Yes. The site publishes llms.txt, sitemap.xml, schema.json and robots.txt — all major AI bots (GPTBot, ClaudeBot, PerplexityBot, Google-Extended) can cite and reference the tool with structured metadata.
+
+## What deck sizes are supported?
+
+The default Fibonacci deck (0, 0.5, 1, 2, 3, 5, 8, 13, 21, ?, coffee). Hosts can pick an active subset per round, and votes are median-aggregated (not averaged) to avoid outlier bias from single estimators.
+`,
+		},
 		{ pathname: "/join", title: "Join a room", description: "Enter a room code to join an existing planning poker session." },
 		{ pathname: "/arena", title: "Arena", description: "Live planning poker arena where the host runs rounds and the team votes on story points." },
 		{ pathname: "/full", title: "Room full", description: "The room reached its seat limit." },
