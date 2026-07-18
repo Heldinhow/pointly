@@ -38,7 +38,20 @@ type AeoConfig = {
 		aiIndex: boolean;
 	};
 	robots: { disallow: string[] };
-	schema: { organization: { name: string } };
+	schema: {
+		organization: {
+			name: string;
+			logo?: string;
+			url?: string;
+			sameAs?: string[];
+		};
+	};
+	og: {
+		enabled: boolean;
+		image?: string;
+		twitterHandle?: string;
+		type?: "website" | "article";
+	};
 	// Disable the plugin's auto-injected widget. We render <AeoWidget />
 	// from `aeo.js/react` ourselves on `/` (landing) only, so the build-time
 	// widget shouldn't render on every route.
@@ -70,7 +83,19 @@ const aeoConfig: AeoConfig = {
 	},
 	// /arena is a client-side route that takes ?code=… — meaningless to bots.
 	robots: { disallow: ["/arena"] },
-	schema: { organization: { name: "Pointly" } },
+	schema: {
+		organization: {
+			name: "Pointly",
+			url: "https://pointly.space",
+			logo: "https://pointly.space/logo.png",
+			sameAs: ["https://github.com/Heldinhow/pointly"],
+		},
+	},
+	og: {
+		enabled: true,
+		image: "https://pointly.space/og-cover.png",
+		type: "website",
+	},
 	widget: { enabled: false },
 };
 
