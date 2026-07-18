@@ -90,7 +90,7 @@ function stripUngeneratedRefs(distDir: string) {
 	const sections = text.split(/^## /m);
 	// Reassemble, dropping the headers (and their bodies) we didn't actually emit.
 	const kept = sections.filter((s) => {
-		const head = s.split("\n", 1)[0].trim();
+		const head = (s.split("\n", 1)[0] ?? "").trim();
 		return !["Quick Links", "For LLMs"].includes(head);
 	});
 	const out = kept[0] + kept.slice(1).map((s) => `## ${s}`).join("");
@@ -108,15 +108,31 @@ function safeAeoPlugin(): PluginOption[] {
 			aeoVitePlugin: (opts: AeoConfig) => PluginOption;
 		};
 		const inner = mod.aeoVitePlugin(aeoConfig);
-		// Resolve dist relative to this config file (apps/web/) so the path
-		// is stable regardless of where `vite build` is invoked from.
-		const distDir = path.resolve(import.meta.dirname, "dist");
+		// Capture Vite's resolved outDir at configResolved time (it may be
+		// overridden via `--outDir` from CLI). Without this, the post-process
+		// would strip aeo.js's broken refs only when running from the default
+		// `apps/web/dist` — tests with a custom outDir would publish broken
+		// refs.
+		let resolvedDistDir = path.resolve(import.meta.dirname, "dist");
+		const innerObj = inner as unknown as Record<string, unknown>;
+		const originalConfigResolved = innerObj.configResolved as
+			| ((this: unknown, cfg: { root: string; build: { outDir: string } }) => void)
+			| undefined;
 		return [
 			{
-				...inner,
+				...innerObj,
+				configResolved(this: unknown, cfg: { root: string; build: { outDir: string } }) {
+					resolvedDistDir = path.isAbsolute(cfg.build.outDir)
+						? cfg.build.outDir
+						: path.resolve(cfg.root, cfg.build.outDir);
+					if (typeof originalConfigResolved === "function") {
+						originalConfigResolved.call(this, cfg);
+					}
+				},
 				closeBundle: async (...args: unknown[]) => {
 					try {
-						const fn = (inner as { closeBundle?: unknown }).closeBundle;
+						const fn = (inner as unknown as { closeBundle?: unknown })
+							.closeBundle;
 						if (typeof fn === "function") {
 							await (fn as (...a: unknown[]) => unknown)(...args);
 						}
@@ -128,7 +144,7 @@ function safeAeoPlugin(): PluginOption[] {
 						return;
 					}
 					try {
-						stripUngeneratedRefs(distDir);
+						stripUngeneratedRefs(resolvedDistDir);
 					} catch (err) {
 						console.warn(
 							"[aeo.js] post-process failed:",
@@ -136,7 +152,7 @@ function safeAeoPlugin(): PluginOption[] {
 						);
 					}
 				},
-			},
+			} as unknown as PluginOption,
 		];
 	} catch (err) {
 		console.warn(
