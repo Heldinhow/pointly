@@ -19,7 +19,13 @@
 
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
+import { init as initAnalytics } from "./lib/analytics";
 import "./index.css";
+
+// Analytics é inicializado uma vez no boot da app, antes do React render.
+// Idempotente: no-op em dev (sem VITE_GA_MEASUREMENT_ID) ou em prod sem env.
+// Veja apps/web/src/lib/analytics.ts + docs/adr/0012-google-analytics-privacy-first.md.
+initAnalytics();
 
 const rootEl = document.getElementById("root");
 if (!rootEl) {

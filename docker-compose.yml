@@ -73,6 +73,11 @@ services:
       context: .
       dockerfile: Dockerfile
       target: web
+      # Build-arg pra Vite inline `VITE_GA_MEASUREMENT_ID` no bundle em
+      # build time. Vazio (default) → analytics no-op em prod. Veja
+      # ADR-0012 + .specs/features/google-analytics/spec.md (P3).
+      args:
+        VITE_GA_MEASUREMENT_ID: ${VITE_GA_MEASUREMENT_ID:-}
     environment:
       PORT: "8080"
       NODE_ENV: "production"

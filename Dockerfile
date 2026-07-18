@@ -32,6 +32,12 @@ WORKDIR /app
 # `node_modules` is copied from `deps` (which installed everything with
 # devDeps), so vite is available even though NODE_ENV=production.
 ENV NODE_ENV=production
+# VITE_GA_MEASUREMENT_ID é build-time inlined pelo Vite via
+# `import.meta.env.VITE_*`. Se ARG não for passado (build local sem
+# analytics), fica string vazia → analytics no-op em prod (zero
+# request a googletagmanager.com). Veja ADR-0012.
+ARG VITE_GA_MEASUREMENT_ID
+ENV VITE_GA_MEASUREMENT_ID=$VITE_GA_MEASUREMENT_ID
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json bun.lockb bunfig.toml ./
 COPY tsconfig.base.json ./
