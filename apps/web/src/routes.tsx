@@ -8,8 +8,9 @@
  */
 
 import { Suspense, lazy } from "react";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { Outlet, RouterProvider, createBrowserRouter } from "react-router-dom";
 import { NetworkBanner } from "./components/network-banner";
+import { PageviewTracker } from "./components/pageview-tracker";
 
 const Landing = lazy(() =>
 	import("./pages/landing").then((m) => ({ default: m.Landing })),
@@ -40,43 +41,66 @@ function NotFound() {
 	return <div>Not Found</div>;
 }
 
+/**
+ * RootLayout — wrappa todas as rotas com `<PageviewTracker />` (que precisa
+ * de `useLocation()`, ou seja, do RouterProvider em cima) + `<Outlet />`
+ * que renderiza a rota filho.
+ *
+ * Layout route é o padrão React Router para "algo que envolve todas as rotas".
+ * Sem isso, teríamos que adicionar `<PageviewTracker />` em cada elemento
+ * individualmente — drift garantido na próxima rota nova.
+ */
+function RootLayout() {
+	return (
+		<>
+			<PageviewTracker />
+			<Outlet />
+		</>
+	);
+}
+
 const router = createBrowserRouter(
 	[
 		{
-			path: "/",
-			element: (
-				<Suspense fallback={<PageFallback />}>
-					<Landing />
-				</Suspense>
-			),
-		},
-		{
-			path: "/join",
-			element: (
-				<Suspense fallback={<PageFallback />}>
-					<Join />
-				</Suspense>
-			),
-		},
-		{
-			path: "/arena",
-			element: (
-				<Suspense fallback={<PageFallback />}>
-					<Arena />
-				</Suspense>
-			),
-		},
-		{
-			path: "/full",
-			element: (
-				<Suspense fallback={<PageFallback />}>
-					<Full />
-				</Suspense>
-			),
-		},
-		{
-			path: "*",
-			element: <NotFound />,
+			element: <RootLayout />,
+			children: [
+				{
+					path: "/",
+					element: (
+						<Suspense fallback={<PageFallback />}>
+							<Landing />
+						</Suspense>
+					),
+				},
+				{
+					path: "/join",
+					element: (
+						<Suspense fallback={<PageFallback />}>
+							<Join />
+						</Suspense>
+					),
+				},
+				{
+					path: "/arena",
+					element: (
+						<Suspense fallback={<PageFallback />}>
+							<Arena />
+						</Suspense>
+					),
+				},
+				{
+					path: "/full",
+					element: (
+						<Suspense fallback={<PageFallback />}>
+							<Full />
+						</Suspense>
+					),
+				},
+				{
+					path: "*",
+					element: <NotFound />,
+				},
+			],
 		},
 	],
 	{
