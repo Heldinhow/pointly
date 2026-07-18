@@ -9,6 +9,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { SiteHeader } from "../components/site-header";
 import { Button } from "../components/ui/button";
+import { AeoWidget } from "aeo.js/react";
 
 function SectionRule({ roman, title }: { roman: string; title: string }) {
 	return (
@@ -296,6 +297,14 @@ export function Landing() {
 					</div>
 				</div>
 			</footer>
+
+			{/* AEO discoverability indicator (landing only). The widget injects
+			    a fixed bottom-right pill via `aeo.js/widget`; its inner DOM
+			    lives outside Tailwind's reach, so visual styling is whatever
+			    aeo.js's bundled CSS does. ARIA-hidden because it's decorative —
+			    the real AEO payload is the build-time llms.txt / robots.txt /
+			    sitemap.xml / schema.json files (see apps/web/vite.config.ts). */}
+			<AeoWidget aria-hidden="true" />
 		</div>
 	);
 }
