@@ -16,6 +16,7 @@
 		"test:web": "bun run --filter web test",
 		"test:shared": "bun run --filter '@planning-poker/shared' test",
 		"test:e2e": "bun run --filter e2e test",
+		"test:coverage": "bun run test:shared && bun run test:server && bun run test:web --coverage",
 		"test:all": "bun run test:shared && bun run test:server && bun run test:web && bun run test:e2e",
 		"lint": "biome check .",
 		"format": "biome format --write .",
