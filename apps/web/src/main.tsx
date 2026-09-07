@@ -20,6 +20,16 @@
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { init as initAnalytics } from "./lib/analytics";
+// Geist via fontsource (SIL OFL 1.1) — latin subset, pesos usados no app.
+// Fallback: Inter, system-ui (sans) + ui-monospace (mono), ver index.css.
+import "@fontsource/geist/latin-400.css";
+import "@fontsource/geist/latin-500.css";
+import "@fontsource/geist/latin-600.css";
+import "@fontsource/geist/latin-700.css";
+import "@fontsource/geist/latin-800.css";
+import "@fontsource/geist-mono/latin-400.css";
+import "@fontsource/geist-mono/latin-500.css";
+import "@fontsource/geist-mono/latin-600.css";
 import "./index.css";
 import "./styles/feedback.css";
 

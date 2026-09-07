@@ -3,7 +3,7 @@ import type { Player, ProjectileType, Vote } from "@planning-poker/shared";
  * Seat — T31 (Phase 6).
  *
  * Assento da mesa com:
- *  - Avatar circular (iniciais do nome em Space Grotesk sem itálico)
+ *  - Avatar circular (iniciais do nome em Geist sem itálico)
  *  - Nick truncado em ellipsis
  *  - Badge "VOCÊ" no assento local
  *  - State pill: AGUARDANDO / VOTOU / revealed-value (face-up)

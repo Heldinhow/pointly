@@ -9,6 +9,11 @@ const config: Config = {
   primary:"var(--accent)","on-primary":"var(--on-accent)","on-accent":"var(--on-accent)",danger:"var(--danger)","danger-soft":"var(--danger-soft)",success:"var(--success)","success-soft":"var(--success-soft)",warning:"var(--warning)","warning-soft":"var(--warning-soft)",table:"var(--table)",
 				"paper-warm": "var(--paper-warm)",
 				"paper-dark": "var(--paper-dark)",
+				paper: "var(--surface)",
+				accent: "var(--accent)",
+				"accent-soft": "var(--accent-soft)",
+				"accent-deep": "var(--accent-deep)",
+				"accent-ink": "var(--accent-ink)",
 				surface: "var(--surface)",
 				ink: "var(--fg)",
 				"ink-soft": "var(--fg-soft)",
@@ -21,10 +26,10 @@ const config: Config = {
 				olive: "var(--olive)",
 			},
 			fontFamily: {
-				display: ['"Space Grotesk"', 'Manrope', 'sans-serif'],
-				italic: ['"Space Grotesk"', 'Manrope', 'sans-serif'],
-				sans: ['Manrope', 'system-ui', 'sans-serif'],
-				mono: ['Manrope', 'system-ui', 'sans-serif'],
+				display: ["Geist", "Inter", "system-ui", "sans-serif"],
+				italic: ["Geist", "Inter", "system-ui", "sans-serif"],
+				sans: ["Geist", "Inter", "system-ui", "sans-serif"],
+				mono: ['"Geist Mono"', "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
 			},
 			fontSize: {
 				"display-xl": [
@@ -77,7 +82,10 @@ const config: Config = {
 				"micro-label": ["10px", { lineHeight: "1.4", letterSpacing: "0.04em" }],
 			},
 			borderRadius: {
-				card: "16px",
+				sm: "3px",
+				md: "6px",
+				lg: "8px",
+				card: "8px",
 			},
 			letterSpacing: {
 				caps: "0.06em",

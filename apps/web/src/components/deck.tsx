@@ -7,7 +7,7 @@ import { type Vote } from "@planning-poker/shared";
  *
  * **Visual** (vide plan.md 6.4 + design/arena.html):
  *  - 9 cartas 64×84 desktop / 48×68 mobile, radius 9px
- *  - Numeral em Space Grotesk 20px sem itálico (dígitos; o ☕ usa
+ *  - Numeral em Geist 20px sem itálico (dígitos; o ☕ usa
  *    font-sans 16px pra diferenciar do numeral)
  *  - Default: ink stroke 1px, surface bone, label ink-faint
  *  - Hover: border coral (sem translate — motion só pra feedback)

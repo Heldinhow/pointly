@@ -1,7 +1,7 @@
 /* Arena mesa: layout owns its geometry here so seats keep readable dimensions. */
 /* Header fixo é o SiteHeader da landing — compensa com padding-top igual. */
 .arena-shell {
-  padding-top: var(--header-height, 80px);
+  padding-top: var(--header-height, 68px);
   --arena-seat-size: clamp(7rem, 11vw, 9rem);
   background: var(--bg);
   color: var(--fg);
@@ -54,7 +54,7 @@
 .arena-table-copy {
   margin: 0;
   color: var(--fg);
-  font: 700 clamp(1.2rem, 2.2vw, 1.75rem)/1.2 var(--font-display, "Space Grotesk", sans-serif);
+  font: 700 clamp(1.2rem, 2.2vw, 1.75rem)/1.2 var(--font-display, Geist, Inter, system-ui, sans-serif);
   text-wrap: balance;
 }
 .arena-table-sub { margin: 0; color: var(--fg-mute); font-size: .875rem; }
