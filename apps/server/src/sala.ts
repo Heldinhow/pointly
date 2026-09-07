@@ -284,7 +284,7 @@ export class Sala {
 	 * Registra/atualiza voto de um player. Idempotente em `value`.
 	 *
 	 * Regras:
-	 *  - `phase !== 'voting' && phase !== 'revealable'` → `invalid_phase`
+	 *  - `phase` aceita: idle|voting|revealable (voto) + revealed (edição pós-reveal EVR-01)
 	 *  - `value === null` → `invalid_vote` (un-vote proibido — spec F-012)
 	 *  - `value ∉ DECK_VALUES` → `invalid_vote`
 	 *  - Marca `hasVoted = true`, atualiza in-place (F-011 idempotência)

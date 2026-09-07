@@ -25,11 +25,14 @@ describe("EmptyOverlay — render", () => {
 		expect((input as HTMLInputElement).value).toMatch(/code=9B9F/);
 	});
 
-	test("role='dialog' + aria-modal='true' (a11y)", () => {
+	test("é um convite inline e não bloqueia a arena", () => {
 		render(<EmptyOverlay code="9B9F" onDismiss={() => {}} />);
 		const dialog = screen.getByTestId("empty-overlay");
 		expect(dialog.getAttribute("role")).toBe("dialog");
-		expect(dialog.getAttribute("aria-modal")).toBe("true");
+		expect(dialog.getAttribute("aria-modal")).toBe("false");
+		expect(dialog.className).toContain("feedback-empty-panel");
+		expect(dialog.className).not.toContain("inset-0");
+		expect(dialog.className).not.toContain("backdrop-blur");
 	});
 
 	test("click em 'Copiar link' chama navigator.clipboard.writeText", async () => {

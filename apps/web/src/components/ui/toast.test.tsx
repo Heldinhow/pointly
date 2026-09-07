@@ -54,7 +54,7 @@ describe("Toast", () => {
 		expect(viewport?.getAttribute("aria-atomic")).toBe("true");
 	});
 
-	test("toast success usa kind success (surface bg + olive text)", () => {
+	test("toast success usa tokens semânticos de sucesso", () => {
 		render(
 			<ToastProvider>
 				<Harness text="Operação ok" kind="success" />
@@ -64,13 +64,41 @@ describe("Toast", () => {
 			screen.getByRole("button", { name: "trigger" }).click();
 		});
 		const toast = screen.getByRole("status");
-		expect(toast.className).toContain("bg-surface");
-		expect(toast.className).toContain("text-olive");
+		expect(toast.className).toContain("feedback-success");
+		expect(screen.getByRole("button", { name: /fechar notificação/i })).toBeInTheDocument();
+	});
+
+	test("toast error usa tokens semânticos de perigo e pode ser fechado", () => {
+		render(
+			<ToastProvider>
+				<Harness text="Servidor indisponível" kind="error" />
+			</ToastProvider>,
+		);
+		act(() => {
+			screen.getByRole("button", { name: "trigger" }).click();
+		});
+		const toast = screen.getByRole("status");
+		expect(toast.className).toContain("feedback-danger");
+		act(() => {
+			screen.getByRole("button", { name: /fechar notificação/i }).click();
+		});
+		expect(screen.queryByRole("status")).toBeNull();
 	});
 
 	test("useToast fora do provider throw error", () => {
-		// Captura expectação sem renderizar (throw acontece em render).
-		expect(() => render(<Harness />)).toThrow(/ToastProvider/);
+		// Probe captura a mensagem sem deixar o erro vazar como
+		// "Uncaught" no React 19 (render assíncrono).
+		let message = "";
+		function Probe() {
+			try {
+				useToast();
+			} catch (e) {
+				message = e instanceof Error ? e.message : String(e);
+			}
+			return null;
+		}
+		render(<Probe />);
+		expect(message).toMatch(/ToastProvider/);
 	});
 
 	test("múltiplos toasts empilham", () => {

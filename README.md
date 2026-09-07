@@ -1,6 +1,6 @@
 # Pointly
 
-Planning Poker web para times ágeis (3–12 pessoas). Salas efêmeras, votação síncrona, deck Fibonacci, sem cadastro, sem email, sem plano pago.
+Planning Poker web para times ágeis (até 12 pessoas por sala). Salas efêmeras, votação síncrona, deck Fibonacci, sem cadastro, sem email, sem plano pago.
 
 ## Visão Geral
 
@@ -23,7 +23,7 @@ Pointly é um aplicativo web para estimativa ágil de trabalho usando Planning P
 | State (client) | Zustand |
 | Schemas compartilhados | Zod |
 | UI | Tailwind CSS |
-| Testes | Vitest + Playwright |
+| Testes | Bun Test + Playwright |
 
 ## Estrutura do Projeto
 
@@ -75,11 +75,12 @@ Isso inicia o frontend (Vite, porta 5173) e o backend (Bun, porta 3001) em paral
 | `bun run dev:web` | Inicia só o frontend |
 | `bun run dev:server` | Inicia só o backend |
 | `bun run build` | Build de produção |
-| `bun run test:all` | Roda todos os testes |
-| `bun run test:server` | Testes do backend (Vitest) |
-| `bun run test:web` | Testes do frontend (Vitest) |
-| `bun run test:shared` | Testes do package shared |
-| `bun run test:e2e` | Testes E2E (Playwright) |
+| `bun run test:all` | Roda shared + server + web + e2e (exclui auditoria UX) |
+| `bun run test:server` | Testes do backend (Bun Test) |
+| `bun run test:web` | Testes do frontend (Bun Test) |
+| `bun run test:shared` | Testes do package shared (Bun Test) |
+| `bun run test:e2e` | Testes E2E (Playwright, projetos chromium + webkit) |
+| `bun run --filter ux test` | Auditoria UX (Playwright, viewports desktop/tablet/mobile) |
 | `bun run typecheck` | Verificação de tipos |
 | `bun run lint` | Lint com Biome |
 | `bun run format` | Formata código com Biome |
@@ -88,7 +89,7 @@ Isso inicia o frontend (Vite, porta 5173) e o backend (Bun, porta 3001) em paral
 
 ### Fluxo de Uso
 
-1. **Criar sala** — Acesse a landing e clique "Criar sala". Um código de 4 caracteres é gerado.
+1. **Criar sala** — Acesse a landing e clique "Criar sala". Um código de 4 caracteres é gerado no servidor.
 2. **Convidar time** — Compartilhe o código (ou link) com sua equipe.
 3. **Entrar na sala** — Cada jogador entra com um apelido (sem cadastro).
 4. **Votar** — Escolha uma carta do deck Fibonacci (`0, ½, 1, 2, 3, 5, 8, 13, ☕`).
@@ -114,7 +115,7 @@ O servidor é a fonte da verdade para fase da rodada, timer e votos.
 
 **Eventos Client → Server:**
 - `hello` — conexão inicial com uuid + apelido + código opcional
-- `cast_vote` — registrar voto (pode ser trocado até o reveal)
+- `cast_vote` — registrar voto (pode ser trocado antes do reveal; edição pós-reveal atualiza o voto e recomputa o consensus, sem sair de `revealed`)
 - `reveal_votes` — revelar todos os votos
 - `start_new_round` — iniciar próxima rodada
 - `ping` — heartbeat a cada 30s
@@ -152,7 +153,7 @@ Cores e tipografia seguem a paleta **Atelier Zero**:
 
 ## Testes
 
-### Unit/Integration (Vitest)
+### Unit/Integration (Bun Test)
 
 ```bash
 bun run test:shared   # Schemas, computeConsensus
@@ -160,11 +161,21 @@ bun run test:server   # State machine, validadores, handlers
 bun run test:web      # Componentes React
 ```
 
-### E2E (Playwright)
+### E2E (Playwright, projetos chromium + webkit)
 
 ```bash
 bun run test:e2e
 ```
+
+> `install-browsers` instala só Chromium; o projeto webkit exige `bunx playwright install webkit`.
+
+### Auditoria UX (fora de `test:all`)
+
+```bash
+bun run --filter ux test
+```
+
+Cobre viewports desktop (1440px), tablet (820px) e mobile (360–412px).
 
 Cenários testados:
 - Fluxo feliz completo (criar sala → votar → revelar)
@@ -184,11 +195,11 @@ Os ADRs detalham as escolhas técnicas:
 | [0007](docs/adr/0007-react-vite-typescript-frontend.md) | React + Vite + TypeScript |
 | [0008](docs/adr/0008-zustand-zod-shared-schemas.md) | Zustand + Zod shared schemas |
 | [0009](docs/adr/0009-reconnect-uuid-strategy.md) | Reconnect por UUID |
-| [0010](docs/adr/0010-ui-primitives-and-testing.md) | UI primitives + Vitest + Playwright |
+| [0010](docs/adr/0010-ui-primitives-and-testing.md) | UI primitives + Bun Test + Playwright |
 
 ## Limitações (v1)
 
-- Desktop only (1440px) — sem responsivo mobile/tablet
+- Desktop-first (referência 1440px), com cobertura mobile/tablet na auditoria UX e componentes `mobile-arena`
 - State in-memory — sem persistência entre restarts do servidor
 - Sem scaling multi-instance (Map não compartilha entre réplicas)
 - Sem integração com Jira, Linear ou outras ferramentas

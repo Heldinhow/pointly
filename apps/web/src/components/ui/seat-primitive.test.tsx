@@ -32,34 +32,34 @@ describe("SeatPrimitive", () => {
 		expect(queryByLabelText("Host")).toBeNull();
 	});
 
-	test("state=disconnected aplica opacity-40", () => {
+	test("state=disconnected aplica opacity-60", () => {
 		const { container } = render(
 			<SeatPrimitive state="disconnected">x</SeatPrimitive>,
 		);
 		const seat = container.firstElementChild;
-		expect(seat?.className).toContain("opacity-40");
+		expect(seat?.className).toContain("opacity-60");
 	});
 
-	test("votedMedian=true && !unanimous aplica borda mustard 2px (sem isYou)", () => {
+	test("votedMedian=true && !unanimous aplica borda warning 2px (sem isYou)", () => {
 		const { container } = render(
 			<SeatPrimitive votedMedian>median</SeatPrimitive>,
 		);
 		const seat = container.firstElementChild;
-		expect(seat?.className).toContain("border-mustard");
+		expect(seat?.className).toContain("border-warning");
 		expect(seat?.className).toContain("border-2");
 	});
 
-	test("votedMedian=true && unanimous=true NÃO aplica borda mustard", () => {
+	test("votedMedian=true && unanimous=true NÃO aplica borda warning", () => {
 		const { container } = render(
 			<SeatPrimitive votedMedian unanimous>
 				unanimous
 			</SeatPrimitive>,
 		);
 		const seat = container.firstElementChild;
-		expect(seat?.className).not.toContain("border-mustard");
+		expect(seat?.className).not.toContain("border-warning");
 	});
 
-	test("votedMedian=true && isYou=true && unanimity aplica box-shadow inset mustard (gold inner)", () => {
+	test("votedMedian=true && isYou=true && unanimity aplica box-shadow inset warning", () => {
 		const { container } = render(
 			<SeatPrimitive isYou votedMedian>
 				you-and-median
@@ -67,7 +67,7 @@ describe("SeatPrimitive", () => {
 		);
 		const seat = container.firstElementChild as HTMLElement;
 		expect(seat.style.boxShadow).toContain("inset");
-		expect(seat.style.boxShadow).toContain("var(--mustard)");
+		expect(seat.style.boxShadow).toContain("var(--warning)");
 	});
 
 	test("data-seat-state/data-seat-is-you presente", () => {

@@ -10,7 +10,7 @@
  *  - `vote_cast { kind: 'aggregate', count }`       → "Mais {count} escolheram."
  *  - Mudança de phase idle → voting + 1º voto        → "Rodada iniciada."
  *  - `votes_revealed`                                  → "Mediana: {median}" (se unanimity=false)
- *                                                       ou "Unanimous!" (se true)
+ *                                                       ou "Unânime!" (se true)
  *  - `sala_ended { reason: 'last_left' }`              → "Sala encerrada — último jogador saiu."
  *  - `error { code: 'invalid_phase' }`                 → "Aguarde o reveal para nova rodada."
  *  - `error { code: 'sala_cheia' }`                    → "Sala cheia — 12/12."
@@ -96,7 +96,7 @@ export function ToastQueue() {
 		) {
 			lastConsensusRound.current = sala.round;
 			if (consensus.unanimous) {
-				toast.push("★ Unanimous!", "success");
+				toast.push("★ Unânime!", "success");
 			} else if (consensus.median !== null) {
 				toast.push(`Mediana: ${consensus.median}`, "success");
 			} else {

@@ -15,7 +15,7 @@ import { z } from "zod";
 
 /**
  * Código curto de 4 caracteres alfanuméricos (A–Z, 0–9).
- * Gerado client-side via `generateUniqueCode` (T7a).
+ * Gerado no servidor via `generateUniqueCode` (T7a; `apps/server/src/hub.ts`).
  */
 export const RoomCodeSchema = z
 	.string()

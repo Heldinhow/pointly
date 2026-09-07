@@ -4,7 +4,7 @@
  * Registra/atualiza voto de um player. Idempotente.
  *
  * Regras (validadas na Sala):
- *  - `phase === 'idle' | 'voting' | 'revealable'` (F-012)
+ *  - `phase === 'idle' | 'voting' | 'revealable'` (voto) ou `'revealed'` (edição pós-reveal EVR-01)
  *  - `value !== null` (un-vote proibido — spec)
  *  - `value ∈ DECK_VALUES`
  *  - Marca `hasVoted = true`, atualiza in-place (F-011)

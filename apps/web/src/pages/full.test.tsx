@@ -32,16 +32,16 @@ describe("Full page (sala cheia) — T29", () => {
 		expect(screen.getByText(/\/ 12 · máximo atingido/i)).toBeInTheDocument();
 	});
 
-	test("renderiza CTA coral 'Criar nova sala' + default 'Esperar um assento'", () => {
+	test("renderiza CTA primário 'Criar sala nova' + 'Voltar'", () => {
 		renderFull();
 		const createBtn = screen.getByTestId("full-create-new");
 		const retryBtn = screen.getByTestId("full-retry");
 		expect(createBtn).toBeInTheDocument();
 		expect(retryBtn).toBeInTheDocument();
-		// Coral variant aplica bg coral
-		expect(createBtn.className).toContain("bg-coral");
-		// Default variant aplica border ink/20
-		expect(retryBtn.className).toContain("border-ink/20");
+		// Ação primária da identidade atual
+		expect(createBtn.className).toContain("pointly-button-primary");
+		expect(createBtn).toHaveTextContent(/criar sala nova/i);
+		expect(retryBtn).toHaveTextContent(/voltar/i);
 	});
 
 	test("card tem aria-label 'Sala cheia' (a11y)", () => {
@@ -59,10 +59,10 @@ describe("Full page (sala cheia) — T29", () => {
 		expect(createBtn).toBeInTheDocument();
 	});
 
-	test("sub copy menciona limite de 12 assentos", () => {
+	test("sub copy menciona limite de 12 jogadores", () => {
 		renderFull();
 		expect(
-			screen.getByText(/12 assentos para manter a votação síncrona/i),
+			screen.getByText(/já tem 12 jogadores/i),
 		).toBeInTheDocument();
 	});
 

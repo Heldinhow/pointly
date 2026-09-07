@@ -25,16 +25,15 @@ describe("Landing — T27", () => {
 	test("renderiza headline", () => {
 		renderLanding();
 		expect(screen.getByTestId("hero-headline")).toBeInTheDocument();
-		expect(screen.getByTestId("hero-headline")).toHaveTextContent(/ritmo/i);
-		expect(screen.getByTestId("hero-headline")).toHaveTextContent(/confiança/i);
+		expect(screen.getByTestId("hero-headline")).toHaveTextContent(/mesma mesa/i);
 	});
 
-	test("CTA 'Criar sala' tem variant coral (≤1 CTA coral por viewport)", () => {
+	test("CTA 'Criar uma sala' é ação primária da identidade (≤1 primário por viewport)", () => {
 		renderLanding();
 		const cta = screen.getByTestId("cta-create-room");
 		expect(cta).toBeInTheDocument();
-		expect(cta.className).toContain("bg-coral");
-		expect(cta).toHaveTextContent(/criar sala/i);
+		expect(cta.className).toContain("landing-button-primary");
+		expect(cta).toHaveTextContent(/criar uma sala/i);
 	});
 
 	test("CTA 'Criar sala' navega para /join?host=1 (server cria sala)", () => {
@@ -70,10 +69,10 @@ describe("Landing — T27", () => {
 		expect(button).toHaveTextContent(/entrar/i);
 	});
 
-	test("CTA ribbon 'Criar sala' também presente", () => {
+	test("landing segue o estudo mesa compartilhada (sem seção extra)", () => {
 		renderLanding();
-		const ctas = screen.getAllByTestId("cta-ribbon-create");
-		expect(ctas.length).toBe(1);
+		expect(screen.queryByTestId("cta-ribbon-create")).not.toBeInTheDocument();
+		expect(screen.getByText(/sem cadastro\. sem complicar\./i)).toBeInTheDocument();
 	});
 
 	test("header CTAs visíveis", () => {
@@ -82,6 +81,6 @@ describe("Landing — T27", () => {
 		const headerJoinCta = screen.getByTestId("cta-nav-join-room");
 		expect(headerCreateCta).toBeInTheDocument();
 		expect(headerJoinCta).toBeInTheDocument();
-		expect(headerCreateCta.className).toContain("border-coral");
+		expect(headerCreateCta.className).toContain("site-header-create");
 	});
 });

@@ -51,4 +51,34 @@ describe("HelpModal — interactions", () => {
 		fireEvent.keyDown(window, { key: "Escape" });
 		expect(onClose).toHaveBeenCalledTimes(0);
 	});
+
+	test("foca o botão de fechar, prende Tab e restaura o foco ao fechar", () => {
+		const trigger = document.createElement("button");
+		trigger.type = "button";
+		trigger.textContent = "Abrir ajuda";
+		document.body.appendChild(trigger);
+		trigger.focus();
+		const onClose = mock(() => {});
+
+		const view = render(<HelpModal open={true} onClose={onClose} />);
+		const close = screen.getByTestId("help-modal-close");
+		expect(document.activeElement).toBe(close);
+
+		const dialog = screen.getByTestId("help-modal");
+		const focusables = dialog.querySelectorAll<HTMLElement>(
+			"button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
+		);
+		const last = focusables[focusables.length - 1];
+		const first = focusables[0];
+		if (!last || !first) throw new Error("sem focáveis no modal");
+		last.focus();
+		fireEvent.keyDown(dialog, { key: "Tab" });
+		expect(document.activeElement).toBe(first);
+
+		fireEvent.click(close);
+		expect(onClose).toHaveBeenCalledTimes(1);
+		view.rerender(<HelpModal open={false} onClose={onClose} />);
+		expect(document.activeElement).toBe(trigger);
+		trigger.remove();
+	});
 });

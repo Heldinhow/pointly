@@ -9,11 +9,11 @@ Container efêmero de uma sessão de Planning Poker, identificado por código cu
 _Avoid_: room, partida, match
 
 **Host**:
-Jogador que criou a sala. Tem permissão para revelar votos e iniciar nova rodada.
+Jogador que criou a sala (★ visual; se sair, o player mais antigo herda). Reveal e nova rodada são democratizados: qualquer player pode revelar e iniciar nova rodada (ADR-0002).
 _Avoid_: admin, dono, owner
 
 **Player**:
-Qualquer participante da sala que não seja o Host. Pode votar e trocar voto até o reveal.
+Qualquer participante da sala. Pode votar, trocar o voto antes do reveal e editar o próprio voto após o reveal (consensus recomputado, sala segue `revealed`).
 _Avoid_: jogador, participante, usuário
 
 **Apelido**:
@@ -21,7 +21,7 @@ Identificador visível de um jogador na mesa, 2–20 caracteres, sem espaços du
 _Avoid_: username, nome de usuário, display name
 
 **Código**:
-Identificador único de uma sala, 4 caracteres alfanuméricos (A–Z, 0–9), gerado client-side. Compartilhado via URL para convidar outros jogadores.
+Identificador único de uma sala, 4 caracteres alfanuméricos (A–Z, 0–9), gerado no servidor (`generateUniqueCode`). Compartilhado via URL para convidar outros jogadores.
 _Avoid_: ID, token, PIN
 
 **Assento**:
@@ -29,15 +29,15 @@ Posição fixa de um jogador ao redor da mesa em formato de elipse. Cada assento
 _Avoid_: cadeira, seat, slot
 
 **Rodada**:
-Ciclo completo de votação dentro de uma sala: idle → voting (após o primeiro voto) → revealed (após reveal ou auto-reveal por timer).
+Ciclo completo de votação dentro de uma sala: idle → voting (após o primeiro voto) → revealable (todos conectados votaram) → revealed (após reveal ou auto-reveal por timer).
 _Avoid_: round, partida, turno
 
 **Voto**:
-Escolha de uma carta do deck por um jogador. Privado até o reveal; pode ser trocado até lá.
+Escolha de uma carta do deck por um jogador. Privado até o reveal; pode ser trocado antes do reveal e editado após o reveal (atualiza o voto, recomputa o consensus).
 _Avoid_: escolha, seleção
 
 **Reveal**:
-Ato de expor todos os votos simultaneamente. Disparado pelo Host manualmente ou pelo timer ao expirar.
+Ato de expor todos os votos simultaneamente. Disparado por qualquer player manualmente ou pelo timer ao expirar.
 _Avoid_: mostrar, expor, abrir
 
 **Mediana**:

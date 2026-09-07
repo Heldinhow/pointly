@@ -22,7 +22,7 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
 }
 
 describe("Seat — T31", () => {
-	test("renderiza nick + state IDLE por default", () => {
+	test("renderiza nick + state AGUARDANDO por default", () => {
 		const p = makePlayer({ nick: "Maya" });
 		render(
 			<Seat
@@ -34,7 +34,7 @@ describe("Seat — T31", () => {
 			/>,
 		);
 		expect(screen.getByTestId("seat-nick")).toHaveTextContent("Maya");
-		expect(screen.getByTestId("seat-state")).toHaveTextContent("IDLE");
+		expect(screen.getByTestId("seat-state")).toHaveTextContent("AGUARDANDO");
 	});
 
 	test("VOCÊ renderiza badge 'Você' quando isYou=true", () => {
@@ -66,7 +66,7 @@ describe("Seat — T31", () => {
 		expect(screen.queryByTestId("seat-voc-badge")).not.toBeInTheDocument();
 	});
 
-	test("state VOTED quando hasVoted=true", () => {
+	test("state VOTOU quando hasVoted=true", () => {
 		const p = makePlayer({ hasVoted: true });
 		render(
 			<Seat
@@ -77,7 +77,7 @@ describe("Seat — T31", () => {
 				unanimous={false}
 			/>,
 		);
-		expect(screen.getByTestId("seat-state")).toHaveTextContent("VOTED");
+		expect(screen.getByTestId("seat-state")).toHaveTextContent("VOTOU");
 	});
 
 	test("face-up mostra valor em numeral Playfair Italic + state vira 'revealed'", () => {
@@ -156,9 +156,9 @@ describe("Seat — T31", () => {
 				unanimous={false}
 			/>,
 		);
-		// SeatPrimitive aplica border-mustard border-2 nesse caso
+		// SeatPrimitive aplica border-warning border-2 nesse caso
 		const primitive = container.querySelector('[data-seat-state="revealed"]');
-		expect(primitive?.className).toContain("border-mustard");
+		expect(primitive?.className).toContain("border-warning");
 	});
 
 	test("votedMedian=true && unanimous=true NÃO aplica median (F-023 regra)", () => {
@@ -173,7 +173,7 @@ describe("Seat — T31", () => {
 			/>,
 		);
 		const primitive = container.querySelector('[data-seat-state="revealed"]');
-		expect(primitive?.className).not.toContain("border-mustard");
+		expect(primitive?.className).not.toContain("border-warning");
 	});
 
 	test("status=disconnected mostra state 'disconnected' (F-050)", () => {
@@ -187,10 +187,10 @@ describe("Seat — T31", () => {
 				unanimous={false}
 			/>,
 		);
-		expect(screen.getByTestId("seat-state")).toHaveTextContent("DISCONNECTED");
+		expect(screen.getByTestId("seat-state")).toHaveTextContent("DESCONECTADO");
 		const primitive = container.querySelector(
 			'[data-seat-state="disconnected"]',
 		);
-		expect(primitive?.className).toContain("opacity-40");
+		expect(primitive?.className).toContain("opacity-60");
 	});
 });

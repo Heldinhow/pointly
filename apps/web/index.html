@@ -11,14 +11,15 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5"
     />
-    <meta name="theme-color" content="#efe7d2" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#13120d" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f5f6fa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#141a2b" media="(prefers-color-scheme: dark)" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="format-detection" content="telephone=no" />
     <meta
       name="description"
-      content="Pointly is a free real-time planning poker app for agile teams. Create a room in 100ms, share a link, estimate story points together. No signup, in-memory only."
+      content="Pointly is a free real-time planning poker app for agile teams. Create a room, share a link, estimate story points together. No signup, in-memory only."
     />
     <!-- Open Graph / Twitter cards for social-share previews + Slack/iMessage.
          Also picked up by AI crawlers building knowledge bases. -->
@@ -50,5 +51,8 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <!-- impeccable-live-start -->
+<script src="http://localhost:8400/live.js"></script>
+<!-- impeccable-live-end -->
+</body>
 </html>

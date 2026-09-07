@@ -1,0 +1,70 @@
+/* Shared visual language for transient and connection feedback. */
+.feedback-empty-panel {
+	background: color-mix(in srgb, var(--bg) 92%, var(--surface));
+	border-block: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
+}
+
+.feedback-empty-card {
+	box-shadow: var(--shadow-card);
+}
+
+.feedback-modal-shell {
+	background: color-mix(in srgb, var(--bg) 82%, transparent);
+	backdrop-filter: blur(8px);
+}
+
+.feedback-modal-card {
+	box-shadow: var(--shadow-bone);
+}
+
+.feedback-danger {
+	background: var(--danger-soft, #ffe8eb);
+	border-color: color-mix(in srgb, var(--danger, #a32e3b) 30%, transparent);
+	color: var(--danger, #a32e3b);
+}
+
+.feedback-success {
+	background: var(--success-soft, #dff2e9);
+	border-color: color-mix(in srgb, var(--success, #256a52) 35%, transparent);
+	color: var(--success, #256a52);
+}
+
+.feedback-connection-loading {
+	background: var(--surface);
+	border-color: color-mix(in srgb, var(--fg) 10%, transparent);
+	color: var(--fg-soft);
+}
+
+.feedback-status-dot,
+.feedback-dot-danger { background: var(--danger, #a32e3b); }
+.feedback-dot-loading { background: var(--accent); }
+.feedback-dot-success { background: var(--success, #256a52); }
+
+.feedback-toast-icon {
+	align-items: center;
+	border: 1px solid currentColor;
+	display: inline-flex;
+	flex: 0 0 auto;
+	height: 1.25rem;
+	justify-content: center;
+	width: 1.25rem;
+}
+
+.feedback-toast-close {
+	align-items: center;
+	background: transparent;
+	border: 0;
+	border-radius: 9px;
+	color: currentColor;
+	display: inline-flex;
+	font-size: 1rem;
+	height: 2.75rem;
+	justify-content: center;
+	margin: -0.5rem -0.5rem -0.5rem 0;
+	opacity: 0.72;
+	width: 2.75rem;
+}
+
+.feedback-toast-close:hover,
+.feedback-toast-close:focus-visible { opacity: 1; }
+.feedback-toast-close:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }

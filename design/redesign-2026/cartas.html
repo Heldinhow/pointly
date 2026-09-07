@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pointly · Proposta C · Cartas em primeiro plano</title>
+  <link rel="stylesheet" href="./assets/fonts.css">
+  <style>
+    :root {
+      --ink: #352447;
+      --ink-2: #533b67;
+      --paper: #f7f2fc;
+      --paper-2: #eee6f7;
+      --paper-3: #e2d6ee;
+      --berry: #9c2871;
+      --berry-deep: #70174f;
+      --peach: #ffd093;
+      --peach-ink: #6e3b24;
+      --line: rgba(53, 36, 71, .16);
+      --line-soft: rgba(53, 36, 71, .09);
+      --shadow: 0 24px 60px rgba(53, 36, 71, .13);
+      --display: Manrope, "Segoe UI", Helvetica, Arial, sans-serif;
+      --card: "Space Grotesk", Manrope, "Segoe UI", Helvetica, Arial, sans-serif;
+      --body: Manrope, "Segoe UI", Helvetica, Arial, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    [data-theme="dark"] {
+      --berry: #ed9cd0;
+      --berry-deep: #bd4b96;
+      --ink: #f7f2fc;
+      --ink-2: #d9c9e5;
+      --paper: #21162d;
+      --paper-2: #2b1d38;
+      --paper-3: #3c2b4b;
+      --line: rgba(247,242,252,.19);
+      --line-soft: rgba(247,242,252,.1);
+      --shadow: 0 24px 60px rgba(0,0,0,.28);
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html { background: var(--paper); scroll-behavior: smooth; }
+    body { margin: 0; min-width: 320px; color: var(--ink); background: var(--paper); font-family: var(--body); line-height: 1.45; -webkit-font-smoothing: antialiased; }
+    button, a { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--berry); outline-offset: 3px; }
+    .frame { max-width: 1500px; margin: 0 auto; padding: 0 28px 72px; }
+    .frame.preview-mobile { max-width: 390px; padding-inline: 14px; }
+    .frame.preview-mobile .brandbar { align-items: flex-start; flex-direction: column; gap: 16px; }
+    .frame.preview-mobile .preview-tools { width: 100%; justify-content: space-between; }
+    .frame.preview-mobile .hero { grid-template-columns: 1fr; padding-top: 58px; }
+    .frame.preview-mobile .card-showcase { min-height: 340px; border-left: 0; border-top: 1px solid var(--line); }
+    .frame.preview-mobile .feature-grid { grid-template-columns: 1fr; }
+    .frame.preview-mobile .arena { grid-template-columns: 1fr; }
+    .frame.preview-mobile .control-rail { flex-direction: column; align-items: flex-start; }
+    .frame.preview-mobile .footer-note { flex-direction: column; align-items: flex-start; }
+    .frame.preview-mobile h1 { font-size: 68px; }
+    .frame.preview-mobile .hero-card { width:112px; }
+    .frame.preview-mobile .side-panel { border: 0; border-top: 1px solid var(--line); }
+    .utility { display: flex; justify-content: space-between; align-items: center; min-height: 40px; border-bottom: 1px solid var(--line); color: var(--ink-2); font: 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .utility strong { color: var(--berry); font-weight: 700; }
+    .brandbar { display: flex; justify-content: space-between; align-items: center; padding: 22px 0 18px; }
+    .brand { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); text-decoration: none; font: 800 20px/1 var(--body); letter-spacing: -.06em; }
+    .brand-mark { width: 28px; height: 28px; display: grid; place-items: center; color: var(--paper); background: var(--berry); border-radius: 50%; font: 700 14px var(--display); transform: rotate(-8deg); }
+    .nav { display: flex; gap: 6px; padding: 4px; border: 1px solid var(--line); border-radius: 999px; }
+    .nav button, .segmented button { border: 0; background: transparent; color: var(--ink-2); padding: 8px 14px; border-radius: 999px; cursor: pointer; font-size: 12px; font-weight: 700; }
+    .nav button[aria-selected="true"], .segmented button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+    .preview-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .tool-label { color: var(--ink-2); font: 9px var(--mono); text-transform: uppercase; letter-spacing: .1em; }
+    .segmented { display: inline-flex; padding: 3px; border: 1px solid var(--line); border-radius: 999px; }
+    .segmented button { padding: 6px 10px; font-size: 10px; }
+    .mode-toggle { border: 1px solid var(--line); background: transparent; padding: 7px 11px; border-radius: 999px; cursor: pointer; font-size: 12px; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .hero { display: grid; grid-template-columns: minmax(280px, .84fr) minmax(480px, 1.16fr); gap: clamp(34px, 6vw, 110px); align-items: center; padding: clamp(44px, 8vw, 116px) 0 98px; }
+    .kicker { display: flex; gap: 10px; align-items: center; color: var(--berry); font: 700 11px var(--mono); letter-spacing: .13em; text-transform: uppercase; }
+    .kicker::before { content: ''; width: 28px; height: 3px; background: var(--berry); }
+    h1, h2, h3, p { margin: 0; }
+    h1 { max-width: 6.5ch; margin-top: 17px; font: 400 clamp(64px, 9vw, 150px)/.84 var(--display); letter-spacing: -.035em; text-transform: uppercase; }
+    h1 .accent { color: var(--berry); }
+    .hero-copy { max-width: 48ch; margin-top: 26px; color: var(--ink-2); font-size: 16px; }
+    .button-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 31px; }
+    .button { display: inline-flex; justify-content: center; align-items: center; gap: 9px; min-height: 44px; padding: 0 17px; border: 1px solid var(--ink); border-radius: 10px; background: var(--ink); color: var(--paper); text-decoration: none; cursor: pointer; font-size: 13px; font-weight: 800; }
+    .button:hover { background: var(--berry-deep); border-color: var(--berry-deep); }
+    .button.secondary { background: transparent; color: var(--ink); }
+    .button.secondary:hover { background: var(--paper-2); }
+    .hero-note { margin-top: 26px; color: var(--ink-2); font: 10px var(--mono); letter-spacing: .03em; }
+    .hero-note b { color: var(--berry); }
+    .card-showcase { min-height: 510px; position: relative; display: grid; place-items: center; overflow: hidden; border-left: 1px solid var(--line); }
+    .card-showcase::before { content: 'ESCOLHA UMA CARTA'; position: absolute; top: 32px; left: 34px; color: var(--ink-2); font: 10px var(--mono); letter-spacing: .11em; }
+    .card-showcase::after { content: ''; position: absolute; right: 22px; bottom: 28px; width: 70%; height: 1px; background: var(--line); }
+    .hero-card { position: absolute; display: grid; place-items: center; width: clamp(118px, 15vw, 205px); aspect-ratio: 3 / 4; border: 1px solid var(--ink); border-radius: 16px; background: var(--paper); box-shadow: var(--shadow); font: 800 clamp(50px, 7vw, 96px)/1 var(--card); transition: transform .25s ease; }
+    .hero-card small { position: absolute; left: 15px; top: 13px; font: 700 9px var(--mono); letter-spacing: .1em; }
+    .hero-card.one { transform: translate(-48%, 8%) rotate(-14deg); color: var(--ink); }
+    .hero-card.two { transform: translate(46%, 15%) rotate(13deg); background: var(--peach); color: var(--peach-ink); }
+    .hero-card.three { z-index: 2; border: 3px solid var(--berry); color: var(--berry); transform: translateY(-1%); }
+    .hero-card:hover { transform: translateY(-12px) rotate(0); }
+    .hero-card.three small { color: var(--berry); }
+    .hero-card .stamp { position: absolute; bottom: 14px; font: 700 9px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+    .quote-line { display: flex; gap: 18px; align-items: flex-start; padding: 22px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--ink-2); font-size: 14px; }
+    .quote-line strong { color: var(--berry); font: 400 34px/1 var(--display); }
+    .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin: 84px 0; background: var(--line); border: 1px solid var(--line); }
+    .feature { min-height: 210px; padding: 27px; background: var(--paper); }
+    .feature .num { color: var(--berry); font: 400 32px/1 var(--display); }
+    .feature h2 { margin-top: 22px; font: 400 30px/.92 var(--display); text-transform: uppercase; }
+    .feature p { margin-top: 11px; color: var(--ink-2); font-size: 13px; }
+    .simulator { margin-top: 14px; padding: 13px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper-2); }
+    .simulator-label { display: flex; justify-content: space-between; align-items: center; color: var(--ink-2); font: 9px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .simulator-label b { color: var(--berry); }
+    .stage-shell { margin-top: 12px; border: 1px solid var(--line); background: var(--paper-2); border-radius: 18px; overflow: hidden; container-type: inline-size; }
+    .stage-head { display: flex; justify-content: space-between; gap: 18px; align-items: center; padding: 17px 20px; border-bottom: 1px solid var(--line); }
+    .stage-title { font-size: 14px; font-weight: 800; }
+    .stage-title span { display: block; color: var(--ink-2); font: 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .status { display: inline-flex; align-items: center; gap: 7px; color: var(--berry); font: 10px var(--mono); text-transform: uppercase; }
+    .status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .arena { display: grid; grid-template-columns: 1fr 250px; min-height: 450px; }
+    .table-area { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 450px; padding: 40px 22px 150px; background: radial-gradient(circle at 50% 30%, var(--paper) 0, transparent 52%); }
+    .round-meta { position: absolute; left: 20px; top: 18px; color: var(--ink-2); font: 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .timer { position: absolute; top: 17px; right: 20px; font: 700 12px var(--mono); }
+    .timer b { color: var(--berry); }
+    .prompt { max-width: 360px; text-align: center; }
+    .prompt small { color: var(--ink-2); font: 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .prompt h2 { margin-top: 10px; font: 400 clamp(36px, 6cqi, 64px)/.87 var(--display); text-transform: uppercase; }
+    .prompt p { margin-top: 12px; color: var(--ink-2); font-size: 13px; }
+    .selected-card { width: clamp(108px, 15cqi, 142px); aspect-ratio: 3 / 4; margin: 24px auto 0; display: grid; place-items: center; position: relative; border: 3px solid var(--berry); border-radius: 14px; background: var(--paper); color: var(--berry); box-shadow: 0 20px 30px rgba(156,40,113,.15); font: 800 clamp(42px, 7cqi, 64px)/1 var(--card); }
+    .selected-card::after { content: 'sua carta'; position: absolute; bottom: 11px; color: var(--berry); font: 700 8px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+    .selected-card.revealed { background: var(--peach); border-color: var(--peach-ink); color: var(--peach-ink); }
+    .selected-card.revealed::after { content: 'revelada'; color: var(--peach-ink); }
+    .deck { position: absolute; bottom: 19px; left: 20px; right: 20px; display: grid; grid-template-columns: repeat(9, minmax(44px, 1fr)); gap: 7px; }
+    .play-card { aspect-ratio: 3 / 4; min-width: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); cursor: pointer; font: 800 clamp(17px, 3cqi, 28px)/1 var(--card); }
+    .play-card:hover, .play-card.selected { border: 2px solid var(--berry); color: var(--berry); transform: translateY(-5px); }
+    .play-card.coffee { font-family: var(--body); font-size: clamp(15px, 2.4cqi, 22px); }
+    .side-panel { padding: 20px; border-left: 1px solid var(--line); background: var(--paper); }
+    .side-heading { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 14px; border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 800; }
+    .side-heading small { color: var(--ink-2); font: 10px var(--mono); }
+    .players { display: grid; gap: 7px; margin-top: 15px; }
+    .player { display: flex; align-items: center; gap: 9px; padding: 9px 0; border-bottom: 1px solid var(--line-soft); font-size: 12px; }
+    .avatar { width: 25px; height: 25px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 50%; background: var(--paper-3); color: var(--ink); font: 700 10px var(--mono); }
+    .player.you .avatar { background: var(--berry); color: var(--paper); }
+    .player .you-label { color: var(--berry); font: 9px var(--mono); text-transform: uppercase; }
+    .player-state { margin-left: auto; color: var(--ink-2); font: 9px var(--mono); text-transform: uppercase; }
+    .player-state.done { color: var(--berry); }
+    .participant-strip { flex-wrap: wrap; display: flex; gap: 7px; margin: 22px 0 0; }
+    .participant-strip span { width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: var(--ink-2); font: 9px var(--mono); }
+    .participant-strip span.done { border-color: var(--berry); color: var(--berry); }
+    .result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 18px; background: var(--line); border: 1px solid var(--line); }
+    .result { padding: 16px; background: var(--paper); }
+    .result small { color: var(--ink-2); font: 9px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .result strong { display: block; margin-top: 7px; color: var(--berry); font: 400 40px/.9 var(--display); }
+    .control-rail { flex-wrap: wrap; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 14px; border-top: 1px dashed var(--line); background: var(--paper-3); color: var(--ink-2); }
+    .control-rail label { display: inline-flex; align-items: center; gap: 8px; font: 10px var(--mono); text-transform: uppercase; }
+    .control-rail input { accent-color: var(--berry); }
+    .control-rail select { border: 1px solid var(--line); border-radius: 6px; padding: 5px 7px; background: var(--paper); color: var(--ink); font: 10px var(--mono); }
+    .disconnected { color: var(--berry); }
+    .footer-note { display: flex; justify-content: space-between; gap: 20px; align-items: center; margin-top: 22px; color: var(--ink-2); font: 10px var(--mono); text-transform: uppercase; letter-spacing: .07em; }
+    .footer-note a { color: var(--berry); text-decoration: none; }
+    .footer-note b { color: var(--berry); }
+    .mobile-preview { width: 390px; max-width: 100%; margin: 40px auto 0; padding: 13px; border: 1px solid var(--line); border-radius: 24px; background: var(--paper-3); }
+    .mobile-preview .stage-shell { margin: 0; }
+    .mobile-preview .arena { grid-template-columns: 1fr; }
+    .mobile-preview .side-panel { border: 0; border-top: 1px solid var(--line); }
+    @container (max-width: 700px) {
+      .arena { grid-template-columns: 1fr; }
+      .side-panel { border: 0; border-top: 1px solid var(--line); }
+      .table-area { min-height: 405px; }
+      .deck { overflow-x:auto; padding:6px 0; gap: 4px; left: 12px; right: 12px; }
+      .stage-head { padding: 15px; }
+    }
+    @media (max-width: 800px) {
+      .frame { padding-inline: 18px; }
+      .brandbar { align-items: flex-start; gap: 16px; flex-direction: column; }
+      .preview-tools { width: 100%; justify-content: space-between; }
+      .hero { grid-template-columns: 1fr; padding-top: 58px; }
+      .card-showcase { min-height: 390px; border-left: 0; border-top: 1px solid var(--line); }
+      .feature-grid { grid-template-columns: 1fr; }
+      h1 { font-size: clamp(66px, 19vw, 120px); }
+      .footer-note { align-items: flex-start; flex-direction: column; }
+    }
+    @media (max-width: 420px) {
+      .nav { width: 100%; }
+      .nav button { flex: 1; padding-inline: 9px; }
+      .tool-label { display: none; }
+      .card-showcase { min-height: 340px; }
+      .hero-card { width: 112px; }
+      .table-area { min-height: 380px; padding-inline: 10px; }
+      .round-meta, .timer { top: 13px; }
+      .deck { left: 8px; right: 8px; gap: 3px; }
+      .play-card { border-radius: 6px; }
+      .control-rail { align-items: flex-start; flex-direction: column; }
+      .result-grid { grid-template-columns: 1fr 1fr 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <div class="frame">
+    <div class="utility"><span>Pointly / proposta de direção visual</span><strong>Comparação C · Cartas em primeiro plano</strong></div>
+    <header class="brandbar">
+      <a class="brand" href="#top" aria-label="Pointly início"><span class="brand-mark">P</span> pointly</a>
+      <nav class="nav" aria-label="Pré-visualização"><button type="button" data-view="landing" aria-selected="true">Landing</button><button type="button" data-view="room" aria-selected="false">Sala</button></nav>
+      <div class="preview-tools"><span class="tool-label">Controles da proposta</span><div class="segmented" aria-label="Tamanho do preview"><button type="button" data-size="desktop" aria-pressed="true">Desktop</button><button type="button" data-size="mobile" aria-pressed="false">Mobile 390</button></div><button class="mode-toggle" id="themeToggle" type="button" aria-label="Alternar entre tema claro e tema escuro">Tema: claro</button></div>
+    </header>
+
+    <main>
+      <section class="view active" id="landing" aria-labelledby="landing-title">
+        <div class="hero" id="top">
+          <div>
+            
+            <h1 id="landing-title">Cartas na mesa<span class="accent">.</span></h1>
+            <p class="hero-copy">Estimem juntos sem transformar a conversa numa planilha. Abra uma sala, escolha uma carta e revele tudo de uma vez — o número vira ponto de partida para a decisão.</p>
+            <div class="button-row"><a class="button" href="#room" data-open-room>Começar uma sala <span aria-hidden="true">↗</span></a><a class="button secondary" href="#how">Ver como funciona</a></div>
+            <p class="hero-note"><b>sem cadastro</b> · até 12 pessoas · sala que desaparece quando termina</p>
+          </div>
+          <div class="card-showcase" aria-label="Exemplo de cartas de Planning Poker">
+            <div class="hero-card one"><small>01</small>2</div><div class="hero-card two"><small>02</small>8</div><div class="hero-card three"><small>03</small>5<span class="stamp">mediana</span></div>
+          </div>
+        </div>
+        <div class="quote-line"><strong>“</strong><p>Todo mundo escolhe em silêncio. O time conversa olhando para a mesma mesa. A estimativa fica mais honesta quando ninguém ancora o grupo antes da hora.</p></div>
+        <div class="feature-grid" id="how">
+          <article class="feature"><div class="num">01</div><h2>Escolha sem pista</h2><p>Cada pessoa guarda sua carta até o momento do reveal. Menos efeito manada, mais opinião própria.</p></article>
+          <article class="feature"><div class="num">02</div><h2>Revele junto</h2><p>Um toque mostra todos os valores e destaca a mediana. A conversa começa com um dado concreto.</p></article>
+          <article class="feature"><div class="num">03</div><h2>Feche a rodada</h2><p>Nova rodada limpa a mesa sem abrir outra sala. O ritmo permanece com o time.</p></article>
+        </div>
+        <p class="footer-note"><span>direção C · <b>cartas em primeiro plano</b></span><span>preview independente · sem backend</span></p>
+      </section>
+
+      <section class="view" id="room" aria-labelledby="room-title">
+        <div class="simulator" aria-label="Controles de simulação da proposta"><div class="simulator-label"><span>Controles da demonstração</span><b>não faz parte da sala</b></div><div class="control-rail"><label>Participantes <select id="participantCount"><option value="1">1 pessoa</option><option value="2">2 pessoas</option><option value="6" selected>6 pessoas</option><option value="12">12 pessoas</option></select></label><label>Estado <span class="segmented" id="phaseToggle"><button type="button" data-phase="voting" aria-pressed="true">Votação</button><button type="button" data-phase="result" aria-pressed="false">Resultado</button></span></label><label class="disconnected"><input id="disconnectToggle" type="checkbox"> simular desconexão</label><button class="button secondary" id="resetDemo" type="button">Resetar demo</button></div></div>
+        <div class="stage-shell" aria-label="Preview da sala Pointly">
+          <div class="stage-head"><div class="stage-title" id="room-title"><span>Sala M7QK · host: você</span>Rodada de estimativa</div><div class="status" id="liveStatus">aguardando votos</div></div>
+          <div class="arena">
+            <div class="table-area"><span class="round-meta">rodada <span id="roundNumber">04</span> / planning</span><span class="timer"><b id="timerValue">00:42</b> restantes</span><div class="prompt"><small>seu voto</small><h2 id="promptText">Escolha uma carta.</h2><div class="selected-card" id="selectedCard" aria-live="polite">?</div></div><div class="deck" id="deck" aria-label="Cartas disponíveis"></div></div>
+            <aside class="side-panel"><div class="side-heading"><span>Na sala</span><small id="playerCount">6 pessoas</small></div><div class="players" id="players"></div><div class="participant-strip" id="strip" aria-label="Participantes"></div></aside>
+          </div>
+          <div class="result-grid" id="results" hidden><div class="result"><small>mediana</small><strong id="median">5</strong></div><div class="result"><small>média</small><strong id="average">5,4</strong></div><div class="result"><small>intervalo</small><strong id="range">3–8</strong></div></div>
+          <div class="control-rail"><span id="voteStatus">0 de 6 votaram</span><button class="button" id="revealButton" type="button" disabled>Revelar votos</button></div>
+        </div>
+        <div class="button-row"><button class="button secondary" id="newRound" type="button">Nova rodada</button><button class="button secondary" type="button" data-view="landing">← Voltar para landing</button></div>
+        <p class="footer-note"><span>direção C · <b>cartas em primeiro plano</b></span><span>área central = produto · faixa lilás = controle de simulação</span><a href="index.html">← overview das propostas</a></p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const fib = ['0', '½', '1', '2', '3', '5', '8', '13', '☕'];
+      const cardValues = { '0': 0, '½': 0.5, '1': 1, '2': 2, '3': 3, '5': 5, '8': 8, '13': 13 };
+      const names = ['Você', 'Maya', 'Rui', 'Lia', 'Theo', 'Nora', 'Ivo', 'Bia', 'Caio', 'Duda', 'Eva', 'Noah'];
+      const state = { round: 4, participants: 6, selected: null, revealed: false, disconnected: false, votes: [null, 5, 3, 8, 5, 5, 2, 5, 8, 3, 5, 5] };
+      const $ = (s) => document.querySelector(s);
+      const $$ = (s) => [...document.querySelectorAll(s)];
+      const room = $('#room');
+      const setView = (view) => { $$('.view').forEach(v => v.classList.toggle('active', v.id === view)); $$('.nav button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.view === view))); if (view === 'room') room.scrollIntoView({behavior: 'smooth', block: 'start'}); };
+      $$('[data-view]').forEach(el => el.addEventListener('click', () => setView(el.dataset.view)));
+      $$('[data-open-room]').forEach(el => el.addEventListener('click', () => setView('room')));
+      $('#themeToggle').addEventListener('click', () => { const body = document.body; const dark = body.dataset.theme === 'dark'; body.dataset.theme = dark ? 'light' : 'dark'; $('#themeToggle').textContent = `Tema: ${dark ? 'claro' : 'escuro'}`; });
+      $$('[data-size]').forEach(btn => btn.addEventListener('click', () => { $$('[data-size]').forEach(b => b.setAttribute('aria-pressed', String(b === btn))); document.querySelector('.frame').classList.toggle('preview-mobile', btn.dataset.size === 'mobile'); }));
+      const renderDeck = () => { $('#deck').innerHTML = fib.map(value => `<button class="play-card${value === '☕' ? ' coffee' : ''}" type="button" data-value="${value}" aria-label="Carta ${value}">${value}</button>`).join(''); $$('#deck .play-card').forEach(card => card.addEventListener('click', () => choose(card.dataset.value))); };
+      const renderPlayers = () => { const count = state.participants; const votedCount = state.votes.slice(0, count).filter((v,i) => v !== null && !(state.disconnected && i === count-1)).length; const connectedCount=count-(state.disconnected?1:0); $('#revealButton').disabled=state.revealed||votedCount===0; $('#playerCount').textContent = `${count} ${count === 1 ? 'pessoa' : 'pessoas'}`; $('#voteStatus').textContent = `${votedCount} de ${connectedCount} conectados votaram`; $('#players').innerHTML = names.slice(0, count).map((name, i) => { const voted = state.votes[i] !== null; const isOffline = state.disconnected && i === count - 1; const voteLabel = state.revealed && voted ? `· ${state.votes[i] === '☕' ? '☕' : state.votes[i]}` : ''; return `<div class="player${i === 0 ? ' you' : ''}"><span class="avatar">${name[0]}</span><span>${name}${i === 0 ? ' <span class="you-label">você</span>' : ''}</span><span class="player-state${voted ? ' done' : ''}">${isOffline ? 'offline' : voted ? `votou ${voteLabel}` : 'pensando'}</span></div>`; }).join(''); $('#strip').innerHTML = names.slice(0, count).map((name, i) => `<span class="${state.votes[i] !== null ? 'done' : ''}" title="${name}">${name[0]}</span>`).join(''); $('#liveStatus').textContent = state.disconnected ? 'uma pessoa caiu' : state.revealed ? 'votos revelados' : votedCount === count ? 'pronto para revelar' : 'aguardando votos'; };
+      const renderResults = () => { const nums = state.votes.slice(0, state.participants).filter((v,i) => !(state.disconnected && i === state.participants - 1)).filter(v => typeof v === 'number' && Number.isFinite(v)); if (!nums.length) { ['median','average','range'].forEach(id => document.getElementById(id).textContent = '—'); return; } const ordered = [...nums].sort((a,b)=>a-b); const middle = ordered.length / 2; const med = ordered.length % 2 ? ordered[Math.floor(middle)] : (ordered[middle - 1] + ordered[middle]) / 2; const avg = nums.reduce((a,b)=>a+b,0) / nums.length; const format = (value) => String(value).replace('.', ','); $('#median').textContent = format(med); $('#average').textContent = avg.toFixed(1).replace('.', ','); $('#range').textContent = `${format(ordered[0])}–${format(ordered[ordered.length - 1])}`; };
+      const choose = (value) => { if (state.revealed) return; state.selected = value; state.votes[0] = value === '☕' ? '☕' : cardValues[value]; $$('#deck .play-card').forEach(c => c.classList.toggle('selected', c.dataset.value === value)); $('#selectedCard').textContent = value; $('#selectedCard').classList.remove('revealed'); $('#promptText').textContent = 'Carta escolhida.'; $('#revealButton').disabled = false; renderPlayers(); };
+      const reveal = () => { if (!state.votes.slice(0,state.participants).some((v,i)=>v!==null && !(state.disconnected && i===state.participants-1))) return; state.revealed = true; $('#selectedCard').classList.add('revealed'); $('#promptText').textContent = 'Agora conversem.'; $('#results').hidden = false; $('#revealButton').textContent = 'Votos revelados'; $('#revealButton').disabled = true; renderResults(); renderPlayers(); };
+      const reset = () => { $$('#phaseToggle button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.phase==='voting'))); state.selected = null; state.revealed = false; state.votes = [null, 5, 3, 8, 5, 5, 2, 5, 8, 3, 5, 5]; $('#selectedCard').textContent = '?'; $('#selectedCard').classList.remove('revealed'); $('#promptText').textContent = 'Escolha uma carta.'; $('#results').hidden = true; $('#revealButton').textContent = 'Revelar votos'; $('#revealButton').disabled = true; renderDeck(); renderPlayers(); };
+      const setPhase = (phase) => { if (phase === 'result') { if (!state.selected) choose('5'); reveal(); } else { state.revealed = false; $('#selectedCard').classList.remove('revealed'); $('#promptText').textContent = state.selected ? 'Carta escolhida.' : 'Escolha uma carta.'; $('#results').hidden = true; $('#revealButton').textContent = 'Revelar votos'; $('#revealButton').disabled = !state.selected; renderPlayers(); } $$('#phaseToggle button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.phase === phase))); };
+      $('#participantCount').addEventListener('change', (e) => { state.participants = Number(e.target.value); reset(); });
+      $('#disconnectToggle').addEventListener('change', (e) => { state.disconnected = e.target.checked; renderPlayers(); if(state.revealed) renderResults(); });
+      $$('#phaseToggle button').forEach(button => button.addEventListener('click', () => setPhase(button.dataset.phase)));
+      $('#resetDemo').addEventListener('click', reset); $('#newRound').addEventListener('click', () => {state.round++; $('#roundNumber').textContent=String(state.round).padStart(2,'0');reset();}); $('#revealButton').addEventListener('click', () => { reveal(); $$('#phaseToggle button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.phase==='result'))); }); renderDeck(); renderPlayers();
+    })();
+  </script>
+</body>
+</html>

@@ -119,7 +119,7 @@ describe("ToastQueue — T37", () => {
 		expect(screen.queryByText(/mediana: 5/i)).not.toBeNull();
 	});
 
-	test("unanimous=true dispara '★ Unanimous!'", () => {
+	test("unanimous=true dispara '★ Unânime!'", () => {
 		setup();
 		act(() => {
 			useSalaStore.getState().reset();
@@ -135,7 +135,7 @@ describe("ToastQueue — T37", () => {
 					{ median: 5, mean: 5, range: [5, 5], unanimous: true },
 				);
 		});
-		expect(screen.queryByText(/unanimous/i)).not.toBeNull();
+		expect(screen.queryByText(/unânime/i)).not.toBeNull();
 	});
 
 	test("sala_ended reason=last_left dispara 'Sala encerrada — último jogador saiu.'", () => {

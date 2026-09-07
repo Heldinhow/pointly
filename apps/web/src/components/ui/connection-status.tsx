@@ -15,16 +15,16 @@ import type * as React from "react";
 import { cn } from "./utils";
 
 const statusVariants = cva(
-	// text-micro-label = 10px token (ramp Atelier Zero §3 Hierarchy).
+	// text-micro-label = 10px, tier de small caps mono (timer / connection pills).
 	// Antes era `text-[10px]` arbitrário; token existe precisamente pra
 	// esse uso em small caps mono labels (timer / connection state pills).
 	"inline-flex items-center gap-2 px-3 py-1 rounded-full font-mono text-micro-label uppercase tracking-caps border",
 	{
 		variants: {
-			variant: {
-				loading: "bg-surface text-ink-soft border-ink/10",
-				error: "bg-coral-soft text-ink border-coral/30",
-				connected: "bg-surface text-olive border-olive/30",
+				variant: {
+					loading: "feedback-connection-loading",
+					error: "feedback-danger",
+					connected: "feedback-success",
 			},
 		},
 		defaultVariants: {
@@ -34,9 +34,9 @@ const statusVariants = cva(
 );
 
 const DOT_COLORS: Record<"loading" | "error" | "connected", string> = {
-	loading: "bg-coral",
-	error: "bg-coral",
-	connected: "bg-olive",
+	loading: "feedback-dot-loading",
+	error: "feedback-dot-danger",
+	connected: "feedback-dot-success",
 };
 
 const LABELS: Record<"loading" | "error" | "connected", string> = {

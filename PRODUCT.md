@@ -18,15 +18,12 @@ Pointly is an ephemeral, real-time Planning Poker tool for agile estimation. It 
 A zero-friction, registration-free estimation tool designed for immediate collaboration. It gets out of the way, running entirely in-memory and discarding all room data as soon as the last player leaves.
 
 ## Brand Personality
-Editorial, restrained, and artisanal. Pointly embraces the "Atelier Zero" design system: warm paper background, dark ink text, subtle coral accents, and a touch of gold/mustard for jewelry. It prioritizes craft, clean typography, and tactile feedback.
-
-## Anti-references
-Generic SaaS platforms with monotone grey cards, neon blue/purple buttons, and standard corporate layouts. It should avoid futuristic dark-mode gaming aesthetics or neon glows.
+Colaborativa, memorável e clara. Mesa compartilhada com paleta Azul tinta, escolhida pelo usuário: branco frio e azul suave no claro; azul profundo com ações claras no escuro. Pessoas, cartas e a conversa são os elementos centrais.
 
 ## Design Principles
-- **Tactile Minimalism**: Keep the interface clean and typographically driven while ensuring interactive moments (like card selection and projectiles) feel physically satisfying.
-- **Zero Administrative Friction**: Every screen should prioritize immediate participation. No forms, settings, or setup steps that are not strictly necessary.
-- **Ephemeral Dignity**: Design for transient sessions. The room exists to serve a single meeting and then cleanly disappears.
+- Participar sem fricção: criação e entrada sem cadastro, com próximo passo explícito.
+- Presença legível: participantes e andamento compreensíveis sem ampliar a tela.
+- Revelação compartilhada: os votos levam à discussão, sem inventar uma decisão final.
 
 ## Accessibility & Inclusion
-Meets WCAG 2.1 AA contrast requirements (especially ensuring readable body text against warm paper). Respects system preferences for reduced motion with clean transitions and crossfades.
+Meets WCAG 2.1 AA contrast requirements (especially ensuring readable body text in both themes). Respects system preferences for reduced motion with clean transitions and crossfades.

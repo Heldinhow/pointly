@@ -6,11 +6,11 @@ import { Pill } from "./pill";
 import { render, screen } from "./test-helpers";
 
 describe("Pill — variants", () => {
-	test("variant critical aplica bg-coral-soft", () => {
+	test("variant critical aplica estado visual de atenção", () => {
 		render(<Pill variant="critical">00:42 · ROUND 03</Pill>);
 		const pill = screen.getByText("00:42 · ROUND 03");
 		expect(pill.className).toContain("bg-coral-soft");
-		expect(pill.className).toContain("text-ink");
+		expect(pill.className).toContain("pointly-pill-critical");
 	});
 
 	test("variant gold aplica bg mustard/15", () => {

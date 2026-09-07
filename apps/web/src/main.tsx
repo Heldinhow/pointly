@@ -21,6 +21,7 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { init as initAnalytics } from "./lib/analytics";
 import "./index.css";
+import "./styles/feedback.css";
 
 // Analytics é inicializado uma vez no boot da app, antes do React render.
 // Idempotente: no-op em dev (sem VITE_GA_MEASUREMENT_ID) ou em prod sem env.

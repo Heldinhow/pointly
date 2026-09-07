@@ -129,12 +129,12 @@ describe("validateNick — T28 unit (pure function)", () => {
 });
 
 describe("Join page — render", () => {
-	test("renderiza headline 'Entrar na sala' + 'Entrar'", () => {
+	test("renderiza headline do modo + CTA correspondente", () => {
 		renderJoin();
 		expect(
-			screen.getByRole("heading", { level: 1, name: /entrar na sala/i }),
+			screen.getByRole("heading", { level: 1, name: /sala/i }),
 		).toBeInTheDocument();
-		expect(screen.getAllByText(/Entrar/i).length).toBeGreaterThan(0);
+		expect(screen.getByTestId("join-submit")).toBeInTheDocument();
 	});
 
 	test("input tem label associado e placeholder", () => {

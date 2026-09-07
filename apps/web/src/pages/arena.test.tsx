@@ -89,10 +89,10 @@ describe("seatPosition — T30 pure", () => {
 });
 
 describe("Arena shell — T30", () => {
-	test("renderiza shell com code '9B9F' no topbar", () => {
+	test("renderiza shell com code '9B9F' no header", () => {
 		renderArena();
 		expect(screen.getByTestId("page-arena")).toBeInTheDocument();
-		expect(screen.getByTestId("arena-code")).toHaveTextContent("9B9F");
+		expect(screen.getByTestId("share-pill")).toHaveTextContent("9B9F");
 	});
 
 	test("renderiza arena-table com Ellipse + RevealButton + Deck", () => {
@@ -161,11 +161,12 @@ describe("Arena shell — T30", () => {
 		// Pode ou não aparecer dependendo de sessionStorage. Em primeiro load sim.
 		// Verificamos o data-od-id presente no DOM
 		const overlay = screen.queryByTestId("empty-overlay");
-		// Se sessionStorage limpo (test default), aparece
+		// Se sessionStorage limpo (test default), aparece como região
+		// não-modal (redesign: convite incorporado ao estado de espera).
 		// Se sessionStorage tem '1', não aparece — ambos os casos são válidos
-		expect(overlay === null || overlay.getAttribute("role") === "dialog").toBe(
-			true,
-		);
+		expect(
+			overlay === null || overlay.getAttribute("role") === "dialog",
+		).toBe(true);
 	});
 
 	test("RevealButton começa em estado 'awaiting' com 0 votos", () => {
@@ -175,5 +176,74 @@ describe("Arena shell — T30", () => {
 		renderArena();
 		const btn = screen.getByTestId("reveal-button");
 		expect(btn.getAttribute("data-reveal-state")).toBe("awaiting");
+	});
+
+	test("centro mostra 'Tem lugar para o time.' com 1 jogador", () => {
+		useSalaStore.getState().reset();
+		useSalaStore.getState().setSala(
+			makeSala({
+				players: [
+					{
+						id: "p_1",
+						uuid: "00000000-0000-4000-8000-000000000000",
+						nick: "Helder",
+						role: "host",
+						seatIndex: 0,
+						hasVoted: false,
+						value: null,
+						status: "connected",
+						joinedAt: 1_000_000,
+					},
+				],
+			}),
+		);
+		useSalaStore.getState().setCurrentPlayerId("p_1");
+		renderArena();
+		expect(screen.getByTestId("arena-table-copy")).toHaveTextContent(
+			/tem lugar para o time/i,
+		);
+		expect(screen.getByTestId("arena-table-sub")).toHaveTextContent(
+			/convide alguém/i,
+		);
+	});
+
+	test("centro mostra 'Podemos revelar.' quando todos votaram", () => {
+		useSalaStore.getState().reset();
+		useSalaStore.getState().setSala(
+			makeSala({
+				players: [
+					{
+						id: "p_1",
+						uuid: "00000000-0000-4000-8000-000000000000",
+						nick: "Helder",
+						role: "host",
+						seatIndex: 0,
+						hasVoted: true,
+						value: "5",
+						status: "connected",
+						joinedAt: 1_000_000,
+					},
+					{
+						id: "p_2",
+						uuid: "00000000-0000-4000-8000-000000000001",
+						nick: "Maya",
+						role: "player",
+						seatIndex: 1,
+						hasVoted: true,
+						value: "8",
+						status: "connected",
+						joinedAt: 1_000_001,
+					},
+				],
+			}),
+		);
+		useSalaStore.getState().setCurrentPlayerId("p_1");
+		renderArena();
+		expect(screen.getByTestId("arena-table-copy")).toHaveTextContent(
+			/podemos revelar/i,
+		);
+		expect(screen.getByTestId("arena-table-sub")).toHaveTextContent(
+			/2 de 2 pessoas votaram/i,
+		);
 	});
 });
