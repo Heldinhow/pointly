@@ -68,7 +68,6 @@
   background: var(--surface) !important;
   border-color: var(--border-rule) !important;
   color: var(--fg);
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--fg) 10%, transparent) !important;
 }
 .arena-seat-card [data-testid="seat-avatar"] {
   width: 3.25rem; height: 3.25rem;
@@ -100,7 +99,6 @@
   padding: .75rem;
   background: var(--surface);
   border-color: var(--border-rule);
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--fg) 8%, transparent);
 }
 .arena-deck-slot [data-testid^="deck-card-"] {
   width: 4rem; height: 5.25rem;

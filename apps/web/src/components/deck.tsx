@@ -6,7 +6,7 @@ import { type Vote } from "@planning-poker/shared";
  * Dock inferior da arena com 9 cartas Fibonacci: 0, ½, 1, 2, 3, 5, 8, 13, ☕.
  *
  * **Visual** (vide plan.md 6.4 + design/arena.html):
- *  - 9 cartas 64×84 desktop / 48×68 mobile, radius 9px
+ *  - 9 cartas 64×84 desktop / 48×68 mobile, radius 8px
  *  - Numeral em Geist 20px sem itálico (dígitos; o ☕ usa
  *    font-sans 16px pra diferenciar do numeral)
  *  - Default: ink stroke 1px, surface bone, label ink-faint
@@ -130,7 +130,7 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 				data-od-id="deck-dock"
 			className={cn(
 				"arena-deck",
-					"flex gap-2 bg-paper-warm border border-ink/5 rounded-2xl py-2 px-2.5 shadow-bone",
+					"flex gap-2 bg-surface border border-ink/5 rounded-lg py-2 px-2.5",
 					"transition-opacity",
 					// Mobile: scroll horizontal + snap. ≥sm: overflow visível.
 					"overflow-x-auto snap-x snap-mandatory sm:overflow-visible sm:snap-none",
@@ -175,7 +175,7 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 									style={{ scrollSnapAlign: "start" }}
 									className={cn(
 										// base
-										"w-[48px] h-[68px] flex-shrink-0 bg-surface rounded-xl",
+										"w-[48px] h-[68px] flex-shrink-0 bg-surface rounded-lg",
 										"flex items-center justify-center select-none",
 										"transition-colors duration-150 cursor-pointer",
 									"focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]",
@@ -200,7 +200,7 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 										</span>
 									) : (
 										<span
-											className={`font-italic text-vote-mark leading-none ${selected ? "text-on-accent" : "text-ink"}`}
+											className={`font-display text-vote-mark leading-none ${selected ? "text-on-accent" : "text-ink"}`}
 											aria-hidden="true"
 										>
 											{value}

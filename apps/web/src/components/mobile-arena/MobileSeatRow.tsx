@@ -113,7 +113,7 @@ export function MobileSeatRow({
 				data-testid="mobile-seat-avatar"
 				className={cn(
 					"w-11 h-11 rounded-full bg-paper-dark flex items-center justify-center flex-shrink-0",
-					"font-italic text-vote-numeral text-ink-soft",
+					"font-display text-vote-numeral text-ink-soft",
 				)}
 			>
 				{initials}
@@ -147,7 +147,7 @@ export function MobileSeatRow({
 				<span
 					data-testid="mobile-seat-face-num"
 					aria-label={`Voto: ${player.value}`}
-					className="font-italic text-vote-mark text-ink font-bold leading-none flex-shrink-0"
+					className="font-display text-vote-mark text-ink font-bold leading-none flex-shrink-0"
 				>
 					{player.value}
 				</span>

@@ -63,8 +63,8 @@ export function SeatPrimitive({
 		<div
 			ref={ref}
 			className={cn(
-				// base
-				"relative w-24 h-32 bg-surface rounded-card shadow-bone border",
+			// base
+			"relative w-24 h-32 bg-surface rounded-card border",
 				"flex flex-col items-center justify-center gap-1",
 				"transition-colors duration-200",
 				// opacity

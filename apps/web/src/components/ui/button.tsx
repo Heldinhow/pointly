@@ -14,7 +14,7 @@ const buttonVariants = cva(
 		variants: {
 			variant: {
 				coral:
-					"pointly-button-primary bg-primary text-on-primary",
+					"pointly-button-primary bg-accent text-on-accent",
 				"coral-outline":
 					"pointly-button-outline",
 				default:

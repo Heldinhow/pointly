@@ -48,7 +48,7 @@
 
 .entry-main > *, .entry-field, .entry-form { min-width: 0; }
 .entry-intro { max-width: 31rem; }
-.entry-eyebrow { color: var(--accent); margin: 0 0 1.25rem; }
+.entry-eyebrow { color: var(--accent-ink); margin: 0 0 1.25rem; }
 .entry-title {
 	font-family: var(--font-display);
 	font-size: 3rem;
@@ -94,7 +94,7 @@
 .entry-form-actions .pointly-button { min-width: 0; white-space: normal; height: auto; min-height: 3rem; padding: .75rem 1rem; transition: transform 150ms ease-out, opacity 150ms ease-out; }
 .entry-code-summary { width: min(100% - 2rem, 72rem); margin: 0 auto; display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; padding: .75rem 0; border-bottom: 1px solid var(--border-rule); color: var(--fg-mute); font-size: .875rem; overflow-wrap: anywhere; }
 .entry-code-summary strong { color: var(--fg); font-family: var(--font-display); letter-spacing: .18em; margin-left: .35rem; }
-.entry-code-value { color: var(--fg); font-family: var(--font-display); letter-spacing: .18em; text-transform: uppercase; margin-left: .35rem; }
+.entry-code-value { color: var(--fg); font-family: var(--font-mono); letter-spacing: .18em; text-transform: uppercase; margin-left: .35rem; }
 .entry-status { color: var(--danger); font-size: .875rem; }
 
 .recovery-main { display: flex; align-items: center; justify-content: center; padding: 3rem 1rem calc(3rem + env(safe-area-inset-bottom, 0px)); }

@@ -4,7 +4,7 @@ import type * as React from "react";
 import { cn } from "./utils";
 
 const pillVariants = cva(
-	"pointly-pill inline-flex items-center gap-1.5 rounded-full font-mono tracking-wide whitespace-nowrap select-none transition-colors",
+	"pointly-pill inline-flex items-center gap-1.5 font-mono tracking-wide whitespace-nowrap select-none transition-colors",
 	{
 		variants: {
 			variant: {

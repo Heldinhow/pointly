@@ -286,7 +286,7 @@ export function Seat({
 							aria-label={cooldownTime > 0 ? `Aguarde ${cooldownTime} segundos para arremessar de novo` : `Arremessar algo em ${player.nick}`}
 							aria-haspopup="menu"
 							aria-expanded={showMenu}
-							className={`min-w-[44px] min-h-[44px] w-11 h-11 rounded-full flex items-center justify-center text-base border bg-surface transition-colors duration-200 cursor-pointer shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 ${
+							className={`min-w-[44px] min-h-[44px] w-11 h-11 rounded-full flex items-center justify-center text-base border bg-surface transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 ${
 								cooldownTime > 0
 									? "border-ink/5 text-ink-faint bg-paper-dark"
 									: "border-coral text-coral hover:bg-coral hover:text-on-accent"
@@ -358,7 +358,7 @@ export function Seat({
 				>
 					{/* Avatar circular */}
 					<div
-						className="w-9 h-9 rounded-full bg-paper-dark flex items-center justify-center font-italic text-vote-numeral text-ink-soft flex-shrink-0 transition-opacity duration-200"
+						className="w-9 h-9 rounded-full bg-paper-dark flex items-center justify-center font-display text-vote-numeral text-ink-soft flex-shrink-0 transition-opacity duration-200"
 						aria-hidden="true"
 						data-testid="seat-avatar"
 					>
@@ -377,7 +377,7 @@ export function Seat({
 					{/* Badge "VOCÊ" */}
 					{isYou && (
 						<div
-							className="font-mono text-micro-label tracking-caps font-semibold text-coral-deep uppercase py-0.5 px-1.5 border border-coral-deep rounded transition-opacity duration-200"
+							className="font-mono text-micro-label tracking-caps font-semibold text-accent-ink uppercase py-0.5 px-1.5 border border-accent-ink rounded transition-opacity duration-200"
 							data-testid="seat-voc-badge"
 							aria-label="Você está neste assento"
 						>
@@ -388,7 +388,7 @@ export function Seat({
 					{/* State pill: AGUARDANDO / VOTOU / face-num */}
 					{showFaceNum ? (
 						<div
-							className="font-italic text-vote-mark text-ink font-bold leading-none mt-1"
+							className="font-display text-vote-mark text-ink font-bold leading-none mt-1"
 							aria-label={`Voto: ${player.value as Vote}`}
 							data-testid="seat-face-num"
 						>

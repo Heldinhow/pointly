@@ -6,7 +6,7 @@ const config: Config = {
 		extend: {
 			colors: {
 				bg: "var(--bg)",
-  primary:"var(--accent)","on-primary":"var(--on-accent)","on-accent":"var(--on-accent)",danger:"var(--danger)","danger-soft":"var(--danger-soft)",success:"var(--success)","success-soft":"var(--success-soft)",warning:"var(--warning)","warning-soft":"var(--warning-soft)",table:"var(--table)",
+  primary:"var(--primary)","on-primary":"var(--on-primary)","on-accent":"var(--on-accent)",danger:"var(--danger)","danger-soft":"var(--danger-soft)",success:"var(--success)","success-soft":"var(--success-soft)",warning:"var(--warning)","warning-soft":"var(--warning-soft)",table:"var(--table)",
 				"paper-warm": "var(--paper-warm)",
 				"paper-dark": "var(--paper-dark)",
 				paper: "var(--surface)",
@@ -27,46 +27,12 @@ const config: Config = {
 			},
 			fontFamily: {
 				display: ["Geist", "Inter", "system-ui", "sans-serif"],
-				italic: ["Geist", "Inter", "system-ui", "sans-serif"],
 				sans: ["Geist", "Inter", "system-ui", "sans-serif"],
 				mono: ['"Geist Mono"', "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
 			},
 			fontSize: {
-				"display-xl": [
-					"clamp(70px, 13vw, 96px)",
-					{
-						lineHeight: "0.95",
-						letterSpacing: "-0.04em",
-						fontWeight: "500",
-					},
-				],
-				"display-hero": [
-					"clamp(36px, 5vw, 72px)",
-					{
-						lineHeight: "1.02",
-						letterSpacing: "-0.04em",
-						fontWeight: "800",
-					},
-				],
-				"card-title": [
-					"34px",
-					{
-						lineHeight: "1.05",
-						letterSpacing: "-0.03em",
-						fontWeight: "800",
-					},
-				],
-				"card-mark": ["36px", { lineHeight: "1" }],
 				"brand-mark": ["28px", { lineHeight: "1", fontWeight: "500" }],
 				"nav-mark": ["22px", { lineHeight: "1" }],
-				"nav-wordmark": [
-					"18px",
-					{
-						lineHeight: "1",
-						letterSpacing: "-0.02em",
-						fontWeight: "800",
-					},
-				],
 				"vote-mark": ["20px", { lineHeight: "1", fontWeight: "500" }],
 				"vote-numeral": ["18px", { lineHeight: "1", fontWeight: "500" }],
 				caption: ["14px", { lineHeight: "1.55" }],

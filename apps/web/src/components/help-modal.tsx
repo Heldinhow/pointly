@@ -148,7 +148,7 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
 					size="md"
 					onClick={onClose}
 					data-testid="help-modal-close"
-					className="min-h-[44px] rounded-[9px] transition-none"
+					className="min-h-[44px] rounded-lg transition-none"
 				>
 					Fechar
 					<span aria-hidden="true">×</span>

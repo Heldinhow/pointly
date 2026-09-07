@@ -201,7 +201,7 @@ export function RevealButton({
 						"border cursor-pointer bg-surface text-ink",
 						confirming
 							? "border-danger text-danger"
-							: "border-ink/25 hover:border-coral hover:text-coral-deep",
+							: "border-ink/25 hover:border-coral hover:text-accent-ink",
 					),
 			)}
 		>

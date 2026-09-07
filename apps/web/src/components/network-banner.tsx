@@ -10,7 +10,8 @@
  *  - sr-only copy: "Sem conexão — verifique sua internet"
  *
  * **Visual**:
- *  - bg-coral-soft + text-coral-deep (atenção sem alarme)
+ *  - feedback-danger (atenção sem alarme; o text-coral-deep anterior era
+ *    código morto — .feedback-danger não-camadas vence o utilitário)
  *  - dot pulsing coral (motion-reduce respeitado)
  *  - Position sticky top-0 z-50 (em fluxo: não cobre o header fixo), safe-area-inset-top respeitado
  *
@@ -46,7 +47,7 @@ export function NetworkBanner() {
 				"feedback-network-banner sticky top-0 left-0 right-0 z-50",
 				"feedback-danger",
 				"flex items-center justify-center gap-2",
-				"py-2 px-4 font-mono text-label uppercase tracking-caps text-coral-deep",
+				"py-2 px-4 font-mono text-label uppercase tracking-caps",
 				"pt-[max(env(safe-area-inset-top),0.5rem)]",
 			)}
 		>

@@ -129,7 +129,7 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 
 				{/* Link de convite */}
 				<div
-					className="flex items-stretch w-full min-w-0 border border-ink/15 rounded-[9px] bg-surface overflow-hidden"
+					className="flex items-stretch w-full min-w-0 border border-ink/15 rounded-lg bg-surface overflow-hidden"
 					data-testid="empty-overlay-share"
 				>
 					<input
@@ -159,7 +159,7 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 					size="md"
 					onClick={handleDismiss}
 					data-testid="empty-overlay-dismiss"
-					className="min-h-[44px] h-auto max-w-full whitespace-normal rounded-[9px] px-0 text-caption transition-none"
+					className="min-h-[44px] h-auto max-w-full whitespace-normal rounded-lg px-0 text-caption transition-none"
 				>
 					Continuar sem o convite
 				</Button>

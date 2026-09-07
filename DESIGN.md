@@ -162,13 +162,14 @@ Raw Factory source tokens live verbatim at the top of `:root` in `index.css`; se
 | Action deep (`accent-deep` = accent-300) | #d15010 | #ee6018 |
 | Action hover (`accent-hover` = accent-100) | #ef6f2e | #f1854d (derived: accent-100 +15% toward white) |
 | Accent ink (`accent-ink`) | #9c3d08 (incumbent hover shade, kept: white on it is 6.81 AA; white on accent-300 would be 4.32, fails) | #ef6f2e (= accent) |
+| Accent ink as text (Task 3) | kickers/eyebrows, VOCÊ badge, post-reveal hover, all small orange-on-light text — accent #ee6018 at 12px on light is 3.05, fails; accent-ink is 6.24 light / 6.11 dark | same token |
 | Text on action (`on-accent`) | #1f1d1c | #1f1d1c |
 | Accent soft (`accent-soft`) | #fdeede | #3e271b |
 | Signature (`signature` = accent-100) | #ef6f2e | #ef6f2e |
 | Hairline (`border-rule`) | #ccc9c7 | #3d3a39 |
 | Focus (`focus`) | #9c3d08 | #ef6f2e |
 | Danger / soft | #a32e3b / #ffe8eb | #ff6b6b / #4c2635 |
-| Success / soft | #256a52 / #dff2e9 | #6fab78 / #1f433d |
+| Success / soft | #256a52 / #dff2e9 | #8fce9f / #1f433d (Task 3: text #6fab78 on soft was 4.03, fails AA — lightened one step; text on surface 9.19) |
 | Warning / soft | #835007 / #fff0ce | #f0a330 / #46391e |
 
 Avatars keep their own bg/ink pairs (light / dark): `avatar` #e4e0de / #3d3a39 with ink #3d3a39 / #ede9e4; `avatar-self` #1f1d1c / #ef6f2e with ink #fafafa / #1f1d1c; `avatar-blue` #d8d3d0 / #4d4947 with ink #2e2c2b / #ede9e4; `avatar-rose` #f3d9c8 / #5a2f18 with ink #7a3410 / #f3d9c8. Error/attention/success use distinct semantic tokens; labels and shapes complement color, never color alone. `theme-color` meta: `#f5f5f5` light / `#161413` dark.
@@ -191,13 +192,8 @@ Geist for interface AND display, Geist Mono for code/timer/room-code. Loaded via
 
 | Token | Size | Line-height / tracking / weight |
 |---|---|---|
-| `display-xl` | clamp(70px, 13vw, 96px) | 0.95 / -0.04em / 500 |
-| `display-hero` | clamp(36px, 5vw, 72px) | 1.02 / -0.04em / 800 |
-| `card-title` | 34px | 1.05 / -0.03em / 800 |
-| `card-mark` | 36px | 1 |
 | `brand-mark` | 28px | 1 / 500 |
 | `nav-mark` | 22px | 1 |
-| `nav-wordmark` | 18px | 1 / -0.02em / 800 |
 | `vote-mark` | 20px | 1 / 500 |
 | `vote-numeral` | 18px | 1 / 500 |
 | `caption` | 14px | 1.55 |
@@ -213,8 +209,8 @@ Plus `letterSpacing` extras: `caps` 0.06em, `eyebrow` 0.18em, `tight` -0.02em, `
 - **Section h2** (landing): `clamp(2rem, 3.5vw, 3.2rem)`, 700, lh 1.04, ls -.045em.
 - **Entry title**: 3rem (mobile 2rem), 700, lh 1.08, ls -.04em. **Recovery title**: `clamp(2.3rem, 7vw, 4.4rem)`, 700, lh .98, ls -.055em.
 - **Lede**: 17px/1.65 `fg-mute`, 44ch. **Body** 16px/1.5, **caption** 14px/1.55, **label/eyebrow/kicker** 12px 800 uppercase ls .08em.
-- **Numerals/codes**: Geist/Geist Mono — room code and timer use mono with tabular-nums and wide tracking (.18em–.2em) uppercase; `vote-numeral` (18px/500) renders seat vote badges; `micro-label` + `caps` render status pills.
-- **Unused in tsx**: `display-xl`, `card-title`, `display-hero`, `card-mark`, `brand-mark`, `nav-mark`, `nav-wordmark`, `vote-mark` are config-only today (no tsx consumer found); kept as scale, not rendered type.
+- **Numerals/codes**: Geist/Geist Mono — room code (entry-code-value) and timer use mono with tabular-nums and wide tracking (.18em–.2em) uppercase; `vote-numeral` (18px/500) renders seat vote badges and mobile avatars; `vote-mark` (20px/500) renders revealed numerals; `brand-mark` renders projectile emoji; `nav-mark` renders the help title; `micro-label` + `caps` render status pills.
+- **Pruned in Task 3 (zero tsx consumers)**: `display-xl`, `card-title`, `display-hero`, `card-mark`, `nav-wordmark` removed from `tailwind.config.ts`. The phantom `fontFamily.italic` key is also gone — it hijacked Tailwind's `font-italic` utility into a font-family, so `font-italic` usages (deck/seat/mobile-row numerals) were rendering Geist-as-family instead of an italic style; all five switched to `font-display` (numerals are non-italic by design, zero visual change).
 
 ## Layout
 
@@ -222,26 +218,22 @@ Header fixed 68px (`--header-height`), landing transparent-until-scroll (border 
 
 ## Elevation & Depth
 
-Flat as rule: `--shadow-card: none`, `--shadow-coral: none`; cards are `surface` + 1px `border-rule`, header has no shadow (`--shadow-header: transparent`). Only overlay-level depth token is `--shadow-bone: 0 16px 48px rgb(31 29 28 / 18%)` (warm, ex-blue). Rendered exceptions (truth, Task 3 polish candidates):
-
-1. `arena.css` seat-card: `0 10px 24px color-mix(fg 10%)` — hardcoded, not a token.
-2. `arena.css` deck container: `0 8px 20px color-mix(fg 8%)` — hardcoded, not a token.
-3. `deck.tsx:133`: deck shell uses `shadow-bone` + `rounded-2xl` (20px+ utility radius, outside the 3/6/8 system).
+Flat as rule: `--shadow-card: none`, `--shadow-coral: none`; cards are `surface` + 1px `border-rule`, header has no shadow (`--shadow-header: transparent`). The only depth token is `--shadow-bone: 0 16px 48px rgb(31 29 28 / 18%)`, reserved for true overlays: the help modal card and the mobile reveal dock (sticky floating surface). Task 3 resolved all three Task 2 exceptions toward flat: seat cards lost the hardcoded `0 10px 24px` (`arena.css`) and the `shadow-bone` base (`SeatPrimitive`) — state reads from the coral 2px border + inset warning ring, never shadow; the deck shell lost `shadow-bone` (it was a ghost card: border + ≥16px shadow) and now renders `surface` + hairline, flat like every card.
 
 Felt keeps the accent ring (1px `color-mix(accent 24–30%)` inner ring) instead of shadow; header depth comes from `backdrop`/border only (landing) — entry header is a flat hairline.
 
 ## Shapes
 
-System 3/6/8 + card 8px: controls/inputs/buttons/deck-cards/shells at `--radius-lg` 8px; pills 7px; small accents at Factory md 4px (`pointly-mark` cells) and 5px (mini-cards, landing mini-card 28×37px); avatars fully round; arena felt elliptical (`38% / 30%`, landing demo `50%`). Ghost-card rule: `entry-form-shell` / `recovery-shell` use `box-shadow: var(--shadow-card)` (= none) — border-only cards. Focus: visible 3px `outline` in `focus` with 2–4px offset on all interactive elements. Out of system and kept: ellipses, mini-card 5px, mark 4px, the `rounded-2xl` deck utility (exception §Elevation-3).
+System 3/6/8 + card 8px: controls/inputs/buttons/deck-cards/deck-shell/shells at `--radius-lg` 8px (Task 3 folded the strays: `rounded-[9px]` ×5 in arena/empty-overlay/help-modal, deck `rounded-xl`/`rounded-2xl` cards+shell, all → `rounded-lg`); pills at 8px (`pointly-pill`, was 7px); mini-cards at Factory md 6px (was 5px); avatars fully round; arena felt elliptical (`38% / 30%`, landing demo `50%`). Kept as Factory-verbatim/semantic: `pointly-mark` cells 4px (Factory md), VOCÊ badge bare `rounded` 4px, capsule `rounded-full` only where the pill shape is semantic (reveal CTA, state pills, cooldown badge, projectile menu). Ghost-card rule: `entry-form-shell` / `recovery-shell` use `box-shadow: var(--shadow-card)` (= none) — border-only cards. Focus: visible 3px `outline` in `focus` with 2–4px offset on all interactive elements.
 
 ## Components
 
-- **Primary button** (`.pointly-button`, landing/header/entry/reveal variants): `accent` bg + `on-accent` text, 8px radius, ≥44px targets, 800 weight; hover → `accent-hover` (light: one verbatim ramp step lighter `#ee6018→#ef6f2e`; dark: derived `#f1854d`) with translateY(-1px) on landing/header CTAs; 150ms transitions, transform/opacity only.
+- **Primary button** (`.pointly-button`, `Button` coral variant `bg-accent text-on-accent`, landing/header/entry/reveal variants): `accent` bg + `on-accent` text, 8px radius, ≥44px targets, 800 weight; hover → `accent-hover` (light: one verbatim ramp step lighter `#ee6018→#ef6f2e`; dark: derived `#f1854d`) with translateY(-1px) on landing/header CTAs; 150ms transitions, transform/opacity only. (Task 3: tailwind `primary`/`on-primary` now resolve honestly to `var(--primary)`/`var(--on-primary)` — the neutral pair — and the coral variant names `accent` directly instead of aliasing through `primary`.)
 - **Outline/secondary button**: `fg` text, 1px `border-rule`, transparent bg; hover → accent border + accent text (landing) or `table` bg (`.pointly-button-outline`).
 - **Surface card** (`.pointly-card`, entry/recovery shells): `surface` + 1px `border-rule`, 8px radius, no shadow.
-- **Deck card**: `surface`, `border-rule`, 8px, Geist numeral; selected → `accent`/`on-accent` (+ accent border, lifts ~7px in arena); disabled 60% opacity; `aria-pressed` is the selection signal.
+- **Deck card**: `surface`, `border-rule`, 8px, Geist numeral; selected → `accent`/`on-accent` (+ accent border, lifts ~7px in arena); disabled 60% opacity; `aria-pressed` is the selection signal. Shell is flat `surface` + hairline, 8px (Task 3: was `bg-paper-warm` — camouflaged against the page bg — with `rounded-2xl` + `shadow-bone`).
 - **Seat (arena)**: 52px avatar (`accent` 16% mix on `surface`), ellipsis name, state badge below (`Pensando`/`Votou`/`Revelado`/`Reconectando`), revealed vote numeral in accent 1.65rem; "me" ring in accent.
-- **Pills**: 7px; critical = `warning-soft`/`warning`; gold/default = `table`/`fg`; timer-critical and network banner consume `coral-soft`/`coral-deep` aliases (§Compatibilidade).
+- **Pills**: 8px; critical = `warning-soft`/`warning`; gold/default = `table`/`fg`; timer-critical is `coral-soft` bg + `ink` text (AA); network banner is `feedback-danger` (the old `text-coral-deep` class was dead — unlayered `.feedback-danger` wins — and removed in Task 3).
 - **Feedback**: empty panel (`bg` 92% + `surface` mix, block hairlines), modal shell/card (`shadow-bone`), danger/success variants on soft tokens with `color-mix` borders, status dots, `aria-live="polite"` toasts; close button 44px, 8px radius.
 - **Brand**: `.pointly-brand` Geist 700 26px (23px mobile) ls -.035em; mark 2×2 rotated -8°, accent cells + `signature` fourth cell offset (1px,1px).
 
@@ -253,6 +245,7 @@ Coverage in `design/redesign-2026/coverage.md`. Every page has a clear action, l
 
 - Do use `accent` for the primary action and selection; `signature` (= accent-100) is reserved to the brand mark's fourth cell and attention accents — never large surfaces.
 - Do keep AA ≥4.5 for body text in both themes; `fg-mute` is the contrast floor for secondary text, never below it.
+- Do use `accent-ink` (not `accent`) for small orange text — kickers, eyebrows, badges, hovers: raw accent at ≤14px on light is ~3.0, fails; large display numerals (≥24px, or ≥18.66px bold) pass at 3:1 and may stay accent.
 - Do use Geist for display + interface, Geist Mono for code/timer/numerals — no other families.
 - Do keep cards flat: `surface` + 1px hairline + 8px radius; new shadows need a token, not a hardcoded `box-shadow`.
 - Don't use the discarded Mesa/Azul-tinta language anywhere: no ink-blue `#354c91`, no cold bg `#f5f6fa`, no blue dark `#141a2b`, no Space Grotesk/Manrope, no paper texture/serifs.
