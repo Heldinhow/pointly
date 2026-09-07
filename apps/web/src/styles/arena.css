@@ -81,7 +81,7 @@
 .arena-seat-card [data-testid="seat-face-num"] { color: var(--accent); font-size: 1.65rem; }
 .arena-reveal-slot { position: static; }
 .arena-shell .arena-reveal-button {
-  border-radius: 9px;
+  border-radius: 8px;
   font-family: var(--font-body);
   transition-property: transform, opacity;
 }
@@ -104,7 +104,7 @@
 }
 .arena-deck-slot [data-testid^="deck-card-"] {
   width: 4rem; height: 5.25rem;
-  border-radius: 9px;
+  border-radius: 8px;
   border-color: var(--border-rule);
   color: var(--fg);
 }

@@ -10,7 +10,7 @@
 .site-header-nav { max-width: 1500px; height: 100%; margin: 0 auto; padding: 0 48px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .site-header-brand { color: var(--fg); text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; }
 .site-header-actions { display: flex; align-items: center; gap: 12px; }
-.site-header-join, .site-header-create { min-height: 44px; border: 0; background: transparent; color: inherit; font: 700 14px/1 var(--font-body); text-decoration: none; border-radius: 9px; padding: 10px 12px; }
+.site-header-join, .site-header-create { min-height: 44px; border: 0; background: transparent; color: inherit; font: 700 14px/1 var(--font-body); text-decoration: none; border-radius: 8px; padding: 10px 12px; }
 .site-header-join:hover { color: var(--accent); }
 .site-header-create { background: var(--accent); color: var(--on-accent); padding-inline: 16px; transition: transform 150ms ease-out; }
 .site-header-create:hover { background: var(--accent-hover); transform: translateY(-1px); }
@@ -24,7 +24,7 @@
 .landing-hero h1 em { color: var(--accent); font-style: normal; }
 .landing-lede { max-width: 44ch; margin: 28px 0 26px; color: var(--fg-mute); font-size: 17px; line-height: 1.65; }
 .landing-actions { display: flex; flex-wrap: wrap; gap: 12px; }
-.landing-button { min-height: 46px; padding: 12px 20px; border-radius: 9px; font: 800 14px/1 var(--font-body); cursor: pointer; transition: transform 150ms ease-out; }
+.landing-button { min-height: 46px; padding: 12px 20px; border-radius: 8px; font: 800 14px/1 var(--font-body); cursor: pointer; transition: transform 150ms ease-out; }
 .landing-button-primary { border: 0; background: var(--accent); color: var(--on-accent); }
 .landing-button-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
 .landing-button-secondary { border: 1px solid var(--border-rule); background: transparent; color: var(--fg); }
@@ -35,7 +35,7 @@
 .landing-felt::before { content: ""; position: absolute; inset: 14px; border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent); border-radius: inherit; }
 .landing-felt strong { position: relative; font: 700 28px/1.15 var(--font-display); }
 .landing-felt span { position: relative; margin-top: 8px; color: var(--fg-mute); font-size: 14px; }
-.landing-player { position: absolute; display: flex; align-items: center; gap: 8px; padding: 10px 13px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border-rule); font-size: 14px; }
+.landing-player { position: absolute; display: flex; align-items: center; gap: 8px; padding: 10px 13px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border-rule); font-size: 14px; }
 .landing-player:nth-of-type(2) { top: 28px; left: 5%; }
 .landing-player:nth-of-type(3) { top: 31px; right: 6%; }
 .landing-player:nth-of-type(4) { bottom: 28px; left: 14%; }
