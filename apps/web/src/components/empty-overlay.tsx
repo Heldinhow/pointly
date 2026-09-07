@@ -1,5 +1,5 @@
 /**
- * Empty sala overlay — T36 (Phase 6) / T06 (Phase 4 fix).
+ * Empty sala invitation panel — T36 (Phase 6) / T06 (Phase 4 fix).
  *
  * Overlay "Convide outros" mostrado quando a sala tem apenas o player local
  * (`selectIsOnlyPlayer` = sala.players.length === 1 && players[0].id === currentPlayerId).
@@ -12,20 +12,15 @@
  *
  * **Persistência**:
  *  - sessionStorage key 'pointly.dismissedEmpty' para não mostrar de novo
- *  - na mesma sessão (dismissado uma vez)
- *  - T06/BUG-102: o pai (`arena.tsx`) **reseta** essa flag quando
- *    `phase === 'voting' && players.length === 1` numa nova transição,
- *    forçando re-show após reveal→nova rodada em sala solo.
- *    O re-show é feito via `<EmptyOverlay key={nonce} />` — cada key
- *    novo reinicia o `useState` interno (leitura fresca do sessionStorage).
+ *  - na mesma sessão (dismissado uma vez, sem re-show)
  *
  * **Auto-dismiss removido (BUG-305)**: clicar "Copiar link" NÃO fecha mais
  * o overlay. O usuário decide quando fechar via "Entrar na mesa" ou Esc.
  * Feedback continua com `Copiado ✓` durante o ciclo de vida do componente.
  *
  * **A11y**:
- *  - role="dialog" + aria-modal="true"
- *  - focus trap mínimo (foco no botão primário)
+ *  - role="dialog" + aria-modal="false" (painel não-modal: a mesa segue interativa atrás)
+ *  - foco inicial no CTA primário + restore-focus ao dispensar
  *  - Esc fecha o overlay
  *  - aria-label="Convide outros para começar a rodada"
  *
@@ -33,7 +28,7 @@
  * @see .specs/features/planning-poker-v1/spec.md F-033
  * @see .compozy/tasks/pointly-ux-hardening/task_06.md
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getDismissedEmpty, setDismissedEmpty } from "../lib/storage";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
@@ -65,11 +60,15 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 	const [dismissed, setDismissed] = useState<boolean>(() =>
 		getDismissedEmpty(),
 	);
+	// Restore-focus (mesmo padrão do HelpModal): o overlay foca o CTA
+	// primário ao abrir; ao dispensar, devolve o foco a quem tinha antes.
+	const restoreRef = useRef<Element | null>(null);
 
 	const handleDismiss = useCallback(() => {
 		setDismissed(true);
 		setDismissedEmpty();
 		onDismiss?.();
+		(restoreRef.current as HTMLElement | null)?.focus?.();
 	}, [onDismiss]);
 
 	const handleCopy = useCallback(async () => {
@@ -98,33 +97,42 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 		return () => window.removeEventListener("keydown", onKey);
 	}, [dismissed, handleDismiss]);
 
+	// Foco inicial no CTA primário ao abrir (dialog sem trap completo: overlay não bloqueia a mesa)
+	const copyRef = useRef<HTMLButtonElement>(null);
+	useEffect(() => {
+		if (dismissed) return;
+		restoreRef.current = document.activeElement;
+		copyRef.current?.focus();
+	}, [dismissed]);
+
 	if (dismissed) return null;
 
 	const url = shareUrl ?? buildShareUrl(window.location.origin, code);
 
 	return (
-		<div
+		<section
 			role="dialog"
-			aria-modal="true"
-			aria-label="Convide outros para começar a rodada"
+			aria-modal="false"
+			aria-labelledby="empty-overlay-title"
+			aria-describedby="empty-overlay-desc"
 			data-testid="empty-overlay"
 			data-od-id="empty-overlay"
-			className="absolute inset-0 bg-bg/92 backdrop-blur-[4px] flex items-center justify-center z-20 transition-opacity duration-200 px-4 pb-[max(env(safe-area-inset-bottom),1rem)]"
+			className="feedback-empty-panel w-full px-4 py-5 sm:px-6"
 		>
 			<Card
-				padding="lg"
-				className="w-full max-w-[560px] max-h-[calc(100dvh-2rem)] overflow-y-auto flex flex-col gap-5 items-start"
+				padding="md"
+				className="feedback-empty-card mx-auto w-full max-w-[680px] flex flex-col gap-4 items-start"
 			>
-				<div className="font-italic italic text-coral text-card-mark leading-none">
+				<div className="font-italic text-coral text-card-mark leading-none" aria-hidden="true">
 					Ø
 				</div>
-				<h2 className="font-display font-extrabold text-brand-mark tracking-tight">
+				<h2 id="empty-overlay-title" className="font-display font-extrabold text-brand-mark tracking-tight">
 					Convide outros<span className="text-coral-deep">.</span>
 				</h2>
-				<p className="font-sans text-caption text-ink-mute">
-					Você é o único na sala agora. Compartilhe o link abaixo — quando
-					alguém entrar, vocês podem votar juntos.
-				</p>
+			<p id="empty-overlay-desc" className="font-sans text-caption text-ink-mute">
+				Você é o único na sala agora. Compartilhe o link abaixo — quando
+				alguém entrar, vocês podem votar juntos.
+			</p>
 
 				{/* Share pill */}
 				<div
@@ -137,15 +145,17 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 						readOnly
 						value={url}
 						aria-label="URL de compartilhamento"
-						className="flex-1 border-0 bg-transparent py-3.5 px-4 font-mono text-caption text-ink outline-none min-w-0"
+						className="flex-1 border-0 bg-transparent py-3.5 px-4 font-mono text-caption text-ink min-w-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-[var(--focus)]"
 						data-testid="empty-overlay-share-url"
 					/>
 					<button
+						ref={copyRef}
 						type="button"
 						onClick={handleCopy}
-						className="border-0 bg-coral text-white font-display font-semibold text-caption py-3.5 px-5 cursor-pointer hover:bg-coral-soft transition-colors min-h-[44px] flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
+						className="border-0 bg-coral text-on-accent font-display font-semibold text-caption py-3.5 px-5 cursor-pointer hover:bg-[var(--accent-hover)] transition-colors min-h-[44px] flex-shrink-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-[var(--focus)]"
 						data-testid="empty-overlay-copy"
 						aria-label="Copiar link de compartilhamento"
+						aria-live="polite"
 					>
 						{copied ? "Copiado ✓" : "Copiar link"}
 					</button>
@@ -162,6 +172,6 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 					<span aria-hidden="true">→</span>
 				</Button>
 			</Card>
-		</div>
+		</section>
 	);
 }

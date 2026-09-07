@@ -5,7 +5,7 @@
  *
  * Acessibilidade:
  *  - role="status" + aria-live="polite" + aria-atomic="true"
- *  - auto-dismiss 3s (configurável via prop `duration`)
+ *  - auto-dismiss 6s (configurável via prop `duration`)
  *  - Suporta prefers-reduced-motion (transição instantânea)
  *
  * Estado local (não conectado ao Zustand store) — UI efêmera não merece
@@ -40,8 +40,8 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 
 const KIND_STYLES: Record<ToastKind, string> = {
 	info: "bg-surface text-ink border-ink/10",
-	success: "bg-surface text-olive border-olive/30",
-	error: "bg-coral text-white border-coral",
+	success: "feedback-success",
+	error: "feedback-danger",
 };
 
 const KIND_LABEL: Record<ToastKind, string> = {
@@ -52,7 +52,7 @@ const KIND_LABEL: Record<ToastKind, string> = {
 
 export interface ToastProviderProps {
 	children: React.ReactNode;
-	/** Default auto-dismiss em ms. Default: 3000. */
+	/** Default auto-dismiss em ms. Default: 6000 (tempo de leitura + SR). */
 	duration?: number;
 }
 
@@ -61,7 +61,7 @@ export interface ToastProviderProps {
  */
 export function ToastProvider({
 	children,
-	duration = 3000,
+	duration = 6000,
 }: ToastProviderProps) {
 	const [toasts, setToasts] = useState<ToastItem[]>([]);
 	const counterRef = useRef(0);
@@ -131,15 +131,27 @@ function ToastEntry({
 	return (
 		<div
 			role="status"
+			data-testid={`toast-${item.id}`}
 			className={cn(
 				"pointer-events-auto rounded-full border px-5 py-2.5 shadow-bone",
-				"text-sm font-sans font-medium max-w-md",
+				"text-sm font-sans font-normal max-w-md",
 				"animate-[fade-in_120ms_ease-out]",
 				KIND_STYLES[item.kind],
 			)}
 		>
-			<span className="sr-only">{KIND_LABEL[item.kind]}: </span>
-			{item.text}
+			<span className="feedback-toast-icon" aria-hidden="true">
+				{item.kind === "success" ? "✓" : item.kind === "error" ? "!" : "i"}
+			</span>
+			<span><span className="sr-only">{KIND_LABEL[item.kind]}: </span>{item.text}</span>
+			<button
+				type="button"
+				aria-label={`Fechar notificação: ${item.text}`}
+				data-testid={`toast-dismiss-${item.id}`}
+				onClick={() => onDismiss(item.id)}
+				className="feedback-toast-close"
+			>
+				<span aria-hidden="true">×</span>
+			</button>
 		</div>
 	);
 }

@@ -3,7 +3,7 @@
  *
  * Substitui o round-table trigonométrico em viewports estreitos. Lista
  * scrollável, com header consolidação de:
- *  - Players voted/total (esquerda)
+ *  - Jogadores votados/total (esquerda)
  *  - TimerPill com timer + round (direita)
  *  - Mediana pós-reveal (entre o contador e a pill)
  *
@@ -33,6 +33,8 @@ export interface MobilePlayerListProps {
 	faceUp: boolean;
 	/** null se ainda não há consensus (pré-reveal). */
 	median: number | null;
+	/** true se todos votaram igual (espelha badge UNÂNIME do desktop). */
+	unanimous?: boolean;
 }
 
 function formatMedian(median: number | null): string | null {
@@ -61,6 +63,7 @@ export function MobilePlayerList({
 	currentPlayerId,
 	faceUp,
 	median,
+	unanimous = false,
 }: MobilePlayerListProps) {
 	const votedCount = players.filter((p) => p.hasVoted).length;
 	const isEmpty = players.length === 0;
@@ -68,7 +71,8 @@ export function MobilePlayerList({
 	return (
 		<section
 			data-testid="mobile-player-list"
-			className="flex-1 flex flex-col min-h-0"
+			aria-label="Jogadores na sala"
+			className="arena-mobile-list flex-1 flex flex-col min-h-0"
 		>
 			{/* Header strip — consolida contador de players + TimerPill (que já
 				 carrega Round internamente) + mediana pós-reveal. Mobile-first
@@ -83,7 +87,7 @@ export function MobilePlayerList({
 				data-testid="mobile-player-header"
 				className="flex items-center justify-between gap-3 px-4 py-2 flex-shrink-0 border-b border-ink/10 min-h-[44px] bg-bg"
 			>
-				{/* Players counter — dot de status + label micro + count bold.
+				{/* Contador de jogadores — dot de status + label micro + count bold.
 				    Hierarchy: "JOGADORES" caption + "0/0" numerico forte.
 				    votedCount em olive quando > 0 (sinal positivo de progresso). */}
 				<div className="flex items-center gap-2">
@@ -91,7 +95,7 @@ export function MobilePlayerList({
 						aria-hidden="true"
 						className={[
 							"inline-block w-1.5 h-1.5 rounded-full",
-							votedCount > 0 ? "bg-olive" : "bg-ink-faint/40",
+							votedCount > 0 ? "bg-olive" : "bg-ink-faint",
 						].join(" ")}
 					/>
 					<div className="flex flex-col leading-tight">
@@ -99,27 +103,38 @@ export function MobilePlayerList({
 							data-testid="mobile-player-count-label"
 							className="font-mono text-micro-label tracking-caps uppercase text-ink-faint"
 						>
-							Players
+							Jogadores
 						</span>
 						<span
 							data-testid="mobile-player-count"
-							className="font-mono text-label font-medium tabular-nums text-ink"
+							className="font-mono text-label font-semibold tabular-nums text-ink"
 						>
 							{votedCount}/{players.length}
 						</span>
 					</div>
 				</div>
 				<div className="flex items-center gap-2.5">
-					{faceUp && median !== null && (
+					{faceUp && unanimous ? (
 						<span
-							data-testid="mobile-player-median"
-							className="font-mono text-micro-label tracking-caps uppercase inline-flex items-center gap-1 text-ink-faint"
+							data-testid="mobile-player-unanimous"
+							className="font-mono text-label tracking-caps uppercase text-warning font-semibold inline-flex items-center gap-1"
 						>
-							<span className="text-ink-faint">Mediana</span>
-							<span className="text-ink font-semibold border-b border-mustard">
-								{formatMedian(median)}
-							</span>
+							<span aria-hidden="true">★</span>
+							Unânime
 						</span>
+					) : (
+						faceUp &&
+						median !== null && (
+							<span
+								data-testid="mobile-player-median"
+								className="font-mono text-label tracking-caps uppercase inline-flex items-center gap-1 text-ink-mute"
+							>
+								<span>Mediana</span>
+								<span className="text-ink font-semibold border-b border-warning">
+									{formatMedian(median)}
+								</span>
+							</span>
+						)
 					)}
 					<TimerPill />
 				</div>
@@ -147,8 +162,8 @@ export function MobilePlayerList({
 								player={p}
 								isYou={p.id === currentPlayerId}
 								faceUp={faceUp}
-								votedMedian={isMedianVote(p, faceUp, median)}
-								unanimous={false}
+							votedMedian={isMedianVote(p, faceUp, median)}
+							unanimous={unanimous}
 							/>
 						))}
 					</ol>

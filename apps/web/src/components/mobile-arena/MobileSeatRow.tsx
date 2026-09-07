@@ -89,27 +89,23 @@ export function MobileSeatRow({
 			data-player-id={player.id}
 			data-seat-state={state}
 			data-seat-is-you={isYou ? "true" : "false"}
+			aria-label={`${player.nick} · ${label}${isYou ? " · você" : ""}`}
 			className={cn(
 				// base
-				"relative flex items-center gap-3 px-3 py-2.5",
+				"arena-mobile-seat relative flex items-center gap-3 px-3 py-2.5",
 				"min-h-[56px]",
 				// **Sem `bg-surface` aqui**: cada row com bg-surface criava 8-12
 				// "listas brancas" no dark mode (sandwich de surfaces).
 				// Avatar (bg-paper-dark) + state badge (bg-paper) já dão
 				// contraste suficiente contra page bg sem precisar row bg.
 				"border-y border-ink/5 first:border-t-0",
-				// VOCÊ: borda esquerda coral 2px substitui o badge "VOCÊ" no nick
-				isYou && "border-l-[3px] border-l-coral",
-				// votedMedian (não-unanimous): gold inner via box-shadow inset
-				effectiveMedian && "border-l-[3px] border-l-mustard",
-				isDisconnected && "opacity-50",
+				// VOCÊ: tint de fundo + rótulo textual (nunca só cor/borda lateral)
+				isYou && "bg-[color-mix(in_srgb,var(--table)_60%,transparent)]",
+				// votedMedian (não-unanimous): anel interno completo, não stripe
+				effectiveMedian && "shadow-[inset_0_0_0_2px_var(--warning)]",
+				isDisconnected && "opacity-60",
 				"transition-colors",
 			)}
-			style={
-				effectiveMedian && isYou
-					? { boxShadow: "inset 0 0 0 2px var(--mustard)" }
-					: undefined
-			}
 		>
 			{/* Avatar (44×44 = WCAG tap target) */}
 			<div
@@ -117,7 +113,7 @@ export function MobileSeatRow({
 				data-testid="mobile-seat-avatar"
 				className={cn(
 					"w-11 h-11 rounded-full bg-paper-dark flex items-center justify-center flex-shrink-0",
-					"font-italic italic text-vote-numeral text-ink-soft",
+					"font-italic text-vote-numeral text-ink-soft",
 				)}
 			>
 				{initials}
@@ -137,8 +133,9 @@ export function MobileSeatRow({
 				</span>
 				{player.role === "host" && (
 					<span
+						role="img"
 						aria-label="Host"
-						className="text-mustard text-sm leading-none flex-shrink-0"
+						className="text-warning text-sm leading-none flex-shrink-0"
 					>
 						★
 					</span>
@@ -150,7 +147,7 @@ export function MobileSeatRow({
 				<span
 					data-testid="mobile-seat-face-num"
 					aria-label={`Voto: ${player.value}`}
-					className="font-italic italic text-vote-mark text-ink font-bold leading-none flex-shrink-0"
+					className="font-italic text-vote-mark text-ink font-bold leading-none flex-shrink-0"
 				>
 					{player.value}
 				</span>
@@ -158,16 +155,19 @@ export function MobileSeatRow({
 				<span
 					data-testid="mobile-seat-state"
 					className={cn(
-						"font-mono text-micro-label tracking-caps uppercase",
+						"font-mono text-label tracking-caps uppercase",
 						"py-[3px] px-2 rounded-full border flex-shrink-0",
 						state === "voted"
 							? "text-ink border-ink/15 bg-paper"
 							: state === "disconnected"
-								? "text-coral-deep border-coral-deep/30 bg-paper"
-								: "text-ink-faint border-ink/5 bg-paper",
+								? "text-ink-mute border-ink/25 bg-paper"
+								: "text-ink-mute border-ink/5 bg-paper",
 					)}
 				>
 					{label}
+					{isYou && (
+						<span className="sr-only"> (você)</span>
+					)}
 				</span>
 			)}
 		</li>

@@ -38,12 +38,14 @@ import {
 } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ThemeToggle } from "../components/theme-toggle";
+import { Brand } from "../components/brand";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { ConnectionStatus } from "../components/ui/connection-status";
 import { useToast } from "../components/ui/toast";
 import { getNick, getUUID, setCode, setNick } from "../lib/storage";
 import { useSalaStore } from "../store/sala";
+import "../styles/entry.css";
 
 const NICK_MIN = 2;
 const NICK_MAX = 20;
@@ -128,7 +130,11 @@ export function Join() {
 	// 'not-found' = 404 → erro inline; 'ok' = 200 (ou fallback) → navega.
 	const [salaCheck, setSalaCheck] = useState<SalaCheckState>("idle");
 
-	const showCodeInput = !code && !isHost;
+	const urlCodeProvided = Boolean(searchParams.get("code"));
+	const urlCodeValid = /^[A-Z0-9]{4}$/.test(code);
+	const showCodeInput =
+		!isHost && (!urlCodeProvided || !urlCodeValid || salaCheck === "not-found");
+	const mode = isHost ? "create" : urlCodeValid ? "invite" : "manual";
 
 	// Refs imperativos: codeInputRef para focus/select quando o código
 	// submetido é mal-formado (UX padrão de formulários curtos).
@@ -265,7 +271,7 @@ export function Join() {
 			setValidation(result);
 			if (!result.ok) return;
 
-			const activeCode = code || localCode;
+			const activeCode = showCodeInput && localCode ? localCode : code || localCode;
 			const isCodeValid =
 				isHost || (activeCode && /^[A-Z0-9]{4}$/.test(activeCode));
 			if (!isCodeValid) {
@@ -306,7 +312,9 @@ export function Join() {
 					setSalaCheck("ok");
 				} catch {
 					// Rede caiu, CORS, etc — não bloqueia o usuário. Segue
-					// pra arena; o WS vai lidar com a verdade.
+					// pra arena; o WS vai lidar com a verdade. Avisa que a
+					// verificação foi pulada pra não parecer sucesso silencioso.
+					toast.push("Sem conexão para verificar a sala. Tentando entrar mesmo assim.", "error");
 					setSalaCheck("ok");
 				}
 			} else {
@@ -374,35 +382,23 @@ export function Join() {
 	// Em-dash acessível: leitores de tela anunciam "código pendente" em vez
 	// de "traço" — copy intencional pro estado vazio.
 	const codeDisplay =
-		codeLabel === "—" ? <span aria-label="código pendente">—</span> : codeLabel;
+		codeLabel === "—" ? <span role="img" aria-label="código pendente">—</span> : codeLabel;
 
 	return (
-		<div
-			data-testid="page-join"
-			className="surface-noise min-h-[100dvh] bg-bg text-ink flex flex-col"
-		>
+		<div data-testid="page-join" className="entry-page">
 			{/* Header topbar — superfície sólida (sem glassmorphism). Tela de
 			    formulário único não justifica sticky: o usuário percorre o card
 			    inteiro dentro de uma viewport cabeçudo+rodapé, e o sticky só
 			    comeria pixels verticais sem benefício.
 			    pt com safe-area-inset-top respeita notch iOS. */}
-			<header className="border-b border-ink/10 py-4 flex-shrink-0 bg-bg pt-[max(env(safe-area-inset-top),1rem)]">
-				<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 flex items-center justify-between">
-					<Link
-						to="/"
-						className="font-display font-extrabold text-nav-wordmark flex items-baseline gap-2 hover:text-coral-deep transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-						aria-label="Pointly — página inicial"
-					>
-						<span className="font-italic italic text-coral text-nav-mark">
-							Ø
-						</span>
-						Pointly
-					</Link>
-					<div className="flex items-center gap-4">
+			<header className="entry-header">
+				<Link to="/" aria-label="Pointly — página inicial">
+					<Brand />
+				</Link>
+				<div className="entry-header-actions">
 						<ThemeToggle />
-						<div className="font-sans text-caption text-ink-mute">Entrar</div>
+						<div className="entry-header-label">{mode === "create" ? "Criar" : "Entrar"}</div>
 					</div>
-				</div>
 			</header>
 
 			{/* Header strip — só renderiza quando existe code de fato.
@@ -417,7 +413,7 @@ export function Join() {
 			    duplicaria a affordance do botão CTA (que já diz "Entrar") —
 			    colapso decidido a favor do CTA único (Single CTA Rule). */}
 			{!isHost && code && (
-				<div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-16 w-full py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 text-caption text-ink-mute">
+				<div className="entry-code-summary">
 					<span>
 						Sala{" "}
 						{/* tracking 0 — text-body não tem tracking próprio. Code label
@@ -425,67 +421,62 @@ export function Join() {
 						    já entrega a identidade de código sem precisar do tracking
 						    apertado (que era off-ramp: arbitrary value). */}
 						<span
-							className="font-mono text-body font-medium text-ink"
+							className="entry-code-value"
 							data-testid="join-code-label"
 						>
 							{codeDisplay}
 						</span>
 					</span>
-					<span className="text-ink-faint">Do link compartilhado pelo host.</span>
+					<span>Do link compartilhado pelo host.</span>
 				</div>
 			)}
 
 			{/* Stage
 			 * FMR-01/02: min-h dinâmico via 100dvh (lida com barra URL iOS),
 			 * padding-bottom com env(safe-area-inset-bottom) p/ home indicator. */}
-			<main className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-16 py-8 sm:py-12 pb-[max(env(safe-area-inset-bottom),2rem)]">
+			<main className="entry-main">
+				<section className="entry-intro" aria-labelledby="join-title">
+					<p className="entry-eyebrow">{mode === "create" ? "Criar uma sala" : mode === "invite" ? "Convite para a sala" : "Entrar com código"}</p>
+					<h1 id="join-title" className="entry-title">
+						{mode === "create" ? <>Abra uma mesa para o <em>time.</em></> : mode === "invite" ? <>Entre na <em>mesa.</em></> : <>Qual é a sua <em>sala?</em></>}
+					</h1>
+					<p className="entry-description">
+						{mode === "create" ? "Crie uma rodada e convide as pessoas certas. Sem conta, sem preparação." : "Escolha como você quer aparecer para o time. A conversa começa quando você chega."}
+					</p>
+					<p className="entry-signal">Até 12 pessoas · cartas sincronizadas · uma boa conversa por rodada.</p>
+				</section>
 				<Card
 					padding="lg"
-					className="w-full max-w-[520px] flex flex-col gap-7 sm:gap-8"
+					className="entry-form-shell"
 					data-od-id="nick-card"
 					data-testid="join-card"
 				>
-					{/* Ø glyph em 28px (text-brand-mark): fica ABAIXO do heading
-					    (card-title 34px) — antes text-card-mark 36px deixava o
-					    Ø visualmente MAIOR que o h1, invertendo a hierarquia. */}
-					<div className="font-italic italic text-coral text-brand-mark">Ø</div>
-					<h1 className="font-display font-extrabold text-card-title text-balance">
-						Entrar na sala<span className="text-coral-deep">.</span>
-					</h1>
-
-					{/* leading do token text-body (1.5) — leading-[1.55] era
-					    off-ramp arbitrary value. O ganho era marginal e não justifica
-					    quebrar a Ramp Rule (§3 DESIGN.md). */}
-					<p className="max-w-[36ch] font-sans text-body text-ink-mute">
-						Escolha como você quer aparecer para o time. Não precisa de conta.
-					</p>
-
 					{/* Status de conexão — só erro é informação útil durante o
 					    stub T28. Connecting/connected ficam implícitos pelo
 					    estado disabled + spinners dos controles (a11y: não
 					    anunciar transições que ainda não confirmaram nada). */}
 					{connectionState === "error" && (
-						<div className="flex" role="alert">
+						<div className="entry-status" role="alert">
 							<ConnectionStatus
 								variant="error"
-								className="normal-case font-sans text-caption tracking-normal px-3 py-2"
+								className="entry-status"
 							/>
 						</div>
 					)}
 
 					<form
 						onSubmit={handleSubmit}
-						className="flex flex-col gap-1.5"
+						className="entry-form"
 						data-testid="nick-form"
 					>
 						{showCodeInput && (
 							<div
-								className="flex flex-col gap-1.5 mb-3"
+								className="entry-field"
 								data-testid="join-code-field"
 							>
 								<label
 									htmlFor="code-input"
-									className="font-sans font-medium text-caption text-ink"
+									className="entry-label"
 								>
 									Código da sala
 								</label>
@@ -510,7 +501,7 @@ export function Join() {
 										salaCheck === "not-found"
 									}
 									disabled={isConnecting}
-									className="font-mono text-center text-body py-3.5 px-4 border border-ink/10 rounded-lg bg-paper-warm text-ink placeholder:text-caption placeholder:text-ink-faint focus:border-coral-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-1 focus-visible:ring-offset-bg transition-colors disabled:opacity-60 tracking-widest uppercase aria-[invalid=true]:border-coral-deep [&:-webkit-autofill]:bg-paper-warm [&:-webkit-autofill]:[-webkit-text-fill-color:var(--fg)] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_var(--paper-warm)_inset]"
+									className="entry-input code"
 									data-testid="join-code-input"
 								/>
 								{salaCheck === "not-found" ? (
@@ -518,14 +509,14 @@ export function Join() {
 										id="code-input-error"
 										role="alert"
 										data-testid="join-code-error"
-										className="font-sans text-caption text-coral-deep"
+										className="entry-error"
 									>
 										Sala não encontrada. Confira o código.
 									</p>
 								) : (
 									<p
 										id="code-input-hint"
-										className="font-sans text-caption text-ink-mute"
+										className="entry-hint"
 									>
 										4 letras ou números · peça ao host que criou a sala.
 									</p>
@@ -533,26 +524,13 @@ export function Join() {
 							</div>
 						)}
 
-						{/* Erro de "sala não encontrada" para o caso ?code=XXXX na URL.
-						    Quando o code vem digitado pelo usuário (showCodeInput=true),
-						    o erro já aparece logo abaixo do input acima. Quando o code
-						    vem via querystring, o input não existe — então o erro é
-						    renderizado aqui, no nível do form, com a mesma copy e
-						    role='alert' pra feedback acessível. A11y: aria-describedby
-						    do botão submit aponta pra cá também (futuro). */}
-						{!showCodeInput && salaCheck === "not-found" && (
-							<p
-								role="alert"
-								data-testid="join-code-error"
-								className="font-sans text-caption text-coral-deep -mt-1"
-							>
-								Sala não encontrada. Confira o código.
-							</p>
-						)}
+						{/* NOTA: quando o pre-check falha (404), `showCodeInput`
+						    vira true e o input de código reaparece com o erro
+						    inline acima + foco — não há branch separado pro
+						    modo invite. */}
 
-						<fieldset className="contents m-0 min-w-0 p-0 border-0">
-							<legend className="sr-only">Como você quer ser chamado</legend>
-							<label htmlFor="nick-input" className="sr-only">
+					<div>
+							<label htmlFor="nick-input" className="entry-label">
 								Como você quer ser chamado
 							</label>
 							<input
@@ -571,7 +549,7 @@ export function Join() {
 										: "nick-hint"
 								}
 								disabled={isConnecting}
-								className="font-sans text-body py-3.5 px-4 border border-ink/10 rounded-lg bg-paper-warm text-ink placeholder:text-caption placeholder:text-ink-faint focus:border-coral-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-1 focus-visible:ring-offset-bg transition-colors disabled:opacity-60 aria-[invalid=true]:border-coral-deep [&:-webkit-autofill]:bg-paper-warm [&:-webkit-autofill]:[-webkit-text-fill-color:var(--fg)] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_var(--paper-warm)_inset]"
+								className="entry-input"
 								data-testid="nick-input"
 							/>
 							{/* min-h-[22px] = 1 linha de `text-caption` (14px × 1.55
@@ -582,29 +560,29 @@ export function Join() {
 								id="nick-error"
 								role={!validation.ok && validation.error ? "alert" : undefined}
 								aria-live={!validation.ok && validation.error ? "assertive" : undefined}
-								className="font-sans text-caption text-coral-deep min-h-[22px]"
+								className="entry-error min-h-[22px]"
 								data-testid="nick-error"
 							>
 								{!validation.ok && validation.error ? validation.error : ""}
 							</div>
 							<div
 								id="nick-hint"
-								className="font-sans text-caption text-ink-mute flex flex-wrap items-center justify-between gap-x-3 gap-y-1"
+								className="entry-hint"
 							>
-								<span>De 2 a 20 caracteres · como você quer ser chamado</span>
+								<span>De 2 a 20 caracteres</span>
 								{validation.ok && (
 									<span
 										aria-hidden="true"
-										className="text-olive font-medium tabular-nums inline-flex items-center gap-1"
+										className="entry-hint"
 									>
 										<span className="leading-none">✓</span>
 										{nick.length}/{NICK_MAX}
 									</span>
 								)}
 							</div>
-						</fieldset>
+						</div>
 
-						<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-1.5">
+						<div className="entry-form-actions">
 							<Button
 								type="submit"
 								variant="coral"
@@ -616,14 +594,18 @@ export function Join() {
 									(showCodeInput && localCode.length !== 4)
 								}
 								aria-busy={isConnecting || salaCheck === "checking"}
-								className="w-full sm:w-auto"
+									className="w-full sm:w-auto"
 								data-testid="join-submit"
 							>
 								{salaCheck === "checking"
 									? "Verificando…"
 									: isConnecting
 										? "Conectando…"
-										: "Entrar"}
+									: mode === "create"
+										? "Criar sala"
+										: mode === "invite"
+											? "Entrar na sala"
+											: "Entrar com código"}
 								{!isConnecting && salaCheck !== "checking" && (
 									<span aria-hidden="true">↗</span>
 								)}

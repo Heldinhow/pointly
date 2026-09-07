@@ -56,13 +56,13 @@ export function MobileRevealDock({
 	return (
 		<div
 			data-testid="mobile-reveal-dock"
-			role="region"
+			role="group"
 			aria-label="Ações de voto da rodada"
 			className={[
 				// sticky ancorado no bottom do <main> scroll container
 				"sticky bottom-0 z-20",
 				// fundo opaco + surface-noise de famille com a página
-				"bg-surface surface-noise",
+				"arena-mobile-dock bg-surface surface-noise",
 				// pill archetype: border-t hairline + shadow-bone
 				// (Border+Shadow Rule exception — floating surface)
 				"border-t border-ink/10 shadow-bone",

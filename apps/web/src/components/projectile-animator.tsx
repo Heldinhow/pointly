@@ -6,10 +6,10 @@ import { assignSeatAngles, seatPosition } from "../lib/arena-geometry";
 
 // Mapa de emojis para cada tipo de projétil
 const PROJECTILE_EMOJIS: Record<ProjectileType, string> = {
-	paper_ball: "🏐",
+	paper_ball: "🧻",
 	tomato: "🍅",
 	coffee: "☕",
-	rubber_duck: "🧸",
+	rubber_duck: "🦆",
 	star: "⭐",
 	heart: "❤️",
 	claps: "👏",
@@ -31,6 +31,7 @@ interface ActiveAnimation {
 const EMPTY_PLAYERS: any[] = [];
 
 export function ProjectileAnimator() {
+	const containerRef = useRef<HTMLDivElement>(null);
 	const [activeAnimations, setActiveAnimations] = useState<ActiveAnimation[]>(
 		[],
 	);
@@ -57,8 +58,24 @@ export function ProjectileAnimator() {
 
 			if (senderAngle === undefined || targetAngle === undefined) return;
 
-			const senderPos = seatPosition(senderAngle);
-			const targetPos = seatPosition(targetAngle);
+			const container = containerRef.current;
+			const rect = container?.getBoundingClientRect();
+			const domPoint = (playerId: string) => {
+				if (!container || !rect) return null;
+				const seat = Array.from(
+					container.querySelectorAll<HTMLElement>("[data-seat-player-id]"),
+				).find((node) => node.dataset.seatPlayerId === playerId);
+				if (!seat) return null;
+				const seatRect = seat.getBoundingClientRect();
+				return {
+					left: seatRect.left + seatRect.width / 2 - rect.left,
+					top: seatRect.top + seatRect.height / 2 - rect.top,
+				};
+			};
+			// The table is responsive; resolve the live DOM centers so a projectile
+			// follows the readable seat cards instead of the old fixed canvas.
+			const senderPos = domPoint(event.senderPlayerId) ?? seatPosition(senderAngle);
+			const targetPos = domPoint(event.targetPlayerId) ?? seatPosition(targetAngle);
 
 			const animationId = Math.random().toString(36).substring(2, 9);
 			const emoji = PROJECTILE_EMOJIS[event.projectileType] ?? "📝";
@@ -148,17 +165,22 @@ export function ProjectileAnimator() {
 	}, []);
 
 	return (
-		<div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
+		<div
+			ref={containerRef}
+			className="absolute inset-0 pointer-events-none z-50 overflow-hidden"
+			data-testid="projectile-layer"
+		>
 			{activeAnimations.map((anim) => (
 				<div
 					key={anim.id}
 					className="absolute animate-proj-x"
 					style={
 						{
-							"--from-x": `${anim.fromX}px`,
-							"--to-x": `${anim.toX}px`,
+							"--delta-x": `${anim.toX - anim.fromX}px`,
+							"--delta-y": `${anim.toY - anim.fromY}px`,
 							"--duration": `${anim.duration}ms`,
 							left: `${anim.fromX}px`,
+							top: `${anim.fromY}px`,
 						} as React.CSSProperties
 					}
 				>
@@ -166,10 +188,7 @@ export function ProjectileAnimator() {
 						className="absolute animate-proj-y text-brand-mark select-none pointer-events-none"
 						style={
 							{
-								"--from-y": `${anim.fromY}px`,
-								"--to-y": `${anim.toY}px`,
 								"--duration": `${anim.duration}ms`,
-								top: `${anim.fromY}px`,
 								transform: "translate(-50%, -50%)",
 							} as React.CSSProperties
 						}

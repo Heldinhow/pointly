@@ -63,7 +63,7 @@ describe("StatsPill — render", () => {
 		);
 	});
 
-	test("unanimous=true mostra badge '★ Unanimous' em vez da mediana gold (F-049)", () => {
+	test("unanimous=true mostra badge '★ Unânime' em vez da mediana gold (F-049)", () => {
 		render(
 			<StatsPill
 				consensus={{
@@ -76,7 +76,7 @@ describe("StatsPill — render", () => {
 		);
 		const badge = screen.getByTestId("stats-unanimous-badge");
 		expect(badge).toBeInTheDocument();
-		expect(badge).toHaveTextContent(/unanimous/i);
+		expect(badge).toHaveTextContent(/unânime/i);
 		// Median NÃO é renderizado (em vez disso, badge)
 		expect(screen.queryByTestId("stats-median-value")).not.toBeInTheDocument();
 		expect(
@@ -84,7 +84,7 @@ describe("StatsPill — render", () => {
 		).toBe("true");
 	});
 
-	test("unanimous=false: mediana em gold (border-mustard)", () => {
+	test("unanimous=false: mediana em gold (border-warning)", () => {
 		const { container } = render(
 			<StatsPill
 				consensus={{
@@ -96,8 +96,8 @@ describe("StatsPill — render", () => {
 			/>,
 		);
 		const medianLabel = container.querySelector('[data-testid="stats-median"]');
-		// O span do valor da mediana deve ter border-mustard
-		expect(medianLabel?.querySelector(".border-mustard")).toBeInTheDocument();
+		// O span do valor da mediana deve ter border-warning (token AA)
+		expect(medianLabel?.querySelector(".border-warning")).toBeInTheDocument();
 	});
 
 	test("role='status' + aria-live='polite' (a11y)", () => {

@@ -46,20 +46,20 @@ describe("formatTimer / formatRound — T34 pure helpers", () => {
 		});
 	});
 
-	test("formatRound(1) → 'ROUND 01'", () => {
-		expect(formatRound(1)).toBe("ROUND 01");
+	test("formatRound(1) → 'RODADA 01'", () => {
+		expect(formatRound(1)).toBe("RODADA 01");
 	});
 
-	test("formatRound(12) → 'ROUND 12'", () => {
-		expect(formatRound(12)).toBe("ROUND 12");
+	test("formatRound(12) → 'RODADA 12'", () => {
+		expect(formatRound(12)).toBe("RODADA 12");
 	});
 });
 
 describe("TimerPill — render (com props diretas, sem store)", () => {
-	test("renderiza '42 · ROUND 03' para timer=42 round=3 (BUG-201)", () => {
+	test("renderiza '42 · RODADA 03' para timer=42 round=3 (BUG-201)", () => {
 		render(<TimerPill timer={42} round={3} />);
 		expect(screen.getByTestId("timer-value")).toHaveTextContent("42");
-		expect(screen.getByTestId("timer-round")).toHaveTextContent("ROUND 03");
+		expect(screen.getByTestId("timer-round")).toHaveTextContent("RODADA 03");
 	});
 
 	test("renderiza '60' para timer=60 (nunca '00:60')", () => {
@@ -70,11 +70,12 @@ describe("TimerPill — render (com props diretas, sem store)", () => {
 		);
 	});
 
-	test("critical=true (timer ≤30) aplica bg-coral-soft + border coral", () => {
+	test("critical=true (timer ≤30) aplica bg-coral-soft + border coral + ícone não-só-cor", () => {
 		render(<TimerPill timer={25} round={1} critical={true} />);
 		const pill = screen.getByTestId("timer-pill");
 		expect(pill.className).toContain("bg-coral-soft");
-		expect(pill.className).toContain("border-coral/40");
+		expect(pill.className).toContain("border-coral");
+		expect(pill.textContent).toContain("⚠");
 		expect(pill.getAttribute("data-timer-critical")).toBe("true");
 	});
 

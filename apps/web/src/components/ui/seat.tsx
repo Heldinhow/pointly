@@ -62,25 +62,23 @@ export function SeatPrimitive({
 	return (
 		<div
 			ref={ref}
-			role="group"
-			aria-label="Assento"
 			className={cn(
 				// base
 				"relative w-24 h-32 bg-surface rounded-card shadow-bone border",
 				"flex flex-col items-center justify-center gap-1",
-				"transition-all duration-200",
+				"transition-colors duration-200",
 				// opacity
-				isDisconnected ? "opacity-40" : faceUp ? "opacity-100" : "opacity-95",
+				isDisconnected ? "opacity-60 saturate-50" : faceUp ? "opacity-100" : "opacity-95",
 				// borders
 				isYou ? "border-coral border-2" : "border-ink/5",
-				effectiveMedian && !isYou && "border-mustard border-2",
+				effectiveMedian && !isYou && "border-warning border-2",
 				className,
 			)}
 			style={{
 				// Coral outer + gold inner via box-shadow inset (não sobrescreve border)
 				boxShadow: effectiveMedian
 					? isYou
-						? "inset 0 0 0 2px var(--mustard)"
+						? "inset 0 0 0 2px var(--warning)"
 						: "none"
 					: "none",
 				...style,
@@ -92,9 +90,9 @@ export function SeatPrimitive({
 			{/* host star (mostarda) — canto superior direito */}
 			{isHost && (
 				<span
+					role="img"
 					aria-label="Host"
-					className="absolute top-1.5 right-1.5 text-mustard text-sm leading-none"
-					style={{ fontFamily: "system-ui, sans-serif" }}
+					className="absolute top-1.5 right-1.5 font-display text-warning text-sm leading-none"
 				>
 					★
 				</span>

@@ -2,12 +2,13 @@
  * RevealButton + NewRoundButton (morphing) — T33 (Phase 6).
  *
  * Botão da arena com 3 estados morphing:
- *  1. `awaiting` (ghost, disabled): "Aguardando jogadores…"
+ *  1. `awaiting` (ghost, disabled): "Aguardando votos…"
  *     Mostrado quando phase !== 'revealed' && votes === 0
- *  2. `ready` (coral pill): "Revelar votos." com coral dot
+ *  2. `ready` (coral pill): "Revelar votos" + hint com contagem
  *     Mostrado quando ≥1 voto entrou && phase !== 'revealed'
- *  3. `post-reveal` (ghost): "Nova rodada"
- *     Mostrado quando phase === 'revealed' (qualquer player pode iniciar)
+ *  3. `post-reveal` (outline ghost): "Nova rodada" → "Confirmar nova rodada?"
+ *     Mostrado quando phase === 'revealed' (qualquer player pode iniciar).
+ *    Ghost proposital: ação destrutiva não veste o coral do commit.
  *
  * **Regra democratizada** (ADR-0002 + spec F-051/F-052):
  *  - Qualquer player pode revelar (não precisa ser host)
@@ -35,6 +36,7 @@
  * @see .specs/features/planning-poker-v1/spec.md F-031, F-051, F-052
  */
 import type { Phase } from "@planning-poker/shared";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "./ui/utils";
 
 export type RevealButtonState = "awaiting" | "ready" | "post-reveal";
@@ -78,24 +80,58 @@ export function RevealButton({
 	const state = deriveButtonState(phase, votedCount);
 	const centered = mode === "centered";
 
+	// Nova rodada limpa votos + timer: ação destrutiva pede confirmação
+	// inline em dois toques (arma → confirma). Desarma sozinho em 4s,
+	// com Escape ou quando a phase muda (nova rodada começou).
+	const [confirming, setConfirming] = useState(false);
+	const disarmTimer = useRef<number | null>(null);
+	const disarm = () => {
+		setConfirming(false);
+		if (disarmTimer.current !== null) {
+			window.clearTimeout(disarmTimer.current);
+			disarmTimer.current = null;
+		}
+	};
+	useEffect(() => {
+		disarm();
+		return () => {
+			if (disarmTimer.current !== null)
+				window.clearTimeout(disarmTimer.current);
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [phase]);
+	const armConfirm = () => {
+		setConfirming(true);
+		if (disarmTimer.current !== null)
+			window.clearTimeout(disarmTimer.current);
+		disarmTimer.current = window.setTimeout(() => setConfirming(false), 4000);
+	};
+
 	// Hint só renderiza quando há algo pra comunicar. Sala vazia
 	// (totalPlayers=0): o MobilePlayerList (ou o empty state desktop) já
 	// mostra "Aguardando jogadores…" — exibir de novo aqui duplicaria.
+	const allVoted = totalPlayers > 0 && votedCount >= totalPlayers;
 	const hint =
 		state === "awaiting" && totalPlayers > 0
-			? "Aguardando jogadores…"
+			? "Aguardando votos…"
 			: state === "ready"
-				? "Todos podem revelar."
+				? allVoted
+					? "Todos votaram · hora de revelar."
+					: `${votedCount} de ${totalPlayers} votaram.`
 				: state === "post-reveal"
-					? "Limpa votos · reinicia timer."
+					? confirming
+						? "Toque de novo para confirmar."
+						: "Limpa votos · reinicia timer."
 					: "";
 
 	const label =
 		state === "awaiting"
-			? "Revelar votos"
+			? "Aguardando votos…"
 			: state === "ready"
-				? "Revelar votos."
-				: "Nova rodada";
+				? "Revelar votos"
+				: confirming
+					? "Confirmar nova rodada?"
+					: "Nova rodada";
 
 	const disabled = state === "awaiting";
 
@@ -103,89 +139,93 @@ export function RevealButton({
 		state === "awaiting"
 			? "Aguardando votos para revelar"
 			: state === "ready"
-				? "Revelar votos agora"
-				: "Iniciar nova rodada";
+				? allVoted
+					? "Revelar votos agora, todos votaram"
+					: `Revelar votos agora, ${votedCount} de ${totalPlayers} votaram`
+				: confirming
+					? "Confirmar nova rodada, limpa os votos"
+					: "Iniciar nova rodada";
 
 	const handleClick = () => {
 		if (state === "ready") onReveal();
-		else if (state === "post-reveal") onNewRound();
+		else if (state === "post-reveal") {
+			if (confirming) {
+				disarm();
+				onNewRound();
+			} else armConfirm();
+		}
 	};
 
 	return (
+		<div
+			className={cn(
+				"arena-reveal-stack flex flex-col items-center gap-1.5",
+				centered
+					? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-auto min-w-[180px]"
+					: "relative w-full",
+			)}
+		>
 		<button
 			type="button"
 			disabled={disabled}
 			aria-label={ariaLabel}
 			aria-disabled={disabled}
+			aria-describedby={hint ? "reveal-button-hint" : undefined}
 			aria-keyshortcuts={
 				state === "ready" ? "R" : state === "post-reveal" ? "N" : undefined
 			}
 			onClick={handleClick}
+			onKeyDown={(e) => {
+				if (e.key === "Escape" && confirming) disarm();
+			}}
 			data-testid="reveal-button"
 			data-od-id="reveal-button"
 			data-reveal-state={state}
 			data-reveal-mode={mode}
+			data-reveal-confirm={confirming ? "true" : "false"}
 			className={cn(
-				// Layout: vertical stack (label + hint)
-				"flex flex-col gap-[3px] items-center justify-center",
-				// Positioning: centered (desktop) vs inline (mobile dock)
-				centered
-					? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-auto min-w-[180px] px-5"
-					: "relative w-full px-6",
-				"py-2 rounded-full whitespace-nowrap",
-				"min-h-[44px] min-h-[var(--tap-target-min,44px)]",
-				"font-display font-semibold text-caption",
-				"transition-all duration-200 select-none",
-				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-deep focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
-				// awaiting (ghost, disabled)
+				"arena-reveal-button",
+				"flex items-center justify-center",
+				centered ? "w-auto min-w-[180px] px-5" : "w-full px-6",
+			"py-2 rounded-full whitespace-nowrap",
+			"min-h-[44px] min-h-[var(--tap-target-min,44px)]",
+			"font-display font-semibold text-caption",
+			"transition-colors duration-200 select-none",
+			"focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]",
 				state === "awaiting" &&
 					"bg-paper-dark border border-ink/15 text-ink-faint cursor-not-allowed",
-				// ready (coral pill, enabled)
 				state === "ready" &&
-					cn(
-						"bg-coral border border-coral text-white cursor-pointer shadow-coral hover:bg-coral-soft",
-						centered
-							? "hover:-translate-x-1/2 hover:-translate-y-[calc(50%+1px)]"
-							: "",
-					),
-				// post-reveal (primary coral, enabled)
+					"bg-coral border border-coral text-on-accent cursor-pointer shadow-coral hover:bg-[var(--accent-hover)]",
 				state === "post-reveal" &&
 					cn(
-						"bg-coral border border-coral text-white cursor-pointer shadow-coral hover:bg-coral-soft shadow-md",
-						centered
-							? "hover:-translate-x-1/2 hover:-translate-y-[calc(50%+1px)]"
-							: "",
+						"border cursor-pointer bg-surface text-ink",
+						confirming
+							? "border-danger text-danger"
+							: "border-ink/25 hover:border-coral hover:text-coral-deep",
 					),
 			)}
 		>
 			<span className="inline-flex items-center gap-1.5 leading-none">
 				{label}
-				{state === "ready" && (
-					<span className="text-coral-deep" aria-hidden="true">
-						.
-					</span>
-				)}
-			</span>
-			{/* Hint: micro-label sem uppercase pra hierarquia clara.
-			 * `tracking-normal` + lowercase = nitidamente secundário.
-			 * leading-[1.2]: 2 linhas de micro-label (10px) precisam caber
-			 * dentro da pill de 44px de altura sem competir com o CTA coral.
-			 * Token `micro-label` é 1.4 e renderiza 3 linhas em 12px — aqui
-			 * queremos 2 linhas em 10px, então apertamos 1.2. Anotar em
-			 * DESIGN.md como off-ramp intencional (Próximo PR de typog.). */}
-			<span
-				className={cn(
-					"font-mono text-micro-label leading-[1.2] font-normal",
-					"normal-case",
-					state === "awaiting"
-						? "text-ink-faint/75"
-						: centered
-							? "text-white/75"
-							: "text-white/80",
-				)}
-			>
-				{hint}
 			</span>
 		</button>
+			{hint && (
+				<p
+					id="reveal-button-hint"
+					data-testid="reveal-button-hint"
+					aria-live="polite"
+					className={cn(
+						"m-0 font-mono text-label normal-case font-normal text-center text-wrap-balance",
+						state === "ready"
+							? "text-ink"
+							: state === "post-reveal" && confirming
+								? "text-danger"
+								: "text-ink-mute",
+					)}
+				>
+					{hint}
+				</p>
+			)}
+		</div>
 	);
 }

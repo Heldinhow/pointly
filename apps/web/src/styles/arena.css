@@ -1,0 +1,138 @@
+/* Arena mesa: layout owns its geometry here so seats keep readable dimensions. */
+/* Header fixo é o SiteHeader da landing — compensa com padding-top igual. */
+.arena-shell {
+  padding-top: var(--header-height, 80px);
+  --arena-seat-size: clamp(7rem, 11vw, 9rem);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.arena-shell .arena-stage-desktop { align-items: center; }
+.arena-stage-desktop .arena-stats,
+.arena-stage-desktop .arena-timer {
+  position: absolute;
+  top: 1.25rem;
+  z-index: 12;
+}
+.arena-stage-desktop .arena-stats { left: clamp(1rem, 4vw, 3rem); max-width: 44%; }
+.arena-stage-desktop .arena-timer { right: clamp(1rem, 4vw, 3rem); max-width: 44%; }
+@media (max-width: 900px) {
+  .arena-stage-desktop .arena-stats,
+  .arena-stage-desktop .arena-timer { position: static; max-width: 100%; align-self: center; }
+  .arena-stage-desktop .arena-stats + .arena-timer { margin-top: .5rem; }
+}
+.arena-table-wrap { aspect-ratio: 920 / 560; overflow: visible; }
+.arena-table-inner { width: 100%; height: 100%; }
+.arena-felt {
+  position: absolute;
+  inset: 15% 10% 13%;
+  border-radius: 38% / 30%;
+  background: var(--table);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  box-shadow: inset 0 0 0 12px color-mix(in srgb, var(--surface) 14%, transparent);
+}
+.arena-center {
+  position: absolute;
+  inset: 15% 10% 13%;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .75rem;
+  padding: 1rem;
+  text-align: center;
+  pointer-events: none;
+}
+.arena-center .arena-reveal-slot { pointer-events: auto; }
+.arena-table-copy {
+  margin: 0;
+  color: var(--fg);
+  font: 700 clamp(1.2rem, 2.2vw, 1.75rem)/1.2 var(--font-display, "Space Grotesk", sans-serif);
+  text-wrap: balance;
+}
+.arena-table-sub { margin: 0; color: var(--fg-mute); font-size: .875rem; }
+.arena-seat-position { width: var(--arena-seat-size); z-index: 4; }
+.arena-seat-card {
+  width: var(--arena-seat-size) !important;
+  height: auto !important;
+  min-height: 9.5rem;
+  padding: 1rem .75rem;
+  gap: .45rem;
+  background: var(--surface) !important;
+  border-color: var(--border-rule) !important;
+  color: var(--fg);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--fg) 10%, transparent) !important;
+}
+.arena-seat-card [data-testid="seat-avatar"] {
+  width: 3.25rem; height: 3.25rem;
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  color: var(--fg);
+  font-size: 1.05rem;
+}
+.arena-seat-name { max-width: 100% !important; color: var(--fg) !important; font-size: .875rem; }
+.arena-seat-card [data-testid="seat-state"] { color: var(--fg-mute); border-color: var(--border-rule); }
+.arena-seat-card [data-testid="seat-face-num"] { color: var(--accent); font-size: 1.65rem; }
+.arena-reveal-slot { position: static; }
+.arena-reveal-slot .relative { position: relative; }
+.arena-reveal-slot [data-testid="reveal-button"] {
+  position: relative; inset: auto; transform: none; min-width: 13rem; width: auto;
+}
+.arena-center-stats { width: max-content; max-width: 100%; }
+.arena-deck-slot { width: min(52rem, 100%); margin: 1rem auto 0; z-index: 10; }
+.arena-deck-slot [data-testid="deck"] {
+  justify-content: center;
+  gap: .65rem;
+  padding: .75rem;
+  background: var(--surface);
+  border-color: var(--border-rule);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--fg) 8%, transparent);
+}
+.arena-deck-slot [data-testid^="deck-card-"] {
+  width: 4rem; height: 5.25rem;
+  border-radius: 9px;
+  border-color: var(--border-rule);
+  color: var(--fg);
+}
+.arena-deck-slot [data-testid^="deck-card-"][aria-pressed="true"] {
+  background: var(--accent); color: var(--on-accent); border-color: var(--accent);
+}
+
+.arena-mobile-list { color: var(--fg); }
+.arena-mobile-list [data-testid="mobile-player-header"] {
+  border-color: var(--border-rule);
+  background: var(--bg);
+}
+.arena-mobile-list [data-testid="mobile-player-count-label"],
+.arena-mobile-list [data-testid="mobile-player-median"] { color: var(--fg-mute); }
+.arena-mobile-seat { border-color: color-mix(in srgb, var(--border-rule) 65%, transparent); }
+.arena-mobile-seat [data-testid="mobile-seat-avatar"] {
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface)); color: var(--fg);
+}
+.arena-mobile-seat [data-testid="mobile-seat-nick"] { color: var(--fg); }
+.arena-mobile-seat [data-testid="mobile-seat-state"] {
+  color: var(--fg-mute); border-color: var(--border-rule); background: var(--surface);
+}
+.arena-mobile-dock { background: var(--surface); border-color: var(--border-rule); }
+.arena-mobile-dock .arena-deck { background: transparent; border: 0; box-shadow: none; }
+.arena-mobile-dock .arena-deck [data-testid^="deck-card-"] {
+  width: 3.2rem; height: 4.4rem; border-color: var(--border-rule); color: var(--fg);
+}
+.arena-mobile-dock .arena-deck [data-testid^="deck-card-"][aria-pressed="true"] {
+  background: var(--accent); color: var(--on-accent); border-color: var(--accent);
+}
+
+@media (max-width: 639px) {
+  .arena-shell { padding-top: 74px; }
+  .arena-stage-desktop { display: none; }
+  .arena-stage-mobile { display: flex; }
+}
+@media (min-width: 640px) {
+  .arena-stage-mobile { display: none; }
+}
+@media (max-width: 720px) {
+  .arena-table-wrap { max-width: 42rem; }
+  .arena-seat-position { --arena-seat-size: 6.75rem; }
+  .arena-felt { inset-inline: 8%; }
+  .arena-deck-slot [data-testid="deck"] { justify-content: flex-start; overflow-x: auto; }
+}

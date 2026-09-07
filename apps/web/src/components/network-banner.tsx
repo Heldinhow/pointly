@@ -12,7 +12,7 @@
  * **Visual**:
  *  - bg-coral-soft + text-coral-deep (atenção sem alarme)
  *  - dot pulsing coral (motion-reduce respeitado)
- *  - Position fixed top-0 z-50, safe-area-inset-top respeitado
+ *  - Position sticky top-0 z-50 (em fluxo: não cobre o header fixo), safe-area-inset-top respeitado
  *
  * @see .specs/features/mobile-first-join-arena/spec.md FMR-23
  */
@@ -43,8 +43,8 @@ export function NetworkBanner() {
 			aria-live="polite"
 			data-testid="network-banner"
 			className={cn(
-				"fixed top-0 left-0 right-0 z-50",
-				"bg-coral-soft border-b border-coral/30",
+				"feedback-network-banner sticky top-0 left-0 right-0 z-50",
+				"feedback-danger",
 				"flex items-center justify-center gap-2",
 				"py-2 px-4 font-mono text-label uppercase tracking-caps text-coral-deep",
 				"pt-[max(env(safe-area-inset-top),0.5rem)]",
@@ -52,9 +52,11 @@ export function NetworkBanner() {
 		>
 			<span
 				aria-hidden="true"
-				className="inline-block w-1.5 h-1.5 rounded-full bg-coral motion-reduce:animate-none animate-pulse flex-shrink-0"
+				className="feedback-status-dot inline-block w-1.5 h-1.5 rounded-full motion-reduce:animate-none animate-pulse flex-shrink-0"
 			/>
-			<span>Sem conexão · verifique sua internet</span>
+			<span>Sem conexão</span>
+			<span aria-hidden="true">·</span>
+			<span>verifique sua internet</span>
 		</div>
 	);
 }

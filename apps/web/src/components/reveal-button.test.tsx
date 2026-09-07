@@ -29,7 +29,7 @@ describe("RevealButton — deriveButtonState (pure)", () => {
 });
 
 describe("RevealButton — render", () => {
-	test("estado awaiting: 'Aguardando jogadores…' (sem contador) + disabled", () => {
+	test("estado awaiting: 'Aguardando votos…' (sem contador) + disabled", () => {
 		render(
 			<RevealButton
 				phase="idle"
@@ -42,7 +42,20 @@ describe("RevealButton — render", () => {
 		const btn = screen.getByTestId("reveal-button");
 		expect(btn.getAttribute("data-reveal-state")).toBe("awaiting");
 		expect(btn).toBeDisabled();
-		expect(btn).toHaveTextContent(/Aguardando jogadores/i);
+		expect(screen.getByTestId('reveal-button-hint')).toHaveTextContent(/Aguardando votos/i);
+	});
+
+	test("estado awaiting: label de estado, não de ação (anti-botão-morto)", () => {
+		render(
+			<RevealButton
+				phase="idle"
+				votedCount={0}
+				totalPlayers={12}
+				onReveal={() => {}}
+				onNewRound={() => {}}
+			/>,
+		);
+		expect(screen.getByTestId("reveal-button")).toHaveTextContent(/Aguardando votos/i);
 	});
 
 	test("estado ready: 'Revelar votos.' enabled + bg-coral", () => {
@@ -59,10 +72,26 @@ describe("RevealButton — render", () => {
 		expect(btn.getAttribute("data-reveal-state")).toBe("ready");
 		expect(btn).toBeEnabled();
 		expect(btn.className).toContain("bg-coral");
-		expect(btn).toHaveTextContent(/Revelar votos\./);
+		expect(btn).toHaveTextContent(/Revelar votos/);
+		expect(screen.getByTestId('reveal-button-hint')).toHaveTextContent(/3 de 12 votaram/);
 	});
 
-	test("estado post-reveal: 'Nova rodada' enabled + bg-paper", () => {
+	test("estado ready com todos os votos: hint 'Todos votaram'", () => {
+		render(
+			<RevealButton
+				phase="voting"
+				votedCount={12}
+				totalPlayers={12}
+				onReveal={() => {}}
+				onNewRound={() => {}}
+			/>,
+		);
+		expect(screen.getByTestId("reveal-button-hint")).toHaveTextContent(
+			/Todos votaram/,
+		);
+	});
+
+	test("estado post-reveal: 'Nova rodada' ghost (bg-surface, sem coral)", () => {
 		render(
 			<RevealButton
 				phase="revealed"
@@ -75,7 +104,8 @@ describe("RevealButton — render", () => {
 		const btn = screen.getByTestId("reveal-button");
 		expect(btn.getAttribute("data-reveal-state")).toBe("post-reveal");
 		expect(btn).toBeEnabled();
-		expect(btn.className).toContain("bg-coral");
+		expect(btn.className).toContain("bg-surface");
+		expect(btn.className).not.toContain("bg-coral");
 		expect(btn).toHaveTextContent(/Nova rodada/i);
 	});
 
@@ -89,8 +119,8 @@ describe("RevealButton — render", () => {
 				onNewRound={() => {}}
 			/>,
 		);
-		expect(screen.getByTestId("reveal-button")).toHaveTextContent(
-			/Aguardando jogadores/i,
+		expect(screen.getByTestId("reveal-button-hint")).toHaveTextContent(
+			/Aguardando votos/i,
 		);
 	});
 });
@@ -113,7 +143,7 @@ describe("RevealButton — interactions", () => {
 		expect(onNewRound).not.toHaveBeenCalled();
 	});
 
-	test("click em 'Nova rodada' (post-reveal) chama onNewRound", () => {
+	test("click em 'Nova rodada' (post-reveal) pede confirmação em 2 toques", () => {
 		const onReveal = mock(() => {});
 		const onNewRound = mock(() => {});
 		render(
@@ -125,7 +155,14 @@ describe("RevealButton — interactions", () => {
 				onNewRound={onNewRound}
 			/>,
 		);
-		fireEvent.click(screen.getByTestId("reveal-button"));
+		const btn = screen.getByTestId("reveal-button");
+		// 1º toque arma, não executa
+		fireEvent.click(btn);
+		expect(onNewRound).not.toHaveBeenCalled();
+		expect(btn.getAttribute("data-reveal-confirm")).toBe("true");
+		expect(btn).toHaveTextContent(/Confirmar nova rodada/i);
+		// 2º toque confirma
+		fireEvent.click(btn);
 		expect(onNewRound).toHaveBeenCalledTimes(1);
 		expect(onReveal).not.toHaveBeenCalled();
 	});

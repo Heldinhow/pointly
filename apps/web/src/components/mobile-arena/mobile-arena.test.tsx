@@ -49,7 +49,7 @@ describe("MobileSeatRow", () => {
 		expect(screen.getByTestId("mobile-seat-state")).toHaveTextContent("AGUARDANDO");
 	});
 
-	test("VOCÊ → border-left coral + voted badge (votedMedian=false)", () => {
+	test("VOCÊ → tint color-mix + data-seat-is-you (votedMedian=false)", () => {
 		render(
 			<ul>
 				<MobileSeatRow
@@ -63,10 +63,10 @@ describe("MobileSeatRow", () => {
 		);
 		const row = screen.getByTestId("mobile-seat-p1");
 		expect(row).toHaveAttribute("data-seat-is-you", "true");
-		expect(row.className).toContain("border-l-coral");
+		expect(row.className).toContain("bg-[color-mix(in_srgb,var(--table)_60%,transparent)]");
 	});
 
-	test("votedMedian → border-left mustard + box-shadow gold inset (unanimous=false)", () => {
+	test("votedMedian → anel inset warning + sem side-stripe (unanimous=false)", () => {
 		render(
 			<ul>
 				<MobileSeatRow
@@ -81,7 +81,7 @@ describe("MobileSeatRow", () => {
 			</ul>,
 		);
 		const row = screen.getByTestId("mobile-seat-p1");
-		expect(row.className).toContain("border-l-mustard");
+		expect(row.className).toContain("shadow-[inset_0_0_0_2px_var(--warning)]");
 	});
 
 	test("face-up + value → face-num italic, não state pill", () => {
@@ -118,7 +118,7 @@ describe("MobileSeatRow", () => {
 		expect(screen.getByTestId("mobile-seat-state")).toHaveTextContent(
 			/DESCONECTADO/i,
 		);
-		expect(screen.getByTestId("mobile-seat-p1").className).toContain("opacity-50");
+		expect(screen.getByTestId("mobile-seat-p1").className).toContain("opacity-60");
 	});
 
 	test("host star ★ presente quando role=host", () => {
@@ -181,6 +181,28 @@ describe("MobilePlayerList", () => {
 		expect(screen.getByTestId("mobile-player-median")).toHaveTextContent(/5/);
 	});
 
+	test("unanimous=true → rows sem anel de mediana (F-023 mobile)", () => {
+		render(
+			<MobilePlayerList
+				players={[
+					makePlayer("p1", "Helder", { hasVoted: true, value: "5" }),
+					makePlayer("p2", "Luna", { hasVoted: true, value: "5" }),
+				]}
+				currentPlayerId="p1"
+				faceUp={true}
+				median={5}
+				unanimous={true}
+			/>,
+		);
+		expect(screen.getByTestId("mobile-player-unanimous")).toBeInTheDocument();
+		expect(screen.getByTestId("mobile-seat-p1").className).not.toContain(
+			"shadow-[inset_0_0_0_2px_var(--warning)]",
+		);
+		expect(screen.getByTestId("mobile-seat-p2").className).not.toContain(
+			"shadow-[inset_0_0_0_2px_var(--warning)]",
+		);
+	});
+
 	test("header inclui TimerPill + não mostra Round duplicado", () => {
 		render(
 			<MobilePlayerList
@@ -194,7 +216,7 @@ describe("MobilePlayerList", () => {
 		);
 		// TimerPill renderiza com testid "timer-pill" + "timer-round"
 		expect(screen.getByTestId("timer-pill")).toBeInTheDocument();
-		expect(screen.getByTestId("timer-round")).toHaveTextContent(/ROUND/);
+		expect(screen.getByTestId("timer-round")).toHaveTextContent(/RODADA/);
 		// Sem span "round" solto no header (era duplicação antes do fix).
 		// Garantimos via ausência do contador "Round NN" inline no header.
 		const header = screen.getByTestId("mobile-player-list").querySelector(

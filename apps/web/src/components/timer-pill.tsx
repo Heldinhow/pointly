@@ -2,7 +2,7 @@
  * Timer pill — T34 (Phase 6).
  *
  * Pill bone-fill no canto superior direito da arena com:
- *  - Mono numerics tabular `00:42 · ROUND 03`
+ *  - Mono numerics tabular `00:42 · RODADA 03`
  *  - Critical state (timer ≤ 30s): bg coral-soft + border coral + coral ink
  *  - Auto-hide quando sala vazia (não aplicável no v2, sempre mostra)
  *  - Sync com Zustand via `useTimer()` + `useRound()`
@@ -35,10 +35,10 @@ export function formatTimer(seconds: number): string {
 	return `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
 }
 
-/** Formata round como 'ROUND 03'. */
+/** Formata round como 'RODADA 03'. */
 export function formatRound(round: number): string {
 	const r = Math.max(1, Math.floor(round));
-	return `ROUND ${String(r).padStart(2, "0")}`;
+	return `RODADA ${String(r).padStart(2, "0")}`;
 }
 
 export interface TimerPillProps {
@@ -68,37 +68,42 @@ export function TimerPill(props: TimerPillProps = {}) {
 			data-od-id="timer-pill"
 			data-timer-critical={isCritical ? "true" : "false"}
 			className={cn(
-				// Pill compacto (Atelier Zero): py-1 + gap-2 (antes py-2 + gap-2.5).
+				// Pill compacto: py-1 + gap-2 (antes py-2 + gap-2.5).
 				// Stats-pill (esquerda) já usa py-1 + `text-micro-label` (10px)
 				// — espelhar aqui pros dois strips do header terem a mesma
 				// altura visual E o mesmo peso tipográfico. Antes timer value
 				// era `text-label` (11px), um passo acima — visualmente
 				// competia com o Seat face-up (20px Playfair) sem motivo.
-				"inline-flex items-center gap-2 px-3 py-1 rounded-full",
-				"border transition-colors duration-200",
-				"font-mono text-micro-label tracking-caps uppercase",
-				isCritical
-					? "bg-coral-soft border-coral/40 text-ink"
-					: "bg-surface border-ink/5 text-ink-faint",
+			"arena-timer-pill inline-flex items-center gap-2 px-3 py-1 rounded-full",
+			"border transition-colors duration-200",
+			"font-mono text-label tracking-caps uppercase",
+			isCritical
+				? "bg-coral-soft border-coral text-ink font-semibold"
+				: "bg-surface border-ink/5 text-ink-mute",
+		)}
+	>
+		{isCritical && (
+				<span aria-hidden="true" className="inline-block leading-none">
+					⚠
+				</span>
 			)}
-		>
 			{/* Timer (número) — text-label, weight medium → info primária */}
 			<span
 				className={cn(
-					"text-label font-medium font-variant-numeric",
+					"text-label font-semibold tabular-nums",
 					isCritical ? "text-ink" : "text-ink",
 				)}
 				data-testid="timer-value"
 			>
 				{formatTimer(timer)}
 			</span>
-			{/* ROUND — micro-label, hairline separator, weight normal → info secundária */}
+			{/* RODADA — micro-label, hairline separator, weight normal → info secundária */}
 			<span
 				aria-hidden="true"
 				className="inline-block w-px h-2.5 bg-ink/15"
 			/>
 			<span
-				className="text-micro-label font-normal text-ink-faint/80"
+				className="text-label font-normal text-ink-mute"
 				data-testid="timer-round"
 			>
 				{formatRound(round)}

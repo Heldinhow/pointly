@@ -49,12 +49,21 @@ describe("Deck — T32", () => {
 		expect(lastCall?.[0]).toBe("8");
 	});
 
-	test("disabled=true bloqueia click + aplica opacity-40 (F-018)", () => {
+	test("disabled=true bloqueia click + container opacity-60 (F-018, sem dupla opacidade)", () => {
 		const onSelect = mock(() => {});
 		render(<Deck currentVote={null} disabled={true} onSelect={onSelect} />);
 		const card = screen.getByTestId("deck-card-5");
 		expect(card).toBeDisabled();
-		expect(card.className).toContain("opacity-40");
+		expect(screen.getByTestId("deck").className).toContain("opacity-60");
+		expect(card.className).not.toContain("opacity-60");
+	});
+
+	test("selecionada usa accent sólido + on-accent (single master)", () => {
+		render(<Deck currentVote="5" disabled={false} onSelect={() => {}} />);
+		const card = screen.getByTestId("deck-card-5");
+		expect(card.className).toContain("bg-coral");
+		expect(card.className).toContain("text-on-accent");
+		expect(card.className).not.toContain("bg-coral/8");
 	});
 
 	test("teclado Enter dispara onSelect (a11y)", () => {
@@ -76,5 +85,12 @@ describe("Deck — T32", () => {
 		const card = screen.getByTestId("deck-card-☕");
 		expect(card).toBeInTheDocument();
 		expect(card.textContent).toContain("☕");
+	});
+
+	test("chunking: 3 grupos (baixas / altas / pausa) com role=group", () => {
+		render(<Deck currentVote={null} disabled={false} onSelect={() => {}} />);
+		expect(screen.getByRole("group", { name: "Estimativas baixas" })).toBeInTheDocument();
+		expect(screen.getByRole("group", { name: "Estimativas altas" })).toBeInTheDocument();
+		expect(screen.getByRole("group", { name: "Pausa" })).toBeInTheDocument();
 	});
 });

@@ -4,12 +4,12 @@
  * Pill bone-fill no canto superior esquerdo da arena com:
  *  - Mono caps `MÉDIA X.X · MEDIANA Y · INTERVALO A–B`
  *  - Mediana em gold (mustard) por padrão
- *  - Quando `unanimous: true`, mostra badge "UNANIMOUS" em vez da mediana gold
+ *  - Quando `unanimous: true`, mostra badge "UNÂNIME" em vez da mediana gold
  *  - Aparece só pós-reveal
  *
  * **Lógica**:
  *  - Se `consensus === null`, renderiza vazio (ou hidden)
- *  - Se `consensus.unanimous === true`, exibe badge UNANIMOUS + range (sem mediana gold)
+ *  - Se `consensus.unanimous === true`, exibe badge UNÂNIME + range (sem mediana gold)
  *  - Caso contrário, exibe média + mediana gold + range
  *
  * **A11y**:
@@ -66,23 +66,23 @@ export function StatsPill({ consensus }: StatsPillProps) {
 			data-od-id="stats-pill"
 			data-stats-unanimous={showUnanimous ? "true" : "false"}
 			className={cn(
-				// pill compacto (Atelier Zero): ocupa 1 linha discreta no topo,
+				// pill compacto: ocupa 1 linha discreta no topo,
 				// não compete com a Ø wordmark à esquerda. py-2 era exagerado
 				// pra um strip pós-reveal — encolhido pra py-1; gap-2.5 → 2 pra
 				// acompanhar (sem isso fica visualmente "arejado demais" perto
 				// do card-title do header). Texto usa `text-micro-label`
 				// (10px) — `text-label` (11px) era grande demais pra um strip
 				// pós-reveal que compete com o Seat face-up (20px Playfair).
-				"inline-flex items-center gap-2 px-3 py-1 rounded-full",
-				"bg-surface border border-ink/5",
-				"font-mono text-micro-label tracking-caps uppercase text-ink-faint",
-				"transition-opacity duration-300",
+			"arena-stats-pill inline-flex items-center gap-2 px-3 py-1 rounded-full",
+			"bg-surface border border-ink/5",
+			"font-mono text-label tracking-caps uppercase text-ink-mute",
+			"transition-opacity duration-300",
 			)}
 		>
 			{/* Média */}
 			<span data-testid="stats-mean">
-				<span className="text-ink-faint">Média</span>{" "}
-				<span className="text-ink font-medium" data-testid="stats-mean-value">
+				<span className="text-ink-mute">Média</span>{" "}
+				<span className="text-ink font-semibold" data-testid="stats-mean-value">
 					{formatMean(consensus.mean)}
 				</span>
 			</span>
@@ -91,24 +91,24 @@ export function StatsPill({ consensus }: StatsPillProps) {
 			{showUnanimous ? (
 				<span
 					data-testid="stats-unanimous-badge"
-					className="font-mono text-micro-label tracking-caps uppercase text-mustard font-semibold inline-flex items-center gap-1"
+					className="font-mono text-micro-label tracking-caps uppercase text-warning font-semibold inline-flex items-center gap-1"
 				>
 					<span aria-hidden="true" className="inline-block">
 						★
 					</span>
-					Unanimous
+					Unânime
 					<span
 						aria-hidden="true"
-						className="inline-block text-mustard/70 text-micro-label tracking-caps -ml-0.5"
+						className="inline-block text-warning/70 text-micro-label tracking-caps -ml-0.5"
 					>
 						✦
 					</span>
 				</span>
 			) : (
 				<span data-testid="stats-median">
-					<span className="text-ink-faint">Mediana</span>{" "}
+					<span className="text-ink-mute">Mediana</span>{" "}
 					<span
-						className="text-ink font-semibold border-b border-mustard"
+						className="text-ink font-semibold border-b border-warning"
 						data-testid="stats-median-value"
 					>
 						{formatMedian(consensus.median)}
@@ -118,12 +118,12 @@ export function StatsPill({ consensus }: StatsPillProps) {
 
 			{/* Média + Mediana estão em `text-micro-label` (10px) via pill
 			    root. Valor da mediana ganha `font-semibold` para hierarquia
-			    sobre o número — borda gold (border-b border-mustard) reforça. */}
+			    sobre o número — borda warning (border-b border-warning) reforça. */}
 
 			{/* Intervalo */}
 			<span data-testid="stats-range">
-				<span className="text-ink-faint">Intervalo</span>{" "}
-				<span className="text-ink font-medium" data-testid="stats-range-value">
+				<span className="text-ink-mute">Intervalo</span>{" "}
+				<span className="text-ink font-semibold" data-testid="stats-range-value">
 					{formatRange(consensus.range)}
 				</span>
 			</span>
