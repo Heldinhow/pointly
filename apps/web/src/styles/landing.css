@@ -5,27 +5,28 @@
 	font-family: "Manrope", system-ui, sans-serif;
 	padding-top: var(--header-height, 80px);
 }
-.site-header { position: fixed; inset: 0 0 auto; z-index: 20; border-bottom: 1px solid transparent; background: color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter: blur(14px); transition: background-color 180ms ease, border-color 180ms ease; padding-top: env(safe-area-inset-top, 0px); }
+.site-header { position: fixed; inset: 0 0 auto; z-index: 20; height: var(--header-height, 80px); box-sizing: border-box; border-bottom: 1px solid transparent; background: var(--bg); }
 .site-header[data-scrolled="true"] { border-bottom-color: var(--border-rule); }
-.site-header-nav { max-width: 1500px; min-height: var(--header-height, 80px); margin: 0 auto; padding: 0 48px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.site-header-nav { max-width: 1500px; height: 100%; margin: 0 auto; padding: 0 48px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .site-header-brand { color: var(--fg); text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; }
 .site-header-actions { display: flex; align-items: center; gap: 12px; }
 .site-header-join, .site-header-create { min-height: 44px; border: 0; background: transparent; color: inherit; font: 700 14px/1 "Manrope", sans-serif; text-decoration: none; border-radius: 9px; padding: 10px 12px; }
 .site-header-join:hover { color: var(--accent); }
-.site-header-create { background: var(--accent); color: var(--on-accent); padding-inline: 16px; transition: filter 150ms ease; }
-.site-header-create:hover { filter: brightness(1.08); }
+.site-header-create { background: var(--accent); color: var(--on-accent); padding-inline: 16px; transition: transform 150ms ease-out; }
+.site-header-create:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.site-header-create:active, .landing-button:active { transform: translateY(0); }
 .landing-hero, .landing-steps, .landing-footer { max-width: 1500px; margin: 0 auto; padding-inline: 48px; }
-.landing-hero { min-height: 650px; display: grid; grid-template-columns: minmax(0, .9fr) minmax(460px, 1.1fr); align-items: center; gap: 56px; padding-top: 48px; padding-bottom: 70px; }
+.landing-hero { min-height: 650px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(380px, .9fr); align-items: center; gap: 40px; padding-top: 48px; padding-bottom: 70px; }
 .landing-hero-copy { max-width: 650px; }
 .landing-kicker { margin: 0 0 18px; color: var(--accent); font: 800 12px/1.2 "Manrope", sans-serif; letter-spacing: .08em; text-transform: uppercase; }
 .landing-hero h1, .landing-section-intro h2 { margin: 0; font-family: "Space Grotesk", Manrope, sans-serif; letter-spacing: -.045em; text-wrap: balance; }
-.landing-hero h1 { font-size: clamp(3.25rem, 6vw, 5.9rem); font-weight: 800; line-height: .99; }
+.landing-hero h1 { font-size: clamp(3.25rem, 4.6vw, 4.6rem); font-weight: 800; line-height: 1.04; letter-spacing: -.04em; }
 .landing-hero h1 em { color: var(--accent); font-style: normal; }
 .landing-lede { max-width: 44ch; margin: 28px 0 26px; color: var(--fg-mute); font-size: 17px; line-height: 1.65; }
 .landing-actions { display: flex; flex-wrap: wrap; gap: 12px; }
-.landing-button { min-height: 46px; padding: 12px 20px; border-radius: 9px; font: 800 14px/1 "Manrope", sans-serif; cursor: pointer; transition: filter 150ms ease, background-color 150ms ease, border-color 150ms ease; }
+.landing-button { min-height: 46px; padding: 12px 20px; border-radius: 9px; font: 800 14px/1 "Manrope", sans-serif; cursor: pointer; transition: transform 150ms ease-out; }
 .landing-button-primary { border: 0; background: var(--accent); color: var(--on-accent); }
-.landing-button-primary:hover { filter: brightness(1.08); }
+.landing-button-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
 .landing-button-secondary { border: 1px solid var(--border-rule); background: transparent; color: var(--fg); }
 .landing-button-secondary:hover { border-color: var(--accent); color: var(--accent); }
 .landing-caption { margin: 15px 0 0; color: var(--fg-mute); font-size: 14px; }
@@ -65,8 +66,7 @@
 	.landing-steps { grid-template-columns: 1fr; gap: 38px; }
 }
 @media (max-width: 600px) {
-	.landing-page { padding-top: 74px; }
-	.site-header-nav { min-height: 74px; padding-inline: 16px; gap: 8px; }
+	.site-header-nav { padding-inline: 16px; gap: 8px; }
 	.site-header-actions { gap: 8px; }
 	.site-header-join { padding-inline: 8px; }
 	.site-header-create { padding-inline: 11px; }

@@ -101,14 +101,14 @@ describe("Toast", () => {
 		expect(message).toMatch(/ToastProvider/);
 	});
 
-	test("múltiplos toasts empilham", () => {
+	test("atualizações rotineiras substituem avisos antigos sem descartar erros", () => {
 		function Multi() {
 			const t = useToast();
 			return (
 				<button
 					type="button"
 					onClick={() => {
-						t.push("first", "info");
+						t.push("first", "error");
 						t.push("second", "info");
 						t.push("third", "info");
 					}}
@@ -127,6 +127,9 @@ describe("Toast", () => {
 			screen.getByRole("button", { name: "trigger" }).click();
 		});
 		const toasts = screen.getAllByRole("status");
-		expect(toasts).toHaveLength(3);
+		expect(toasts).toHaveLength(2);
+		expect(screen.queryByText("second")).toBeNull();
+		expect(screen.getByText("first")).toBeInTheDocument();
+		expect(screen.getByText("third")).toBeInTheDocument();
 	});
 });

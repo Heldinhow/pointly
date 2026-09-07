@@ -73,7 +73,8 @@ export function ToastProvider({
 	const push = useCallback((text: string, kind: ToastKind = "info") => {
 		counterRef.current += 1;
 		const id = `t_${Date.now().toString(36)}_${counterRef.current}`;
-		setToasts((curr) => [...curr, { id, text, kind }]);
+		// Routine updates replace stale feedback; errors remain until dismissed.
+		setToasts((curr) => [...curr.filter((t) => t.kind === "error"), { id, text, kind }]);
 	}, []);
 
 	const ctxValue = useMemo<ToastContextValue>(
@@ -100,7 +101,7 @@ function ToastViewport({ toasts, duration, onDismiss }: ViewportProps) {
 		<div
 			aria-live="polite"
 			aria-atomic="true"
-			className="pointer-events-none fixed inset-x-0 top-4 z-50 flex flex-col items-center gap-2 px-4"
+			className="feedback-toast-viewport pointer-events-none fixed inset-x-0 z-50 flex flex-col items-center gap-2 px-4"
 		>
 			{toasts.map((t) => (
 				<ToastEntry
@@ -133,8 +134,8 @@ function ToastEntry({
 			role="status"
 			data-testid={`toast-${item.id}`}
 			className={cn(
-				"pointer-events-auto rounded-full border px-5 py-2.5 shadow-bone",
-				"text-sm font-sans font-normal max-w-md",
+				"pointer-events-auto flex items-center gap-3 rounded-lg border px-4 py-3 shadow-card",
+				"text-sm font-sans font-normal max-w-md w-full",
 				"animate-[fade-in_120ms_ease-out]",
 				KIND_STYLES[item.kind],
 			)}

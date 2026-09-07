@@ -16,6 +16,12 @@
 }
 .arena-stage-desktop .arena-stats { left: clamp(1rem, 4vw, 3rem); max-width: 44%; }
 .arena-stage-desktop .arena-timer { right: clamp(1rem, 4vw, 3rem); max-width: 44%; }
+.arena-stage-desktop:has(> .feedback-empty-panel) .arena-stats,
+.arena-stage-desktop:has(> .feedback-empty-panel) .arena-timer {
+  position: static;
+  margin-top: .75rem;
+  max-width: 100%;
+}
 @media (max-width: 900px) {
   .arena-stage-desktop .arena-stats,
   .arena-stage-desktop .arena-timer { position: static; max-width: 100%; align-self: center; }
@@ -74,6 +80,14 @@
 .arena-seat-card [data-testid="seat-state"] { color: var(--fg-mute); border-color: var(--border-rule); }
 .arena-seat-card [data-testid="seat-face-num"] { color: var(--accent); font-size: 1.65rem; }
 .arena-reveal-slot { position: static; }
+.arena-shell .arena-reveal-button {
+  border-radius: 9px;
+  font-family: var(--font-body);
+  transition-property: transform, opacity;
+}
+.arena-shell [data-testid="reveal-button-hint"] {
+  font-family: var(--font-body);
+}
 .arena-reveal-slot .relative { position: relative; }
 .arena-reveal-slot [data-testid="reveal-button"] {
   position: relative; inset: auto; transform: none; min-width: 13rem; width: auto;
@@ -123,9 +137,11 @@
 }
 
 @media (max-width: 639px) {
-  .arena-shell { padding-top: 74px; }
   .arena-stage-desktop { display: none; }
   .arena-stage-mobile { display: flex; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arena-shell .arena-reveal-button { transition-duration: .01ms; }
 }
 @media (min-width: 640px) {
   .arena-stage-mobile { display: none; }

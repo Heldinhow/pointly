@@ -72,7 +72,7 @@ export function MobilePlayerList({
 		<section
 			data-testid="mobile-player-list"
 			aria-label="Jogadores na sala"
-			className="arena-mobile-list flex-1 flex flex-col min-h-0"
+			className="arena-mobile-list flex-1 flex flex-col min-h-0 min-w-0"
 		>
 			{/* Header strip — consolida contador de players + TimerPill (que já
 				 carrega Round internamente) + mediana pós-reveal. Mobile-first
@@ -85,7 +85,7 @@ export function MobilePlayerList({
 				 reforça o page bg (redundante, omitido). */}
 			<header
 				data-testid="mobile-player-header"
-				className="flex items-center justify-between gap-3 px-4 py-2 flex-shrink-0 border-b border-ink/10 min-h-[44px] bg-bg"
+				className="flex flex-wrap items-center justify-between gap-3 px-4 py-2 flex-shrink-0 border-b border-ink/10 min-h-[44px] bg-bg"
 			>
 				{/* Contador de jogadores — dot de status + label micro + count bold.
 				    Hierarchy: "JOGADORES" caption + "0/0" numerico forte.
@@ -101,23 +101,24 @@ export function MobilePlayerList({
 					<div className="flex flex-col leading-tight">
 						<span
 							data-testid="mobile-player-count-label"
-							className="font-mono text-micro-label tracking-caps uppercase text-ink-faint"
+							className="font-sans text-caption text-ink-mute"
 						>
-							Jogadores
+							Votos recebidos
 						</span>
 						<span
 							data-testid="mobile-player-count"
-							className="font-mono text-label font-semibold tabular-nums text-ink"
+							aria-label={`${votedCount} de ${players.length} participantes votaram`}
+							className="font-display text-caption font-semibold tabular-nums text-ink"
 						>
 							{votedCount}/{players.length}
 						</span>
 					</div>
 				</div>
-				<div className="flex items-center gap-2.5">
+				<div className="flex flex-wrap min-w-0 items-center gap-2.5">
 					{faceUp && unanimous ? (
 						<span
 							data-testid="mobile-player-unanimous"
-							className="font-mono text-label tracking-caps uppercase text-warning font-semibold inline-flex items-center gap-1"
+							className="font-sans text-caption text-warning font-semibold inline-flex items-center gap-1"
 						>
 							<span aria-hidden="true">★</span>
 							Unânime
@@ -127,7 +128,7 @@ export function MobilePlayerList({
 						median !== null && (
 							<span
 								data-testid="mobile-player-median"
-								className="font-mono text-label tracking-caps uppercase inline-flex items-center gap-1 text-ink-mute"
+								className="font-sans text-caption inline-flex items-center gap-1 text-ink-mute"
 							>
 								<span>Mediana</span>
 								<span className="text-ink font-semibold border-b border-warning">

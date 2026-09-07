@@ -386,11 +386,6 @@ export function Join() {
 
 	return (
 		<div data-testid="page-join" className="entry-page">
-			{/* Header topbar — superfície sólida (sem glassmorphism). Tela de
-			    formulário único não justifica sticky: o usuário percorre o card
-			    inteiro dentro de uma viewport cabeçudo+rodapé, e o sticky só
-			    comeria pixels verticais sem benefício.
-			    pt com safe-area-inset-top respeita notch iOS. */}
 			<header className="entry-header">
 				<Link to="/" aria-label="Pointly — página inicial">
 					<Brand />
@@ -436,14 +431,12 @@ export function Join() {
 			 * padding-bottom com env(safe-area-inset-bottom) p/ home indicator. */}
 			<main className="entry-main">
 				<section className="entry-intro" aria-labelledby="join-title">
-					<p className="entry-eyebrow">{mode === "create" ? "Criar uma sala" : mode === "invite" ? "Convite para a sala" : "Entrar com código"}</p>
 					<h1 id="join-title" className="entry-title">
 						{mode === "create" ? <>Abra uma mesa para o <em>time.</em></> : mode === "invite" ? <>Entre na <em>mesa.</em></> : <>Qual é a sua <em>sala?</em></>}
 					</h1>
 					<p className="entry-description">
-						{mode === "create" ? "Crie uma rodada e convide as pessoas certas. Sem conta, sem preparação." : "Escolha como você quer aparecer para o time. A conversa começa quando você chega."}
+						{mode === "create" ? "Escolha seu nome para criar a sala e convidar o time." : mode === "invite" ? "Escolha como você quer aparecer para o time." : "Informe o código da sala e escolha seu nome para entrar."}
 					</p>
-					<p className="entry-signal">Até 12 pessoas · cartas sincronizadas · uma boa conversa por rodada.</p>
 				</section>
 				<Card
 					padding="lg"
@@ -529,7 +522,7 @@ export function Join() {
 						    inline acima + foco — não há branch separado pro
 						    modo invite. */}
 
-					<div>
+						<div className="entry-field">
 							<label htmlFor="nick-input" className="entry-label">
 								Como você quer ser chamado
 							</label>
@@ -567,13 +560,13 @@ export function Join() {
 							</div>
 							<div
 								id="nick-hint"
-								className="entry-hint"
+								className="entry-hint entry-hint-row"
 							>
 								<span>De 2 a 20 caracteres</span>
 								{validation.ok && (
 									<span
 										aria-hidden="true"
-										className="entry-hint"
+										className="entry-hint-count"
 									>
 										<span className="leading-none">✓</span>
 										{nick.length}/{NICK_MAX}

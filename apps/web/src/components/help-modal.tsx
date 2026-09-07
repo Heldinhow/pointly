@@ -3,7 +3,7 @@
  *
  * Modal pequeno exibido quando o user pressiona `?` (ou `/` em ABNT).
  * Lista os atalhos disponíveis na Arena:
- *  - `R` — revelar votos (host, fase voting, ≥1 voto)
+ *  - `R` — revelar votos (fase voting, ≥1 voto)
  *  - `N` — nova rodada (qualquer player, fase revealed)
  *  - `?` — abrir este help
  *  - `Esc` — fechar overlays / modais
@@ -37,9 +37,9 @@ interface Row {
 
 const ROWS: Row[] = [
 	{ keys: ["R"], label: "Revelar votos (durante a votação)" },
-	{ keys: ["N"], label: "Iniciar nova rodada (após o reveal)" },
-	{ keys: ["?"], label: "Abrir este help" },
-	{ keys: ["Esc"], label: "Fechar overlays e modais" },
+	{ keys: ["N"], label: "Iniciar nova rodada (após a revelação)" },
+	{ keys: ["?"], label: "Abrir esta ajuda" },
+	{ keys: ["Esc"], label: "Fechar ajuda ou convite" },
 ];
 
 export function HelpModal({ open, onClose }: HelpModalProps) {
@@ -96,22 +96,22 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
 			onKeyDown={trapFocus}
 			className="feedback-modal-shell fixed inset-0 z-30 flex items-center justify-center px-4 py-6"
 		>
-			<Card padding="lg" className="feedback-modal-card w-full max-w-[480px] max-h-[calc(100dvh-3rem)] overflow-y-auto flex flex-col gap-4 items-start">
-				<div className="flex items-baseline gap-3">
-					<div className="font-italic text-coral text-brand-mark leading-none">
-						Ø
-					</div>
+			<Card padding="md" className="feedback-modal-card w-full min-w-0 max-w-[480px] max-h-[calc(100dvh-3rem)] overflow-y-auto flex flex-col gap-4 items-start">
+				<div className="min-w-0">
 					<h2
 						id="help-modal-title"
 						className="font-display font-extrabold text-nav-mark tracking-tight"
 					>
-						Atalhos<span className="text-coral-deep">.</span>
+						Como jogar
 					</h2>
 				</div>
-				<p className="font-sans text-caption text-ink-mute">
-					Navegação rápida pelo teclado. Atalhos também ficam indicados nos
-					botões da arena (anunciados pelos leitores de tela).
-				</p>
+				<ol className="list-decimal pl-5 space-y-2 font-sans text-caption text-ink-mute">
+					<li>Compartilhe o link da sala e combinem o que vão estimar.</li>
+					<li>Escolha uma carta. Seu voto fica oculto para os outros até a revelação. O primeiro voto inicia os 60 segundos.</li>
+					<li>Com pelo menos um voto, qualquer participante pode usar Revelar votos. Ao acabar o tempo, os votos são revelados automaticamente.</li>
+					<li>Conversem sobre as diferenças. Após a revelação, qualquer participante pode iniciar uma nova rodada, que limpa os votos.</li>
+				</ol>
+				<h3 className="font-sans font-bold text-caption">Atalhos de teclado</h3>
 
 				<table className="w-full mt-1" data-testid="help-modal-shortcuts">
 					<caption className="sr-only">Teclas de atalho e ações correspondentes</caption>
@@ -148,7 +148,7 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
 					size="md"
 					onClick={onClose}
 					data-testid="help-modal-close"
-					className="min-h-[44px]"
+					className="min-h-[44px] rounded-[9px] transition-none"
 				>
 					Fechar
 					<span aria-hidden="true">×</span>

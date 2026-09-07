@@ -5,8 +5,7 @@
  * (`selectIsOnlyPlayer` = sala.players.length === 1 && players[0].id === currentPlayerId).
  *
  * **Visual**:
- *  - Backdrop paper + blur(4px) (vide design/arena.html)
- *  - Card central bone-fill com mark Ø + headline 'Convide outros.' + coral dot
+ *  - Painel inline compacto antes da mesa e do baralho
  *  - Share URL readonly + botão 'Copiar link' (clipboard API)
  *  - Botão ghost 'Entrar na mesa mesmo assim' dismissa overlay
  *
@@ -31,7 +30,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getDismissedEmpty, setDismissedEmpty } from "../lib/storage";
 import { Button } from "./ui/button";
-import { Card } from "./ui/card";
 
 /** Hook utilitário pra construir a share URL (SPA router). */
 export function buildShareUrl(origin: string, code: string): string {
@@ -117,26 +115,21 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 			aria-describedby="empty-overlay-desc"
 			data-testid="empty-overlay"
 			data-od-id="empty-overlay"
-			className="feedback-empty-panel w-full px-4 py-5 sm:px-6"
+			className="feedback-empty-panel w-full min-w-0 shrink-0 px-4 py-4 sm:px-6"
 		>
-			<Card
-				padding="md"
-				className="feedback-empty-card mx-auto w-full max-w-[680px] flex flex-col gap-4 items-start"
+			<div
+				className="mx-auto w-full min-w-0 max-w-[680px] flex flex-col gap-3 items-start"
 			>
-				<div className="font-italic text-coral text-card-mark leading-none" aria-hidden="true">
-					Ø
-				</div>
-				<h2 id="empty-overlay-title" className="font-display font-extrabold text-brand-mark tracking-tight">
-					Convide outros<span className="text-coral-deep">.</span>
+				<h2 id="empty-overlay-title" className="font-display font-bold text-xl tracking-tight">
+					Convide outros para a mesa
 				</h2>
-			<p id="empty-overlay-desc" className="font-sans text-caption text-ink-mute">
-				Você é o único na sala agora. Compartilhe o link abaixo — quando
-				alguém entrar, vocês podem votar juntos.
-			</p>
+				<p id="empty-overlay-desc" className="font-sans text-caption text-ink-mute">
+					Só você está na sala. Compartilhe o link para estimar com o time.
+				</p>
 
-				{/* Share pill */}
+				{/* Link de convite */}
 				<div
-					className="flex items-stretch w-full border border-ink/15 rounded-full bg-paper overflow-hidden"
+					className="flex items-stretch w-full min-w-0 border border-ink/15 rounded-[9px] bg-surface overflow-hidden"
 					data-testid="empty-overlay-share"
 				>
 					<input
@@ -144,15 +137,15 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 						type="text"
 						readOnly
 						value={url}
-						aria-label="URL de compartilhamento"
-						className="flex-1 border-0 bg-transparent py-3.5 px-4 font-mono text-caption text-ink min-w-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-[var(--focus)]"
+						aria-label="Link de convite da sala"
+						className="flex-1 w-0 border-0 bg-transparent py-2 px-3 font-sans text-caption text-ink min-w-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-[var(--focus)]"
 						data-testid="empty-overlay-share-url"
 					/>
 					<button
 						ref={copyRef}
 						type="button"
 						onClick={handleCopy}
-						className="border-0 bg-coral text-on-accent font-display font-semibold text-caption py-3.5 px-5 cursor-pointer hover:bg-[var(--accent-hover)] transition-colors min-h-[44px] flex-shrink-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-[var(--focus)]"
+						className="border-0 bg-coral text-on-accent font-sans font-bold text-caption py-2 px-3 cursor-pointer hover:bg-[var(--accent-hover)] min-h-[44px] flex-shrink-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-[var(--focus)]"
 						data-testid="empty-overlay-copy"
 						aria-label="Copiar link de compartilhamento"
 						aria-live="polite"
@@ -162,16 +155,15 @@ export function EmptyOverlay({ code, onDismiss, shareUrl }: EmptyOverlayProps) {
 				</div>
 
 				<Button
-					variant="default"
+					variant="ghost"
 					size="md"
 					onClick={handleDismiss}
 					data-testid="empty-overlay-dismiss"
-					className="min-h-[44px]"
+					className="min-h-[44px] h-auto max-w-full whitespace-normal rounded-[9px] px-0 text-caption transition-none"
 				>
-					Entrar na mesa mesmo assim
-					<span aria-hidden="true">→</span>
+					Continuar sem o convite
 				</Button>
-			</Card>
+			</div>
 		</section>
 	);
 }

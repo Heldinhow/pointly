@@ -10,7 +10,6 @@
 
 .feedback-modal-shell {
 	background: color-mix(in srgb, var(--bg) 82%, transparent);
-	backdrop-filter: blur(8px);
 }
 
 .feedback-modal-card {
@@ -50,6 +49,13 @@
 	width: 1.25rem;
 }
 
+.feedback-toast-viewport {
+	top: calc(var(--header-height) + 1rem);
+	max-height: calc(100dvh - var(--header-height) - 2rem);
+	overflow-y: auto;
+}
+.feedback-toast-viewport [role="status"] > span:nth-child(2) { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+
 .feedback-toast-close {
 	align-items: center;
 	background: transparent;
@@ -63,6 +69,7 @@
 	margin: -0.5rem -0.5rem -0.5rem 0;
 	opacity: 0.72;
 	width: 2.75rem;
+	flex-shrink: 0;
 }
 
 .feedback-toast-close:hover,

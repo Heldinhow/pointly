@@ -353,7 +353,7 @@ export function Seat({
 					faceUp={faceUp}
 					votedMedian={votedMedian}
 					unanimous={unanimous}
-					className={`arena-seat-card ${impactClass} transition-all duration-200`}
+					className={`arena-seat-card ${impactClass} transition-[transform,opacity] duration-200`}
 					style={dodgeStyle}
 				>
 					{/* Avatar circular */}

@@ -89,7 +89,7 @@ function SharePill({ code }: { code: string }) {
 			data-testid="share-pill"
 			disabled={!code}
 			className={cn(
-				"inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-micro-label tracking-caps uppercase border transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--focus)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg)] min-h-[44px]",
+				"inline-flex items-center gap-1.5 rounded-[9px] px-2.5 py-1 font-sans text-micro-label border cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--focus)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg)] min-h-[44px]",
 				"disabled:opacity-50 disabled:cursor-not-allowed",
 				copied
 					? "bg-success-soft border-success text-success"
@@ -134,7 +134,7 @@ function SharePill({ code }: { code: string }) {
 					<path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
 				</svg>
 			)}
-			<span className="font-display tracking-eyebrow uppercase text-label tabular-nums">
+			<span className="font-sans font-bold text-label tabular-nums">
 				{copied ? "Copiado!" : code || "—"}
 			</span>
 		</button>
@@ -313,7 +313,7 @@ export function Arena() {
 							aria-label="Ajuda e atalhos de teclado"
 							title="Ajuda e atalhos (?)"
 							data-testid="arena-help-button"
-							className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] w-11 h-11 rounded-full border border-ink/15 text-ink-soft hover:text-ink hover:border-ink/40 hover:bg-ink/5 transition-colors font-display font-bold text-label focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2"
+							className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] w-11 h-11 rounded-[9px] border border-ink/15 text-ink-soft hover:text-ink hover:border-ink/40 hover:bg-ink/5 font-sans font-bold text-label focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2"
 						>
 							<span aria-hidden="true">?</span>
 						</button>
@@ -349,6 +349,8 @@ export function Arena() {
 				}
 				style={isMobile ? { minHeight: "60dvh" } : { minHeight: "60vh" }}
 			>
+				{isOnlyPlayer && code && <EmptyOverlay code={code} />}
+
 				{isMobile ? (
 					<>
 						{/* PlayerList carrega o TimerPill in-flow dentro do
@@ -491,12 +493,6 @@ export function Arena() {
 							/>
 						</div>
 					</>
-				)}
-
-				{/* Empty overlay (condicional: sala só com você) — sibling
-				    comum dos dois branches, z-20 sobre tudo */}
-				{isOnlyPlayer && code && (
-					<EmptyOverlay code={code} />
 				)}
 
 				<HelpModal open={openHelp} onClose={() => setOpenHelp(false)} />
