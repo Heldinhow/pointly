@@ -21,7 +21,7 @@
  * @see .specs/features/planning-poker-v1/tasks.md T30
  * @see .specs/features/planning-poker-v1/spec.md F-007, F-053
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useBlocker, useSearchParams } from "react-router-dom";
 import { Deck } from "../components/deck";
 import { buildShareUrl } from "../components/empty-overlay";
@@ -405,7 +405,10 @@ export function Arena() {
 												left: `${(pos.left / 960) * 100}%`,
 												top: `${(pos.top / 560) * 100}%`,
 												transform: "translate(-50%, -50%)",
-											}}
+												"--seat-card-x": `${-Math.cos(angle * Math.PI / 180) * 90}px`,
+												"--seat-card-y": `${-Math.sin(angle * Math.PI / 180) * 82}px`,
+												"--seat-card-angle": `${angle - 90}deg`,
+											} as CSSProperties}
 											data-seat-angle={angle}
 											data-seat-index={p.seatIndex}
 										>

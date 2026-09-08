@@ -22,6 +22,22 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
 }
 
 describe("Seat — T31", () => {
+	test("vote card hides the value until reveal and then shows the real vote", () => {
+		const player = makePlayer({ hasVoted: true, value: "13" });
+		const { rerender } = render(
+			<Seat player={player} isYou={true} faceUp={false} votedMedian={false} unanimous={false} />,
+		);
+		expect(screen.getByTestId("seat-vote-card")).toHaveAttribute("aria-hidden", "true");
+		expect(screen.getByTestId("seat-vote-card")).toHaveTextContent("");
+		expect(screen.queryByTestId("seat-face-num")).not.toBeInTheDocument();
+		rerender(
+			<Seat player={player} isYou={true} faceUp={true} votedMedian={true} unanimous={false} />,
+		);
+		expect(screen.getByTestId("seat-face-num")).toHaveTextContent("13");
+		expect(screen.getByTestId("seat-vote-card")).not.toHaveAttribute("aria-hidden");
+		expect(screen.getByTestId("seat-vote-card").className).toContain("is-median");
+	});
+
 	test("renderiza nick + state AGUARDANDO por default", () => {
 		const p = makePlayer({ nick: "Maya" });
 		render(

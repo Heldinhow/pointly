@@ -66,6 +66,15 @@ function renderArena(initialEntry = "/arena?code=9B9F") {
 }
 
 describe("seatPosition — T30 pure", () => {
+	test("capsule keeps top/bottom seats on the straight rail and side seats on the caps", () => {
+		for (const angle of [60, 90, 120]) {
+			expect(seatPosition(angle).top).toBeCloseTo(490);
+			expect(seatPosition(angle + 180).top).toBeCloseTo(70);
+		}
+		const side = seatPosition(30);
+		expect((side.left - 690) ** 2 + (side.top - 280) ** 2).toBeCloseTo(210 ** 2);
+	});
+
 	test("angle=90 (VOCÊ) → bottom-center", () => {
 		const pos = seatPosition(90);
 		// 480 + cos(90)*420 = 480 + 0 = 480

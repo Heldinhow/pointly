@@ -23,7 +23,7 @@ export function SiteHeader({
 }: SiteHeaderProps) {
 	return (
 		<header className="site-header" data-site-header="true">
-			<nav className="site-header-nav" aria-label="Navegação principal">
+			<nav className="site-header-nav header-brand-led" aria-label="Navegação principal">
 				<Link
 					to="/"
 					className="site-header-brand"

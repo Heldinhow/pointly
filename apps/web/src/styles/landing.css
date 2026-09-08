@@ -10,6 +10,15 @@
 .site-header-brand { color: var(--fg); text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; }
 .site-header-brand:hover { opacity: .75; }
 .site-header-actions { display: flex; align-items: center; gap: 12px; }
+.header-brand-led .pointly-brand { font-size: 30px; gap: 12px; }
+.header-brand-led .pointly-mark { width: 34px; height: 34px; }
+.header-brand-led [data-testid="share-pill"] { min-width: 110px; justify-content: center; background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+.header-brand-led [data-testid="share-pill"] svg { color: inherit; }
+@media (max-width: 600px) {
+  .header-brand-led .site-header-brand .pointly-brand { font-size: 22px; gap: 6px; }
+  .header-brand-led .site-header-brand .pointly-mark { width: 26px; height: 26px; }
+  .header-brand-led [data-testid="share-pill"] { min-width: 70px; }
+}
 .site-header-join, .site-header-create { position: relative; isolation: isolate; overflow: clip; min-height: 44px; border: 0; background: transparent; color: inherit; font-family: var(--font-mono); font-size: 13px; font-weight: 600; line-height: 1; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; border-radius: 3px; padding: 10px 12px; transition: color 200ms, opacity 250ms, transform 150ms ease-out, background-color 150ms; }
 .site-header-join { border: 1px solid var(--border-rule); }
 .site-header-join:hover { background: var(--table); }

@@ -1,11 +1,11 @@
 /**
  * Table Geometry & Seat Placement Constants and Helpers.
  *
- * Provides a single source of truth for the ellipse layout parameters
+ * Provides a single source of truth for the capsule layout parameters
  * and distributes seats among players without overlaps.
  */
 
-// Table radius in pixels (matching SVG ellipse bounds)
+// Capsule half-extents in the 960x560 layout.
 export const TABLE_RX = 420;
 export const TABLE_RY = 210;
 // Table center relative to the 960x560 container (offset vertically to avoid clipping)
@@ -17,9 +17,12 @@ export const TABLE_CY = 280;
  */
 export function seatPosition(angleDeg: number): { left: number; top: number } {
 	const rad = (angleDeg * Math.PI) / 180;
+	const x = Math.cos(rad) * TABLE_RX;
+	// Straight top/bottom rail, joined by semicircular ends.
+	const capX = Math.max(0, Math.abs(x) - (TABLE_RX - TABLE_RY));
 	return {
-		left: TABLE_CX + Math.cos(rad) * TABLE_RX,
-		top: TABLE_CY + Math.sin(rad) * TABLE_RY,
+		left: TABLE_CX + x,
+		top: TABLE_CY + Math.sign(Math.sin(rad)) * Math.sqrt(TABLE_RY ** 2 - capX ** 2),
 	};
 }
 

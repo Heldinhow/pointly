@@ -353,59 +353,60 @@ export function Seat({
 					faceUp={faceUp}
 					votedMedian={votedMedian}
 					unanimous={unanimous}
-					className={`arena-seat-card ${impactClass} transition-[transform,opacity] duration-200`}
+					className={`arena-seat-card seat-status ${impactClass} transition-[transform,opacity] duration-200`}
 					style={dodgeStyle}
 				>
-					{/* Avatar circular */}
-					<div
-						className="w-9 h-9 rounded-full bg-paper-dark flex items-center justify-center font-display text-vote-numeral text-ink-soft flex-shrink-0 transition-opacity duration-200"
-						aria-hidden="true"
-						data-testid="seat-avatar"
-					>
-						{initials}
-					</div>
-
-					{/* Nick (truncado) */}
-					<div
-						className="arena-seat-name font-display font-semibold text-label text-ink max-w-[80px] truncate transition-opacity duration-200"
-						title={player.nick}
-						data-testid="seat-nick"
-					>
-						{player.nick}
-					</div>
-
-					{/* Badge "VOCÊ" */}
-					{isYou && (
+					{/* Identity stays on the rail; the vote card sits on the felt. */}
+					<div className="ss-top">
 						<div
-							className="font-mono text-micro-label tracking-caps font-semibold text-accent-ink uppercase py-0.5 px-1.5 border border-accent-ink rounded transition-opacity duration-200"
-							data-testid="seat-voc-badge"
-							aria-label="Você está neste assento"
+							className="ss-avatar"
+							aria-hidden="true"
+							data-testid="seat-avatar"
 						>
-							Você
+							{initials}
 						</div>
-					)}
-
-					{/* State pill: AGUARDANDO / VOTOU / face-num */}
-					{showFaceNum ? (
-						<div
-							className="font-display text-vote-mark text-ink font-bold leading-none mt-1"
-							aria-label={`Voto: ${player.value as Vote}`}
-							data-testid="seat-face-num"
-						>
-							{player.value}
+						<div className="ss-id">
+							<div
+								className="arena-seat-name ss-nick"
+								title={player.nick}
+								data-testid="seat-nick"
+							>
+								{player.nick}
+							</div>
+							{isYou && (
+								<div
+									className="ss-you"
+									data-testid="seat-voc-badge"
+									aria-label="Você está neste assento"
+								>
+									Você
+								</div>
+							)}
+							{!showFaceNum && (
+								<span
+									className={`ss-state${player.hasVoted ? " is-voted" : ""}`}
+									data-testid="seat-state"
+								>
+									{label}
+								</span>
+							)}
 						</div>
-					) : (
-						<span
-							className={`font-mono text-label tracking-caps uppercase py-[3px] px-2 border rounded-full bg-paper ${
-								player.hasVoted
-									? "text-ink border-ink/15"
-									: "text-ink-mute border-ink/5"
-							}`}
-							data-testid="seat-state"
-						>
-							{label}
-						</span>
-					)}
+					</div>
+					<div
+						className={`ss-card${showFaceNum ? " is-revealed" : player.hasVoted ? " is-voted" : ""}${votedMedian && !unanimous ? " is-median" : ""}`}
+						data-testid="seat-vote-card"
+						aria-hidden={showFaceNum ? undefined : true}
+					>
+						{showFaceNum && (
+							<div
+								className="ss-face"
+								aria-label={`Voto: ${player.value as Vote}`}
+								data-testid="seat-face-num"
+							>
+								{player.value}
+							</div>
+						)}
+					</div>
 				</SeatPrimitive>
 			</div>
 		</div>
