@@ -4,7 +4,7 @@
  * Tela de entrada com prompt de apelido. Editorial-lite:
  *  - Topbar metadata strip
  *  - FIG. 02 · ENTRAR (mono ink-faint)
- *  - Card central bone-fill: mark Ø + headline + input nick + botão coral
+ *  - Card central: headline + input nick + botão primário
  *
  * **Flow**:
  *  1. User digita nick (2-20 chars, sem espaços duplos, sem ponta)
@@ -36,9 +36,8 @@ import {
 	useRef,
 	useState,
 } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { ThemeToggle } from "../components/theme-toggle";
-import { Brand } from "../components/brand";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { SiteHeader } from "../components/site-header";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { ConnectionStatus } from "../components/ui/connection-status";
@@ -386,15 +385,7 @@ export function Join() {
 
 	return (
 		<div data-testid="page-join" className="entry-page">
-			<header className="entry-header">
-				<Link to="/" aria-label="Pointly — página inicial">
-					<Brand />
-				</Link>
-				<div className="entry-header-actions">
-						<ThemeToggle />
-						<div className="entry-header-label">{mode === "create" ? "Criar" : "Entrar"}</div>
-					</div>
-			</header>
+			<SiteHeader actions={<span className="entry-header-label">{mode === "create" ? "Criar" : "Entrar"}</span>} />
 
 			{/* Header strip — só renderiza quando existe code de fato.
 			    Helper copy à direita ("Do link compartilhado pelo host") explica

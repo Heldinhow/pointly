@@ -112,7 +112,7 @@ describe("StatsPill — render", () => {
 			/>,
 		);
 		const pill = screen.getByTestId("stats-pill");
-		expect(pill.getAttribute("role")).toBe("status");
+		expect(screen.getByRole("status")).toBe(pill);
 		expect(pill.getAttribute("aria-live")).toBe("polite");
 	});
 

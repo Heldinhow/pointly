@@ -9,14 +9,14 @@ describe("Pill — variants", () => {
 	test("variant critical aplica estado visual de atenção", () => {
 		render(<Pill variant="critical">00:42 · ROUND 03</Pill>);
 		const pill = screen.getByText("00:42 · ROUND 03");
-		expect(pill.className).toContain("bg-coral-soft");
+		expect(pill.className).toContain("bg-warning-soft");
 		expect(pill.className).toContain("pointly-pill-critical");
 	});
 
-	test("variant gold aplica bg mustard/15", () => {
+	test("variant gold aplica par warning/attention", () => {
 		render(<Pill variant="gold">MEDIANA 5</Pill>);
 		const pill = screen.getByText("MEDIANA 5");
-		expect(pill.className).toContain("bg-mustard/15");
+		expect(pill.className).toContain("bg-warning-soft");
 	});
 
 	test("variant default aplica bg-surface", () => {

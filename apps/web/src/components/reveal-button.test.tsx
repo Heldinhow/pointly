@@ -42,7 +42,9 @@ describe("RevealButton — render", () => {
 		const btn = screen.getByTestId("reveal-button");
 		expect(btn.getAttribute("data-reveal-state")).toBe("awaiting");
 		expect(btn).toBeDisabled();
-		expect(screen.getByTestId('reveal-button-hint')).toHaveTextContent(/Aguardando votos/i);
+		expect(screen.queryByTestId("reveal-button-hint")).not.toBeInTheDocument();
+		expect(btn).not.toHaveAttribute("aria-describedby");
+		expect(screen.getAllByText("Aguardando votos…")).toHaveLength(1);
 	});
 
 	test("estado awaiting: label de estado, não de ação (anti-botão-morto)", () => {
@@ -109,7 +111,7 @@ describe("RevealButton — render", () => {
 		expect(btn).toHaveTextContent(/Nova rodada/i);
 	});
 
-	test("singular: hint não cita count mesmo com 1 jogador (UX consistente)", () => {
+	test("singular: estado de espera aparece somente no botão", () => {
 		render(
 			<RevealButton
 				phase="idle"
@@ -119,9 +121,8 @@ describe("RevealButton — render", () => {
 				onNewRound={() => {}}
 			/>,
 		);
-		expect(screen.getByTestId("reveal-button-hint")).toHaveTextContent(
-			/Aguardando votos/i,
-		);
+		expect(screen.queryByTestId("reveal-button-hint")).not.toBeInTheDocument();
+		expect(screen.getAllByText("Aguardando votos…")).toHaveLength(1);
 	});
 });
 

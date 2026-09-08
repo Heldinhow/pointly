@@ -4,11 +4,11 @@
  * Botão da arena com 3 estados morphing:
  *  1. `awaiting` (ghost, disabled): "Aguardando votos…"
  *     Mostrado quando phase !== 'revealed' && votes === 0
- *  2. `ready` (coral pill): "Revelar votos" + hint com contagem
+ *  2. `ready` (primary pill): "Revelar votos" + hint com contagem
  *     Mostrado quando ≥1 voto entrou && phase !== 'revealed'
  *  3. `post-reveal` (outline ghost): "Nova rodada" → "Confirmar nova rodada?"
  *     Mostrado quando phase === 'revealed' (qualquer player pode iniciar).
- *    Ghost proposital: ação destrutiva não veste o coral do commit.
+ *    Ghost proposital: ação destrutiva não veste o primário do commit.
  *
  * **Regra democratizada** (ADR-0002 + spec F-051/F-052):
  *  - Qualquer player pode revelar (não precisa ser host)
@@ -107,22 +107,18 @@ export function RevealButton({
 		disarmTimer.current = window.setTimeout(() => setConfirming(false), 4000);
 	};
 
-	// Hint só renderiza quando há algo pra comunicar. Sala vazia
-	// (totalPlayers=0): o MobilePlayerList (ou o empty state desktop) já
-	// mostra "Aguardando jogadores…" — exibir de novo aqui duplicaria.
+	// O botão já comunica espera; o hint complementa apenas ações disponíveis.
 	const allVoted = totalPlayers > 0 && votedCount >= totalPlayers;
 	const hint =
-		state === "awaiting" && totalPlayers > 0
-			? "Aguardando votos…"
-			: state === "ready"
-				? allVoted
-					? "Todos votaram · hora de revelar."
-					: `${votedCount} de ${totalPlayers} votaram.`
-				: state === "post-reveal"
-					? confirming
-						? "Toque de novo para confirmar."
-						: "Limpa votos · reinicia timer."
-					: "";
+		state === "ready"
+			? allVoted
+				? "Todos votaram · hora de revelar."
+				: `${votedCount} de ${totalPlayers} votaram.`
+			: state === "post-reveal"
+				? confirming
+					? "Toque de novo para confirmar."
+					: "Limpa votos · reinicia timer."
+				: "";
 
 	const label =
 		state === "awaiting"
@@ -189,7 +185,7 @@ export function RevealButton({
 				centered ? "w-auto min-w-[180px] px-5" : "w-full px-6",
 			"py-2 rounded-full whitespace-nowrap",
 			"min-h-[44px] min-h-[var(--tap-target-min,44px)]",
-			"font-display font-semibold text-caption",
+			"font-mono font-semibold uppercase tracking-caps text-[13px]",
 			"transition-colors duration-200 select-none",
 			"focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]",
 				state === "awaiting" &&

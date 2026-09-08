@@ -3,7 +3,7 @@
  *
  * Pill bone-fill no canto superior esquerdo da arena com:
  *  - Mono caps `MÉDIA X.X · MEDIANA Y · INTERVALO A–B`
- *  - Mediana em gold (mustard) por padrão
+ *  - Mediana com sublinhado warning por padrão
  *  - Quando `unanimous: true`, mostra badge "UNÂNIME" em vez da mediana gold
  *  - Aparece só pós-reveal
  *
@@ -54,8 +54,7 @@ export function StatsPill({ consensus }: StatsPillProps) {
 	const showUnanimous = consensus.unanimous;
 
 	return (
-		<div
-			role="status"
+		<output
 			aria-live="polite"
 			aria-label={
 				showUnanimous
@@ -73,10 +72,10 @@ export function StatsPill({ consensus }: StatsPillProps) {
 				// do card-title do header). Texto usa `text-micro-label`
 				// (10px) — `text-label` (11px) era grande demais pra um strip
 				// pós-reveal que compete com o Seat face-up (20px Playfair).
-			"arena-stats-pill inline-flex items-center gap-2 px-3 py-1 rounded-full",
-			"bg-surface border border-ink/5",
-			"font-mono text-label tracking-caps uppercase text-ink-mute",
-			"transition-opacity duration-300",
+				"arena-stats-pill inline-flex items-center gap-2 px-3 py-1 rounded-full",
+				"bg-surface border border-ink/5",
+				"font-mono text-label tracking-caps uppercase text-ink-mute",
+				"transition-opacity duration-300",
 			)}
 		>
 			{/* Média */}
@@ -93,16 +92,7 @@ export function StatsPill({ consensus }: StatsPillProps) {
 					data-testid="stats-unanimous-badge"
 					className="font-mono text-micro-label tracking-caps uppercase text-warning font-semibold inline-flex items-center gap-1"
 				>
-					<span aria-hidden="true" className="inline-block">
-						★
-					</span>
 					Unânime
-					<span
-						aria-hidden="true"
-						className="inline-block text-warning/70 text-micro-label tracking-caps -ml-0.5"
-					>
-						✦
-					</span>
 				</span>
 			) : (
 				<span data-testid="stats-median">
@@ -123,10 +113,13 @@ export function StatsPill({ consensus }: StatsPillProps) {
 			{/* Intervalo */}
 			<span data-testid="stats-range">
 				<span className="text-ink-mute">Intervalo</span>{" "}
-				<span className="text-ink font-semibold" data-testid="stats-range-value">
+				<span
+					className="text-ink font-semibold"
+					data-testid="stats-range-value"
+				>
 					{formatRange(consensus.range)}
 				</span>
 			</span>
-		</div>
+		</output>
 	);
 }

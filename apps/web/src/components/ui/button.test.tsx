@@ -35,17 +35,18 @@ describe("Button — variants", () => {
 });
 
 describe("Button — sizes", () => {
-	test("size sm aplica h-8 e text-sm", () => {
+	test("size sm keeps a 44px target and the shared CTA type size", () => {
 		render(
 			<Button variant="default" size="sm">
 				sm
 			</Button>,
 		);
 		const btn = screen.getByRole("button", { name: "sm" });
-		expect(btn.className).toContain("h-8");
+		expect(btn.className).toContain("h-11");
+		expect(btn.className).toContain("text-[13px]");
 	});
 
-	test("size lg aplica h-12 e text-lg", () => {
+	test("size lg keeps 48px height without enlarging CTA typography", () => {
 		render(
 			<Button variant="coral" size="lg">
 				lg
@@ -53,6 +54,7 @@ describe("Button — sizes", () => {
 		);
 		const btn = screen.getByRole("button", { name: "lg" });
 		expect(btn.className).toContain("h-12");
+		expect(btn.className).toContain("text-[13px]");
 	});
 
 	test("click handler é invocado", () => {

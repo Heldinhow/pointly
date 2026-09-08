@@ -8,7 +8,7 @@
  *      (vertical scroll) + MobileRevealDock (sticky bottom-0)
  *    - Desktop (≥sm): StatsPill + TimerPill counter-scaled + Round-table
  *      trigonométrico + Deck counter-scaled + RevealButton central
- *  - EmptyOverlay (só quando isOnlyPlayer) + HelpModal — sibling
+ *  - EmptyOverlay (só quando isOnlyPlayer) — sibling
  *
  * **Counter-Scale Rule (DESIGN.md §4)**: desktop usa `transform: scale()`
  * no arena-table-inner + counter-scale em TimerPill/Deck pra tap targets.
@@ -26,7 +26,6 @@ import { useBlocker, useSearchParams } from "react-router-dom";
 import { Deck } from "../components/deck";
 import { buildShareUrl } from "../components/empty-overlay";
 import { EmptyOverlay } from "../components/empty-overlay";
-import { HelpModal } from "../components/help-modal";
 import { MobilePlayerList } from "../components/mobile-arena/MobilePlayerList";
 import { MobileRevealDock } from "../components/mobile-arena/MobileRevealDock";
 import { ProjectileAnimator } from "../components/projectile-animator";
@@ -279,20 +278,16 @@ export function Arena() {
 		requestNewRound();
 	}, [requestNewRound]);
 
-	const [openHelp, setOpenHelp] = useState(false);
-
 	const stageRef = useRef<HTMLDivElement>(null);
 
 	useKeyboardShortcuts({
-		helpKey: "?",
 		shortcuts: {
 			R: () => {
-				if (phase === "voting" && votedCount > 0) handleReveal();
+				if ((phase === "voting" || phase === "revealable") && votedCount > 0) handleReveal();
 			},
 			N: () => {
 				if (phase === "revealed") handleNewRound();
 			},
-			"?": () => setOpenHelp(true),
 		},
 	});
 
@@ -305,21 +300,7 @@ export function Arena() {
 			    são ThemeToggle + SharePill; o brand volta para o início. */}
 			<SiteHeader
 				brandLabel="Sair da sala e voltar para a página inicial"
-				actions={
-					<>
-						<button
-							type="button"
-							onClick={() => setOpenHelp(true)}
-							aria-label="Ajuda e atalhos de teclado"
-							title="Ajuda e atalhos (?)"
-							data-testid="arena-help-button"
-							className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] w-11 h-11 rounded-lg border border-ink/15 text-ink-soft hover:text-ink hover:border-ink/40 hover:bg-ink/5 font-sans font-bold text-label focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2"
-						>
-							<span aria-hidden="true">?</span>
-						</button>
-						<SharePill code={code} />
-					</>
-				}
+				actions={<SharePill code={code} />}
 			/>
 
 			<h1 className="sr-only">
@@ -495,7 +476,6 @@ export function Arena() {
 					</>
 				)}
 
-				<HelpModal open={openHelp} onClose={() => setOpenHelp(false)} />
 			</main>
 		</div>
 	);

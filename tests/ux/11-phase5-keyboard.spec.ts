@@ -4,8 +4,7 @@
  * Verifica:
  *  - `R` revela (durante voting, ≥1 voto).
  *  - `N` inicia nova rodada (após reveal).
- *  - `?` abre HelpModal; `Esc` fecha.
- *  - `/` (ABNT) também abre HelpModal.
+ *  - Ajuda removida: `?` e `/` não abrem modal.
  *  - Atalhos NÃO disparam quando foco está em `<input>`.
  *
  * @see .compozy/tasks/pointly-ux-hardening/task_09.md
@@ -26,75 +25,31 @@ async function enterSoloArena(page: import("@playwright/test").Page) {
 	});
 }
 
-test("`?` abre HelpModal; `Esc` fecha", async ({ browser }) => {
-	const ctx = await browser.newContext({
-		viewport: { width: 1440, height: 900 },
-	});
-	const page = await ctx.newPage();
-	try {
-		await enterSoloArena(page);
-
-		await page.keyboard.press("?");
-		const modal = page.locator('[data-testid="help-modal"]');
-		await modal.waitFor({ state: "visible", timeout: 3_000 });
-		expect(await modal.isVisible()).toBe(true);
-
-		// Lista atalhos.
-		const text = await modal.textContent();
-		expect(text).toContain("R");
-		expect(text).toContain("N");
-		expect(text).toContain("?");
-		expect(text).toContain("Esc");
-
-		// Esc fecha.
-		await page.keyboard.press("Escape");
-		await expect(modal).toBeHidden({ timeout: 3_000 });
-	} finally {
-		await ctx.close();
-	}
-});
-
-test("`/` (ABNT) também abre HelpModal via helpKey=?", async ({ browser }) => {
-	const ctx = await browser.newContext({
-		viewport: { width: 1440, height: 900 },
-	});
-	const page = await ctx.newPage();
-	try {
-		await enterSoloArena(page);
-		await page.keyboard.press("/");
-		const modal = page.locator('[data-testid="help-modal"]');
-		await modal.waitFor({ state: "visible", timeout: 3_000 });
-		expect(await modal.isVisible()).toBe(true);
-	} finally {
-		await ctx.close();
-	}
-});
-
-test("RevealButton anuncia `aria-keyshortcuts` quando ready", async ({
-	browser,
+test("ajuda não aparece no header nem pelos atalhos ? e /", async ({
+	page,
 }) => {
-	const ctx = await browser.newContext({
-		viewport: { width: 1440, height: 900 },
-	});
-	const page = await ctx.newPage();
-	try {
-		await enterSoloArena(page);
-		const reveal = page.locator('[data-testid="reveal-button"]');
-		await reveal.waitFor({ state: "attached", timeout: 5_000 });
-		// Estado inicial: 'awaiting' (sem votos). aria-keyshortcuts não deve ter 'R'.
-		const awaitingAks = await reveal.getAttribute("aria-keyshortcuts");
-		expect(awaitingAks).not.toBe("R");
-
-		// Vota em uma carta para virar 'ready'.
-		await page.click('[data-deck-value="3"]');
-		await page.waitForTimeout(500);
-
-		// Recupera atributo após vote.
-		const readyAks = await reveal.getAttribute("aria-keyshortcuts");
-		expect(readyAks).toBe("R");
-	} finally {
-		await ctx.close();
+	await enterSoloArena(page);
+	await expect(page.getByTestId("arena-help-button")).toHaveCount(0);
+	for (const key of ["?", "/"]) {
+		await page.keyboard.press(key);
+		await expect(page.getByTestId("help-modal")).toHaveCount(0);
 	}
+	await expect(page.getByTestId("reveal-button")).toBeDisabled();
+});
+
+test("R revela votos e N inicia nova rodada com atalhos acessíveis", async ({
+	page,
+}) => {
+	await enterSoloArena(page);
+	const reveal = page.getByTestId("reveal-button");
+	await expect(reveal).not.toHaveAttribute("aria-keyshortcuts", "R");
+	await page.locator('[data-deck-value="3"]').click();
+	await expect(reveal).toHaveAttribute("aria-keyshortcuts", "R");
+	await page.keyboard.press("r");
+	await expect(reveal).toHaveAttribute("data-reveal-state", "post-reveal");
+	await expect(reveal).toHaveAttribute("aria-keyshortcuts", "N");
+	await page.keyboard.press("n");
+	await expect(reveal).toHaveAttribute("data-reveal-state", "awaiting");
 });
 
 test("foco em `<input>` impede que atalhos disparem (input guard)", async ({

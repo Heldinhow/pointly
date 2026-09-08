@@ -48,10 +48,14 @@ const config: Config = {
 				"micro-label": ["10px", { lineHeight: "1.4", letterSpacing: "0.04em" }],
 			},
 			borderRadius: {
+				xs: "2px",
 				sm: "3px",
-				md: "6px",
-				lg: "8px",
-				card: "8px",
+				md: "4px",
+				lg: "6px",
+				xl: "8px",
+				"2xl": "10px",
+				"3xl": "12px",
+				card: "10px",
 			},
 			letterSpacing: {
 				caps: "0.06em",

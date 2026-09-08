@@ -4,7 +4,7 @@
 import { describe, expect, test } from "bun:test";
 import type { SalaState } from "@planning-poker/shared";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
-import { render, screen } from "../components/ui/test-helpers";
+import { fireEvent, render, screen } from "../components/ui/test-helpers";
 import { ToastProvider } from "../components/ui/toast";
 import { useSalaStore } from "../store/sala";
 import { Arena, seatPosition } from "./arena";
@@ -89,6 +89,18 @@ describe("seatPosition — T30 pure", () => {
 });
 
 describe("Arena shell — T30", () => {
+	test("não oferece ajuda nem abre modal com ? ou /", () => {
+		useSalaStore.getState().reset();
+		useSalaStore.getState().setSala(makeSala());
+		useSalaStore.getState().setCurrentPlayerId("p_1");
+		renderArena();
+		expect(screen.queryByTestId("arena-help-button")).not.toBeInTheDocument();
+		for (const key of ["?", "/"]) {
+			fireEvent.keyDown(window, { key });
+			expect(screen.queryByTestId("help-modal")).not.toBeInTheDocument();
+		}
+	});
+
 	test("renderiza shell com code '9B9F' no header", () => {
 		renderArena();
 		expect(screen.getByTestId("page-arena")).toBeInTheDocument();

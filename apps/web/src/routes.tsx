@@ -11,8 +11,7 @@ import { Suspense, lazy, useEffect, useRef } from "react";
 import { Outlet, RouterProvider, createBrowserRouter } from "react-router-dom";
 import { NetworkBanner } from "./components/network-banner";
 import { PageviewTracker } from "./components/pageview-tracker";
-import { Brand } from "./components/brand";
-import { ThemeToggle } from "./components/theme-toggle";
+import { SiteHeader } from "./components/site-header";
 import { Link } from "react-router-dom";
 import "./styles/entry.css";
 
@@ -32,8 +31,20 @@ const Full = lazy(() =>
 function PageFallback() {
 	return (
 		<div className="entry-page">
-			<header className="entry-header"><Brand /><span className="entry-header-label">Preparando a mesa</span></header>
-			<main className="recovery-main"><section className="recovery-shell"><p className="entry-eyebrow">Só um instante</p><h1 className="recovery-title">Abrindo a mesa<span aria-hidden="true">.</span></h1><p className="recovery-copy" role="status">Estamos carregando o próximo passo da sua rodada.</p></section></main>
+			<SiteHeader
+				actions={<span className="entry-header-label">Preparando a mesa</span>}
+			/>
+			<main className="recovery-main">
+				<section className="recovery-shell">
+					<p className="entry-eyebrow">Só um instante</p>
+					<h1 className="recovery-title">
+						Abrindo a mesa<span aria-hidden="true">.</span>
+					</h1>
+					<output className="recovery-copy">
+						Estamos carregando o próximo passo da sua rodada.
+					</output>
+				</section>
+			</main>
 		</div>
 	);
 }
@@ -45,8 +56,40 @@ function NotFound() {
 	}, []);
 	return (
 		<div className="entry-page" data-testid="page-not-found">
-			<header className="entry-header"><Link to="/" aria-label="Pointly — página inicial"><Brand /></Link><div className="entry-header-actions"><ThemeToggle /><span className="entry-header-label">Página não encontrada</span></div></header>
-			<main className="recovery-main"><section className="recovery-shell" role="region" aria-labelledby="notfound-title"><div className="recovery-mark" aria-hidden="true">?</div><p className="entry-eyebrow">Endereço desconhecido</p><h1 id="notfound-title" ref={titleRef} tabIndex={-1} className="recovery-title">Essa página não existe<span aria-hidden="true">.</span></h1><p className="recovery-copy">O endereço pode estar incompleto ou a sala já terminou. Volte ao início para criar uma sala ou abrir um novo convite.</p><div className="recovery-actions"><Link to="/" className="button-reset" data-testid="notfound-home"><span>Ir para o início</span><span aria-hidden="true">↗</span></Link><Link to="/join" className="button-reset button-reset-secondary" data-testid="notfound-join">Entrar com código</Link></div></section></main>
+			<SiteHeader actions={<span className="entry-header-label">404</span>} />
+			<main className="recovery-main">
+				<section className="recovery-shell" aria-labelledby="notfound-title">
+					<div className="recovery-mark" aria-hidden="true">
+						?
+					</div>
+					<p className="entry-eyebrow">Endereço desconhecido</p>
+					<h1
+						id="notfound-title"
+						ref={titleRef}
+						tabIndex={-1}
+						className="recovery-title"
+					>
+						Essa página não existe<span aria-hidden="true">.</span>
+					</h1>
+					<p className="recovery-copy">
+						O endereço pode estar incompleto ou a sala já terminou. Volte ao
+						início para criar uma sala ou abrir um novo convite.
+					</p>
+					<div className="recovery-actions">
+						<Link to="/" className="button-reset" data-testid="notfound-home">
+							<span>Ir para o início</span>
+							<span aria-hidden="true">↗</span>
+						</Link>
+						<Link
+							to="/join"
+							className="button-reset button-reset-secondary"
+							data-testid="notfound-join"
+						>
+							Entrar com código
+						</Link>
+					</div>
+				</section>
+			</main>
 		</div>
 	);
 }

@@ -416,7 +416,7 @@ test.describe("Mobile-First Arena", () => {
 				}
 			});
 
-			test(`FMR-21: timer ≤30s critical (coral-soft bg + data-timer-critical=true)`, async ({
+			test(`FMR-21: timer ≤30s critical (warning-soft bg + data-timer-critical=true)`, async ({
 				browser,
 			}) => {
 				test.setTimeout(60_000);
@@ -492,11 +492,11 @@ test.describe("Mobile-First Arena", () => {
 					await pill.waitFor({ state: "attached", timeout: 5_000 });
 					await expect(pill).toBeVisible();
 
-					// Confirma visual: bg-coral-soft (não bg-surface) no estado crítico.
-					const classes = await pill.getAttribute("class");
-					expect(classes, "TimerPill deve ter bg-coral-soft").toContain(
-						"bg-coral-soft",
-					);
+				// Confirma visual: bg-warning-soft (não bg-surface) no estado crítico.
+				const classes = await pill.getAttribute("class");
+				expect(classes, "TimerPill deve ter bg-warning-soft").toContain(
+					"bg-warning-soft",
+				);
 					expect(classes, "TimerPill NÃO deve ter bg-surface").not.toContain(
 						"bg-surface",
 					);

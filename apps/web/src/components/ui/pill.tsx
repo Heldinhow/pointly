@@ -9,8 +9,8 @@ const pillVariants = cva(
 		variants: {
 			variant: {
 				default: "bg-surface text-ink-faint border border-ink/5",
-				critical: "pointly-pill-critical bg-coral-soft text-ink border border-coral/20",
-				gold: "pointly-pill-gold bg-mustard/15 text-ink border border-mustard/40",
+				critical: "pointly-pill-critical bg-warning-soft text-warning border border-warning/40",
+				gold: "pointly-pill-gold bg-warning-soft text-ink border border-warning/40",
 				ghost: "bg-transparent text-ink border border-ink/20",
 			},
 			size: {

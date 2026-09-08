@@ -28,11 +28,12 @@ export function Landing() {
 				<section className="landing-hero" aria-labelledby="hero-headline">
 					<div className="landing-hero-copy">
 						<h1 id="hero-headline" data-testid="hero-headline">Ideias diferentes.<br /><em>Na mesma mesa.</em></h1>
+						<p className="landing-eyebrow">Planning poker para times ágeis</p>
 						<p className="landing-lede">Seu time, uma rodada de cartas e uma boa conversa. Estimem juntos com Planning Poker, sem criar conta.</p>
-						<div className="landing-actions" role="group" aria-label="Ações da sala">
+						<fieldset className="landing-actions" aria-label="Ações da sala">
 							<button type="button" className="landing-button landing-button-primary" onClick={handleCreateRoom} data-testid="cta-create-room">Criar uma sala <span aria-hidden="true">↗</span></button>
 							<button type="button" className="landing-button landing-button-secondary" onClick={handleJoinRoom} data-testid="cta-join-room">Entrar com código</button>
-						</div>
+						</fieldset>
 						<p className="landing-caption">Grátis. Até 12 pessoas. Só chegar e participar.</p>
 					</div>
 					<div className="landing-table-demo" role="img" aria-label="Demonstração ilustrativa de uma mesa com quatro participantes">

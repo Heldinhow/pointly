@@ -3,7 +3,7 @@
  *
  * Pill bone-fill no canto superior direito da arena com:
  *  - Mono numerics tabular `00:42 · RODADA 03`
- *  - Critical state (timer ≤ 30s): bg coral-soft + border coral + coral ink
+ *  - Critical state (timer ≤ 30s): bg warning-soft + border warning + ink text + ⚠ icon
  *  - Auto-hide quando sala vazia (não aplicável no v2, sempre mostra)
  *  - Sync com Zustand via `useTimer()` + `useRound()`
  *
@@ -78,7 +78,7 @@ export function TimerPill(props: TimerPillProps = {}) {
 			"border transition-colors duration-200",
 			"font-mono text-label tracking-caps uppercase",
 			isCritical
-				? "bg-coral-soft border-coral text-ink font-semibold"
+				? "bg-warning-soft border-warning text-ink font-semibold"
 				: "bg-surface border-ink/5 text-ink-mute",
 		)}
 	>

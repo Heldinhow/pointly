@@ -70,11 +70,11 @@ describe("TimerPill — render (com props diretas, sem store)", () => {
 		);
 	});
 
-	test("critical=true (timer ≤30) aplica bg-coral-soft + border coral + ícone não-só-cor", () => {
+	test("critical=true (timer ≤30) aplica par warning + ícone não-só-cor", () => {
 		render(<TimerPill timer={25} round={1} critical={true} />);
 		const pill = screen.getByTestId("timer-pill");
-		expect(pill.className).toContain("bg-coral-soft");
-		expect(pill.className).toContain("border-coral");
+		expect(pill.className).toContain("bg-warning-soft");
+		expect(pill.className).toContain("border-warning");
 		expect(pill.textContent).toContain("⚠");
 		expect(pill.getAttribute("data-timer-critical")).toBe("true");
 	});

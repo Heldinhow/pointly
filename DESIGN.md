@@ -1,269 +1,116 @@
 ---
-version: alpha
-name: Pointly — Autonomy / Industrial
+version: v3-monochrome-convergence
+name: Pointly - Monochrome Convergence
 colors:
   bg: "#f5f5f5"
   surface: "#ffffff"
-  ink: "#1f1d1c"
-  ink-soft: "#3d3a39"
-  ink-mute: "#4d4947"
-  ink-faint: "#5c5855"
-  table: "#ebebeb"
-  accent: "#ee6018"
-  on-accent: "#1f1d1c"
-  accent-hover: "#ef6f2e"
-  line: "#ccc9c7"
-  signature: "#ef6f2e"
-  focus: "#9c3d08"
-  danger: "#a32e3b"
-  danger-soft: "#ffe8eb"
-  success: "#256a52"
-  success-soft: "#dff2e9"
-  warning: "#835007"
-  warning-soft: "#fff0ce"
-  avatar: "#e4e0de"
-  avatar-ink: "#3d3a39"
-  avatar-self: "#1f1d1c"
-  avatar-self-ink: "#fafafa"
-  avatar-blue: "#d8d3d0"
-  avatar-blue-ink: "#2e2c2b"
-  avatar-rose: "#f3d9c8"
-  avatar-rose-ink: "#7a3410"
+  sunken: "#ebebeb"
+  fg: "#171717"
+  fg-soft: "#383838"
+  fg-mute: "#525252"
+  fg-faint: "#626262"
+  primary: "#171717"
+  on-primary: "#fafafa"
+  primary-hover: "#383838"
+  line: "#c9c9c9"
+  focus: "#171717"
 typography:
-  display-hero:
-    fontFamily: Geist
-    fontSize: clamp(3.25rem, 4.6vw, 4.6rem)
-    fontWeight: 800
-    lineHeight: 1.04
-    letterSpacing: -0.04em
-  display-landing:
-    fontFamily: Geist
-    fontSize: clamp(2rem, 3.5vw, 3.2rem)
-    fontWeight: 700
-    lineHeight: 1.04
-    letterSpacing: -0.045em
-  display-entry:
-    fontFamily: Geist
-    fontSize: 3rem
-    fontWeight: 700
-    lineHeight: 1.08
-    letterSpacing: -0.04em
-  numeral:
-    fontFamily: Geist
-    fontSize: 1.65rem
-    fontWeight: 700
-  body:
-    fontFamily: Geist
-    fontSize: 16px
-    fontWeight: 400
-    lineHeight: 1.5
-  lede:
-    fontFamily: Geist
-    fontSize: 17px
-    fontWeight: 400
-    lineHeight: 1.65
-  caption:
-    fontFamily: Geist
-    fontSize: 14px
-    fontWeight: 400
-    lineHeight: 1.55
-  label:
-    fontFamily: Geist
-    fontSize: 12px
-    fontWeight: 800
-    letterSpacing: 0.08em
+  sans: Geist
+  mono: Geist Mono
 rounded:
-  sm: 3px
-  md: 6px
-  lg: 8px
-  card: 8px
-  full: 9999px
+  control: 3px
+  card: 10px
 spacing:
-  xs: 4px
-  sm: 8px
-  md: 16px
-  lg: 24px
-  xl: 32px
-components:
-  button-primary:
-    backgroundColor: "{colors.accent}"
-    textColor: "{colors.on-accent}"
-    rounded: "{rounded.lg}"
-    minHeight: 44px
-    padding: 12px 20px
-    fontWeight: 800
-  button-primary-hover:
-    backgroundColor: "{colors.accent-hover}"
-  button-outline:
-    textColor: "{colors.ink}"
-    borderColor: "{colors.line}"
-    rounded: "{rounded.lg}"
-    minHeight: 44px
-  card-surface:
-    backgroundColor: "{colors.surface}"
-    borderColor: "{colors.line}"
-    rounded: "{rounded.card}"
-  deck-card:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
-    borderColor: "{colors.line}"
-    rounded: "{rounded.lg}"
-    size: 64px x 84px
-  deck-card-selected:
-    backgroundColor: "{colors.accent}"
-    textColor: "{colors.on-accent}"
-  felt-table:
-    backgroundColor: "{colors.table}"
-    borderRadius: 38% / 30%
-  avatar:
-    backgroundColor: "{colors.avatar}"
-    textColor: "{colors.avatar-ink}"
-    rounded: "{rounded.full}"
-    size: 36px
+  header: 72px
+  column: 1440px
 ---
 
-# Pointly — Autonomy / Industrial
+# Pointly: Monochrome Convergence
 
-Factory-tokens system effectively rendered after Task 1 (commits 065ae15..21badfb). Replaces Mesa compartilhada / Azul tinta integrally. Source of truth is the rendered code: `apps/web/src/index.css` (`:root` + dark) + `apps/web/tailwind.config.ts` + `apps/web/src/styles/*.css`. This document describes exactly what is rendered — no invented tokens.
+## Compromisso
 
-## Overview
+Direção aprovada: linguagem visual do factory.ai em **todas** as telas, sem copiar sua marca. Geist, Geist Mono, composição ampla, controles precisos, superfícies planas e hairlines. A identidade anterior azul e a etapa intermediária com laranja foram substituídas. O nome Pointly permanece; quatro perspectivas convergem para um centro aberto no símbolo original.
 
-Industrial autonomy: warm-neutral surfaces, hairline borders, one orange accent ramp, no elevation on cards. The landing shows the experience next to an elliptical table demo; the arena stages presence, vote and discussion on a felt ellipse with an accent ring. Light theme is Factory paper (`#f5f5f5` page, `#fff` raised, `#ebebeb` sunken); dark is a warm tonal derivation (`#161413` / `#1f1d1c` / `#0a0908`), never blue. Name Pointly preserved; symbol `pointly-mark` stays a 2×2 grid rotated -8° (three pieces `accent`, the fourth `signature`), now at 13px cells / 3px gap (11px mobile).
+A landing apresenta o produto; entrada, arena e recuperação priorizam a tarefa. Times usam a mesa em ambientes claros e escuros, por isso ambos os temas têm o mesmo nível de acabamento. Tema explícito vence a preferência do sistema; o terceiro estado do seletor volta ao sistema.
 
-## Ref precedence
+## Contrato
 
-Tokens were extracted from the live Factory refs in this order; higher rows win on conflict.
+- Landing: headline central em duas linhas no desktop e mobile, descrição real, criar/entrar e demonstração identificada como exemplo. Passos sequenciais, não uma grade de benefícios inventados.
+- Entrada: título e explicação à esquerda, formulário à direita; uma coluna no mobile. Preservar criação, convite, entrada manual, validação e recuperação de código inexistente.
+- Arena: pessoas, andamento, deck, revelação e nova rodada. Votos continuam privados até a revelação. Backend e store seguem como autoridade.
+- Recuperação: sala cheia, 404 e carregamento usam a mesma navegação, tipografia, superfícies e ações.
+- Navbar: fixa, ampla no topo; compacta ao rolar por transform/opacity, sem animar largura, altura ou posição de layout.
+- Não inventar métricas, links, depoimentos ou funcionalidades. Não adicionar dependências para efeitos visuais.
 
-| Prec. | Ref | What was adopted |
-|---|---|---|
-| 1 | factory.ai (`/_next/static/css/*.css`, `:root` verbatim) | Raw source tokens: accent ramp, surfaces, neutrals 100–1000, radii, type scale, 1440px column, flat hairlines |
-| 2 | factory.ai /product/cli | Same system, no new tokens (CLI product page) |
-| 3 | factory.ai /company#careers | Same system; the 01–07 numbered list is editorial content, NOT adopted (numbered eyebrow rejected) |
-| 4 | docs.factory.ai | Own Mintlify theme, lowest precedence, NOT adopted (only confirms dark industrial aesthetic) |
+## Cores
 
-## Colors
+| Papel | Claro | Escuro |
+| --- | --- | --- |
+| Página | `#f5f5f5` | `#111111` |
+| Superfície | `#ffffff` | `#191919` |
+| Rebaixo | `#ebebeb` | `#080808` |
+| Mesa / seleção suave | `#ebebeb` | `#242424` |
+| Texto principal | `#171717` | `#eeeeee` |
+| Texto suave | `#383838` | `#d4d4d4` |
+| Texto secundário | `#525252` | `#b6b6b6` |
+| Texto discreto | `#626262` | `#a3a3a3` |
+| Primário | `#171717` | `#eeeeee` |
+| Sobre primário | `#fafafa` | `#171717` |
+| Hover primário | `#383838` | `#d4d4d4` |
+| Hairline | `#c9c9c9` | `#414141` |
 
-Raw Factory source tokens live verbatim at the top of `:root` in `index.css`; semantic tokens below remap via `var()`. Accent ramp: `--accent-100 #ef6f2e`, `--accent-200 #ee6018`, `--accent-300 #d15010`. Surfaces: page `#f5f5f5`, sunken `#ebebeb`, raised `#fff`. Neutrals: `100 #d6d3d2, 200 #ccc9c7, 300 #b8b3b0, 400 #a49d9a, 500 #8a8380, 600 #5c5855, 700 #4d4947, 800 #3d3a39, 900 #2e2c2b, 1000 #1f1d1c`. Light/dark bases (`#eee`/`#fafafa`, `#020202`/`#101010`) and `theme-color #f5f5f5` are carried verbatim; `::selection` is accent bg + on-accent text.
+`accent`, `signature`, `accent-ink` e `focus` são aliases neutros. Não existe exceção laranja no produto: criar, entrar, copiar, revelar e carta selecionada seguem o mesmo par primário. Avatares também são neutros; o próprio participante recebe o par primário invertido.
 
-| Role | Light | Dark |
-|---|---|---|
-| Page (`bg`) | #f5f5f5 | #161413 |
-| Surface (`surface`) | #ffffff | #1f1d1c |
-| Sunken (`sunken`) | #ebebeb | #0a0908 |
-| Ink (`fg`) | #1f1d1c | #ede9e4 |
-| Ink soft (`fg-soft`) | #3d3a39 | #d6d3d2 |
-| Ink mute (`fg-mute`) | #4d4947 | #b8b3b0 |
-| Ink faint (`fg-faint`) | #5c5855 | #a49d9a |
-| Table (`table`) | #ebebeb | #2e2c2b |
-| Primary (`primary`, neutral, ≠ accent) | #1f1d1c | #ede9e4 |
-| On-primary (`on-primary`) | #fafafa | #1f1d1c |
-| Primary hover (`primary-hover`) | #3d3a39 | #d6d3d2 |
-| Action (`accent` = accent-200) | #ee6018 | #ef6f2e |
-| Action deep (`accent-deep` = accent-300) | #d15010 | #ee6018 |
-| Action hover (`accent-hover` = accent-100) | #ef6f2e | #f1854d (derived: accent-100 +15% toward white) |
-| Accent ink (`accent-ink`) | #9c3d08 (incumbent hover shade, kept: white on it is 6.81 AA; white on accent-300 would be 4.32, fails) | #ef6f2e (= accent) |
-| Accent ink as text (Task 3) | kickers/eyebrows, VOCÊ badge, post-reveal hover, all small orange-on-light text — accent #ee6018 at 12px on light is 3.05, fails; accent-ink is 6.24 light / 6.11 dark | same token |
-| Text on action (`on-accent`) | #1f1d1c | #1f1d1c |
-| Accent soft (`accent-soft`) | #fdeede | #3e271b |
-| Signature (`signature` = accent-100) | #ef6f2e | #ef6f2e |
-| Hairline (`border-rule`) | #ccc9c7 | #3d3a39 |
-| Focus (`focus`) | #9c3d08 | #ef6f2e |
-| Danger / soft | #a32e3b / #ffe8eb | #ff6b6b / #4c2635 |
-| Success / soft | #256a52 / #dff2e9 | #8fce9f / #1f433d (Task 3: text #6fab78 on soft was 4.03, fails AA — lightened one step; text on surface 9.19) |
-| Warning / soft | #835007 / #fff0ce | #f0a330 / #46391e |
+Cores semânticas não são marca: erro `#a32e3b/#ffe8eb`, sucesso `#256a52/#dff2e9`, atenção `#835007/#fff0ce`; no escuro, pares `#ff8c96/#3b2025`, `#8fce9f/#1f3830`, `#e4bc75/#373022`. Estados sempre incluem texto ou outro sinal, nunca só cor.
 
-Avatars keep their own bg/ink pairs (light / dark): `avatar` #e4e0de / #3d3a39 with ink #3d3a39 / #ede9e4; `avatar-self` #1f1d1c / #ef6f2e with ink #fafafa / #1f1d1c; `avatar-blue` #d8d3d0 / #4d4947 with ink #2e2c2b / #ede9e4; `avatar-rose` #f3d9c8 / #5a2f18 with ink #7a3410 / #f3d9c8. Error/attention/success use distinct semantic tokens; labels and shapes complement color, never color alone. `theme-color` meta: `#f5f5f5` light / `#161413` dark.
+## Tipografia
 
-### AA pairs (measured, python script — Task 1)
+- Geist local: interface, títulos, nomes e textos. Geist Mono local: CTAs, códigos, timer e votos. Sem terceira família.
+- Hero: peso 500, uppercase, `clamp(3rem, 5.2vw, 4.6rem)`, line-height 1, tracking -0.04em. Até 600px: `clamp(2rem, 8.8vw, 3.4rem)` para manter a frase legível sem seis linhas.
+- H2: peso 500, `clamp(2rem, 3.5vw, 3.2rem)`, line-height 1.04. Entrada: 3rem, 2rem mobile. Recuperação: 2.3rem a 4rem.
+- Corpo: 16px/1.5; lede: 17px/1.65; legenda: 14px/1.55. Textos secundários não usam hairline como cor.
+- CTAs: mono 13px, peso 600, uppercase e tracking 0.06em; tamanho do botão altera área de toque, não a hierarquia tipográfica.
+- Dados numéricos: tabulares. Nomes longos podem truncar no assento, mantendo `title` e nome acessível.
 
-- Light rest on-accent/accent `#1f1d1c`/`#ee6018`: **5.05** · Light hover on-accent/hover `#1f1d1c`/`#ef6f2e`: **5.58**
-- Dark rest on-accent/accent `#1f1d1c`/`#ef6f2e`: **5.58** · Dark hover on-accent/hover `#1f1d1c`/`#f1854d`: **6.56**
-- Body/muted text pairs pass AA in both themes (light body 15.40, dark body 15.20). Hairlines sit ~1.6 in both themes, same as the Factory ref (non-text, by design).
+## Navegação
 
-### Dark strategy
+`SiteHeader` é compartilhado pela landing, join, arena, full, 404 e fallback de carregamento. Altura reservada de 72px, largura máxima de 1440px, padding 36/28/16px.
 
-The old blue dark system (`#141a2b`…) was discarded. Dark is a warm tonal derivation of the Factory light tokens: neutral-1000-based surfaces (`#161413` page / `#1f1d1c` raised / `#0a0908` sunken), accent steps one rung lighter than light (rest = accent-100, deep = accent-200, hover = derived `#f1854d` so hover stays distinct from rest), hairline = neutral-800 `#3d3a39`. Theme selection: `data-theme` light/dark on `html` wins; otherwise `prefers-color-scheme: dark` applies the same dark block; `color-scheme` is set per theme.
+Após 48px de scroll, os grupos transladam para dentro até 160px e descem 8px. Uma superfície compacta entra por opacity/transform; o fundo amplo sai por opacity. Controles não são escalados e mantêm 44px. O listener é passivo, usa no máximo um requestAnimationFrame pendente e cancela o frame ao desmontar.
 
-## Typography
+No mobile a compactação é vertical, sem deslocamento horizontal. Até 380px, apenas o símbolo aparece no link da marca para preservar todas as ações; o nome acessível continua completo. Movimento reduzido mantém os mesmos estados sem transição perceptível.
 
-Geist for interface AND display, Geist Mono for code/timer/room-code. Loaded via fontsource (OFL-1.1, Vercel Geist Project) in `main.tsx`: sans latin 400/500/600/700/800, mono latin 400/500/600. Stacks: `Geist, Inter, system-ui, -apple-system, sans-serif`; mono `"Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace`. No Space Grotesk, no Manrope, no local `/fonts` files. Titles use `text-wrap: balance` (h1–h3); ledes cap at ~44ch.
+## Componentes
 
-### Full tailwind config scale (`tailwind.config.ts`)
+- Marca: wordmark minúsculo Geist 600; símbolo SVG de quatro cantos independentes, centro vazio, preenchimento `currentColor`. Não usar a estrela do Factory nem o antigo bloco 2x2 inclinado.
+- Botões: primário sólido, secundário transparente com borda, ghost para ações terciárias. Radius 3px e mínimo de 44px. Sem textura diagonal ou grain.
+- Superfícies: fundo + hairline, radius 10px, sem sombra decorativa. Sombra suave apenas no modal; o modal usa sombra sem borda duplicada.
+- Formulário: inputs com 16px mínimo, padding responsivo, foco visível, erros inline e botões com texto de carregamento. Não substituir validação por cor.
+- Deck: seleção sólida com texto invertido, `aria-pressed`, foco e navegação por teclado preservados. Scroll horizontal com indicação de continuidade quando necessário.
+- Assentos desktop: grade interna compacta, avatar 32px, nome e estado/voto; mínimo de 96px de altura. Borda e badge identificam o próprio participante. Dimensões não podem colidir com posições vizinhas.
+- Resultados: painel de dados com média, mediana e intervalo; unânime explícito, sem enfeites de estrelas. `output` fornece semântica de status, com anúncio polite.
+- Ajuda: overlay com foco preso, Escape e retorno ao acionador; conteúdo interno em fluxo com gap de 16px e scroll em telas baixas.
+- Toasts: semântica e fechamento preservados. No mobile ficam acima do deck, sem cobrir o resumo superior de votos.
 
-| Token | Size | Line-height / tracking / weight |
-|---|---|---|
-| `brand-mark` | 28px | 1 / 500 |
-| `nav-mark` | 22px | 1 |
-| `vote-mark` | 20px | 1 / 500 |
-| `vote-numeral` | 18px | 1 / 500 |
-| `caption` | 14px | 1.55 |
-| `body` | 16px | 1.5 |
-| `label` | 12px | 1.4 / 0.08em / 800 |
-| `micro-label` | 10px | 1.4 / 0.04em |
+## Responsividade
 
-Plus `letterSpacing` extras: `caps` 0.06em, `eyebrow` 0.18em, `tight` -0.02em, `tighter` -0.03em, `display` -0.04em.
+- Acima de 1050px: mesa elíptica, geometria existente e até 12 assentos ao redor.
+- De 640px a 1050px: o mesmo componente de assento passa para grade de três colunas; resumo/ação no topo. Não comprimir a mesa até sobrepor pessoas.
+- Abaixo de 640px: lista de participantes e dock de voto, com safe-area, rolagem de cartas e alvos de toque preservados.
+- Entrada abaixo de 720px: uma coluna. Todos os shells respeitam viewport dinâmico e o tratamento de teclado existente.
+- Focus: outline 3px com offset 3px. Seleção de texto, caret, scrollbar e controles nativos usam os tokens do tema.
+- Transições de interface limitadas a transform/opacity. `prefers-reduced-motion` reduz animações e transições; projéteis existentes permanecem funcionais com seu fallback.
 
-### Actually rendered (CSS rules in use)
+## Assets e Fonte de Verdade
 
-- **Hero h1** (landing): Geist, `clamp(3.25rem, 4.6vw, 4.6rem)` (mobile `clamp(3rem, 14vw, 4.2rem)`), 800, lh 1.04, ls -.04em; `em` accent, non-italic.
-- **Section h2** (landing): `clamp(2rem, 3.5vw, 3.2rem)`, 700, lh 1.04, ls -.045em.
-- **Entry title**: 3rem (mobile 2rem), 700, lh 1.08, ls -.04em. **Recovery title**: `clamp(2.3rem, 7vw, 4.4rem)`, 700, lh .98, ls -.055em.
-- **Lede**: 17px/1.65 `fg-mute`, 44ch. **Body** 16px/1.5, **caption** 14px/1.55, **label/eyebrow/kicker** 12px 800 uppercase ls .08em.
-- **Numerals/codes**: Geist/Geist Mono — room code (entry-code-value) and timer use mono with tabular-nums and wide tracking (.18em–.2em) uppercase; `vote-numeral` (18px/500) renders seat vote badges and mobile avatars; `vote-mark` (20px/500) renders revealed numerals; `brand-mark` renders projectile emoji; `nav-mark` renders the help title; `micro-label` + `caps` render status pills.
-- **Pruned in Task 3 (zero tsx consumers)**: `display-xl`, `card-title`, `display-hero`, `card-mark`, `nav-wordmark` removed from `tailwind.config.ts`. The phantom `fontFamily.italic` key is also gone — it hijacked Tailwind's `font-italic` utility into a font-family, so `font-italic` usages (deck/seat/mobile-row numerals) were rendering Geist-as-family instead of an italic style; all five switched to `font-display` (numerals are non-italic by design, zero visual change).
+- `apps/web/src/index.css`, `tailwind.config.ts` e `styles/*.css` definem o sistema implementado.
+- `public/favicon.svg` compartilha a geometria de `Brand`; inverte no tema escuro do sistema.
+- `public/logo.png` (512x512) e `public/og-cover.png` (1200x630) mantêm suas URLs anteriores. Fonte reproduzível: `apps/web/brand-assets.html`, renderizada no Vite com os mesmos fonts locais; exportar os elementos `#logo` e `#og` em escala CSS.
+- Nomes legados `coral`, `mustard`, `paper-*`, `surface-noise` e variantes existentes continuam disponíveis aos consumidores e testes, mas não reintroduzem a paleta antiga ou textura.
+- Não alterar backend, protocolo, persistência, rotas ou fluxo para resolver problemas visuais.
 
-## Layout
+## Verificação
 
-Header fixed 68px (`--header-height`), landing transparent-until-scroll (border transparent → `border-rule` on `data-scrolled`), entry header always hairline-bordered. Content column `--content-column: 1440px`, gutter `--content-gutter: 1rem`; landing caps at 1500px with 48px inline padding (28px ≤900px, 20px ≤600px). Landing hero: two-column desktop (copy ≤650px + table demo ≥430px tall), stacked mobile. Steps: intro + 3-column grid desktop, single column mobile — plain list, no numbered-eyebrow pattern. Arena desktop: 920/560 stage, felt ellipse at inset 15%/10%/13%, seats `clamp(7rem, 11vw, 9rem)` (6.75rem ≤720px); mobile: 2-column seat list + bottom card dock. Deck: 64×84px desktop (4rem×5.25rem, 8px radius), 3.2×4.4rem in the mobile dock, horizontal scroll when overflowing with edge-peek affordance. Spacing scale 4px (xs 4, sm 8, md 16, lg 24, xl 32). Minimum 44px hit targets on buttons/controls; `scroll-padding-top: 96px`; safe-area insets honored.
+Capturas locais desta implementação estão em `.uizze/review/`. Fluxo real com dois participantes cobriu criação, convite, votos distintos, revelação, mediana, ajuda e nova rodada. A disposição de 12 pessoas foi exercitada com fixture visual local em 1440, 1051, 768, 640 e 390px, sem sobreposição de assentos. Fixture não é alegação de teste de carga nem de doze conexões reais.
 
-## Elevation & Depth
-
-Flat as rule: `--shadow-card: none`, `--shadow-coral: none`; cards are `surface` + 1px `border-rule`, header has no shadow (`--shadow-header: transparent`). The only depth token is `--shadow-bone: 0 16px 48px rgb(31 29 28 / 18%)`, reserved for true overlays: the help modal card and the mobile reveal dock (sticky floating surface). Task 3 resolved all three Task 2 exceptions toward flat: seat cards lost the hardcoded `0 10px 24px` (`arena.css`) and the `shadow-bone` base (`SeatPrimitive`) — state reads from the coral 2px border + inset warning ring, never shadow; the deck shell lost `shadow-bone` (it was a ghost card: border + ≥16px shadow) and now renders `surface` + hairline, flat like every card.
-
-Felt keeps the accent ring (1px `color-mix(accent 24–30%)` inner ring) instead of shadow; header depth comes from `backdrop`/border only (landing) — entry header is a flat hairline.
-
-## Shapes
-
-System 3/6/8 + card 8px: controls/inputs/buttons/deck-cards/deck-shell/shells at `--radius-lg` 8px (Task 3 folded the strays: `rounded-[9px]` ×5 in arena/empty-overlay/help-modal, deck `rounded-xl`/`rounded-2xl` cards+shell, all → `rounded-lg`); pills at 8px (`pointly-pill`, was 7px); mini-cards at Factory md 6px (was 5px); avatars fully round; arena felt elliptical (`38% / 30%`, landing demo `50%`). Kept as Factory-verbatim/semantic: `pointly-mark` cells 4px (Factory md), VOCÊ badge bare `rounded` 4px, capsule `rounded-full` only where the pill shape is semantic (reveal CTA, state pills, cooldown badge, projectile menu). Ghost-card rule: `entry-form-shell` / `recovery-shell` use `box-shadow: var(--shadow-card)` (= none) — border-only cards. Focus: visible 3px `outline` in `focus` with 2–4px offset on all interactive elements.
-
-## Components
-
-- **Primary button** (`.pointly-button`, `Button` coral variant `bg-accent text-on-accent`, landing/header/entry/reveal variants): `accent` bg + `on-accent` text, 8px radius, ≥44px targets, 800 weight; hover → `accent-hover` (light: one verbatim ramp step lighter `#ee6018→#ef6f2e`; dark: derived `#f1854d`) with translateY(-1px) on landing/header CTAs; 150ms transitions, transform/opacity only. (Task 3: tailwind `primary`/`on-primary` now resolve honestly to `var(--primary)`/`var(--on-primary)` — the neutral pair — and the coral variant names `accent` directly instead of aliasing through `primary`.)
-- **Outline/secondary button**: `fg` text, 1px `border-rule`, transparent bg; hover → accent border + accent text (landing) or `table` bg (`.pointly-button-outline`).
-- **Surface card** (`.pointly-card`, entry/recovery shells): `surface` + 1px `border-rule`, 8px radius, no shadow.
-- **Deck card**: `surface`, `border-rule`, 8px, Geist numeral; selected → `accent`/`on-accent` (+ accent border, lifts ~7px in arena); disabled 60% opacity; `aria-pressed` is the selection signal. Shell is flat `surface` + hairline, 8px (Task 3: was `bg-paper-warm` — camouflaged against the page bg — with `rounded-2xl` + `shadow-bone`).
-- **Seat (arena)**: 52px avatar (`accent` 16% mix on `surface`), ellipsis name, state badge below (`Pensando`/`Votou`/`Revelado`/`Reconectando`), revealed vote numeral in accent 1.65rem; "me" ring in accent.
-- **Pills**: 8px; critical = `warning-soft`/`warning`; gold/default = `table`/`fg`; timer-critical is `coral-soft` bg + `ink` text (AA); network banner is `feedback-danger` (the old `text-coral-deep` class was dead — unlayered `.feedback-danger` wins — and removed in Task 3).
-- **Feedback**: empty panel (`bg` 92% + `surface` mix, block hairlines), modal shell/card (`shadow-bone`), danger/success variants on soft tokens with `color-mix` borders, status dots, `aria-live="polite"` toasts; close button 44px, 8px radius.
-- **Brand**: `.pointly-brand` Geist 700 26px (23px mobile) ls -.035em; mark 2×2 rotated -8°, accent cells + `signature` fourth cell offset (1px,1px).
-
-## Estados
-
-Coverage in `design/redesign-2026/coverage.md`. Every page has a clear action, loading and recovery state. Solo invite stays reachable inside the room; help remains a focus-trapped modal. Votes never leak pre-reveal; server stays authoritative. Motion is feedback-only: projectile, hit-shake, dodge-slide, reaction fade-up on ease-out curves; global CSS clamps `transition-property` to transform/opacity, and `prefers-reduced-motion: reduce` collapses everything to .01ms instant. Invalid inputs get `danger` borders + error text; disabled controls sit at 50% opacity.
-
-## Do's and Don'ts
-
-- Do use `accent` for the primary action and selection; `signature` (= accent-100) is reserved to the brand mark's fourth cell and attention accents — never large surfaces.
-- Do keep AA ≥4.5 for body text in both themes; `fg-mute` is the contrast floor for secondary text, never below it.
-- Do use `accent-ink` (not `accent`) for small orange text — kickers, eyebrows, badges, hovers: raw accent at ≤14px on light is ~3.0, fails; large display numerals (≥24px, or ≥18.66px bold) pass at 3:1 and may stay accent.
-- Do use Geist for display + interface, Geist Mono for code/timer/numerals — no other families.
-- Do keep cards flat: `surface` + 1px hairline + 8px radius; new shadows need a token, not a hardcoded `box-shadow`.
-- Don't use the discarded Mesa/Azul-tinta language anywhere: no ink-blue `#354c91`, no cold bg `#f5f6fa`, no blue dark `#141a2b`, no Space Grotesk/Manrope, no paper texture/serifs.
-- Don't add gradient text, ghost cards (border + shadow ≥16px), radii ≥32px, numbered eyebrows, or hero-metrics — all rejected from the Factory refs.
-- Don't animate layout; motion is transform/opacity only, feedback only.
-
-## Compatibilidade
-
-Internal variant/utility names (`coral`, `paper`, `mustard`, `olive`) remain ONLY as compatibility aliases resolving to the new tokens — they are not the discarded identity. Code wins; the previous DESIGN.md mapping text was stale drift. Actual `var()` targets in `index.css`:
-
-| Alias | Resolves to | Light value |
-|---|---|---|
-| `paper-warm` | `var(--bg)` | #f5f5f5 |
-| `paper-dark` | `var(--sunken)` | #ebebeb |
-| `coral` | `var(--accent)` | #ee6018 |
-| `coral-soft` | `var(--accent-soft)` | #fdeede |
-| `coral-deep` | `var(--accent-deep)` | #d15010 |
-| `mustard` | `var(--accent)` | #ee6018 (NOT signature) |
-| `olive` | `var(--success)` | #256a52 |
-
-Tailwind keeps the same alias keys (`paper` → `surface`, `ink*` → `fg*`, `coral*`/`mustard`/`olive` → above) because tested consumers render them (`deck.test.tsx`, `pill`, `timer-pill`, `reveal-button`, `MobilePlayerList` voted-dot `bg-olive`, seat/reveal `bg-coral`). Transport, schemas, store and rules are untouched by the redesign.
+Revisão 2026-09-07 (sessão atual): estados críticos (Pill `critical`, TimerPill ≤30s, Pill `gold`) migrados de aliases neutros para o par `warning`/`warning-soft`, com testes unitários e spec UX FMR-21 atualizados; CTAs e seleção permanecem no par primário neutro (preto no claro, claro no escuro). Validado nesta sessão: `test:web` 351 pass / 0 fail, `typecheck` OK nos 5 pacotes, `build` web OK; inspeção visual no dev server em landing (claro, escuro e 390px), join?host=1, /full, 404 e /arena desktop, com navbar compactando ao rolar (`data-scrolled=true`, 72px preservados). `bun run lint` segue com 401 erros pré-existentes no repo (formatação e exhaustive-deps legados); nenhum erro novo nas linhas alteradas. Specs UX legadas `02-visual`/`07-phase2` ainda citam a paleta laranja antiga e não foram migradas. Sem revisão independente por subagente (ferramenta indisponível nesta sessão).

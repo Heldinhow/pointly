@@ -18,7 +18,10 @@ Pointly is an ephemeral, real-time Planning Poker tool for agile estimation. It 
 A zero-friction, registration-free estimation tool designed for immediate collaboration. It gets out of the way, running entirely in-memory and discarding all room data as soon as the last player leaves.
 
 ## Brand Personality
-Colaborativa, memorável e clara. Mesa compartilhada com paleta Azul tinta, escolhida pelo usuário: branco frio e azul suave no claro; azul profundo com ações claras no escuro. Pessoas, cartas e a conversa são os elementos centrais.
+Colaborativa, precisa e clara. Pessoas, cartas e a conversa são os elementos centrais.
+
+## Brand Commitment
+Direção aprovada pelo usuário: linguagem visual do factory.ai em todas as telas, com Geist e Geist Mono, superfícies neutras e bordas finas. Ações primárias pretas no tema claro e claras no escuro, sem laranja de marca. Pointly mantém nome e identidade próprios: símbolo monocromático original de quatro perspectivas convergindo em um centro aberto, nunca a estrela do Factory. Navbar fixa ampla que compacta ao rolar, adaptada a mobile e à preferência de movimento reduzido. Esta decisão substitui a paleta Azul tinta e o estágio intermediário com laranja no produto.
 
 ## Design Principles
 - Participar sem fricção: criação e entrada sem cadastro, com próximo passo explícito.

@@ -1,7 +1,7 @@
 /* Arena mesa: layout owns its geometry here so seats keep readable dimensions. */
 /* Header fixo é o SiteHeader da landing — compensa com padding-top igual. */
 .arena-shell {
-  padding-top: var(--header-height, 68px);
+  padding-top: var(--header-height, 72px);
   --arena-seat-size: clamp(7rem, 11vw, 9rem);
   background: var(--bg);
   color: var(--fg);
@@ -34,9 +34,9 @@
   inset: 15% 10% 13%;
   border-radius: 38% / 30%;
   background: var(--table);
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  box-shadow: inset 0 0 0 12px color-mix(in srgb, var(--surface) 14%, transparent);
+  border: 1px solid var(--border-rule);
 }
+.arena-felt::before { content: ""; position: absolute; inset: 12px; border: 1px solid var(--border-rule); border-radius: inherit; }
 .arena-center {
   position: absolute;
   inset: 15% 10% 13%;
@@ -54,7 +54,7 @@
 .arena-table-copy {
   margin: 0;
   color: var(--fg);
-  font: 700 clamp(1.2rem, 2.2vw, 1.75rem)/1.2 var(--font-display, Geist, Inter, system-ui, sans-serif);
+  font: 500 clamp(1.2rem, 2.2vw, 1.75rem)/1.2 var(--font-display, Geist, Inter, system-ui, sans-serif);
   text-wrap: balance;
 }
 .arena-table-sub { margin: 0; color: var(--fg-mute); font-size: .875rem; }
@@ -62,26 +62,37 @@
 .arena-seat-card {
   width: var(--arena-seat-size) !important;
   height: auto !important;
-  min-height: 9.5rem;
-  padding: 1rem .75rem;
-  gap: .45rem;
+  min-height: 6rem;
+  padding: .625rem;
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: .5rem;
   background: var(--surface) !important;
   border-color: var(--border-rule) !important;
   color: var(--fg);
 }
 .arena-seat-card [data-testid="seat-avatar"] {
-  width: 3.25rem; height: 3.25rem;
+  width: 2rem; height: 2rem;
   background: color-mix(in srgb, var(--accent) 16%, var(--surface));
   color: var(--fg);
-  font-size: 1.05rem;
+  font-size: .75rem;
 }
-.arena-seat-name { max-width: 100% !important; color: var(--fg) !important; font-size: .875rem; }
-.arena-seat-card [data-testid="seat-state"] { color: var(--fg-mute); border-color: var(--border-rule); }
-.arena-seat-card [data-testid="seat-face-num"] { color: var(--accent); font-size: 1.65rem; }
+.arena-seat-card[data-seat-is-you="true"] { border-color: var(--fg) !important; }
+.arena-seat-card[data-seat-is-you="true"] [data-testid="seat-avatar"] { background: var(--primary); color: var(--on-primary); }
+.arena-seat-name { max-width: 100% !important; color: var(--fg) !important; font-size: .75rem; letter-spacing: 0; }
+.arena-seat-card [data-testid="seat-state"] { grid-column: 1 / -1; justify-self: center; color: var(--fg-mute); border-color: var(--border-rule); border-radius: var(--radius-sm); font-size: 10px; letter-spacing: .02em; }
+.arena-seat-card [data-testid="seat-face-num"] { grid-column: 1 / -1; justify-self: center; margin: 0; color: var(--accent); font: 500 1.5rem/1 var(--font-mono); }
+.arena-seat-card [data-testid="seat-voc-badge"] { position: absolute; left: .5rem; top: -.65rem; background: var(--surface); }
+.arena-seat-card [aria-label="Host"] { top: -.65rem; right: .5rem; background: var(--surface); color: var(--fg); }
+.arena-mobile-seat [aria-label="Host"] { color: var(--fg); }
+.arena-timer-pill { border-radius: var(--radius-sm); border-color: var(--border-rule); }
 .arena-reveal-slot { position: static; }
 .arena-shell .arena-reveal-button {
-  border-radius: 8px;
-  font-family: var(--font-body);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .06em;
   transition-property: transform, opacity;
 }
 .arena-shell [data-testid="reveal-button-hint"] {
@@ -92,6 +103,11 @@
   position: relative; inset: auto; transform: none; min-width: 13rem; width: auto;
 }
 .arena-center-stats { width: max-content; max-width: 100%; }
+.arena-stats-pill { flex-wrap: wrap; justify-content: center; gap: .75rem; padding: .75rem 1rem; border-radius: var(--radius-sm); border-color: var(--border-rule); }
+.arena-stats-pill [data-testid="stats-unanimous-badge"] { color: var(--fg); }
+.arena-stats-pill [data-testid="stats-median-value"] { border-color: var(--fg); }
+.arena-shell [data-testid="share-pill"] { border-radius: var(--radius-sm); border-color: var(--border-rule); }
+.arena-shell [data-testid="share-pill"] > span { font-family: var(--font-mono); letter-spacing: .1em; }
 .arena-deck-slot { width: min(52rem, 100%); margin: 1rem auto 0; z-index: 10; }
 .arena-deck-slot [data-testid="deck"] {
   justify-content: center;
@@ -102,7 +118,7 @@
 }
 .arena-deck-slot [data-testid^="deck-card-"] {
   width: 4rem; height: 5.25rem;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   border-color: var(--border-rule);
   color: var(--fg);
 }
@@ -122,10 +138,14 @@
   background: color-mix(in srgb, var(--accent) 16%, var(--surface)); color: var(--fg);
 }
 .arena-mobile-seat [data-testid="mobile-seat-nick"] { color: var(--fg); }
+.arena-mobile-seat[data-seat-is-you="true"] [data-testid="mobile-seat-avatar"] { background: var(--primary); color: var(--on-primary); }
 .arena-mobile-seat [data-testid="mobile-seat-state"] {
   color: var(--fg-mute); border-color: var(--border-rule); background: var(--surface);
 }
-.arena-mobile-dock { background: var(--surface); border-color: var(--border-rule); }
+.arena-mobile-dock { background: var(--surface); border-color: var(--border-rule); box-shadow: none; }
+.arena-mobile-dock .arena-reveal-stack { margin-top: .75rem; }
+.arena-mobile-seat [data-testid="mobile-seat-state"] { border-radius: var(--radius-sm); font-size: 10px; letter-spacing: .04em; }
+.arena-shell [data-testid^="deck-card-"] span { font-family: var(--font-mono); }
 .arena-mobile-dock .arena-deck { background: transparent; border: 0; box-shadow: none; }
 .arena-mobile-dock .arena-deck [data-testid^="deck-card-"] {
   width: 3.2rem; height: 4.4rem; border-color: var(--border-rule); color: var(--fg);
@@ -148,5 +168,15 @@
   .arena-table-wrap { max-width: 42rem; }
   .arena-seat-position { --arena-seat-size: 6.75rem; }
   .arena-felt { inset-inline: 8%; }
+  .arena-deck-slot [data-testid="deck"] { justify-content: flex-start; overflow-x: auto; }
+}
+/* A compact table becomes a seat grid on tablets; never shrink touch targets. */
+@media (min-width: 640px) and (max-width: 1050px) {
+  .arena-table-wrap { aspect-ratio: auto; max-width: 48rem; }
+  .arena-table-inner { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; height: auto; }
+  .arena-felt { display: none; }
+  .arena-center { position: relative; inset: auto; grid-column: 1 / -1; grid-row: 1; min-height: 13rem; background: var(--table); border: 1px solid var(--border-rule); border-radius: var(--radius-md); }
+  .arena-seat-position { position: relative; top: auto !important; left: auto !important; width: auto; transform: none !important; }
+  .arena-seat-card { width: 100% !important; }
   .arena-deck-slot [data-testid="deck"] { justify-content: flex-start; overflow-x: auto; }
 }
