@@ -3,7 +3,7 @@
 	"version": "0.1.0",
 	"private": true,
 	"type": "module",
-	"description": "Pointly frontend — React 18 + Vite + TS",
+	"description": "Pointly frontend — React 18 + Vite + TS + Tailwind v4 (Spell-UI dark)",
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc --noEmit && vite build",
@@ -13,19 +13,23 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@fontsource/geist": "^5.3.0",
-		"@fontsource/geist-mono": "^5.3.0",
 		"@planning-poker/shared": "workspace:*",
+		"@radix-ui/react-slot": "^1.1.2",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
+		"lucide-react": "^0.460.0",
+		"motion": "^12.0.0",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
-		"react-router-dom": "^6.30.0",
+		"react-router-dom": "^6.28.0",
 		"tailwind-merge": "^2.5.5",
 		"zod": "^3.24.1",
 		"zustand": "^5.0.2"
 	},
 	"devDependencies": {
+		"@fontsource/geist": "^5.3.0",
+		"@fontsource/geist-mono": "^5.3.0",
+		"@tailwindcss/vite": "^4.0.0",
 		"@testing-library/jest-dom": "^6.6.3",
 		"@testing-library/react": "^16.1.0",
 		"@types/jsdom": "^21.1.7",
@@ -37,7 +41,7 @@
 		"jsdom": "^25.0.1",
 		"playwright": "^1.61.1",
 		"postcss": "^8.4.49",
-		"tailwindcss": "^3.4.17",
+		"tailwindcss": "^4.0.0",
 		"typescript": "^5.7.2",
 		"vite": "^6.0.7"
 	}

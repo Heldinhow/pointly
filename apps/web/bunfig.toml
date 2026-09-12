@@ -4,4 +4,4 @@
 # antes do jsdom, falha com "global document has to be available".
 
 [test]
-preload = ["./src/test-jsdom.ts", "./src/components/ui/test-helpers.tsx"]
+preload = ["./src/test-jsdom.ts"]

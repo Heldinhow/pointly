@@ -1,62 +1,148 @@
+/**
+ * Landing — hero Spell dark + 3 passos + stats (spell-rebuild).
+ *
+ * - Headline em GradientWaveText, subhero em BlurReveal.
+ * - CTAs são RichButton com as props confirmadas (color/size/onClick);
+ *   data-testid é atributo HTML padrão, repassado ao <button>.
+ */
 import { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { SiteHeader } from "../components/site-header";
-import "../styles/landing.css";
+import { Link, useNavigate } from "react-router-dom";
+import { Moon, Sun } from "lucide-react";
+import { Badge } from "@/components/spell/badge";
+import { BlurReveal } from "@/components/spell/blur-reveal";
+import { GradientWaveText } from "@/components/spell/gradient-wave-text";
+import { RichButton } from "@/components/spell/rich-button";
+import { TiltCard } from "@/components/spell/tilt-card";
+import { useTheme } from "@/theme/theme";
 
 const STEPS = [
-	["Crie uma sala para o time.", "Compartilhe o link. Cada pessoa entra com um apelido, sem conta."],
-	["Pense por conta própria.", "Escolha uma carta. Seu voto fica escondido até a revelação para cada perspectiva aparecer."],
-	["Descubram juntos.", "Revelem os votos, conversem sobre as diferenças e comecem outra rodada."],
-] as const;
-
-const PLAYERS = [
-	["MA", "Marina", "5", "peach"],
-	["RA", "Rafa", "8", "blue"],
-	["VO", "Você", "5", "self"],
-	["BI", "Bia", "3", "rose"],
+	{
+		title: "Crie",
+		body: "Abra uma sala e compartilhe o código com o time.",
+	},
+	{
+		title: "Vote",
+		body: "Cada pessoa escolhe uma carta em segredo.",
+	},
+	{
+		title: "Revele",
+		body: "Revelem juntos e conversem sobre as diferenças.",
+	},
 ] as const;
 
 export function Landing() {
 	const navigate = useNavigate();
-	const handleCreateRoom = useCallback(() => navigate("/join?host=1"), [navigate]);
-	const handleJoinRoom = useCallback(() => navigate("/join"), [navigate]);
+	const { theme, toggle } = useTheme();
+
+	const goCreate = useCallback(() => navigate("/join?host=1"), [navigate]);
+	const goJoin = useCallback(() => navigate("/join"), [navigate]);
 
 	return (
-		<div className="landing-page" data-testid="page-landing">
-			<SiteHeader onCreateRoom={handleCreateRoom} onJoinRoom={handleJoinRoom} />
-			<main>
-				<section className="landing-hero" aria-labelledby="hero-headline">
-					<div className="landing-hero-copy">
-						<h1 id="hero-headline" data-testid="hero-headline">Ideias diferentes.<br /><em>Na mesma mesa.</em></h1>
-						<p className="landing-eyebrow">Planning poker para times ágeis</p>
-						<p className="landing-lede">Seu time, uma rodada de cartas e uma boa conversa. Estimem juntos com Planning Poker, sem criar conta.</p>
-						<fieldset className="landing-actions" aria-label="Ações da sala">
-							<button type="button" className="landing-button landing-button-primary" onClick={handleCreateRoom} data-testid="cta-create-room">Criar uma sala <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg></button>
-							<button type="button" className="landing-button landing-button-secondary" onClick={handleJoinRoom} data-testid="cta-join-room">Entrar com código</button>
-						</fieldset>
-						<p className="landing-caption">Grátis. Até 12 pessoas. Só chegar e participar.</p>
-					</div>
-					<div className="landing-table-demo" role="img" aria-label="Demonstração ilustrativa de uma mesa com quatro participantes">
-						<div className="landing-felt" aria-hidden="true"><strong>Vamos conversar?</strong><span>Cada ponto de vista conta.</span></div>
-						{PLAYERS.map(([initials, name, vote, tone]) => (
-							<div className={`landing-player landing-player-${tone}`} key={name} aria-hidden="true">
-								<span className="landing-avatar">{initials}</span><span className="landing-player-name">{name}</span><span className="landing-mini-card">{vote}</span>
-							</div>
-						))}
-						<span className="landing-demo-label" aria-hidden="true">exemplo de rodada</span>
-					</div>
-				</section>
+		<div
+			data-testid="page-landing"
+			className="flex min-h-dvh flex-col bg-[#09090b] text-zinc-100 [html.light_&]:bg-[#f5f5f5] [html.light_&]:text-zinc-900"
+		>
+			<header className="mx-auto flex w-full max-w-5xl items-center justify-between px-5 py-4">
+				<span className="font-mono text-sm font-semibold tracking-[0.08em] uppercase">
+					Pointly
+				</span>
+				<nav className="flex items-center gap-4" aria-label="navegação principal">
+					<button
+						type="button"
+						onClick={toggle}
+						aria-label={
+							theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"
+						}
+						className="flex h-11 w-11 items-center justify-center rounded-lg border border-zinc-800 text-zinc-300 transition-colors hover:border-zinc-600 hover:text-zinc-100"
+					>
+						{theme === "dark" ? (
+							<Sun aria-hidden="true" className="h-5 w-5" />
+						) : (
+							<Moon aria-hidden="true" className="h-5 w-5" />
+						)}
+					</button>
+					<Link
+						to="/join"
+						className="font-mono text-sm tracking-wide text-zinc-300 underline-offset-4 hover:text-zinc-100 hover:underline"
+					>
+						Entrar
+					</Link>
+				</nav>
+			</header>
 
-				<section className="landing-steps" aria-labelledby="steps-title">
-					<div className="landing-section-intro"><p className="landing-kicker">Como funciona</p><h2 id="steps-title">Uma rodada começa com espaço para todo mundo.</h2></div>
-					<ol>{STEPS.map(([title, body], index) => <li key={title} data-testid={`cap-card-0${index + 1}`}><span className="landing-step-number" aria-hidden="true">0{index + 1}</span><div><h3>{title}</h3><p>{body}</p></div></li>)}</ol>
-					<button type="button" className="landing-button landing-button-primary landing-mobile-create" onClick={handleCreateRoom} data-testid="cta-mobile-create-room">Criar uma sala</button>
-				</section>
+			<main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center px-5 pt-14 pb-10 text-center sm:pt-20">
+				<p className="mb-5 font-mono text-xs tracking-[0.14em] text-zinc-400 uppercase">
+					Planning poker para times ágeis
+				</p>
+				<h1 className="max-w-3xl text-5xl leading-[1.05] font-medium tracking-tight text-balance sm:text-6xl">
+					<GradientWaveText>Planning poker sem fricção</GradientWaveText>
+				</h1>
+				<BlurReveal className="mt-5 max-w-xl text-base leading-relaxed text-zinc-400 sm:text-lg">
+					{"Estime histórias com seu time em tempo real — sem cadastro, sem complicação."}
+				</BlurReveal>
 
+				<div className="mt-9 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row">
+					<RichButton
+						color="emerald"
+						size="lg"
+						onClick={goCreate}
+						data-testid="landing-create"
+					>
+						Criar uma sala
+					</RichButton>
+					<RichButton
+						color="zinc"
+						size="lg"
+						onClick={goJoin}
+						data-testid="landing-join"
+					>
+						Entrar com código
+					</RichButton>
+				</div>
+
+				<div
+					className="mt-14 grid w-full gap-4 text-left sm:grid-cols-3"
+					aria-label="Como funciona"
+				>
+					{STEPS.map((step, index) => (
+						<TiltCard
+							key={step.title}
+							className="rounded-2xl border border-[#26262c] bg-[#101013] p-6"
+						>
+							<p
+								aria-hidden="true"
+								className="font-mono text-xs tracking-[0.14em] text-zinc-500"
+							>
+								0{index + 1}
+							</p>
+							<h2 className="mt-2 text-xl font-medium tracking-tight">
+								{step.title}
+							</h2>
+							<p className="mt-1.5 text-sm leading-relaxed text-zinc-400">
+								{step.body}
+							</p>
+						</TiltCard>
+					))}
+				</div>
+
+				<ul
+					className="mt-10 flex flex-wrap items-center justify-center gap-2"
+					aria-label="Destaques"
+				>
+					<li>
+						<Badge variant="blue">Até 12 pessoas</Badge>
+					</li>
+					<li>
+						<Badge variant="green">Sem cadastro</Badge>
+					</li>
+					<li>
+						<Badge variant="violet">Tempo real</Badge>
+					</li>
+				</ul>
 			</main>
-			<footer className="landing-footer">
-				<span>Pointly · Uma boa conversa começa com perspectivas diferentes.</span>
-				<span>Sem cadastro. Sem complicar.</span>
+
+			<footer className="mx-auto w-full max-w-5xl px-5 py-6 text-center font-mono text-xs tracking-wide text-zinc-500">
+				Pointly · Sem cadastro. Sem complicação.
 			</footer>
 		</div>
 	);

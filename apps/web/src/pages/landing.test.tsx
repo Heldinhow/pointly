@@ -1,86 +1,106 @@
 /**
- * Landing page tests — T27 verify (≥3 of 5 minimum required).
- *
- * Cobre:
- *  - Render: headline com itálico
- *  - CTAs: 'Criar sala' navega para /join?host=1
- *  - A11y: heading hierárquico + CTAs focáveis
+ * landing.test — CTAs + navegação (spell-rebuild).
  */
-import { describe, expect, test } from "bun:test";
-import { MemoryRouter } from "react-router-dom";
-import { fireEvent, render, screen } from "../components/ui/test-helpers";
+import "../test-jsdom";
+
+// jsdom sem pretendToBeVisual não tem rAF — @testing-library/react exige.
+if (typeof globalThis.requestAnimationFrame === "undefined") {
+	globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number =>
+		setTimeout(() => cb(performance.now()), 16) as unknown as number;
+	globalThis.cancelAnimationFrame = (id: number): void => {
+		clearTimeout(id as unknown as ReturnType<typeof setTimeout>);
+	};
+}
+import { afterEach, describe, expect, test } from "bun:test";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
+import { ThemeProvider } from "@/theme/theme";
 import { Landing } from "./landing";
 
-function renderLanding() {
-	return render(
-		<MemoryRouter
-			future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-		>
-			<Landing />
-		</MemoryRouter>,
+afterEach(() => {
+	cleanup();
+});
+
+function LocationProbe() {
+	const loc = useLocation();
+	return (
+		<div data-testid="location">
+			{loc.pathname}
+			{loc.search}
+		</div>
 	);
 }
 
-describe("Landing — T27", () => {
-	test("renderiza headline", () => {
+function renderLanding() {
+	return render(
+		<ThemeProvider>
+			<MemoryRouter
+				future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+				initialEntries={["/"]}
+			>
+				<Routes>
+					<Route path="/" element={<Landing />} />
+					<Route path="/join" element={<LocationProbe />} />
+				</Routes>
+			</MemoryRouter>
+		</ThemeProvider>,
+	);
+}
+
+describe("Landing", () => {
+	test("renderiza página + headline", () => {
 		renderLanding();
-		expect(screen.getByTestId("hero-headline")).toBeInTheDocument();
-		expect(screen.getByTestId("hero-headline")).toHaveTextContent(/mesma mesa/i);
+		expect(screen.getByTestId("page-landing")).toBeTruthy();
+		const h1 = screen.getByRole("heading", { level: 1 });
+		expect(h1.textContent ?? "").toMatch(/planning poker sem fricção/i);
 	});
 
-	test("CTA 'Criar uma sala' é ação primária da identidade (≤1 primário por viewport)", () => {
+	test("renderiza os dois CTAs", () => {
 		renderLanding();
-		const cta = screen.getByTestId("cta-create-room");
-		expect(cta).toBeInTheDocument();
-		expect(cta.className).toContain("landing-button-primary");
-		expect(cta).toHaveTextContent(/criar uma sala/i);
+		expect(screen.getByTestId("landing-create").textContent ?? "").toMatch(
+			/criar uma sala/i,
+		);
+		expect(screen.getByTestId("landing-join").textContent ?? "").toMatch(
+			/entrar com código/i,
+		);
 	});
 
-	test("CTA 'Criar sala' navega para /join?host=1 (server cria sala)", () => {
+	test("Criar uma sala → /join?host=1", async () => {
 		renderLanding();
-		const cta = screen.getByTestId("cta-create-room");
-		expect(cta).toBeInTheDocument();
-		// Verifica que é um button (não link) — navegação é client-side via useNavigate
-		expect(cta.tagName).toBe("BUTTON");
-		// Click não deve quebrar
-		fireEvent.click(cta);
-		expect(cta).toBeInTheDocument();
+		fireEvent.click(screen.getByTestId("landing-create"));
+		await waitFor(() => {
+			expect(screen.getByTestId("location").textContent).toBe(
+				"/join?host=1",
+			);
+		});
 	});
 
-	test("headings hierárquicos (h1 + h2)", () => {
+	test("Entrar com código → /join", async () => {
 		renderLanding();
-		expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
-		const h2s = screen.getAllByRole("heading", { level: 2 });
-		expect(h2s.length).toBeGreaterThanOrEqual(1);
+		fireEvent.click(screen.getByTestId("landing-join"));
+		await waitFor(() => {
+			expect(screen.getByTestId("location").textContent).toBe("/join");
+		});
 	});
 
-	test("renderiza 3 capability cards numerados", () => {
+	test("stats strip PT-BR", () => {
 		renderLanding();
-		expect(screen.getByTestId("cap-card-01")).toBeInTheDocument();
-		expect(screen.getByTestId("cap-card-02")).toBeInTheDocument();
-		expect(screen.getByTestId("cap-card-03")).toBeInTheDocument();
-		expect(screen.queryByTestId("cap-card-04")).not.toBeInTheDocument();
+		expect(screen.getByText("Até 12 pessoas")).toBeTruthy();
+		expect(screen.getByText("Sem cadastro")).toBeTruthy();
+		expect(screen.getByText("Tempo real")).toBeTruthy();
 	});
 
-	test("renderiza botão Entrar no Hero", () => {
+	test("header com toggle de tema + Entrar", () => {
 		renderLanding();
-		const button = screen.getByTestId("cta-join-room");
-		expect(button).toBeInTheDocument();
-		expect(button).toHaveTextContent(/entrar/i);
-	});
-
-	test("landing segue o estudo mesa compartilhada (sem seção extra)", () => {
-		renderLanding();
-		expect(screen.queryByTestId("cta-ribbon-create")).not.toBeInTheDocument();
-		expect(screen.getByText(/sem cadastro\. sem complicar\./i)).toBeInTheDocument();
-	});
-
-	test("header CTAs visíveis", () => {
-		renderLanding();
-		const headerCreateCta = screen.getByTestId("cta-nav-create-room");
-		const headerJoinCta = screen.getByTestId("cta-nav-join-room");
-		expect(headerCreateCta).toBeInTheDocument();
-		expect(headerJoinCta).toBeInTheDocument();
-		expect(headerCreateCta.className).toContain("site-header-create");
+		expect(
+			screen.getByRole("button", { name: /modo (claro|escuro)/i }),
+		).toBeTruthy();
+		expect(screen.getByRole("link", { name: /^entrar$/i })).toBeTruthy();
 	});
 });
