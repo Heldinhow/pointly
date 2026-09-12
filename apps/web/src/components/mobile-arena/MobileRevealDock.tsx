@@ -34,8 +34,6 @@ import { RevealButton } from "../reveal-button";
 export interface MobileRevealDockProps {
 	phase: Phase;
 	myVote: Vote | null;
-	/** true se fase atual é 'revealed' (deck fica disabled). */
-	disabled: boolean;
 	votedCount: number;
 	totalPlayers: number;
 	onSelect: (value: Vote) => void;
@@ -46,7 +44,6 @@ export interface MobileRevealDockProps {
 export function MobileRevealDock({
 	phase,
 	myVote,
-	disabled,
 	votedCount,
 	totalPlayers,
 	onSelect,
@@ -72,12 +69,7 @@ export function MobileRevealDock({
 				"pb-[max(env(safe-area-inset-bottom),0.75rem)]",
 			].join(" ")}
 		>
-			<Deck
-				currentVote={myVote}
-				disabled={disabled}
-				onSelect={onSelect}
-				phase={phase}
-			/>
+			<Deck currentVote={myVote} onSelect={onSelect} phase={phase} />
 			<RevealButton
 				phase={phase}
 				votedCount={votedCount}

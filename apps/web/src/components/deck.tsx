@@ -12,7 +12,7 @@ import { type Vote } from "@planning-poker/shared";
  *  - Default: ink stroke 1px, surface bone, label ink-faint
  *  - Hover: border coral (sem translate — motion só pra feedback)
  *  - Selected: accent sólido + on-accent (single master com arena.css)
- *  - Disabled pós-reveal: opacity 0.6 no container, sem pointer
+ *  - Pós-reveal: cartas seguem ativas para editar o próprio voto (EVR-01)
  *
  * **Comportamento**:
  *  - Click numa carta chama `onSelect(value)` (T38 wire dispara `cast_vote`)
@@ -22,11 +22,11 @@ import { type Vote } from "@planning-poker/shared";
  *
  * **A11y**:
  *  - Cada carta é `<button>` com aria-label contextual
- *  - aria-disabled quando deck.post-reveal
  *  - Navegação por teclado (Enter/Space nativos do <button>)
  *
  * @see .specs/features/planning-poker-v1/tasks.md T32
- * @see .specs/features/planning-poker-v1/spec.md F-016, F-017, F-018
+ * @see .specs/features/planning-poker-v1/spec.md F-016, F-017
+ * @see tests/e2e/edit-vote-after-reveal.spec.ts (EVR-01: edição pós-reveal)
  */
 import { type KeyboardEvent, Fragment, useEffect, useRef } from "react";
 import { cn } from "./ui/utils";
@@ -34,8 +34,6 @@ import { cn } from "./ui/utils";
 export interface DeckProps {
 	/** Voto atual do player local. `null` = não votou. */
 	currentVote: Vote | null;
-	/** true se fase atual é 'revealed' (deck fica desabilitado). */
-	disabled: boolean;
 	/** Callback quando user clica/ativa uma carta. */
 	onSelect: (value: Vote) => void;
 	/** Phase atual (para resetar scrollLeft quando entra em voting). */
@@ -65,7 +63,7 @@ const DECK_GROUPS: Array<{ label: string; values: Vote[] }> = [
 	{ label: "Estimativas altas", values: ["3", "5", "8", "13"] },
 	{ label: "Pausa", values: ["☕"] },
 ];
-export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
+export function Deck({ currentVote, onSelect, phase }: DeckProps) {
 	const scrollRef = useRef<HTMLDivElement | null>(null);
 
 	// BUG-203 / T05: reset scrollLeft no início de cada rodada (phase → voting).
@@ -103,7 +101,6 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 	}, []);
 
 	function handleKeyDown(e: KeyboardEvent<HTMLButtonElement>, value: Vote) {
-		if (disabled) return;
 		// <button> já lida com Enter/Space; nada extra necessário.
 		// (Mantemos o handler explícito pra accessibility/axe.)
 		if (e.key === "Enter" || e.key === " ") {
@@ -131,12 +128,10 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 			className={cn(
 				"arena-deck",
 					"flex gap-2 bg-surface border border-ink/5 rounded-lg py-2 px-2.5",
-					"transition-opacity",
 					// Mobile: scroll horizontal + snap. ≥sm: overflow visível.
 					"overflow-x-auto snap-x snap-mandatory sm:overflow-visible sm:snap-none",
 					// Esconde scrollbar webkit (peek é o affordance).
 					"fib-deck",
-					disabled && "opacity-60",
 				)}
 				aria-label="Deck de cartas Fibonacci"
 				role="region"
@@ -162,7 +157,6 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 								<button
 									key={value}
 									type="button"
-									disabled={disabled}
 									aria-label={
 										selected ? `Selecionada, voto em ${value}` : `Votar ${value}`
 									}
@@ -183,12 +177,8 @@ export function Deck({ currentVote, disabled, onSelect, phase }: DeckProps) {
 									!selected && "border border-ink/15",
 									// selected: accent sólido + on-accent (DESIGN deck-card-selected)
 									selected && "border-2 border-coral bg-coral text-on-accent",
-									// hover (só quando não disabled e não selected)
-									!disabled &&
-										!selected &&
-										"hover:border-coral-deep",
-									// disabled pós-reveal: sem pointer + texto comunica estado
-									disabled && "pointer-events-none cursor-not-allowed",
+									// hover (só quando não selected)
+									!selected && "hover:border-coral-deep",
 									)}
 								>
 									{isCoffee ? (

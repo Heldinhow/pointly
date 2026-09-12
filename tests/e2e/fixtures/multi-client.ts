@@ -407,6 +407,16 @@ export async function multiClient(
 			{ timeout: 10_000 },
 		);
 		await page.getByTestId("reveal-button").click();
+		// Ação destrutiva: primeiro clique arma a confirmação, segundo confirma.
+		await page.waitForFunction(
+			() => {
+				const btn = document.querySelector('[data-testid="reveal-button"]');
+				return btn?.getAttribute("data-reveal-confirm") === "true";
+			},
+			undefined,
+			{ timeout: 5_000 },
+		);
+		await page.getByTestId("reveal-button").click();
 		// Volta para 'awaiting' ou 'voting' (phase mudou)
 		await page.waitForFunction(
 			() => {

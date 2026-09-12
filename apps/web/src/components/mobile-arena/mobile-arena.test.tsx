@@ -311,7 +311,6 @@ describe("MobileRevealDock", () => {
 			<MobileRevealDock
 				phase="voting"
 				myVote={null}
-				disabled={false}
 				votedCount={1}
 				totalPlayers={2}
 				onSelect={() => {}}
@@ -333,7 +332,6 @@ describe("MobileRevealDock", () => {
 			<MobileRevealDock
 				phase="voting"
 				myVote={null}
-				disabled={false}
 				votedCount={0}
 				totalPlayers={1}
 				onSelect={() => {}}

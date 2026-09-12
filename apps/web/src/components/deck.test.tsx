@@ -8,14 +8,14 @@ import { fireEvent, render, screen } from "./ui/test-helpers";
 
 describe("Deck — T32", () => {
 	test("renderiza 9 cartas Fibonacci em ordem", () => {
-		render(<Deck currentVote={null} disabled={false} onSelect={() => {}} />);
+		render(<Deck currentVote={null} onSelect={() => {}} />);
 		DECK_VALUES.forEach((v) => {
 			expect(screen.getByTestId(`deck-card-${v}`)).toBeInTheDocument();
 		});
 	});
 
 	test("carta selecionada tem data-deck-selected=true + aria-pressed=true", () => {
-		render(<Deck currentVote="5" disabled={false} onSelect={() => {}} />);
+		render(<Deck currentVote="5" onSelect={() => {}} />);
 		const card = screen.getByTestId("deck-card-5");
 		expect(card.getAttribute("data-deck-selected")).toBe("true");
 		expect(card.getAttribute("aria-pressed")).toBe("true");
@@ -23,7 +23,7 @@ describe("Deck — T32", () => {
 	});
 
 	test("carta não-selecionada tem data-deck-selected=false", () => {
-		render(<Deck currentVote="5" disabled={false} onSelect={() => {}} />);
+		render(<Deck currentVote="5" onSelect={() => {}} />);
 		const card = screen.getByTestId("deck-card-3");
 		expect(card.getAttribute("data-deck-selected")).toBe("false");
 		expect(card.getAttribute("aria-pressed")).toBe("false");
@@ -35,7 +35,6 @@ describe("Deck — T32", () => {
 		render(
 			<Deck
 				currentVote={null}
-				disabled={false}
 				onSelect={
 					onSelect as unknown as (
 						v: import("@planning-poker/shared").Vote,
@@ -49,17 +48,18 @@ describe("Deck — T32", () => {
 		expect(lastCall?.[0]).toBe("8");
 	});
 
-	test("disabled=true bloqueia click + container opacity-60 (F-018, sem dupla opacidade)", () => {
+	test("cartas seguem habilitadas pós-reveal — edição do próprio voto (EVR-01)", () => {
 		const onSelect = mock(() => {});
-		render(<Deck currentVote={null} disabled={true} onSelect={onSelect} />);
-		const card = screen.getByTestId("deck-card-5");
-		expect(card).toBeDisabled();
-		expect(screen.getByTestId("deck").className).toContain("opacity-60");
-		expect(card.className).not.toContain("opacity-60");
+		render(<Deck currentVote="5" onSelect={onSelect} />);
+		const card = screen.getByTestId("deck-card-8");
+		expect(card).not.toBeDisabled();
+		expect(screen.getByTestId("deck").className).not.toContain("opacity-60");
+		fireEvent.click(card);
+		expect(onSelect).toHaveBeenCalledWith("8");
 	});
 
 	test("selecionada usa accent sólido + on-accent (single master)", () => {
-		render(<Deck currentVote="5" disabled={false} onSelect={() => {}} />);
+		render(<Deck currentVote="5" onSelect={() => {}} />);
 		const card = screen.getByTestId("deck-card-5");
 		expect(card.className).toContain("bg-coral");
 		expect(card.className).toContain("text-on-accent");
@@ -68,27 +68,27 @@ describe("Deck — T32", () => {
 
 	test("teclado Enter dispara onSelect (a11y)", () => {
 		const onSelect = mock(() => {});
-		render(<Deck currentVote={null} disabled={false} onSelect={onSelect} />);
+		render(<Deck currentVote={null} onSelect={onSelect} />);
 		fireEvent.keyDown(screen.getByTestId("deck-card-3"), { key: "Enter" });
 		expect(onSelect).toHaveBeenCalledWith("3");
 	});
 
 	test("teclado Space dispara onSelect (a11y)", () => {
 		const onSelect = mock(() => {});
-		render(<Deck currentVote={null} disabled={false} onSelect={onSelect} />);
+		render(<Deck currentVote={null} onSelect={onSelect} />);
 		fireEvent.keyDown(screen.getByTestId("deck-card-13"), { key: " " });
 		expect(onSelect).toHaveBeenCalledWith("13");
 	});
 
 	test("☕ renderiza como botão distinto (sem numeral italic)", () => {
-		render(<Deck currentVote={null} disabled={false} onSelect={() => {}} />);
+		render(<Deck currentVote={null} onSelect={() => {}} />);
 		const card = screen.getByTestId("deck-card-☕");
 		expect(card).toBeInTheDocument();
 		expect(card.textContent).toContain("☕");
 	});
 
 	test("chunking: 3 grupos (baixas / altas / pausa) com role=group", () => {
-		render(<Deck currentVote={null} disabled={false} onSelect={() => {}} />);
+		render(<Deck currentVote={null} onSelect={() => {}} />);
 		expect(screen.getByRole("group", { name: "Estimativas baixas" })).toBeInTheDocument();
 		expect(screen.getByRole("group", { name: "Estimativas altas" })).toBeInTheDocument();
 		expect(screen.getByRole("group", { name: "Pausa" })).toBeInTheDocument();

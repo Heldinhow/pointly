@@ -347,7 +347,6 @@ export function Arena() {
 						<MobileRevealDock
 							phase={phase}
 							myVote={myVote}
-							disabled={faceUp}
 							votedCount={votedCount}
 							totalPlayers={sala?.players.length ?? 0}
 							onSelect={handleCardSelect}
@@ -472,7 +471,6 @@ export function Arena() {
 						>
 							<Deck
 								currentVote={myVote}
-								disabled={faceUp}
 								onSelect={handleCardSelect}
 							/>
 						</div>
