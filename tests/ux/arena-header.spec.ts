@@ -1,17 +1,21 @@
 import { expect, test } from "@playwright/test";
 import { multiClient } from "../e2e/fixtures/multi-client";
 
-test("navbar stays fixed and opaque after scrolling in both themes", async ({
+test("navbar stays fixed and compacts after scrolling in both themes", async ({
 	page,
 }) => {
 	await page.goto("/");
 	const header = page.getByRole("banner");
 	const brand = page.locator(".site-header-brand");
 	const actions = page.locator(".site-header-actions");
+	const mobile = (page.viewportSize()?.width ?? 1440) <= 600;
 	for (const theme of ["light", "dark"]) {
 		await page.getByTestId("theme-toggle").click();
 		await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
 		await page.evaluate(() => window.scrollTo(0, 0));
+		await expect(header).toHaveAttribute("data-scrolled", "false");
+		// Let the 420ms settle-back transition finish before baselining.
+		await page.waitForTimeout(600);
 		const before = await Promise.all([
 			header.boundingBox(),
 			brand.boundingBox(),
@@ -21,21 +25,79 @@ test("navbar stays fixed and opaque after scrolling in both themes", async ({
 		await expect
 			.poll(() => page.evaluate(() => window.scrollY))
 			.toBeGreaterThan(48);
+		await expect(header).toHaveAttribute("data-scrolled", "true");
 		await expect(header).toHaveCSS("position", "fixed");
-		await expect(header).toHaveCSS(
-			"background-color",
-			theme === "light" ? "rgb(245, 245, 245)" : "rgb(17, 17, 17)",
-		);
-		expect(
-			await Promise.all([
-				header.boundingBox(),
-				brand.boundingBox(),
-				actions.boundingBox(),
-			]),
-		).toEqual(before);
-		await expect(page.getByTestId("cta-nav-create-room")).toBeInViewport();
+		if (!mobile) {
+			// Settle the 420ms compact transition before measuring.
+			await expect
+				.poll(() => brand.evaluate((node) => node.getBoundingClientRect().y))
+				.toBeGreaterThan(before[1]?.y ?? 0);
+		} else {
+			await page.waitForTimeout(500);
+		}
+		const after = await Promise.all([
+			header.boundingBox(),
+			brand.boundingBox(),
+			actions.boundingBox(),
+		]);
+		// Header keeps its 72px slot; only the groups settle (desktop).
+		expect(after[0]?.height).toBe(before[0]?.height);
+		expect(after[0]?.y).toBe(before[0]?.y);
+		if (mobile) {
+			expect(after[1]?.y).toBe(before[1]?.y);
+			expect(after[2]?.y).toBe(before[2]?.y);
+			await expect(page.getByTestId("cta-nav-join-room")).toBeInViewport();
+			await expect(page.getByTestId("cta-nav-create-room")).toBeHidden();
+		} else {
+			expect((after[1]?.y ?? 0) - (before[1]?.y ?? 0)).toBeGreaterThan(0);
+			await expect(page.getByTestId("cta-nav-create-room")).toBeInViewport();
+		}
+		// Visible surface keeps the theme background (full bar on mobile,
+		// compact pill on desktop) instead of transparent page bleed.
+		const surface = await header.evaluate((element) => {
+			const wide = getComputedStyle(element, "::before");
+			const nav = element.querySelector(".site-header-nav");
+			if (!nav) throw new Error("Header nav missing");
+			const pill = getComputedStyle(nav, "::before");
+			return {
+				wide: { background: wide.backgroundColor, opacity: wide.opacity },
+				pill: { background: pill.backgroundColor, opacity: pill.opacity },
+			};
+		});
+		const expected =
+			theme === "light" ? "rgb(245, 245, 245)" : "rgb(17, 17, 17)";
+		if (mobile) {
+			expect(surface.wide.background).toBe(expected);
+			await expect
+				.poll(() =>
+					header.evaluate(
+						(element) =>
+							Number.parseFloat(
+								getComputedStyle(element, "::before").opacity,
+							),
+					),
+				)
+				.toBeGreaterThan(0.9);
+		} else {
+			expect(surface.pill.background).toBe(expected);
+			await expect
+				.poll(() =>
+					header.evaluate((element) => {
+						const nav = element.querySelector(".site-header-nav");
+						if (!nav) throw new Error("Header nav missing");
+						return Number.parseFloat(
+							getComputedStyle(nav, "::before").opacity,
+						);
+					}),
+				)
+				.toBeGreaterThan(0.9);
+		}
 	}
-	await page.getByTestId("cta-nav-create-room").click();
+	if (mobile) {
+		await page.getByTestId("cta-create-room").click();
+	} else {
+		await page.getByTestId("cta-nav-create-room").click();
+	}
 	await expect(page.getByTestId("page-join")).toBeVisible();
 	const headerBox = await header.boundingBox();
 	const inputBox = await page.getByTestId("nick-input").boundingBox();
@@ -49,6 +111,13 @@ test("cards animate once, respond to hover and focus, and respect reduced motion
 	await page.goto("/");
 	const card = page.locator(".pointly-mark-back");
 	const brand = page.locator(".site-header-brand");
+	const mobile = (page.viewportSize()?.width ?? 1440) <= 600;
+	if (mobile) {
+		// Mobile keeps the wordmark only; the mark is hidden by design.
+		await expect(page.locator(".site-header-brand .pointly-mark")).toBeHidden();
+		await expect(card).toBeHidden();
+		return;
+	}
 	await expect(card).toHaveCSS("animation-duration", "0.4s");
 	await expect(card).toHaveCSS("animation-iteration-count", "1");
 	await expect

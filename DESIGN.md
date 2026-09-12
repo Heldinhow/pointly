@@ -35,11 +35,11 @@ A landing apresenta o produto; entrada, arena e recuperação priorizam a tarefa
 
 ## Contrato
 
-- Landing: headline central em duas linhas no desktop e mobile, descrição real, criar/entrar e demonstração identificada como exemplo. Passos sequenciais, não uma grade de benefícios inventados.
+- Landing: headline central no desktop; até 600px, alinhada à esquerda e sem uppercase. Descrição real, criar/entrar e demonstração identificada como exemplo: mesa no desktop, lista de participantes no mobile. Passos sequenciais, não uma grade de benefícios inventados.
 - Entrada: título e explicação à esquerda, formulário à direita; uma coluna no mobile. Preservar criação, convite, entrada manual, validação e recuperação de código inexistente.
 - Arena: pessoas, andamento, deck, revelação e nova rodada. Votos continuam privados até a revelação. Backend e store seguem como autoridade.
 - Recuperação: sala cheia, 404 e carregamento usam a mesma navegação, tipografia, superfícies e ações.
-- Navbar: fixa, ampla no topo; compacta ao rolar por transform/opacity, sem animar largura, altura ou posição de layout.
+- Navbar: fixa, ampla no topo; acima de 600px compacta ao rolar por transform/opacity, sem animar largura, altura ou posição de layout. No mobile permanece estável e revela apenas o separador inferior.
 - Não inventar métricas, links, depoimentos ou funcionalidades. Não adicionar dependências para efeitos visuais.
 
 ## Cores
@@ -66,19 +66,19 @@ Cores semânticas não são marca: erro `#a32e3b/#ffe8eb`, sucesso `#256a52/#dff
 ## Tipografia
 
 - Geist local: interface, títulos, nomes e textos. Geist Mono local: CTAs, códigos, timer e votos. Sem terceira família.
-- Hero: peso 500, uppercase, `clamp(3rem, 5.2vw, 4.6rem)`, line-height 1, tracking -0.04em. Até 600px: `clamp(2rem, 8.8vw, 3.4rem)` para manter a frase legível sem seis linhas.
+- Hero: peso 500, uppercase, `clamp(3rem, 5.2vw, 4.6rem)`, line-height 1, tracking -0.04em. Até 600px: caixa natural, `clamp(2rem, 9.7vw, 2.75rem)` e line-height 1.08.
 - H2: peso 500, `clamp(2rem, 3.5vw, 3.2rem)`, line-height 1.04. Entrada: 3rem, 2rem mobile. Recuperação: 2.3rem a 4rem.
 - Corpo: 16px/1.5; lede: 17px/1.65; legenda: 14px/1.55. Textos secundários não usam hairline como cor.
-- CTAs: mono 13px, peso 600, uppercase e tracking 0.06em; tamanho do botão altera área de toque, não a hierarquia tipográfica.
+- CTAs da landing mobile: Geist 15px, peso 500, caixa natural e 48px de altura; ação principal ocupa a largura disponível, entrada é secundária sem borda. No header mobile, Entrar usa Geist 14px; demais controles preservam Geist Mono.
 - Dados numéricos: tabulares. Nomes longos podem truncar no assento, mantendo `title` e nome acessível.
 
 ## Navegação
 
-`SiteHeader` é compartilhado pela landing, join, arena, full, 404 e fallback de carregamento. Altura reservada de 72px, largura máxima de 1440px, padding 36/28/16px.
+`SiteHeader` é compartilhado pela landing, join, arena, full, 404 e fallback de carregamento. Altura reservada de 72px, largura máxima de 1440px, padding 36/28/24px.
 
-Após 48px de scroll, os grupos transladam para dentro até 160px e descem 8px. Uma superfície compacta entra por opacity/transform; o fundo amplo sai por opacity. Controles não são escalados e mantêm 44px. O listener é passivo, usa no máximo um requestAnimationFrame pendente e cancela o frame ao desmontar.
+Acima de 600px, após 48px de scroll, os grupos transladam para dentro até 160px e descem 8px. Uma superfície compacta entra por opacity/transform; o fundo amplo sai por opacity. Controles não são escalados e mantêm 44px. O listener é passivo, usa no máximo um requestAnimationFrame pendente e cancela o frame ao desmontar.
 
-No mobile a compactação é vertical, sem deslocamento horizontal. Até 380px, apenas o símbolo aparece no link da marca para preservar todas as ações; o nome acessível continua completo. Movimento reduzido mantém os mesmos estados sem transição perceptível.
+Até 600px o header não se desloca nem vira caixa flutuante. O wordmark completo aparece mesmo em 320px, sem o símbolo reduzido. Tema usa ícone de 20px e alvo de 44px; Entrar permanece no topo. Criar fica no hero e ao final dos passos, não duplicado no header. Ações customizadas de entrada e arena permanecem disponíveis. Movimento reduzido mantém os mesmos estados sem transição perceptível.
 
 ## Componentes
 

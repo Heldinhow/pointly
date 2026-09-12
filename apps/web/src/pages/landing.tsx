@@ -31,7 +31,7 @@ export function Landing() {
 						<p className="landing-eyebrow">Planning poker para times ágeis</p>
 						<p className="landing-lede">Seu time, uma rodada de cartas e uma boa conversa. Estimem juntos com Planning Poker, sem criar conta.</p>
 						<fieldset className="landing-actions" aria-label="Ações da sala">
-							<button type="button" className="landing-button landing-button-primary" onClick={handleCreateRoom} data-testid="cta-create-room">Criar uma sala <span aria-hidden="true">↗</span></button>
+							<button type="button" className="landing-button landing-button-primary" onClick={handleCreateRoom} data-testid="cta-create-room">Criar uma sala <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg></button>
 							<button type="button" className="landing-button landing-button-secondary" onClick={handleJoinRoom} data-testid="cta-join-room">Entrar com código</button>
 						</fieldset>
 						<p className="landing-caption">Grátis. Até 12 pessoas. Só chegar e participar.</p>
@@ -50,6 +50,7 @@ export function Landing() {
 				<section className="landing-steps" aria-labelledby="steps-title">
 					<div className="landing-section-intro"><p className="landing-kicker">Como funciona</p><h2 id="steps-title">Uma rodada começa com espaço para todo mundo.</h2></div>
 					<ol>{STEPS.map(([title, body], index) => <li key={title} data-testid={`cap-card-0${index + 1}`}><span className="landing-step-number" aria-hidden="true">0{index + 1}</span><div><h3>{title}</h3><p>{body}</p></div></li>)}</ol>
+					<button type="button" className="landing-button landing-button-primary landing-mobile-create" onClick={handleCreateRoom} data-testid="cta-mobile-create-room">Criar uma sala</button>
 				</section>
 
 			</main>

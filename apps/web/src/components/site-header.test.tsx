@@ -1,9 +1,9 @@
 import { expect, mock, test } from "bun:test";
 import { MemoryRouter } from "react-router-dom";
 import { SiteHeader } from "./site-header";
-import { fireEvent, render, screen } from "./ui/test-helpers";
+import { act, fireEvent, render, screen } from "./ui/test-helpers";
 
-test("header preserves navigation and actions without changing on scroll", () => {
+test("header compacts on scroll and expands at the top without replacing actions", async () => {
 	const create = mock(() => {});
 	const join = mock(() => {});
 	const { container } = render(
@@ -12,6 +12,7 @@ test("header preserves navigation and actions without changing on scroll", () =>
 		</MemoryRouter>,
 	);
 	const header = screen.getByRole("banner");
+	expect(header.getAttribute("data-scrolled")).toBe("false");
 	expect(screen.getByRole("link").getAttribute("href")).toBe("/");
 	expect(container.querySelector("svg.pointly-mark")).toHaveAttribute(
 		"aria-hidden",
@@ -24,7 +25,13 @@ test("header preserves navigation and actions without changing on scroll", () =>
 	Object.defineProperty(window, "scrollY", { configurable: true, value: 120 });
 	try {
 		fireEvent.scroll(window);
-		expect(header).not.toHaveAttribute("data-scrolled");
+		await act(() => new Promise(requestAnimationFrame));
+		expect(header.getAttribute("data-scrolled")).toBe("true");
+		expect(screen.getByTestId("cta-nav-create-room")).toBeEnabled();
+		Object.defineProperty(window, "scrollY", { configurable: true, value: 48 });
+		fireEvent.scroll(window);
+		await act(() => new Promise(requestAnimationFrame));
+		expect(header.getAttribute("data-scrolled")).toBe("false");
 	} finally {
 		Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
 	}

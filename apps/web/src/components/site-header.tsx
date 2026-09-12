@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Brand } from "./brand";
 import { ThemeToggle } from "./theme-toggle";
@@ -21,9 +21,34 @@ export function SiteHeader({
 	brandLabel,
 	brandTestId,
 }: SiteHeaderProps) {
+	const [scrolled, setScrolled] = useState(() => window.scrollY > 48);
+
+	useEffect(() => {
+		let frame: number | null = null;
+		const onScroll = () => {
+			if (frame !== null) return;
+			frame = requestAnimationFrame(() => {
+				setScrolled(window.scrollY > 48);
+				frame = null;
+			});
+		};
+		window.addEventListener("scroll", onScroll, { passive: true });
+		return () => {
+			window.removeEventListener("scroll", onScroll);
+			if (frame !== null) cancelAnimationFrame(frame);
+		};
+	}, []);
+
 	return (
-		<header className="site-header" data-site-header="true">
-			<nav className="site-header-nav header-brand-led" aria-label="Navegação principal">
+		<header
+			className="site-header"
+			data-site-header="true"
+			data-scrolled={scrolled}
+		>
+			<nav
+				className="site-header-nav header-brand-led"
+				aria-label="Navegação principal"
+			>
 				<Link
 					to="/"
 					className="site-header-brand"
@@ -50,7 +75,20 @@ export function SiteHeader({
 								onClick={onCreateRoom}
 								data-testid="cta-nav-create-room"
 							>
-								Criar sala <span aria-hidden="true">↗</span>
+								<span>Criar sala</span>
+								<svg
+									width="14"
+									height="14"
+									viewBox="0 0 16 16"
+									fill="none"
+									aria-hidden="true"
+								>
+									<path
+										d="M3 13 13 3M3 3h10v10"
+										stroke="currentColor"
+										strokeWidth="1.5"
+									/>
+								</svg>
 							</button>
 						</>
 					)}
