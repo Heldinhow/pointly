@@ -10,7 +10,9 @@
  * **A11y**:
  *  - role="timer"
  *  - aria-live="off" (não anuncia cada segundo pra evitar ruído)
- *  - aria-label="Tempo restante: X segundos"
+ *  - aria-label="Tempo restante: X segundos. No zero, revela sozinho."
+ *    (a regra do auto-reveal viaja no próprio instrumento, nas duas
+ *    modalidades: tooltip pra quem vê, label pra SR)
  *
  * @see .specs/features/planning-poker-v1/tasks.md T34
  * @see .specs/features/planning-poker-v1/spec.md F-013, F-014
@@ -63,7 +65,8 @@ export function TimerPill(props: TimerPillProps = {}) {
 		<div
 			role="timer"
 			aria-live="off"
-			aria-label={`Tempo restante: ${timer} segundos`}
+			aria-label={`Tempo restante: ${timer} segundos. No zero, revela sozinho.`}
+			title="No zero, os votos revelam sozinhos"
 			data-testid="timer-pill"
 			data-od-id="timer-pill"
 			data-timer-critical={isCritical ? "true" : "false"}

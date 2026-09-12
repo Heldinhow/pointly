@@ -6,7 +6,7 @@
  *
  * Props:
  *  - isYou: borda coral 2px (outer)
- *  - isHost: ★ mostarda no canto (decoração via children)
+ *  - isHost: ★ ink no canto (identidade; o âmbar é só veredito)
  *  - state: 'idle' | 'voted' | 'disconnected' | 'revealed'
  *  - faceUp: full opacity após reveal
  *  - votedMedian: borda gold 2px inner (box-shadow inset)

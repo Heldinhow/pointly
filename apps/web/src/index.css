@@ -4,13 +4,15 @@
 @tailwind utilities;
 :root{color-scheme:light;accent-color:var(--primary);
 --bg:#f5f5f5;--surface:#fff;--sunken:#ebebeb;--fg:#171717;--fg-soft:#383838;--fg-mute:#525252;--fg-faint:#626262;--table:#ebebeb;--primary:#171717;--on-primary:#fafafa;--primary-hover:#383838;--accent:var(--primary);--accent-deep:var(--primary-hover);--accent-hover:var(--primary-hover);--accent-ink:var(--fg);--on-accent:var(--on-primary);--accent-soft:var(--table);--signature:var(--fg);--border-rule:#c9c9c9;--focus:var(--fg);--danger:#a32e3b;--danger-soft:#ffe8eb;--success:#256a52;--success-soft:#dff2e9;--warning:#835007;--warning-soft:#fff0ce;--avatar:#dedede;--avatar-ink:var(--fg);--avatar-self:var(--primary);--avatar-self-ink:var(--on-primary);--avatar-blue:#d0d0d0;--avatar-blue-ink:var(--fg);--avatar-rose:#e8e8e8;--avatar-rose-ink:var(--fg);
+/* Feltro da arena: exceção cromática deliberada (material da mesa), temada nos dois temas. */
+--arena-felt:#c4d0c7;--arena-felt-light:#d0dad3;--arena-felt-edge:#b0bfb3;--arena-rail:#dedede;--arena-on-felt:#1b2a21;--arena-on-felt-mute:#45584b;--arena-stitch:rgb(27 42 33 / 16%);--arena-card:#fff;--arena-card-ink:#1b2a21;
 --font-body:Geist,Inter,system-ui,-apple-system,sans-serif;--font-display:Geist,Inter,system-ui,-apple-system,sans-serif;--font-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;--header-height:72px;--content-column:1440px;--content-gutter:1rem;--radius-xs:2px;--radius-sm:3px;--radius-md:4px;--radius-lg:6px;--radius-xl:8px;--radius-2xl:10px;--radius-3xl:12px;
 /* Compatibility aliases for existing utility consumers; all resolve to the new semantic system. */
 --paper-warm:var(--bg);--paper-dark:var(--sunken);--coral-soft:var(--accent-soft);--coral-deep:var(--accent-deep);--coral:var(--accent);--mustard:var(--accent);--olive:var(--success);
 --shadow-bone:0 16px 48px rgb(31 29 28 / 18%);--shadow-card:none;--shadow-coral:none;--border-header:var(--border-rule);--shadow-header:transparent;--border-rail:var(--border-rule);
 }
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-theme="dark"]){--bg:#111;--surface:#191919;--sunken:#080808;--fg:#eee;--fg-soft:#d4d4d4;--fg-mute:#b6b6b6;--fg-faint:#a3a3a3;--table:#242424;--primary:#eee;--on-primary:#171717;--primary-hover:#d4d4d4;--border-rule:#414141;--danger:#ff8c96;--danger-soft:#3b2025;--success:#8fce9f;--success-soft:#1f3830;--warning:#e4bc75;--warning-soft:#373022;--avatar:#383838;--avatar-blue:#454545;--avatar-rose:#303030;color-scheme:dark;}}
-html[data-theme="dark"]{--bg:#111;--surface:#191919;--sunken:#080808;--fg:#eee;--fg-soft:#d4d4d4;--fg-mute:#b6b6b6;--fg-faint:#a3a3a3;--table:#242424;--primary:#eee;--on-primary:#171717;--primary-hover:#d4d4d4;--border-rule:#414141;--danger:#ff8c96;--danger-soft:#3b2025;--success:#8fce9f;--success-soft:#1f3830;--warning:#e4bc75;--warning-soft:#373022;--avatar:#383838;--avatar-blue:#454545;--avatar-rose:#303030;color-scheme:dark;}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-theme="dark"]){--bg:#111;--surface:#191919;--sunken:#080808;--fg:#eee;--fg-soft:#d4d4d4;--fg-mute:#b6b6b6;--fg-faint:#a3a3a3;--table:#242424;--primary:#eee;--on-primary:#171717;--primary-hover:#d4d4d4;--border-rule:#414141;--danger:#ff8c96;--danger-soft:#3b2025;--success:#8fce9f;--success-soft:#1f3830;--warning:#e4bc75;--warning-soft:#373022;--avatar:#383838;--avatar-blue:#454545;--avatar-rose:#303030;--arena-felt:#1d3527;--arena-felt-light:#26402f;--arena-felt-edge:#16281e;--arena-rail:#1a1d1b;--arena-on-felt:#eef3ef;--arena-on-felt-mute:#a9bfae;--arena-stitch:rgb(238 243 239 / 14%);--arena-card:#eef1ec;--arena-card-ink:#173227;color-scheme:dark;}}
+html[data-theme="dark"]{--bg:#111;--surface:#191919;--sunken:#080808;--fg:#eee;--fg-soft:#d4d4d4;--fg-mute:#b6b6b6;--fg-faint:#a3a3a3;--table:#242424;--primary:#eee;--on-primary:#171717;--primary-hover:#d4d4d4;--border-rule:#414141;--danger:#ff8c96;--danger-soft:#3b2025;--success:#8fce9f;--success-soft:#1f3830;--warning:#e4bc75;--warning-soft:#373022;--avatar:#383838;--avatar-blue:#454545;--avatar-rose:#303030;--arena-felt:#1d3527;--arena-felt-light:#26402f;--arena-felt-edge:#16281e;--arena-rail:#1a1d1b;--arena-on-felt:#eef3ef;--arena-on-felt-mute:#a9bfae;--arena-stitch:rgb(238 243 239 / 14%);--arena-card:#eef1ec;--arena-card-ink:#173227;color-scheme:dark;}
 html,body,#root{min-height:100%}html{-webkit-text-size-adjust:100%;scroll-padding-top:96px}body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-weight:400;-webkit-font-smoothing:antialiased;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 *{box-sizing:border-box}button,a[role=button]{cursor:pointer}button:disabled{cursor:default}button,input,select,textarea{font:inherit}input,select,textarea{font-size:16px;caret-color:var(--accent)}button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}a{text-underline-offset:4px}::selection{background:var(--accent);color:var(--on-accent)}:focus-visible{outline:3px solid var(--focus);outline-offset:3px}*{scrollbar-color:var(--border-rule) transparent;scrollbar-width:thin}[hidden]{display:none!important}
 .pointly-brand{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:600;font-size:26px;letter-spacing:-.04em;line-height:1.15;white-space:nowrap;color:var(--fg)}.pointly-mark{width:30px;height:30px;flex:none;color:currentColor}
@@ -101,29 +103,6 @@ html,body,#root{min-height:100%}html{-webkit-text-size-adjust:100%;scroll-paddin
 .animate-dodge-slide {
 	animation: dodge-slide 0.7s cubic-bezier(0.25, 0.8, 0.25, 1) both;
 }
-
-@keyframes reaction-fade-up {
-	0% {
-		transform: translateY(10px) scale(0.5);
-		opacity: 0;
-	}
-	15% {
-		transform: translateY(-10px) scale(1.3);
-		opacity: 1;
-	}
-	85% {
-		transform: translateY(-25px) scale(1);
-		opacity: 1;
-	}
-	100% {
-		transform: translateY(-35px) scale(0.8);
-		opacity: 0;
-	}
-}
-.animate-reaction-fade-up {
-	animation: reaction-fade-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
 
 h1,h2,h3{text-wrap:balance;overflow-wrap:break-word}p{text-wrap:pretty}
 /* Feedback moves without tweening layout, colors, or paint effects. */

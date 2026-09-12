@@ -22,7 +22,7 @@
  * @see .specs/features/planning-poker-v1/spec.md F-007, F-053
  */
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useBlocker, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { Deck } from "../components/deck";
 import { buildShareUrl } from "../components/empty-overlay";
 import { EmptyOverlay } from "../components/empty-overlay";
@@ -133,7 +133,12 @@ function SharePill({ code }: { code: string }) {
 					<path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
 				</svg>
 			)}
-			<span className="font-sans font-bold text-label tabular-nums">
+			{!copied && (
+				<span className="font-mono text-micro-label uppercase tracking-caps opacity-70">
+					Sala
+				</span>
+			)}
+			<span className="font-mono font-bold text-label tabular-nums">
 				{copied ? "Copiado!" : code || "—"}
 			</span>
 		</button>
@@ -180,26 +185,9 @@ export function Arena() {
 	// perceptível (o conteúdo da Arena é absolute/scale-driven).
 	const isMobile = useIsMobile();
 
-	// Intercepta navegações internas da SPA quando o usuário está em uma sala ativa
-	const blocker = useBlocker(
-		({ currentLocation, nextLocation }) =>
-			sala !== null && currentLocation.pathname !== nextLocation.pathname,
-	);
-
-	useEffect(() => {
-		if (blocker.state === "blocked") {
-			const confirmExit = window.confirm(
-				"Sair da sala agora? Seu voto e sua participação na rodada atual serão perdidos.",
-			);
-			if (confirmExit) {
-				blocker.proceed();
-			} else {
-				blocker.reset();
-			}
-		}
-	}, [blocker]);
-
-	// Intercepta recarregamento ou fechamento de aba/janela do navegador
+	// Saída com sala ativa: o `beforeunload` nativo é o único guardião
+	// (recarregar/fechar). Sem `window.confirm` custom duplicando a
+	// pergunta na navegação interna da SPA.
 	useEffect(() => {
 		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
 			if (sala !== null) {
@@ -226,23 +214,35 @@ export function Arena() {
 		() => sala?.players.filter((p) => p.hasVoted).length ?? 0,
 		[sala],
 	);
+	// Votos efetivamente dados na rodada (values só existem pós-reveal).
+	const roundVotes = useMemo(
+		() =>
+			(sala?.players ?? [])
+				.map((p) => p.value)
+				.filter((v): v is NonNullable<typeof v> => v !== null),
+		[sala],
+	);
 	const phase = sala?.phase ?? "idle";
 	const faceUp = phase === "revealed";
 	const unanimous = consensus?.unanimous ?? false;
 	const playerCount = sala?.players.length ?? 0;
 
 	// Copy do centro da mesa por estado (estudo mesa compartilhada):
-	// 1 pessoa → convite; todos votaram → revelar; senão → andamento.
+	// 1 pessoa → convite; todos votaram → beat nomeado + regra do
+	// auto-reveal (o que fazer: revelar agora ou aguardar o zero);
+	// senão → andamento com contagem.
 	const tableCopy =
 		playerCount <= 1
 			? "Tem lugar para o time."
 			: votedCount === playerCount && playerCount > 0
-				? "Podemos revelar."
+				? "Todos votaram."
 				: "Cada um no seu tempo.";
 	const tableSub =
 		playerCount <= 1
 			? "Convide alguém para estimar com você."
-			: `${votedCount} de ${playerCount} pessoas votaram`;
+			: votedCount === playerCount && playerCount > 0
+				? "Revele agora ou aguarde — no zero, revela sozinho."
+				: `${votedCount} de ${playerCount} pessoas votaram`;
 
 	// Calcula mediana e votedMedian por player
 	const median = consensus?.median ?? null;
@@ -343,6 +343,8 @@ export function Arena() {
 							faceUp={faceUp}
 							median={median}
 							unanimous={unanimous}
+							consensus={consensus}
+							votes={roundVotes}
 						/>
 						<MobileRevealDock
 							phase={phase}
@@ -404,9 +406,10 @@ export function Arena() {
 												left: `${(pos.left / 960) * 100}%`,
 												top: `${(pos.top / 560) * 100}%`,
 												transform: "translate(-50%, -50%)",
-												"--seat-card-x": `${-Math.cos(angle * Math.PI / 180) * 90}px`,
-												"--seat-card-y": `${-Math.sin(angle * Math.PI / 180) * 82}px`,
+												"--seat-card-x": `${-Math.cos(angle * Math.PI / 180) * 96}px`,
+												"--seat-card-y": `${-Math.sin(angle * Math.PI / 180) * 74}px`,
 												"--seat-card-angle": `${angle - 90}deg`,
+												"--reveal-delay": `${(p.seatIndex % 10) * 26}ms`,
 											} as CSSProperties}
 											data-seat-angle={angle}
 											data-seat-index={p.seatIndex}
@@ -428,26 +431,28 @@ export function Arena() {
 								{/* Centro da mesa em fluxo (estudo): copy do estado +
 								    botão empilhados, sem sobreposição. */}
 								<div className="arena-center">
-									{faceUp ? (
-										<div className="arena-center-stats">
-											<StatsPill consensus={consensus} />
-										</div>
-									) : (
-										<>
-											<h2
-												className="arena-table-copy"
-												data-testid="arena-table-copy"
-											>
-												{tableCopy}
-											</h2>
-											<p
-												className="arena-table-sub"
-												data-testid="arena-table-sub"
-											>
-												{tableSub}
-											</p>
-										</>
-									)}
+									<div className="arena-inlay">
+										{faceUp ? (
+											<div className="arena-center-stats">
+												<StatsPill consensus={consensus} votes={roundVotes} />
+											</div>
+										) : (
+											<>
+												<h2
+													className="arena-table-copy"
+													data-testid="arena-table-copy"
+												>
+													{tableCopy}
+												</h2>
+												<p
+													className="arena-table-sub"
+													data-testid="arena-table-sub"
+												>
+													{tableSub}
+												</p>
+											</>
+										)}
+									</div>
 									<div
 										className="arena-reveal-slot"
 										data-testid="arena-reveal-wrapper"
@@ -459,6 +464,7 @@ export function Arena() {
 											onReveal={handleReveal}
 											onNewRound={handleNewRound}
 											mode="inline"
+											showShortcutHint
 										/>
 									</div>
 								</div>

@@ -2,7 +2,13 @@
  * StatsPill tests — T35 verify (≥2 of 5 minimum required).
  */
 import { describe, expect, test } from "bun:test";
-import { StatsPill, formatMean, formatMedian, formatRange } from "./stats-pill";
+import {
+	StatsPill,
+	formatMean,
+	formatMedian,
+	formatRange,
+	groupVotes,
+} from "./stats-pill";
 import { render, screen } from "./ui/test-helpers";
 
 describe("formatMean / formatMedian / formatRange — T35 pure", () => {
@@ -84,8 +90,8 @@ describe("StatsPill — render", () => {
 		).toBe("true");
 	});
 
-	test("unanimous=false: mediana em gold (border-warning)", () => {
-		const { container } = render(
+	test("unanimous=false: mediana é o numeral herói do plate", () => {
+		render(
 			<StatsPill
 				consensus={{
 					median: 5,
@@ -95,9 +101,9 @@ describe("StatsPill — render", () => {
 				}}
 			/>,
 		);
-		const medianLabel = container.querySelector('[data-testid="stats-median"]');
-		// O span do valor da mediana deve ter border-warning (token AA)
-		expect(medianLabel?.querySelector(".border-warning")).toBeInTheDocument();
+		const pill = screen.getByTestId("stats-pill");
+		expect(pill.getAttribute("data-stats-mode")).toBe("normal");
+		expect(screen.getByTestId("stats-median-value")).toHaveTextContent("5");
 	});
 
 	test("role='status' + aria-live='polite' (a11y)", () => {
@@ -129,5 +135,77 @@ describe("StatsPill — render", () => {
 		);
 		const pill = screen.getByTestId("stats-pill");
 		expect(pill.getAttribute("aria-label")).toMatch(/unânime/i);
+	});
+});
+
+describe("groupVotes — distribuição", () => {
+	test("agrupa e ordena na ordem do deck, ☕ por último", () => {
+		expect(groupVotes(["8", "5", "5", "☕", "0"])).toEqual([
+			{ value: "0", count: 1 },
+			{ value: "5", count: 2 },
+			{ value: "8", count: 1 },
+			{ value: "☕", count: 1 },
+		]);
+	});
+});
+
+describe("Result plate — estados da rodada", () => {
+	test("voto único: 'Voto único' no lugar de 'Unânime'", () => {
+		render(
+			<StatsPill
+				consensus={{ median: 5, mean: 5, range: [5, 5], unanimous: true }}
+				votes={["5"]}
+			/>,
+		);
+		const pill = screen.getByTestId("stats-pill");
+		expect(pill.getAttribute("data-stats-mode")).toBe("solo");
+		expect(screen.getByTestId("stats-eyebrow")).toHaveTextContent(/voto único/i);
+		expect(screen.getByTestId("stats-result-value")).toHaveTextContent("5");
+		expect(screen.queryByTestId("stats-unanimous-badge")).not.toBeInTheDocument();
+	});
+
+	test("pausa: todos ☕ mostra modo pause sem números", () => {
+		render(
+			<StatsPill
+				consensus={{ median: null, mean: null, range: null, unanimous: false }}
+				votes={["☕", "☕"]}
+			/>,
+		);
+		const pill = screen.getByTestId("stats-pill");
+		expect(pill.getAttribute("data-stats-mode")).toBe("pause");
+		expect(screen.getByTestId("stats-result-value")).toHaveTextContent("☕");
+		expect(screen.queryByTestId("stats-mean-value")).not.toBeInTheDocument();
+		expect(screen.queryByTestId("stats-distribution")).not.toBeInTheDocument();
+	});
+
+	test("distribuição: pips por valor, mediana com aro, contagem ×N", () => {
+		render(
+			<StatsPill
+				consensus={{ median: 5, mean: 5.25, range: [3, 8], unanimous: false }}
+				votes={["3", "5", "5", "8"]}
+			/>,
+		);
+		expect(screen.getByTestId("stats-distribution")).toBeInTheDocument();
+		expect(screen.getByTestId("stats-pip-5")).toHaveTextContent("×2");
+		expect(
+			screen.getByTestId("stats-pip-5").getAttribute("data-pip-median"),
+		).toBe("true");
+		expect(
+			screen.getByTestId("stats-pip-3").getAttribute("data-pip-median"),
+		).toBe("false");
+	});
+
+	test("unânime com 2+ votos: badge + valor, sem mediana com testid antigo", () => {
+		render(
+			<StatsPill
+				consensus={{ median: 5, mean: 5, range: [5, 5], unanimous: true }}
+				votes={["5", "5"]}
+			/>,
+		);
+		expect(screen.getByTestId("stats-unanimous-badge")).toHaveTextContent(
+			/unânime/i,
+		);
+		expect(screen.queryByTestId("stats-median-value")).not.toBeInTheDocument();
+		expect(screen.queryByTestId("stats-distribution")).not.toBeInTheDocument();
 	});
 });

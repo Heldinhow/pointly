@@ -81,16 +81,21 @@ export function useArenaLoop({ nick, code, uuid, wsUrl }: UseArenaLoopParams) {
 	codeRef.current = code;
 	uuidRef.current = uuid;
 
-	// Helper: envia hello após WS abrir
+	// Helper: envia hello após WS abrir. Sem identidade (uuid/nick) não
+	// há o que apresentar — retorna sem marcar como enviado e sem
+	// disparar o warn do ws-client (o fluxo de join remonta com identidade).
 	const sendHello = useCallback((ws: WSClient) => {
 		if (helloSentRef.current) return;
+		const uuid = uuidRef.current;
+		const nick = nickRef.current;
+		if (!uuid || !nick) return;
 		helloSentRef.current = true;
 		const effectiveCode = codeRef.current || undefined;
 		ws.send({
 			type: "hello",
 			payload: {
-				uuid: uuidRef.current,
-				nick: nickRef.current,
+				uuid,
+				nick,
 				code: effectiveCode,
 			},
 		});

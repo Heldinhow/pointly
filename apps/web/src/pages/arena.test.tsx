@@ -228,7 +228,7 @@ describe("Arena shell — T30", () => {
 		);
 	});
 
-	test("centro mostra 'Podemos revelar.' quando todos votaram", () => {
+	test("centro mostra 'Todos votaram.' + regra do auto-reveal quando todos votaram", () => {
 		useSalaStore.getState().reset();
 		useSalaStore.getState().setSala(
 			makeSala({
@@ -261,10 +261,10 @@ describe("Arena shell — T30", () => {
 		useSalaStore.getState().setCurrentPlayerId("p_1");
 		renderArena();
 		expect(screen.getByTestId("arena-table-copy")).toHaveTextContent(
-			/podemos revelar/i,
+			/todos votaram/i,
 		);
 		expect(screen.getByTestId("arena-table-sub")).toHaveTextContent(
-			/2 de 2 pessoas votaram/i,
+			/revele agora ou aguarde — no zero, revela sozinho/i,
 		);
 	});
 });

@@ -9,8 +9,9 @@
  *  - `vote_cast { kind: 'individual', playerName }` → "{playerName} escolheu uma carta."
  *  - `vote_cast { kind: 'aggregate', count }`       → "Mais {count} escolheram."
  *  - Mudança de phase idle → voting + 1º voto        → "Rodada iniciada."
- *  - `votes_revealed`                                  → "Mediana: {median}" (se unanimity=false)
- *                                                       ou "Unânime!" (se true)
+ *  - `votes_revealed`                                  → "Voto revelado." (1 votante),
+ *                                                       "Mediana: {median}" (unanimity=false)
+ *                                                       ou "Unânime!" (true, ≥2 votos)
  *  - `sala_ended { reason: 'last_left' }`              → "Sala encerrada — último jogador saiu."
  *  - `error { code: 'invalid_phase' }`                 → "Aguarde o reveal para nova rodada."
  *  - `error { code: 'sala_cheia' }`                    → "Sala cheia — 12/12."
@@ -95,7 +96,10 @@ export function ToastQueue() {
 			sala.round !== lastConsensusRound.current
 		) {
 			lastConsensusRound.current = sala.round;
-			if (consensus.unanimous) {
+			// Com um único voto "unânime" não diz nada — anuncia o voto revelado.
+			if (Object.keys(sala.votes).length === 1) {
+				toast.push("Voto revelado.", "success");
+			} else if (consensus.unanimous) {
 				toast.push("★ Unânime!", "success");
 			} else if (consensus.median !== null) {
 				toast.push(`Mediana: ${consensus.median}`, "success");

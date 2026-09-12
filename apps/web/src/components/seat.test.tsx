@@ -209,4 +209,38 @@ describe("Seat — T31", () => {
 		);
 		expect(primitive?.className).toContain("opacity-60");
 	});
+
+	test("mira de arremesso some durante a votação (celebração é pós-reveal)", () => {
+		const p = makePlayer({ nick: "Maya" });
+		render(
+			<Seat
+				player={p}
+				isYou={false}
+				faceUp={false}
+				votedMedian={false}
+				unanimous={false}
+				onThrow={() => {}}
+			/>,
+		);
+		expect(
+			screen.queryByRole("button", { name: "Arremessar algo em Maya" }),
+		).not.toBeInTheDocument();
+	});
+
+	test("mira de arremesso aparece pós-reveal (faceUp=true)", () => {
+		const p = makePlayer({ nick: "Maya" });
+		render(
+			<Seat
+				player={p}
+				isYou={false}
+				faceUp={true}
+				votedMedian={false}
+				unanimous={false}
+				onThrow={() => {}}
+			/>,
+		);
+		expect(
+			screen.getByRole("button", { name: "Arremessar algo em Maya" }),
+		).toBeInTheDocument();
+	});
 });

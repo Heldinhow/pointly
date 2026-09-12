@@ -100,7 +100,7 @@ describe("ToastQueue — T37", () => {
 		expect(rodada !== null || alguem !== null).toBe(true);
 	});
 
-	test("votes_revealed (consensus com median) dispara 'Mediana: 5'", () => {
+	test("votes_revealed (consensus com median) dispara 'Mediana: 6.5'", () => {
 		setup();
 		act(() => {
 			useSalaStore.getState().reset();
@@ -112,14 +112,33 @@ describe("ToastQueue — T37", () => {
 			useSalaStore
 				.getState()
 				.applyReveal(
-					{ p_1: "5" },
-					{ median: 5, mean: 5, range: [5, 5], unanimous: false },
+					{ p_1: "5", p_2: "8" },
+					{ median: 6.5, mean: 6.5, range: [5, 8], unanimous: false },
 				);
 		});
-		expect(screen.queryByText(/mediana: 5/i)).not.toBeNull();
+		expect(screen.queryByText(/mediana: 6.5/i)).not.toBeNull();
 	});
 
-	test("unanimous=true dispara '★ Unânime!'", () => {
+	test("unanimous=true com 2+ votos dispara '★ Unânime!'", () => {
+		setup();
+		act(() => {
+			useSalaStore.getState().reset();
+		});
+		act(() => {
+			useSalaStore.getState().setSala(makeSala());
+		});
+		act(() => {
+			useSalaStore
+				.getState()
+				.applyReveal(
+					{ p_1: "5", p_2: "5" },
+					{ median: 5, mean: 5, range: [5, 5], unanimous: true },
+				);
+		});
+		expect(screen.queryByText(/unânime/i)).not.toBeNull();
+	});
+
+	test("1 votante: 'Voto revelado.' em vez de 'Unânime!'", () => {
 		setup();
 		act(() => {
 			useSalaStore.getState().reset();
@@ -135,7 +154,8 @@ describe("ToastQueue — T37", () => {
 					{ median: 5, mean: 5, range: [5, 5], unanimous: true },
 				);
 		});
-		expect(screen.queryByText(/unânime/i)).not.toBeNull();
+		expect(screen.queryByText(/voto revelado/i)).not.toBeNull();
+		expect(screen.queryByText(/unânime/i)).toBeNull();
 	});
 
 	test("sala_ended reason=last_left dispara 'Sala encerrada — último jogador saiu.'", () => {

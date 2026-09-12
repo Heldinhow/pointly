@@ -101,6 +101,15 @@ describe("TimerPill — render (com props diretas, sem store)", () => {
 		expect(pill.getAttribute("aria-label")).toMatch(/42 segundos/i);
 	});
 
+	test("pill declara a regra do auto-reveal (aria-label + title)", () => {
+		render(<TimerPill timer={42} round={3} />);
+		const pill = screen.getByTestId("timer-pill");
+		expect(pill.getAttribute("aria-label")).toMatch(
+			/no zero, revela sozinho/i,
+		);
+		expect(pill.getAttribute("title")).toMatch(/revelam sozinhos/i);
+	});
+
 	test("aria-live='off' (não anuncia cada segundo — evita ruído)", () => {
 		render(<TimerPill timer={42} round={3} />);
 		expect(screen.getByTestId("timer-pill").getAttribute("aria-live")).toBe(

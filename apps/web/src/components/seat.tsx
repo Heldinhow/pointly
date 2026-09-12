@@ -7,11 +7,14 @@ import type { Player, ProjectileType, Vote } from "@planning-poker/shared";
  *  - Nick truncado em ellipsis
  *  - Badge "VOCÊ" no assento local
  *  - State pill: AGUARDANDO / VOTOU / revealed-value (face-up)
- *  - ★ mostarda no canto superior direito se host
+ *  - ★ ink no canto do assento do host (identidade, nunca veredito)
  *  - Borda coral 2px se VOCÊ; borda gold 2px se votedMedian (aninhada via inset shadow)
- *  - Micro-interações de Arremesso (Mira + Menu de Projéteis no hover)
- *  - Cooldown visual de 5s após arremessar
- *  - Animações de impacto (Hit shake, Dodge slide, Deflect glow) e emojis flutuantes
+ *  - Celebração pós-reveal: mira + menu de projéteis só com face-up.
+ *    Durante a votação a mira some — arremesso é festa depois dela,
+ *    nunca munição no meio dela. Sem emoji flutuante aleatório, sem
+ *    badge de cooldown: o estado desabilitado da mira + status pra SR bastam.
+ *  - Animações de impacto (Hit shake, Dodge slide, Deflect) como feedback
+ *    do arremesso que acertou — é a resposta da celebração, não enfeite.
  */
 import { useEffect, useRef, useState } from "react";
 import { SeatPrimitive, type SeatPrimitiveState } from "./ui/seat";
@@ -44,8 +47,6 @@ const PROJECTILES: Array<{
 	{ type: "heart", emoji: "❤️", title: "Coração" },
 	{ type: "claps", emoji: "👏", title: "Palmas" },
 ];
-
-const EMOJI_REACTIONS = ["🤨", "😐", "😠", "😂", "😮", "😎", "😜"];
 
 /** Gera a inicial do nick para o avatar (max 2 chars, uppercase). */
 function getInitials(nick: string): string {
@@ -94,10 +95,6 @@ export function Seat({
 	const [impact, setImpact] = useState<"hit" | "dodge" | "deflect" | null>(
 		null,
 	);
-	const [floatingEmoji, setFloatingEmoji] = useState<{
-		emoji: string;
-		key: number;
-	} | null>(null);
 	const [cooldownTime, setCooldownTime] = useState(0);
 
 	const menuRef = useRef<HTMLDivElement>(null);
@@ -151,17 +148,6 @@ export function Seat({
 
 			setImpact(detail.outcome);
 
-			// Se for um acerto normal (hit), joga emoji flutuante
-			if (detail.outcome === "hit") {
-				const randomEmoji =
-					EMOJI_REACTIONS[Math.floor(Math.random() * EMOJI_REACTIONS.length)] ||
-					"🤨";
-				setFloatingEmoji({
-					emoji: randomEmoji,
-					key: Math.random(),
-				});
-			}
-
 			// Limpa o impacto após a animação terminar
 			const duration = detail.outcome === "dodge" ? 700 : 400;
 			setTimeout(() => {
@@ -173,6 +159,15 @@ export function Seat({
 		return () =>
 			window.removeEventListener("pointly-projectile-impact", handleImpact);
 	}, [player.id]);
+
+	// Celebração é pós-reveal: ao sair do face-up, fecha o menu e apaga
+	// o hover pra não reabrir mira velha na próxima revelação.
+	useEffect(() => {
+		if (!faceUp) {
+			setShowMenu(false);
+			setIsHovered(false);
+		}
+	}, [faceUp]);
 
 	// Fechar menu de reações se clicar fora ou Escape; retorna foco ao trigger
 	useEffect(() => {
@@ -261,18 +256,9 @@ export function Seat({
 					}
 				}}
 			>
-				{/* Emoji Flutuante de Reação */}
-				{floatingEmoji && (
-					<div
-						key={floatingEmoji.key}
-						className="absolute -top-10 left-1/2 -translate-x-1/2 text-3xl z-40 pointer-events-none select-none motion-reduce:animate-none animate-reaction-fade-up"
-					>
-						{floatingEmoji.emoji}
-					</div>
-				)}
-
-				{/* Botão discreto de arremesso (Mira) — sempre no DOM pra teclado/toque, visível em hover OU foco */}
-				{!isYou && player.status === "connected" && (
+				{/* Botão discreto de arremesso (Mira) — só pós-reveal, sempre no
+				    DOM pra teclado/toque quando visível, revelado em hover OU foco */}
+				{!isYou && player.status === "connected" && faceUp && (
 					<div
 						className={`absolute -top-3 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center transition-opacity ${isHovered || showMenu ? "opacity-100" : "opacity-0 pointer-events-none focus-within:opacity-100 focus-within:pointer-events-auto"}`}
 					>
@@ -325,15 +311,10 @@ export function Seat({
 					</div>
 				)}
 
-				{/* Cooldown overlay sobre o seu próprio assento */}
-				{isYou && cooldownTime > 0 && (
-					<div className="absolute -top-6 left-1/2 -translate-x-1/2 z-30 font-mono text-label bg-ink text-bg px-2 py-0.5 rounded-full shadow-sm motion-reduce:animate-none animate-pulse tracking-caps select-none">
-						Aguarde {cooldownTime}s
-					</div>
-				)}
 				{/* Cooldown anunciado pra SR uma vez (texto estático: sem
-				    countdown por segundo, que competia com o StatsPill). */}
-				{!isYou && cooldownTime > 0 && (
+				    countdown por segundo, que competia com o StatsPill).
+				    Sem badge visual — a mira desabilitada já diz "aguarde". */}
+				{cooldownTime > 0 && (
 					<span className="sr-only" role="status">
 						Aguarde para arremessar de novo.
 					</span>

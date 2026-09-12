@@ -60,7 +60,7 @@ describe("RevealButton — render", () => {
 		expect(screen.getByTestId("reveal-button")).toHaveTextContent(/Aguardando votos/i);
 	});
 
-	test("estado ready: 'Revelar votos.' enabled + bg-coral", () => {
+	test("estado ready: 'Revelar votos.' enabled + bg-coral, sem hint duplicado", () => {
 		render(
 			<RevealButton
 				phase="voting"
@@ -75,22 +75,8 @@ describe("RevealButton — render", () => {
 		expect(btn).toBeEnabled();
 		expect(btn.className).toContain("bg-coral");
 		expect(btn).toHaveTextContent(/Revelar votos/);
-		expect(screen.getByTestId('reveal-button-hint')).toHaveTextContent(/3 de 12 votaram/);
-	});
-
-	test("estado ready com todos os votos: hint 'Todos votaram'", () => {
-		render(
-			<RevealButton
-				phase="voting"
-				votedCount={12}
-				totalPlayers={12}
-				onReveal={() => {}}
-				onNewRound={() => {}}
-			/>,
-		);
-		expect(screen.getByTestId("reveal-button-hint")).toHaveTextContent(
-			/Todos votaram/,
-		);
+		// O andamento vive no centro da mesa — o botão não repete o dado.
+		expect(screen.queryByTestId("reveal-button-hint")).not.toBeInTheDocument();
 	});
 
 	test("estado post-reveal: 'Nova rodada' ghost (bg-surface, sem coral)", () => {
@@ -111,8 +97,7 @@ describe("RevealButton — render", () => {
 		expect(btn).toHaveTextContent(/Nova rodada/i);
 	});
 
-	test("singular: estado de espera aparece somente no botão", () => {
-		render(
+	test("singular: estado de espera aparece somente no botão", () => {		render(
 			<RevealButton
 				phase="idle"
 				votedCount={0}
@@ -123,6 +108,53 @@ describe("RevealButton — render", () => {
 		);
 		expect(screen.queryByTestId("reveal-button-hint")).not.toBeInTheDocument();
 		expect(screen.getAllByText("Aguardando votos…")).toHaveLength(1);
+	});
+
+	test("showShortcutHint + ready → kbd 'R' visível (desktop)", () => {
+		render(
+			<RevealButton
+				phase="voting"
+				votedCount={3}
+				totalPlayers={12}
+				onReveal={() => {}}
+				onNewRound={() => {}}
+				showShortcutHint
+			/>,
+		);
+		const btn = screen.getByTestId("reveal-button");
+		expect(btn.textContent).toContain("R");
+		expect(btn.querySelector("kbd")).toHaveTextContent("R");
+	});
+
+	test("showShortcutHint + post-reveal → kbd 'N' visível", () => {
+		render(
+			<RevealButton
+				phase="revealed"
+				votedCount={12}
+				totalPlayers={12}
+				onReveal={() => {}}
+				onNewRound={() => {}}
+				showShortcutHint
+			/>,
+		);
+		expect(
+			screen.getByTestId("reveal-button").querySelector("kbd"),
+		).toHaveTextContent("N");
+	});
+
+	test("sem showShortcutHint → nenhum kbd (mobile default)", () => {
+		render(
+			<RevealButton
+				phase="voting"
+				votedCount={3}
+				totalPlayers={12}
+				onReveal={() => {}}
+				onNewRound={() => {}}
+			/>,
+		);
+		expect(
+			screen.getByTestId("reveal-button").querySelector("kbd"),
+		).not.toBeInTheDocument();
 	});
 });
 

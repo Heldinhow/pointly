@@ -166,9 +166,11 @@ test("arena has one waiting message and preserves a round between two participan
 		}
 		await suite.joinRoom(code, 1);
 		await suite.vote(0, "5");
-		await expect(first.getByTestId("reveal-button-hint")).toHaveText(
-			"1 de 2 votaram.",
+		// O andamento vive no centro da mesa; o botão não repete a contagem.
+		await expect(first.getByTestId("arena-table-sub")).toHaveText(
+			"1 de 2 pessoas votaram",
 		);
+		await expect(first.getByTestId("reveal-button-hint")).toHaveCount(0);
 		await suite.vote(1, "8");
 		await suite.reveal(1);
 		await expect(first.getByTestId("reveal-button")).toHaveAttribute(

@@ -93,4 +93,25 @@ describe("Deck — T32", () => {
 		expect(screen.getByRole("group", { name: "Estimativas altas" })).toBeInTheDocument();
 		expect(screen.getByRole("group", { name: "Pausa" })).toBeInTheDocument();
 	});
+
+	test("chunking visível: micro-legendas baixas / altas / pausa pra quem enxerga", () => {
+		const { container } = render(<Deck currentVote={null} onSelect={() => {}} />);
+		const deck = screen.getByTestId("deck");
+		for (const caption of ["baixas", "altas", "pausa"]) {
+			const el = Array.from(deck.querySelectorAll("span")).find(
+				(s) => s.textContent === caption,
+			);
+			expect(el).toBeInTheDocument();
+			// Legenda é visual; SR usa o aria-label do grupo, não o texto.
+			expect(el?.getAttribute("aria-hidden")).toBe("true");
+		}
+		expect(container).toBeInTheDocument();
+	});
+
+	test("☕ explica a regra: title + aria 'pausa — fora da média'", () => {
+		render(<Deck currentVote={null} onSelect={() => {}} />);
+		const card = screen.getByTestId("deck-card-☕");
+		expect(card.getAttribute("title")).toMatch(/fora da média/i);
+		expect(card.getAttribute("aria-label")).toMatch(/pausa — fora da média/i);
+	});
 });

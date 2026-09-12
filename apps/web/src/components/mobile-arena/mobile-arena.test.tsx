@@ -169,19 +169,50 @@ describe("MobilePlayerList", () => {
 		expect(screen.getByTestId("mobile-player-count")).toHaveTextContent("1/2");
 	});
 
-	test("faceUp + median → header mostra mediana em gold", () => {
+	test("faceUp + consensus → bloco de veredito completo (não só mediana)", () => {
 		render(
 			<MobilePlayerList
-				players={[makePlayer("p1", "Helder", { hasVoted: true, value: "5" })]}
+				players={[
+					makePlayer("p1", "Helder", { hasVoted: true, value: "3" }),
+					makePlayer("p2", "Luna", { hasVoted: true, value: "5" }),
+					makePlayer("p3", "Rui", { hasVoted: true, value: "8" }),
+				]}
 				currentPlayerId="p1"
 				faceUp={true}
 				median={5}
+				consensus={{ median: 5, mean: 5.3, range: [3, 8], unanimous: false }}
+				votes={["3", "5", "8"]}
 			/>,
 		);
-		expect(screen.getByTestId("mobile-player-median")).toHaveTextContent(/5/);
+		// Mesmo componente do desktop, variante painel: mediana + média +
+		// intervalo + distribuição de pips, com os mesmos testids.
+		expect(screen.getByTestId("stats-median-value")).toHaveTextContent("5");
+		expect(screen.getByTestId("stats-mean-value")).toHaveTextContent("5.3");
+		expect(screen.getByTestId("stats-range-value")).toHaveTextContent("3–8");
+		expect(screen.getByTestId("stats-distribution")).toBeInTheDocument();
+		// Header fica magro: sem chip de mediana/Unânime duplicando o veredito.
+		expect(
+			screen.queryByTestId("mobile-player-median"),
+		).not.toBeInTheDocument();
+		expect(
+			screen.queryByTestId("mobile-player-unanimous"),
+		).not.toBeInTheDocument();
 	});
 
-	test("unanimous=true → rows sem anel de mediana (F-023 mobile)", () => {
+	test("pré-reveal (consensus=null) → sem bloco de veredito", () => {
+		render(
+			<MobilePlayerList
+				players={[makePlayer("p1", "Helder", { hasVoted: true })]}
+				currentPlayerId="p1"
+				faceUp={false}
+				median={null}
+				consensus={null}
+			/>,
+		);
+		expect(screen.queryByTestId("stats-pill")).not.toBeInTheDocument();
+	});
+
+	test("unanimous=true → veredito 'Unânime' + rows sem anel de mediana (F-023 mobile)", () => {
 		render(
 			<MobilePlayerList
 				players={[
@@ -192,9 +223,13 @@ describe("MobilePlayerList", () => {
 				faceUp={true}
 				median={5}
 				unanimous={true}
+				consensus={{ median: 5, mean: 5, range: [5, 5], unanimous: true }}
+				votes={["5", "5"]}
 			/>,
 		);
-		expect(screen.getByTestId("mobile-player-unanimous")).toBeInTheDocument();
+		expect(screen.getByTestId("stats-unanimous-badge")).toHaveTextContent(
+			/Unânime/i,
+		);
 		expect(screen.getByTestId("mobile-seat-p1").className).not.toContain(
 			"shadow-[inset_0_0_0_2px_var(--warning)]",
 		);

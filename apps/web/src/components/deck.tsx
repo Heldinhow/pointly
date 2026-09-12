@@ -57,11 +57,16 @@ export interface DeckProps {
  *  - baixas: 0, ½, 1, 2
  *  - altas: 3, 5, 8, 13
  *  - pausa: ☕ (preciso de um intervalo)
+ *
+ * Cada grupo mostra sua micro-legenda VISÍVEL (`caption`) acima das
+ * cartas — o chunking existe pra quem enxerga, não só pra SR (o
+ * aria-label do grupo continua canônico). A regra do ☕ ("fora da
+ * média") viaja no title + aria-label da própria carta.
  */
-const DECK_GROUPS: Array<{ label: string; values: Vote[] }> = [
-	{ label: "Estimativas baixas", values: ["0", "½", "1", "2"] },
-	{ label: "Estimativas altas", values: ["3", "5", "8", "13"] },
-	{ label: "Pausa", values: ["☕"] },
+const DECK_GROUPS: Array<{ label: string; caption: string; values: Vote[] }> = [
+	{ label: "Estimativas baixas", caption: "baixas", values: ["0", "½", "1", "2"] },
+	{ label: "Estimativas altas", caption: "altas", values: ["3", "5", "8", "13"] },
+	{ label: "Pausa", caption: "pausa", values: ["☕"] },
 ];
 export function Deck({ currentVote, onSelect, phase }: DeckProps) {
 	const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -141,32 +146,46 @@ export function Deck({ currentVote, onSelect, phase }: DeckProps) {
 					{gi > 0 && (
 						<span
 							aria-hidden="true"
-							className="w-px self-stretch bg-ink/10 flex-shrink-0"
+							className="w-px self-stretch mt-3.5 bg-ink/10 flex-shrink-0"
 						/>
 					)}
 					<div
 						key={group.label}
 						role="group"
 						aria-label={group.label}
-						className="flex gap-2 flex-shrink-0"
+						className="flex flex-col gap-1 flex-shrink-0"
 					>
-						{group.values.map((value) => {
-							const selected = currentVote === value;
-							const isCoffee = value === "☕";
-							return (
-								<button
-									key={value}
-									type="button"
-									aria-label={
-										selected ? `Selecionada, voto em ${value}` : `Votar ${value}`
-									}
-									aria-pressed={selected}
-									onClick={() => onSelect(value)}
-									onKeyDown={(e) => handleKeyDown(e, value)}
-									data-testid={`deck-card-${value}`}
-									data-deck-value={value}
-									data-deck-selected={selected ? "true" : "false"}
-									style={{ scrollSnapAlign: "start" }}
+						<span
+							aria-hidden="true"
+							className="font-mono text-[10px] leading-none tracking-caps uppercase text-ink-faint whitespace-nowrap pl-0.5"
+						>
+							{group.caption}
+						</span>
+						<div className="flex gap-2 flex-shrink-0">
+							{group.values.map((value) => {
+								const selected = currentVote === value;
+								const isCoffee = value === "☕";
+								return (
+									<button
+										key={value}
+										type="button"
+										aria-label={
+											isCoffee
+												? selected
+													? "Selecionada, pausa — fora da média"
+													: "Votar pausa — fora da média"
+												: selected
+													? `Selecionada, voto em ${value}`
+													: `Votar ${value}`
+										}
+										title={isCoffee ? "Pausa — fora da média" : undefined}
+										aria-pressed={selected}
+										onClick={() => onSelect(value)}
+										onKeyDown={(e) => handleKeyDown(e, value)}
+										data-testid={`deck-card-${value}`}
+										data-deck-value={value}
+										data-deck-selected={selected ? "true" : "false"}
+										style={{ scrollSnapAlign: "start" }}
 									className={cn(
 										// base
 										"w-[48px] h-[68px] flex-shrink-0 bg-surface rounded-lg",
@@ -199,6 +218,7 @@ export function Deck({ currentVote, onSelect, phase }: DeckProps) {
 								</button>
 							);
 						})}
+						</div>
 					</div>
 				</Fragment>
 			))}

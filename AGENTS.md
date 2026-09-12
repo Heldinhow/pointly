@@ -8,3 +8,8 @@ Prefer specialized subagents for bounded exploration, implementation, testing, r
 Do not delegate trivial work merely for parallelism.
 Do not let multiple implementation agents edit the same files without explicit ownership boundaries.
 User instructions always take precedence over this orchestration policy.
+
+## Design Context
+
+Product register (`product`, `web`): Planning Poker sem fricção para times ágeis — ver `apps/web/PRODUCT.md`.
+Visual system (monocromo Geist + feltro sage, plano por padrão): ver `apps/web/DESIGN.md`.

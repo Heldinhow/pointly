@@ -5,7 +5,11 @@
  * scrollável, com header consolidação de:
  *  - Jogadores votados/total (esquerda)
  *  - TimerPill com timer + round (direita)
- *  - Mediana pós-reveal (entre o contador e a pill)
+ *
+ * Pós-reveal, o veredito COMPLETO (mediana + média + intervalo +
+ * distribuição) abre a área de scroll no mesmo componente do desktop
+ * (`StatsPill` variant panel) — um veredito, dois palcos. O header
+ * fica propositalmente magro (contador + timer) pra nunca colidir.
  *
  * O round NN é mostrado pelo TimerPill — não duplicamos.
  *
@@ -23,7 +27,9 @@
  *
  * @see MobileSeatRow (filho)
  */
-import type { Player } from "@planning-poker/shared";
+import type { Player, Vote } from "@planning-poker/shared";
+import type { ConsensusSnapshot } from "../../store/sala";
+import { StatsPill } from "../stats-pill";
 import { TimerPill } from "../timer-pill";
 import { MobileSeatRow } from "./MobileSeatRow";
 
@@ -35,11 +41,10 @@ export interface MobilePlayerListProps {
 	median: number | null;
 	/** true se todos votaram igual (espelha badge UNÂNIME do desktop). */
 	unanimous?: boolean;
-}
-
-function formatMedian(median: number | null): string | null {
-	if (median === null) return null;
-	return Number.isInteger(median) ? String(median) : median.toFixed(1);
+	/** Consensus pós-reveal — alimenta o bloco de veredito. null pré-reveal. */
+	consensus?: ConsensusSnapshot | null;
+	/** Votos revelados — alimenta a distribuição do veredito. */
+	votes?: readonly Vote[];
 }
 
 /** Compara o valor do player com a mediana; trata "½" como 0.5 e "☕" como null. */
@@ -64,6 +69,8 @@ export function MobilePlayerList({
 	faceUp,
 	median,
 	unanimous = false,
+	consensus = null,
+	votes = [],
 }: MobilePlayerListProps) {
 	const votedCount = players.filter((p) => p.hasVoted).length;
 	const isEmpty = players.length === 0;
@@ -115,28 +122,6 @@ export function MobilePlayerList({
 					</div>
 				</div>
 				<div className="flex flex-wrap min-w-0 items-center gap-2.5">
-					{faceUp && unanimous ? (
-						<span
-							data-testid="mobile-player-unanimous"
-							className="font-sans text-caption text-warning font-semibold inline-flex items-center gap-1"
-						>
-							<span aria-hidden="true">★</span>
-							Unânime
-						</span>
-					) : (
-						faceUp &&
-						median !== null && (
-							<span
-								data-testid="mobile-player-median"
-								className="font-sans text-caption inline-flex items-center gap-1 text-ink-mute"
-							>
-								<span>Mediana</span>
-								<span className="text-ink font-semibold border-b border-warning">
-									{formatMedian(median)}
-								</span>
-							</span>
-						)
-					)}
 					<TimerPill />
 				</div>
 			</header>
@@ -144,6 +129,13 @@ export function MobilePlayerList({
 			{/* Scroll container. overflow-y-auto + min-h-0 permitem o flex
 				 comprimir e scroll funcionar em safari iOS. */}
 			<div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+				{/* Veredito pós-reveal: mediana + média + intervalo +
+				    distribuição, no mesmo componente do desktop. O header
+				    fica magro de propósito — veredito mora aqui, no fluxo
+				    da discussão, não espremido no strip. */}
+				{faceUp && consensus && (
+					<StatsPill consensus={consensus} votes={votes} variant="panel" />
+				)}
 				{isEmpty ? (
 					<p
 						className="px-4 py-12 text-center font-sans text-caption text-ink-mute"

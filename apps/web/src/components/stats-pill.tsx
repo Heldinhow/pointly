@@ -1,29 +1,47 @@
 /**
- * Stats pill — T35 (Phase 6).
+ * Result plate — pós-reveal na arena.
  *
- * Pill bone-fill no canto superior esquerdo da arena com:
- *  - Mono caps `MÉDIA X.X · MEDIANA Y · INTERVALO A–B`
- *  - Mediana com sublinhado warning por padrão
- *  - Quando `unanimous: true`, mostra badge "UNÂNIME" em vez da mediana gold
- *  - Aparece só pós-reveal
- *
- * **Lógica**:
- *  - Se `consensus === null`, renderiza vazio (ou hidden)
- *  - Se `consensus.unanimous === true`, exibe badge UNÂNIME + range (sem mediana gold)
- *  - Caso contrário, exibe média + mediana gold + range
+ * Imprime o resultado da rodada no inlay central do feltro:
+ *  - Eyebrow + numeral herói (mono, tabular) + legenda média/intervalo
+ *  - Distribuição real dos votos (agrupada por valor, ☕ por último)
+ *  - Estados: normal (mediana), unânime, voto único, pausa (só ☕)
  *
  * **A11y**:
- *  - role="status" + aria-live="polite" (anuncia quando reveal acontece)
- *  - aria-label descritivo
+ *  - `role="status"` implícito (`<output>`) + `aria-live="polite"`
+ *  - `aria-label` descritivo por estado
  *
  * @see .specs/features/planning-poker-v1/tasks.md T35
  * @see .specs/features/planning-poker-v1/spec.md F-024, F-049
  */
+import { DECK_VALUES, type Vote, voteToNumber } from "@planning-poker/shared";
 import type { ConsensusSnapshot } from "../store/sala";
-import { cn } from "./ui/utils";
 
 export interface StatsPillProps {
 	consensus: ConsensusSnapshot | null;
+	/**
+	 * Votos efetivamente dados nesta rodada (pós-reveal). Opcional:
+	 * sem ele o plate mostra só o resultado, sem distribuição.
+	 */
+	votes?: readonly Vote[];
+	/**
+	 * `inlay` (default): numeral herói sobre o feltro da mesa (desktop).
+	 * `panel`: mesmo veredito, em cartão de superfície — veredito
+	 * byte-idêntico no topo da lista mobile (um componente, dois palcos).
+	 */
+	variant?: "inlay" | "panel";
+}
+
+/** Grupo de votos iguais, na ordem do deck (☕ por último). */
+export type VoteGroup = { value: Vote; count: number };
+
+/** Agrupa votos por valor preservando a ordem do deck. */
+export function groupVotes(votes: readonly Vote[]): VoteGroup[] {
+	const counts = new Map<Vote, number>();
+	for (const v of votes) counts.set(v, (counts.get(v) ?? 0) + 1);
+	return DECK_VALUES.filter((v) => counts.has(v)).map((v) => ({
+		value: v,
+		count: counts.get(v) ?? 0,
+	}));
 }
 
 /** Formata range "min–max" (U+2013 en-dash). */
@@ -44,82 +62,128 @@ export function formatMedian(median: number | null): string {
 	return Number.isInteger(median) ? median.toString() : median.toFixed(1);
 }
 
-export function StatsPill({ consensus }: StatsPillProps) {
-	// Sem consensus (pré-reveal): não renderiza nada visível, mas mantém
-	// slot reservado pro layout (display:none evita CLS).
+export function StatsPill({ consensus, votes, variant = "inlay" }: StatsPillProps) {
+	// Sem consensus (pré-reveal): não renderiza nada visível.
 	if (!consensus) {
 		return null;
 	}
 
-	const showUnanimous = consensus.unanimous;
+	const total = votes?.length ?? 0;
+	const allCoffee = consensus.median === null && total > 0;
+	const solo = !allCoffee && total === 1;
+	const unanimous = consensus.unanimous && !solo;
+	const groups =
+		total > 1 && !unanimous && !allCoffee ? groupVotes(votes ?? []) : [];
+	const showDistribution = groups.length > 1;
+
+	const ariaLabel = allCoffee
+		? "Rodada em pausa · nenhum voto numérico"
+		: solo
+			? `Voto único · média ${formatMean(consensus.mean)} · intervalo ${formatRange(consensus.range)}`
+			: unanimous
+				? `Votação unânime · média ${formatMean(consensus.mean)} · intervalo ${formatRange(consensus.range)}`
+				: `Estatísticas pós-reveal · média ${formatMean(consensus.mean)} · mediana ${formatMedian(consensus.median)} · intervalo ${formatRange(consensus.range)}`;
+
+	const distributionLabel = showDistribution
+		? `Distribuição: ${groups.map((g) => `${g.count} voto${g.count > 1 ? "s" : ""} ${g.value}`).join(", ")}`
+		: undefined;
 
 	return (
 		<output
 			aria-live="polite"
-			aria-label={
-				showUnanimous
-					? `Votação unânime · média ${formatMean(consensus.mean)} · intervalo ${formatRange(consensus.range)}`
-					: `Estatísticas pós-reveal · média ${formatMean(consensus.mean)} · mediana ${formatMedian(consensus.median)} · intervalo ${formatRange(consensus.range)}`
-			}
+			aria-label={ariaLabel}
 			data-testid="stats-pill"
 			data-od-id="stats-pill"
-			data-stats-unanimous={showUnanimous ? "true" : "false"}
-			className={cn(
-				// pill compacto: ocupa 1 linha discreta no topo,
-				// não compete com a Ø wordmark à esquerda. py-2 era exagerado
-				// pra um strip pós-reveal — encolhido pra py-1; gap-2.5 → 2 pra
-				// acompanhar (sem isso fica visualmente "arejado demais" perto
-				// do card-title do header). Texto usa `text-micro-label`
-				// (10px) — `text-label` (11px) era grande demais pra um strip
-				// pós-reveal que compete com o Seat face-up (20px Playfair).
-				"arena-stats-pill inline-flex items-center gap-2 px-3 py-1 rounded-full",
-				"bg-surface border border-ink/5",
-				"font-mono text-label tracking-caps uppercase text-ink-mute",
-				"transition-opacity duration-300",
-			)}
+			data-stats-unanimous={consensus.unanimous ? "true" : "false"}
+			data-stats-mode={
+				allCoffee ? "pause" : solo ? "solo" : unanimous ? "unanimous" : "normal"
+			}
+			data-stats-variant={variant}
+			className={variant === "panel" ? "arena-result arena-result-panel" : "arena-result"}
 		>
-			{/* Média */}
-			<span data-testid="stats-mean">
-				<span className="text-ink-mute">Média</span>{" "}
-				<span className="text-ink font-semibold" data-testid="stats-mean-value">
-					{formatMean(consensus.mean)}
-				</span>
-			</span>
-
-			{/* Mediana (gold) OU UNANIMOUS badge */}
-			{showUnanimous ? (
-				<span
-					data-testid="stats-unanimous-badge"
-					className="font-mono text-micro-label tracking-caps uppercase text-warning font-semibold inline-flex items-center gap-1"
-				>
+			{/* Eyebrow: o que o numeral está dizendo */}
+			{unanimous ? (
+				<span className="arena-result-eyebrow" data-testid="stats-unanimous-badge">
 					Unânime
 				</span>
 			) : (
-				<span data-testid="stats-median">
-					<span className="text-ink-mute">Mediana</span>{" "}
-					<span
-						className="text-ink font-semibold border-b border-warning"
-						data-testid="stats-median-value"
-					>
-						{formatMedian(consensus.median)}
-					</span>
+				<span className="arena-result-eyebrow" data-testid="stats-eyebrow">
+					{allCoffee ? "Pausa" : solo ? "Voto único" : "Mediana"}
 				</span>
 			)}
 
-			{/* Média + Mediana estão em `text-micro-label` (10px) via pill
-			    root. Valor da mediana ganha `font-semibold` para hierarquia
-			    sobre o número — borda warning (border-b border-warning) reforça. */}
-
-			{/* Intervalo */}
-			<span data-testid="stats-range">
-				<span className="text-ink-mute">Intervalo</span>{" "}
-				<span
-					className="text-ink font-semibold"
-					data-testid="stats-range-value"
-				>
-					{formatRange(consensus.range)}
-				</span>
+			{/* Numeral herói */}
+			<span
+				className="arena-result-value"
+				data-testid={
+					unanimous || solo || allCoffee
+						? "stats-result-value"
+						: "stats-median-value"
+				}
+			>
+				{allCoffee ? "☕" : formatMedian(consensus.median)}
 			</span>
+
+			{/* Legenda: média + intervalo (só faz sentido com dispersão) */}
+			{!allCoffee && !solo && !unanimous && (
+				<span className="arena-result-caption" data-testid="stats-caption">
+					<span data-testid="stats-mean">
+						média{" "}
+						<span className="arena-result-strong" data-testid="stats-mean-value">
+							{formatMean(consensus.mean)}
+						</span>
+					</span>
+					<span aria-hidden="true"> · </span>
+					<span data-testid="stats-range">
+						intervalo{" "}
+						<span className="arena-result-strong" data-testid="stats-range-value">
+							{formatRange(consensus.range)}
+						</span>
+					</span>
+				</span>
+			)}
+			{unanimous && (
+				<span className="arena-result-caption">todos votaram o mesmo</span>
+			)}
+			{allCoffee && (
+				<span className="arena-result-caption">
+					sem votos numéricos nesta rodada
+				</span>
+			)}
+
+			{/* Distribuição: os votos que produziram o numeral */}
+			{showDistribution && (
+				<span
+					className="arena-result-dist"
+					data-testid="stats-distribution"
+					aria-label={distributionLabel}
+				>
+					{groups.map((g) => {
+						const n = voteToNumber(g.value);
+						const isMedian =
+							n !== null &&
+							consensus.median !== null &&
+							n === consensus.median;
+						return (
+							<span
+								key={g.value}
+								className="arena-pip"
+								data-testid={`stats-pip-${g.value}`}
+								data-pip-median={isMedian ? "true" : "false"}
+							>
+								<span className="arena-pip-value" aria-hidden="true">
+									{g.value}
+								</span>
+								{g.count > 1 && (
+									<span className="arena-pip-count" aria-hidden="true">
+										×{g.count}
+									</span>
+								)}
+							</span>
+						);
+					})}
+				</span>
+			)}
 		</output>
 	);
 }

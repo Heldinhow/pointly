@@ -3,9 +3,6 @@
 .arena-shell {
   padding-top: var(--header-height, 72px);
   --arena-seat-size: 8.5rem;
-  --arena-felt: #155b40;
-  --arena-felt-light: #26734f;
-  --arena-on-felt: #f0f7f2;
   background: var(--bg);
   color: var(--fg);
 }
@@ -36,34 +33,53 @@
   position: absolute;
   inset: 10.5% 5%;
   border-radius: 999px;
-  background: radial-gradient(ellipse at 50% 38%, var(--arena-felt-light), var(--arena-felt) 62%, #10432f) padding-box, linear-gradient(#343a36, #111512 48%, #272d29) border-box;
+  background: radial-gradient(ellipse at 50% 36%, var(--arena-felt-light), var(--arena-felt) 64%, var(--arena-felt-edge)) padding-box,
+    linear-gradient(var(--arena-rail), var(--arena-rail)) border-box;
   border: 22px solid transparent;
-  box-shadow: 0 3px 0 #080b09, 0 14px 24px #00000026, inset 0 3px 14px #061c16b3;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 6%, transparent), 0 10px 22px rgb(0 0 0 / 16%),
+    inset 0 2px 12px color-mix(in srgb, var(--arena-felt-edge) 70%, transparent);
   overflow: hidden;
 }
-.arena-felt::before { content: ""; position: absolute; inset: 17px; border: 1px solid #d0ead32e; border-radius: inherit; }
-.arena-felt::after { content: ""; position: absolute; inset: -18px; border: 1px dashed #ffffff24; border-radius: inherit; pointer-events: none; }
+.arena-felt::before { content: ""; position: absolute; inset: 16px; border: 1px solid var(--arena-stitch); border-radius: inherit; }
 .arena-center {
   position: absolute;
-  inset: 27% 23%;
+  inset: 25% 22% 30%;
   z-index: 8;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: .75rem;
-  padding: 1rem;
+  gap: .875rem;
   text-align: center;
   pointer-events: none;
+}
+/* Inlay: a marca impressa no centro do feltro onde o estado da rodada vive. */
+.arena-inlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .3rem;
+  max-width: 100%;
+  padding: .875rem 1.6rem 1rem;
+  border: 1px solid var(--arena-stitch);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--arena-felt-edge) 40%, transparent);
 }
 .arena-center .arena-reveal-slot { pointer-events: auto; }
 .arena-table-copy {
   margin: 0;
   color: var(--arena-on-felt);
-  font: 500 clamp(1.2rem, 2.2vw, 1.75rem)/1.2 var(--font-display, Geist, Inter, system-ui, sans-serif);
+  font: 500 clamp(1.35rem, 2.1vw, 1.75rem)/1.15 var(--font-display, Geist, Inter, system-ui, sans-serif);
+  letter-spacing: -.01em;
   text-wrap: balance;
 }
-.arena-table-sub { margin: 0; color: #d4e8da; font-size: .875rem; }
+.arena-table-sub {
+  margin: 0;
+  color: var(--arena-on-felt-mute);
+  font-family: var(--font-mono);
+  font-size: .8125rem;
+  letter-spacing: .03em;
+}
 .arena-seat-position { width: var(--arena-seat-size); z-index: 4; }
 .arena-seat-position:focus-within,
 .arena-seat-position:hover { z-index: 13; }
@@ -71,37 +87,42 @@
   width: var(--arena-seat-size) !important;
   height: 3.75rem !important;
   padding: .375rem;
-  background: #202522 !important;
-  border: 0 !important;
+  background: var(--surface) !important;
+  border: 1px solid color-mix(in srgb, var(--arena-on-felt) 16%, transparent) !important;
   border-radius: 999px;
   box-shadow: none !important;
-  color: #f0f7f2;
+  color: var(--arena-on-felt);
   opacity: 1;
 }
-.arena-seat-card[data-seat-is-you="true"] { outline: 2px solid #d4e8da; outline-offset: 3px; }
-.arena-seat-card [aria-label="Host"] { top: -5px; left: 32px; right: auto; color: #f0d391; font-size: 13px; }
+.arena-seat-card[data-seat-is-you="true"] { outline: 2px solid var(--arena-on-felt); outline-offset: 3px; }
+.arena-seat-card [aria-label="Host"] { top: 5px; right: 12px; left: auto; color: var(--fg); font-size: 12px; }
 .arena-seat-card .ss-top { display: flex; align-items: center; gap: 7px; width: 100%; min-width: 0; }
-.arena-seat-card .ss-avatar { width: 40px; height: 40px; flex: none; border: 2px solid #647c6d; border-radius: 50%; background: #344b3d; color: #f0f7f2; display: flex; align-items: center; justify-content: center; font: 600 14px/1 var(--font-display); }
-.arena-seat-card[data-seat-is-you="true"] .ss-avatar { background: #e0eee4; color: #173d2b; border-color: #f0f7f2; }
-.arena-seat-card .ss-id { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; flex: 1; }
+.arena-seat-card .ss-avatar { width: 40px; height: 40px; flex: none; border: 2px solid color-mix(in srgb, var(--arena-on-felt) 30%, transparent); border-radius: 50%; background: color-mix(in srgb, var(--arena-on-felt) 12%, var(--arena-rail)); color: var(--arena-on-felt); display: flex; align-items: center; justify-content: center; font: 600 14px/1 var(--font-display); }
+.arena-seat-card[data-seat-is-you="true"] .ss-avatar { background: var(--arena-on-felt); color: var(--arena-felt); border-color: var(--arena-card); }
+.arena-seat-card .ss-id { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; flex: 1; padding-right: 14px; }
 .arena-seat-card .ss-nick { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 600; line-height: 1.25; text-align: left; }
-.arena-seat-card .ss-you { font: 500 9px/1 var(--font-mono); color: #d4e8da; }
-.arena-seat-card .ss-state { max-width: 100%; font: 500 10px/1.3 var(--font-mono); color: #c6d4cb; overflow-wrap: anywhere; }
-.arena-seat-card .ss-state.is-voted { color: #a9edc1; }
+.arena-seat-card .ss-you { font: 500 9px/1 var(--font-mono); color: var(--arena-on-felt-mute); }
+.arena-seat-card .ss-state { max-width: 100%; font: 500 10px/1.3 var(--font-mono); color: var(--arena-on-felt-mute); overflow-wrap: anywhere; }
+.arena-seat-card .ss-state.is-voted { color: var(--success); font-weight: 700; }
 /* Only the card points inward; identity and revealed values stay readable. */
 .arena-seat-card .ss-card {
   position: absolute; left: 50%; top: 50%; width: 42px; height: 58px;
   display: flex; align-items: center; justify-content: center;
-  transform: translate(-50%, -50%) translate(var(--seat-card-x, 0px), var(--seat-card-y, -82px)) rotate(var(--seat-card-angle, 0deg));
-  border: 1px dashed #d4e8da66; border-radius: 5px; background: #103f2c33;
+  transform: translate(-50%, -50%) translate(var(--seat-card-x, 0px), var(--seat-card-y, -66px)) rotate(var(--seat-card-angle, 0deg));
+  border: 1px dashed var(--arena-stitch); border-radius: 5px;
+  background: color-mix(in srgb, var(--arena-felt-edge) 60%, transparent);
 }
-.arena-seat-card .ss-card.is-voted { border: 3px solid #e0e9e2; background: #203f30; box-shadow: 0 2px 4px #00000040; }
-.arena-seat-card .ss-card.is-voted::before { content: ""; position: absolute; inset: 4px; border: 1px solid #b8cebf80; border-radius: 2px; }
-.arena-seat-card .ss-card.is-revealed { border: 0; background: #f0f7f2; color: #173d2b; box-shadow: 0 2px 4px #00000040; }
-.arena-seat-card .ss-card.is-median { outline: 3px solid #e4bc75; outline-offset: 3px; }
+.arena-seat-card .ss-card.is-voted {
+  border: 2px solid var(--arena-card);
+  background: color-mix(in srgb, var(--arena-felt-edge) 80%, var(--arena-rail));
+  box-shadow: 0 2px 4px rgb(0 0 0 / 25%);
+}
+.arena-seat-card .ss-card.is-voted::before { content: ""; position: absolute; inset: 4px; border: 1px solid color-mix(in srgb, var(--arena-card) 45%, transparent); border-radius: 2px; }
+.arena-seat-card .ss-card.is-revealed { border: 0; background: var(--arena-card); color: var(--arena-card-ink); box-shadow: 0 2px 5px rgb(0 0 0 / 28%); }
+.arena-seat-card .ss-card.is-median { outline: 3px solid var(--warning); outline-offset: 3px; }
 .arena-seat-card [data-testid="seat-face-num"] { transform: rotate(calc(-1 * var(--seat-card-angle, 0deg))); font: 600 24px/1 var(--font-mono); font-variant-numeric: tabular-nums; }
 .arena-mobile-seat [aria-label="Host"] { color: var(--fg); }
-.arena-timer-pill { border-radius: var(--radius-sm); border-color: var(--border-rule); }
+.arena-timer-pill { border-radius: var(--radius-sm); }
 .arena-reveal-slot { position: static; }
 .arena-shell .arena-reveal-button {
   border-radius: var(--radius-sm);
@@ -115,34 +136,115 @@
 .arena-shell [data-testid="reveal-button-hint"] {
   font-family: var(--font-body);
 }
-.arena-center [data-testid="reveal-button-hint"] { color: #d4e8da; }
+.arena-center [data-testid="reveal-button-hint"] { color: var(--arena-on-felt-mute); }
 .arena-center .arena-reveal-button:focus-visible { outline: 3px solid var(--arena-on-felt); outline-offset: 4px; }
+/* Reveal: as cartas viram em sequência e o inlay assenta. Único movimento orquestrado. */
+@keyframes arena-card-flip {
+  from {
+    transform: translate(-50%, -50%) translate(var(--seat-card-x, 0px), var(--seat-card-y, -66px)) rotate(var(--seat-card-angle, 0deg)) rotateY(76deg) scale(.94);
+    opacity: .4;
+  }
+  to {
+    transform: translate(-50%, -50%) translate(var(--seat-card-x, 0px), var(--seat-card-y, -66px)) rotate(var(--seat-card-angle, 0deg)) rotateY(0deg) scale(1);
+    opacity: 1;
+  }
+}
+@keyframes arena-inlay-settle {
+  from { opacity: 0; transform: translateY(5px) scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+.arena-table-revealed .arena-seat-card .ss-card.is-revealed {
+  animation: arena-card-flip 340ms cubic-bezier(.2, .8, .2, 1) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+.arena-table-revealed .arena-inlay {
+  animation: arena-inlay-settle 380ms cubic-bezier(.16, 1, .3, 1) both;
+  animation-delay: 80ms;
+}
 .arena-reveal-slot .relative { position: relative; }
 .arena-reveal-slot [data-testid="reveal-button"] {
   position: relative; inset: auto; transform: none; min-width: 13rem; width: auto;
 }
 .arena-center-stats { width: max-content; max-width: 100%; }
-.arena-stats-pill { flex-wrap: wrap; justify-content: center; gap: .75rem; padding: .75rem 1rem; border-radius: var(--radius-sm); border-color: var(--border-rule); }
-.arena-stats-pill [data-testid="stats-unanimous-badge"] { color: var(--fg); }
-.arena-stats-pill [data-testid="stats-median-value"] { border-color: var(--fg); }
+.arena-result { display: flex; flex-direction: column; align-items: center; gap: .3rem; }
+.arena-result-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--arena-on-felt-mute);
+}
+.arena-result-value {
+  font-family: var(--font-mono);
+  font-size: clamp(2.5rem, 4.2vw, 3.5rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--arena-on-felt);
+}
+.arena-result-caption {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: .04em;
+  color: var(--arena-on-felt-mute);
+}
+.arena-result-strong { color: var(--arena-on-felt); font-weight: 600; }
+.arena-result-dist { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: .375rem; margin-top: .3rem; }
+.arena-pip {
+  display: inline-flex; align-items: baseline; justify-content: center; gap: 2px;
+  min-width: 30px; padding: .25rem .4rem .3rem;
+  border: 1px solid var(--arena-stitch); border-radius: var(--radius-sm);
+  background: var(--arena-card); color: var(--arena-card-ink);
+  font-family: var(--font-mono); font-size: .75rem; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.arena-pip[data-pip-median="true"] { outline: 2px solid var(--warning); outline-offset: 2px; }
+.arena-pip-count { font-size: 9px; font-weight: 500; opacity: .65; }
+/* Veredito em painel (lista mobile): o MESMO componente do inlay, com
+   tokens de página em vez de feltro. Um veredito, dois palcos — nunca
+   três dialetos. Só renderiza no branch mobile (<sm), então sem media query. */
+.arena-result-panel {
+  margin: .75rem .75rem 0;
+  padding: .875rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border-rule);
+  border-radius: var(--radius-lg);
+  align-items: stretch;
+  text-align: left;
+  gap: .4rem;
+}
+.arena-result-panel .arena-result-eyebrow { color: var(--fg-mute); }
+.arena-result-panel .arena-result-value { color: var(--fg); font-size: 2rem; }
+.arena-result-panel .arena-result-caption { color: var(--fg-mute); }
+.arena-result-panel .arena-result-strong { color: var(--fg); }
+.arena-result-panel .arena-result-dist { justify-content: flex-start; margin-top: .35rem; }
+.arena-result-panel .arena-pip { background: var(--table); border-color: var(--border-rule); color: var(--fg); }
 .arena-shell [data-testid="share-pill"] { border-radius: var(--radius-sm); border-color: var(--border-rule); }
 .arena-shell [data-testid="share-pill"] > span { font-family: var(--font-mono); letter-spacing: .1em; }
 .arena-deck-slot { width: min(52rem, 100%); margin: 1rem auto 0; z-index: 10; }
 .arena-deck-slot [data-testid="deck"] {
   justify-content: center;
   gap: .65rem;
-  padding: .75rem;
-  background: var(--surface);
-  border-color: var(--border-rule);
+  padding: .5rem .75rem;
+  background: transparent;
+  border-color: transparent;
 }
 .arena-deck-slot [data-testid^="deck-card-"] {
   width: 4rem; height: 5.25rem;
   border-radius: var(--radius-lg);
   border-color: var(--border-rule);
   color: var(--fg);
+  background: var(--surface);
+}
+.arena-deck-slot [data-testid^="deck-card-"]:not([aria-pressed="true"]):hover {
+  border-color: var(--fg-faint);
 }
 .arena-deck-slot [data-testid^="deck-card-"][aria-pressed="true"] {
   background: var(--accent); color: var(--on-accent); border-color: var(--accent);
+  transform: translateY(-2px);
 }
 
 .arena-mobile-list { color: var(--fg); }
@@ -193,7 +295,7 @@
   .arena-table-wrap { aspect-ratio: auto; max-width: 48rem; }
   .arena-table-inner { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; height: auto; }
   .arena-felt { display: none; }
-  .arena-center { position: relative; inset: auto; grid-column: 1 / -1; grid-row: 1; min-height: 13rem; background: radial-gradient(ellipse at 50% 38%, var(--arena-felt-light), var(--arena-felt)); border: 10px solid #191b1a; border-radius: var(--radius-lg); }
+  .arena-center { position: relative; inset: auto; grid-column: 1 / -1; grid-row: 1; min-height: 13rem; background: var(--arena-felt); border: 8px solid var(--arena-rail); border-radius: var(--radius-lg); }
   .arena-seat-position { position: relative; top: auto !important; left: auto !important; width: auto; transform: none !important; }
   .arena-seat-card { width: 100% !important; height: 5.5rem !important; padding: .625rem; padding-right: 3.5rem; border-radius: var(--radius-lg); }
   .arena-seat-card .ss-avatar { width: 32px; height: 32px; }

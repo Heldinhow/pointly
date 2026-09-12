@@ -4,8 +4,9 @@
  * Botão da arena com 3 estados morphing:
  *  1. `awaiting` (ghost, disabled): "Aguardando votos…"
  *     Mostrado quando phase !== 'revealed' && votes === 0
- *  2. `ready` (primary pill): "Revelar votos" + hint com contagem
- *     Mostrado quando ≥1 voto entrou && phase !== 'revealed'
+ *  2. `ready` (primary pill): "Revelar votos" (sem hint — o centro da
+ *     mesa já mostra a contagem). Mostrado quando ≥1 voto entrou &&
+ *     phase !== 'revealed'
  *  3. `post-reveal` (outline ghost): "Nova rodada" → "Confirmar nova rodada?"
  *     Mostrado quando phase === 'revealed' (qualquer player pode iniciar).
  *    Ghost proposital: ação destrutiva não veste o primário do commit.
@@ -57,6 +58,13 @@ export interface RevealButtonProps {
 	 * `inline`: width-full dentro de um sticky dock (mobile-first).
 	 */
 	mode?: RevealButtonMode;
+	/**
+	 * Mostra o atalho de teclado no botão (`R` pra revelar, `N` pra nova
+	 * rodada). Opt-in explícito: só o palco desktop passa `true` — no
+	 * dock mobile (toque) a dica não existe. SR já recebe via
+	 * `aria-keyshortcuts`; o <kbd> é só a face visível dele.
+	 */
+	showShortcutHint?: boolean;
 }
 
 /** Decide o estado do botão baseado na phase + votedCount. */
@@ -76,6 +84,7 @@ export function RevealButton({
 	onReveal,
 	onNewRound,
 	mode = "centered",
+	showShortcutHint = false,
 }: RevealButtonProps) {
 	const state = deriveButtonState(phase, votedCount);
 	const centered = mode === "centered";
@@ -107,18 +116,15 @@ export function RevealButton({
 		disarmTimer.current = window.setTimeout(() => setConfirming(false), 4000);
 	};
 
-	// O botão já comunica espera; o hint complementa apenas ações disponíveis.
+	// O centro da mesa já mostra o andamento ("N de M pessoas votaram");
+	// o hint só explica a ação destrutiva pós-reveal (evita duplicar dado).
 	const allVoted = totalPlayers > 0 && votedCount >= totalPlayers;
 	const hint =
-		state === "ready"
-			? allVoted
-				? "Todos votaram · hora de revelar."
-				: `${votedCount} de ${totalPlayers} votaram.`
-			: state === "post-reveal"
-				? confirming
-					? "Toque de novo para confirmar."
-					: "Limpa votos · reinicia timer."
-				: "";
+		state === "post-reveal"
+			? confirming
+				? "Toque de novo para confirmar."
+				: "Apaga os votos e reinicia o timer."
+			: "";
 
 	const label =
 		state === "awaiting"
@@ -201,9 +207,17 @@ export function RevealButton({
 					),
 			)}
 		>
-			<span className="inline-flex items-center gap-1.5 leading-none">
-				{label}
-			</span>
+		<span className="inline-flex items-center gap-1.5 leading-none">
+			{label}
+			{showShortcutHint && (state === "ready" || state === "post-reveal") && (
+				<kbd
+					aria-hidden="true"
+					className="font-mono text-[10px] font-medium leading-none border border-current rounded-[3px] px-1 py-0.5 opacity-70"
+				>
+					{state === "ready" ? "R" : "N"}
+				</kbd>
+			)}
+		</span>
 		</button>
 			{hint && (
 				<p
