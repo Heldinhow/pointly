@@ -1,49 +1,21 @@
-/**
- * landing.test — CTAs + navegação (spell-rebuild).
- */
 import "../test-jsdom";
-
-// jsdom sem pretendToBeVisual não tem rAF — @testing-library/react exige.
-if (typeof globalThis.requestAnimationFrame === "undefined") {
-	globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number =>
-		setTimeout(() => cb(performance.now()), 16) as unknown as number;
-	globalThis.cancelAnimationFrame = (id: number): void => {
-		clearTimeout(id as unknown as ReturnType<typeof setTimeout>);
-	};
-}
 import { afterEach, describe, expect, test } from "bun:test";
-import {
-	cleanup,
-	fireEvent,
-	render,
-	screen,
-	waitFor,
-} from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/theme/theme";
 import { Landing } from "./landing";
 
-afterEach(() => {
-	cleanup();
-});
+afterEach(cleanup);
 
 function LocationProbe() {
-	const loc = useLocation();
-	return (
-		<div data-testid="location">
-			{loc.pathname}
-			{loc.search}
-		</div>
-	);
+	const location = useLocation();
+	return <div data-testid="location">{location.pathname}{location.search}</div>;
 }
 
 function renderLanding() {
 	return render(
 		<ThemeProvider>
-			<MemoryRouter
-				future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-				initialEntries={["/"]}
-			>
+			<MemoryRouter initialEntries={["/"]}>
 				<Routes>
 					<Route path="/" element={<Landing />} />
 					<Route path="/join" element={<LocationProbe />} />
@@ -54,53 +26,65 @@ function renderLanding() {
 }
 
 describe("Landing", () => {
-	test("renderiza página + headline", () => {
+	test("mostra a headline da landing", () => {
 		renderLanding();
-		expect(screen.getByTestId("page-landing")).toBeTruthy();
-		const h1 = screen.getByRole("heading", { level: 1 });
-		expect(h1.textContent ?? "").toMatch(/planning poker sem fricção/i);
-	});
 
-	test("renderiza os dois CTAs", () => {
-		renderLanding();
-		expect(screen.getByTestId("landing-create").textContent ?? "").toMatch(
-			/criar uma sala/i,
-		);
-		expect(screen.getByTestId("landing-join").textContent ?? "").toMatch(
-			/entrar com código/i,
+		expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
+			"Estimar é ouvir antes de concordar.",
 		);
 	});
 
-	test("Criar uma sala → /join?host=1", async () => {
+	test("inclui a mesa demonstrativa", () => {
+		renderLanding();
+
+		expect(
+			screen.getByRole("group", { name: "Exemplo de rodada de Planning Poker" }),
+		).toBeTruthy();
+		expect(screen.getByText("4/4 votos revelados")).toBeTruthy();
+	});
+
+	test("mostra os CTAs da sala", () => {
+		renderLanding();
+
+		expect(screen.getByTestId("landing-create").textContent).toBe("Criar uma sala");
+		expect(screen.getByTestId("landing-join").textContent).toBe("Entrar com código");
+	});
+
+	test("leva a criação de sala para /join?host=1", async () => {
 		renderLanding();
 		fireEvent.click(screen.getByTestId("landing-create"));
-		await waitFor(() => {
-			expect(screen.getByTestId("location").textContent).toBe(
-				"/join?host=1",
-			);
-		});
+
+		await waitFor(() =>
+			expect(screen.getByTestId("location").textContent).toBe("/join?host=1"),
+		);
 	});
 
-	test("Entrar com código → /join", async () => {
+	test("leva a entrada com código para /join", async () => {
 		renderLanding();
 		fireEvent.click(screen.getByTestId("landing-join"));
-		await waitFor(() => {
-			expect(screen.getByTestId("location").textContent).toBe("/join");
-		});
+
+		await waitFor(() =>
+			expect(screen.getByTestId("location").textContent).toBe("/join"),
+		);
 	});
 
-	test("stats strip PT-BR", () => {
+	test("mantém o link Entrar para /join", () => {
 		renderLanding();
-		expect(screen.getByText("Até 12 pessoas")).toBeTruthy();
-		expect(screen.getByText("Sem cadastro")).toBeTruthy();
-		expect(screen.getByText("Tempo real")).toBeTruthy();
+
+		expect(screen.getByRole("link", { name: "Entrar" }).getAttribute("href")).toBe(
+			"/join",
+		);
 	});
 
-	test("header com toggle de tema + Entrar", () => {
+	test("alterna o tema pelo controle do cabeçalho", () => {
 		renderLanding();
+		const toggle = screen.getByRole("button", { name: /Ativar modo (claro|escuro)/ });
+		const initialLabel = toggle.getAttribute("aria-label");
+
+		fireEvent.click(toggle);
+
 		expect(
-			screen.getByRole("button", { name: /modo (claro|escuro)/i }),
-		).toBeTruthy();
-		expect(screen.getByRole("link", { name: /^entrar$/i })).toBeTruthy();
+			screen.getByRole("button", { name: /Ativar modo (claro|escuro)/ }).getAttribute("aria-label"),
+		).not.toBe(initialLabel);
 	});
 });
