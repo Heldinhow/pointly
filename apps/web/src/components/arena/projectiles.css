@@ -1,0 +1,95 @@
+/**
+ * Projéteis — keyframes da celebração pós-reveal.
+ *
+ * O emoji voa seat→seat em 700ms (via `--dx/--dy` calculados do
+ * `getBoundingClientRect`); no impacto, o assento-alvo reage conforme o
+ * `outcome` do server: hit (shake) / dodge (slide) / deflect (rebound).
+ * Tudo colapsa sob `prefers-reduced-motion`.
+ */
+
+@keyframes pointly-proj-fly {
+	from {
+		transform: translate(0, 0) scale(0.6);
+		opacity: 0;
+	}
+	15% {
+		opacity: 1;
+	}
+	to {
+		transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(1.15);
+		opacity: 1;
+	}
+}
+
+@keyframes pointly-proj-hit {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	20% {
+		transform: translateX(-6px) rotate(-2deg);
+	}
+	40% {
+		transform: translateX(5px) rotate(2deg);
+	}
+	60% {
+		transform: translateX(-3px);
+	}
+	80% {
+		transform: translateX(2px);
+	}
+}
+
+@keyframes pointly-proj-dodge {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	35% {
+		transform: translateX(14px) skewX(-6deg);
+	}
+	70% {
+		transform: translateX(6px);
+	}
+}
+
+@keyframes pointly-proj-deflect {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	30% {
+		transform: translateY(-10px) rotate(3deg);
+	}
+	60% {
+		transform: translateY(2px);
+	}
+}
+
+.pointly-proj-flyer {
+	position: fixed;
+	z-index: 90;
+	pointer-events: none;
+	animation: pointly-proj-fly 700ms ease-out forwards;
+}
+
+.pointly-proj-impact-hit {
+	animation: pointly-proj-hit 450ms ease-in-out;
+}
+
+.pointly-proj-impact-dodge {
+	animation: pointly-proj-dodge 450ms ease-in-out;
+}
+
+.pointly-proj-impact-deflect {
+	animation: pointly-proj-deflect 450ms ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pointly-proj-flyer,
+	.pointly-proj-impact-hit,
+	.pointly-proj-impact-dodge,
+	.pointly-proj-impact-deflect {
+		animation-duration: 1ms;
+	}
+}

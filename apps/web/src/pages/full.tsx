@@ -1,78 +1,124 @@
-/** Full room recovery page. */
+/**
+ * Full — sala cheia (spell-rebuild).
+ *
+ * Estática, PT-BR: contagem 12/12 + criar sala nova / voltar ao início.
+ * Com `?code=XXXX` (redirect do erro `sala_cheia`): mostra qual sala está
+ * cheia + terceira ação "Tentar outro código" → /join.
+ * h1 recebe foco no mount. CTAs são RichButton (color/size/onClick
+ * confirmados); data-testid é atributo HTML padrão, repassado ao <button>.
+ */
 import { useCallback, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { SiteHeader } from "../components/site-header";
-import { Button } from "../components/ui/button";
-import "../styles/entry.css";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { RichButton } from "@/components/spell/rich-button";
 
 const MAX_PLAYERS = 12;
 
 export function Full() {
 	const navigate = useNavigate();
-	const goCreate = useCallback(
-		(): void => navigate("/join?host=1"),
-		[navigate],
-	);
-	const goHome = useCallback((): void => navigate("/"), [navigate]);
+	const [searchParams] = useSearchParams();
 	const titleRef = useRef<HTMLHeadingElement>(null);
+
+	const code = (searchParams.get("code") || "").toUpperCase();
+
 	useEffect(() => {
 		titleRef.current?.focus();
 	}, []);
 
+	const goCreate = useCallback(
+		() => navigate("/join?host=1"),
+		[navigate],
+	);
+	const goHome = useCallback(() => navigate("/"), [navigate]);
+	const goTryOther = useCallback(() => navigate("/join"), [navigate]);
+
 	return (
-		<div data-testid="page-full" className="entry-page">
-			<SiteHeader
-				brandTestId="full-back"
-				actions={<span className="entry-header-label">Sala cheia</span>}
-			/>
-			<main className="recovery-main">
-				<section
-					className="recovery-shell"
-					aria-labelledby="full-title"
-					data-od-id="full-card"
+		<main
+			data-testid="page-full"
+			className="flex min-h-dvh flex-col items-center bg-[#09090b] bg-[radial-gradient(ellipse_55%_30%_at_50%_0%,rgba(52,211,153,0.07),transparent_70%)] px-5 py-10 text-zinc-100 [html.light_&]:bg-zinc-100 [html.light_&]:text-zinc-900"
+		>
+			<div className="w-full max-w-md text-center">
+				<Link
+					to="/"
+					className="inline-flex items-center gap-2.5 font-mono text-sm font-semibold tracking-[0.08em] text-zinc-300 uppercase hover:text-zinc-100 [html.light_&]:text-zinc-600 [html.light_&]:hover:text-zinc-900"
 				>
-					<div className="recovery-mark" aria-hidden="true">
-						12
-					</div>
-					<p className="entry-eyebrow">Capacidade máxima</p>
-					<h1
-						id="full-title"
-						ref={titleRef}
-						className="recovery-title"
-						tabIndex={-1}
+					<span aria-hidden="true" className="grid grid-cols-2 gap-[3px]">
+						<span className="h-2 w-2 rounded-[3px] bg-current opacity-80" />
+						<span className="h-2 w-2 rounded-[3px] bg-current opacity-80" />
+						<span className="h-2 w-2 rounded-[3px] bg-current opacity-80" />
+						<span className="h-2 w-2 rounded-[3px] bg-emerald-400" />
+					</span>
+					Pointly
+				</Link>
+
+				<div className="mt-6 rounded-2xl border border-[#26262c] bg-[#101013] p-6 shadow-[0_32px_80px_-40px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.05)] sm:p-8 [html.light_&]:border-zinc-200 [html.light_&]:bg-white">
+					<p
+						aria-hidden="true"
+						className="font-mono text-6xl font-semibold tracking-tight text-zinc-700 [html.light_&]:text-zinc-300"
 					>
-						Sala cheia<span aria-hidden="true">.</span>
-					</h1>
-					<div className="recovery-count">
-						<strong data-testid="full-count">{MAX_PLAYERS}</strong>
-						<span>/ {MAX_PLAYERS} · máximo atingido</span>
-					</div>
-					<p className="recovery-copy">
-						Esta sala já tem {MAX_PLAYERS} jogadores. Crie uma sala nova para
-						continuar a rodada com o seu time.
+						{MAX_PLAYERS}
 					</p>
-					<div className="recovery-actions">
-						<Button
-							variant="coral"
+					<p className="mt-4 font-mono text-xs tracking-[0.14em] text-zinc-500 uppercase">
+						Capacidade máxima
+					</p>
+					<h1
+						ref={titleRef}
+						tabIndex={-1}
+						className="mt-2 text-3xl font-medium tracking-tight"
+					>
+						{code ? `Sala ${code} está cheia` : "Sala cheia"}
+					</h1>
+					<p data-testid="full-count" className="mt-3 font-mono text-lg">
+						{MAX_PLAYERS}/{MAX_PLAYERS}
+					</p>
+					<p className="mt-2 text-sm leading-relaxed text-zinc-400">
+						{code ? (
+							<>
+								A sala {code} já tem {MAX_PLAYERS} pessoas. Tente outro
+								código ou crie uma sala nova para continuar com o seu time.
+							</>
+						) : (
+							<>
+								Esta sala já tem {MAX_PLAYERS} pessoas. Crie uma sala nova
+								para continuar com o seu time.
+							</>
+						)}
+					</p>
+
+					<div className="mt-6 flex flex-col gap-3">
+						<RichButton
+							color="emerald"
 							size="lg"
 							onClick={goCreate}
-							className="w-full sm:w-auto"
 							data-testid="full-create-new"
+							className="rounded-full"
 						>
-							Criar sala nova <span aria-hidden="true">↗</span>
-						</Button>
-						<Button
-							variant="default"
+							Criar sala nova
+						</RichButton>
+						<div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+						<RichButton
+							color="zinc"
 							size="lg"
 							onClick={goHome}
-							className="w-full sm:w-auto"
 							data-testid="full-retry"
+							className="rounded-full sm:flex-1"
 						>
 							Voltar ao início
-						</Button>
+						</RichButton>
+						{code && (
+							<RichButton
+								color="zinc"
+								size="lg"
+								onClick={goTryOther}
+								data-testid="full-try-other"
+								className="rounded-full sm:flex-1"
+							>
+								Tentar outro código
+							</RichButton>
+						)}
+						</div>
 					</div>
-				</section>
-			</main>
-		</div>
+				</div>
+			</div>
+		</main>
 	);
 }

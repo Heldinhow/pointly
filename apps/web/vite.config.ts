@@ -1,7 +1,8 @@
 /**
  * Vite config — Pointly web app
  *
- * Phase 1 (T6): proxy `/api` and `/ws` → :3001 server.
+ * Phase 1 (T6): proxy `/api` → :3001 server (o WS usa URL absoluta
+ * resolvida em `resolveWsUrl` — sem proxy `/ws` aqui).
  * Phase 6+: Tailwind tokens + shadcn/ui (T25/T26).
  * aeo.js (AE-1+): emit llms.txt / robots.txt / sitemap.xml / schema.json
  *                 during `vite build`. Config kept inline (no separate
@@ -16,6 +17,7 @@
  * Tests are run via `bun test` (apps/web/package.json). No vitest dependency.
  */
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -75,7 +77,7 @@ const aeoConfig: AeoConfig = {
 			pathname: "/",
 			title: "Pointly — Free Real-Time Planning Poker for Agile Teams",
 			description:
-				"Pointly is a free, real-time planning poker app for agile teams. Create a room in 100ms, share a 6-character code, vote on story points together, and reveal in one click. No signup, no install, in-memory only.",
+				"Pointly is a free, real-time planning poker app for agile teams. Create a room in 100ms, share a 4-character code, vote on story points together, and reveal in one click. No signup, no install, in-memory only.",
 			content: `# Pointly — Free Real-Time Planning Poker
 
 ## Is Pointly really free?
@@ -88,15 +90,15 @@ Up to 12 participants per room, sized for typical agile teams of 4 to 9 estimato
 
 ## How fast can I create a room?
 
-About 100 milliseconds from click to room-open-ready. There are no intermediate steps: click Create, choose a nickname, and the room is ready for the rest of the team to join via a 6-character code.
+About 100 milliseconds from click to room-open-ready. There are no intermediate steps: click Create, choose a nickname, and the room is ready for the rest of the team to join via a 4-character code.
 
 ## Does Pointly save my retrospective data?
 
-No. Every room is ephemeral: votes, chat messages and timers exist only while the room is open. When the last player exits, the entire state is discarded — this is the design, not a bug.
+No. Every room is ephemeral: votes and timers exist only while the room is open. When the last player exits, the entire state is discarded — this is the design, not a bug.
 
 ## Does Pointly work on mobile?
 
-Yes. The arena uses the standard Fibonacci deck (0, 0.5, 1, 2, 3, 5, 8, 13, 21, ?, coffee) rendered as large tappable cards.
+Yes. The arena uses the standard deck (0, ½, 1, 2, 3, 5, 8, 13, ☕) rendered as large tappable cards.
 
 ## Can I integrate Pointly with Jira, Linear or Azure DevOps?
 
@@ -108,7 +110,7 @@ Yes. The site publishes llms.txt, sitemap.xml, schema.json and robots.txt — al
 
 ## What deck sizes are supported?
 
-The default Fibonacci deck (0, 0.5, 1, 2, 3, 5, 8, 13, 21, ?, coffee). Hosts can pick an active subset per round, and votes are median-aggregated (not averaged) to avoid outlier bias from single estimators.
+The default deck (0, ½, 1, 2, 3, 5, 8, 13, ☕). Rounds reveal with the median, mean and range computed automatically, so the team can discuss the spread and agree on a final value.
 `,
 		},
 		{ pathname: "/join", title: "Join a room", description: "Enter a room code to join an existing planning poker session." },
@@ -199,20 +201,20 @@ function safeAeoPlugin(): PluginOption[] {
 						originalConfigResolved.call(this, cfg);
 					}
 				},
-				closeBundle: async (...args: unknown[]) => {
-					try {
-						const fn = (inner as unknown as { closeBundle?: unknown })
-							.closeBundle;
-						if (typeof fn === "function") {
-							await (fn as (...a: unknown[]) => unknown)(...args);
-						}
-					} catch (err) {
-						console.warn(
-							"[aeo.js] closeBundle failed — SEO files not emitted:",
-							err instanceof Error ? err.message : String(err),
-						);
-						return;
+			closeBundle: async (...args: unknown[]) => {
+				try {
+					const fn = (inner as unknown as { closeBundle?: unknown })
+						.closeBundle;
+					if (typeof fn === "function") {
+						await (fn as (...a: unknown[]) => unknown)(...args);
 					}
+				} catch (err) {
+					console.warn(
+						"[aeo.js] closeBundle failed — SEO files not emitted:",
+						err instanceof Error ? err.message : String(err),
+					);
+					return;
+				}
 					try {
 						stripUngeneratedRefs(resolvedDistDir);
 					} catch (err) {
@@ -235,7 +237,7 @@ function safeAeoPlugin(): PluginOption[] {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-	plugins: [react(), ...safeAeoPlugin()],
+	plugins: [react(), tailwindcss(), ...safeAeoPlugin()],
 	resolve: {
 		alias: {
 			"@": path.resolve(import.meta.dirname, "src"),

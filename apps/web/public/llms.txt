@@ -10,7 +10,7 @@ optimized for consumption by Large Language Models (LLMs) and AI assistants.
 ## Pages
 
 - [Pointly — Free Real-Time Planning Poker for Agile Teams](https://pointly.space)
-  Pointly is a free, real-time planning poker app for agile teams. Create a room in 100ms, share a 6-character code, vote on story points together, and reveal in one click. No signup, no install, in-memory only.
+  Pointly is a free, real-time planning poker app for agile teams. Create a room in 100ms, share a 4-character code, vote on story points together, and reveal in one click. No signup, no install, in-memory only.
 - [Join a room](https://pointly.space/join)
   Enter a room code to join an existing planning poker session.
 - [Arena](https://pointly.space/arena)

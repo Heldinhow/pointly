@@ -24,9 +24,10 @@ Estimativa ágil com zero cadastro: entre com um apelido, vote, revele — pront
 
 Voz direta e prática, sem cerimônia — ferramenta de time, não palco. Personalidade em três palavras: prático e direto. O tom explica o passo atual em uma frase e some; a sensação alvo é ritmo sem pressa, cada um com espaço para pensar antes do reveal. Nenhuma referência externa nomeada; o código atual é a referência.
 
-## Anti-references
+## Estética
 
-Nada de dashboard SaaS genérico: sem grade de cards idênticos com ícone + título + texto, sem métricas-hero de número gigante, sem kicker em caixa alta com tracking largo em toda seção. Nada de clichê de poker ou cassino — sem feltro verde, sem naipe, sem neon de jogo.
+A estética segue Spell UI, dark-first — ver `DESIGN.md` (sistema
+Spell: tokens noturnos, peças copiáveis, motion com reduced-motion).
 
 ## Design Principles
 

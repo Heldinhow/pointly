@@ -1,41 +1,57 @@
 /**
- * Arena page tests — T30 verify (≥3 of 5 minimum required).
+ * Arena render smoke — colocated (bun:test).
+ *
+ * MemoryRouter + store pré-carregado: deck renderiza 9 cartas, reveal
+ * desabilitado com 0 votos. Self-contained (sem test-helpers — scaffold).
  */
-import { describe, expect, test } from "bun:test";
-import type { SalaState } from "@planning-poker/shared";
-import { RouterProvider, createMemoryRouter } from "react-router-dom";
-import { fireEvent, render, screen } from "../components/ui/test-helpers";
-import { ToastProvider } from "../components/ui/toast";
-import { useSalaStore } from "../store/sala";
-import { Arena, seatPosition } from "./arena";
+import { afterEach, describe, expect, test } from "bun:test";
+import "../test-jsdom";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import type { Player, SalaState } from "@planning-poker/shared";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { useSalaStore } from "@/store/sala";
+import { ThemeProvider } from "@/theme/theme";
+import { Arena } from "./arena";
+
+afterEach(() => {
+	cleanup();
+	useSalaStore.getState().reset();
+	try {
+		sessionStorage.clear();
+	} catch {
+		// ignore
+	}
+});
+
+function makePlayer(overrides: Partial<Player> = {}): Player {
+	return {
+		id: "p_1",
+		uuid: "00000000-0000-4000-8000-000000000000",
+		nick: "Helder",
+		role: "host",
+		seatIndex: 0,
+		hasVoted: false,
+		value: null,
+		status: "connected",
+		joinedAt: 1_000_000,
+		...overrides,
+	};
+}
 
 function makeSala(overrides: Partial<SalaState> = {}): SalaState {
 	return {
-		code: "9B9F",
+		code: "AB12",
 		hostId: "p_1",
 		players: [
-			{
-				id: "p_1",
-				uuid: "00000000-0000-4000-8000-000000000000",
-				nick: "Helder",
-				role: "host",
-				seatIndex: 0,
-				hasVoted: false,
-				value: null,
-				status: "connected",
-				joinedAt: 1_000_000,
-			},
-			{
+			makePlayer(),
+			makePlayer({
 				id: "p_2",
 				uuid: "00000000-0000-4000-8000-000000000001",
 				nick: "Maya",
 				role: "player",
 				seatIndex: 1,
-				hasVoted: false,
-				value: null,
-				status: "connected",
 				joinedAt: 1_000_001,
-			},
+			}),
 		],
 		phase: "idle",
 		round: 1,
@@ -46,225 +62,99 @@ function makeSala(overrides: Partial<SalaState> = {}): SalaState {
 	};
 }
 
-function renderArena(initialEntry = "/arena?code=9B9F") {
-	const routes = [{ path: "/arena", element: <Arena /> }];
-	const router = createMemoryRouter(routes, {
-		initialEntries: [initialEntry],
-		future: {
-			v7_fetcherPersist: true,
-			v7_normalizeFormMethod: true,
-			v7_partialHydration: true,
-			v7_relativeSplatPath: true,
-			v7_skipActionErrorRevalidation: true,
-		},
-	});
+function renderArena(entry = "/arena?code=AB12") {
+	try {
+		sessionStorage.setItem("pointly.nick", "Helder");
+		sessionStorage.setItem("pointly.uuid", "00000000-0000-4000-8000-000000000000");
+	} catch {
+		// ignore
+	}
+	const router = createMemoryRouter(
+		[
+			{ path: "/arena", element: <Arena /> },
+			{ path: "/join", element: <div data-testid="page-join" /> },
+		],
+		{ initialEntries: [entry] },
+	);
 	return render(
-		<ToastProvider>
-			<RouterProvider router={router} future={{ v7_startTransition: true }} />
-		</ToastProvider>,
+		<ThemeProvider>
+			<RouterProvider router={router} />
+		</ThemeProvider>,
 	);
 }
 
-describe("seatPosition — T30 pure", () => {
-	test("capsule keeps top/bottom seats on the straight rail and side seats on the caps", () => {
-		for (const angle of [60, 90, 120]) {
-			expect(seatPosition(angle).top).toBeCloseTo(490);
-			expect(seatPosition(angle + 180).top).toBeCloseTo(70);
-		}
-		const side = seatPosition(30);
-		expect((side.left - 690) ** 2 + (side.top - 280) ** 2).toBeCloseTo(210 ** 2);
+describe("Arena smoke", () => {
+	test("resultado troca instruções e timer por discussão", () => {
+		useSalaStore.getState().setSala(makeSala({ phase: "revealed" }));
+		useSalaStore.getState().setCurrentPlayerId("p_1");
+		renderArena();
+		expect(screen.getByTestId("arena-table-copy").textContent).toBe("Votos revelados.");
+		expect(screen.getByTestId("arena-table-sub").textContent).toBe("Conversem sobre as diferenças.");
+		expect(screen.getByText("Em discussão")).not.toBeNull();
+		expect(screen.queryByRole("timer")).toBeNull();
 	});
 
-	test("angle=90 (VOCÊ) → bottom-center", () => {
-		const pos = seatPosition(90);
-		// 480 + cos(90)*420 = 480 + 0 = 480
-		// 280 + sin(90)*210 = 280 + 210 = 490
-		expect(pos.left).toBeCloseTo(480);
-		expect(pos.top).toBeCloseTo(490);
+	test("atalho N usa a mesma confirmação do clique e ignora tecla mantida", () => {
+		useSalaStore.getState().setSala(makeSala({ phase: "revealed" }));
+		useSalaStore.getState().setCurrentPlayerId("p_1");
+		renderArena();
+		const reveal = screen.getByTestId("reveal-button");
+		fireEvent.keyDown(window, { key: "n", repeat: true });
+		expect(reveal.getAttribute("data-reveal-confirm")).toBe("false");
+		fireEvent.keyDown(window, { key: "n" });
+		expect(reveal.getAttribute("data-reveal-confirm")).toBe("true");
+		fireEvent.keyDown(window, { key: "Escape" });
+		expect(reveal.getAttribute("data-reveal-confirm")).toBe("false");
+		fireEvent.click(reveal);
+		expect(reveal.getAttribute("data-reveal-confirm")).toBe("true");
 	});
 
-	test("angle=0 (right) → right edge", () => {
-		const pos = seatPosition(0);
-		// 480 + 1*420 = 900, 280 + 0 = 280
-		expect(pos.left).toBeCloseTo(900);
-		expect(pos.top).toBeCloseTo(280);
-	});
-
-	test("angle=180 (left) → left edge", () => {
-		const pos = seatPosition(180);
-		expect(pos.left).toBeCloseTo(60);
-		expect(pos.top).toBeCloseTo(280);
-	});
-});
-
-describe("Arena shell — T30", () => {
-	test("não oferece ajuda nem abre modal com ? ou /", () => {
-		useSalaStore.getState().reset();
+	test("mobile mantém votação antes dos participantes", () => {
 		useSalaStore.getState().setSala(makeSala());
 		useSalaStore.getState().setCurrentPlayerId("p_1");
 		renderArena();
-		expect(screen.queryByTestId("arena-help-button")).not.toBeInTheDocument();
-		for (const key of ["?", "/"]) {
-			fireEvent.keyDown(window, { key });
-			expect(screen.queryByTestId("help-modal")).not.toBeInTheDocument();
-		}
+		const deck = screen.getByTestId("arena-deck-wrapper");
+		const seat = screen.getByTestId("seat-p_1");
+		expect(deck.compareDocumentPosition(seat) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 	});
-
-	test("renderiza shell com code '9B9F' no header", () => {
-		renderArena();
-		expect(screen.getByTestId("page-arena")).toBeInTheDocument();
-		expect(screen.getByTestId("share-pill")).toHaveTextContent("9B9F");
-	});
-
-	test("renderiza arena-table com Ellipse + RevealButton + Deck", () => {
-		renderArena();
-		expect(screen.getByTestId("arena-table")).toBeInTheDocument();
-		expect(screen.getByTestId("reveal-button")).toBeInTheDocument();
-		expect(screen.getByTestId("deck")).toBeInTheDocument();
-		expect(screen.getByTestId("timer-pill")).toBeInTheDocument();
-	});
-
-	test("round label atualiza conforme store.round", () => {
-		renderArena();
-		expect(screen.getByTestId("arena-round-hidden-stub")).toHaveTextContent(
-			/Rodada 01/i,
-		);
-	});
-
-	test("renderiza Seat para cada player do store", () => {
-		// Seta sala com 2 players antes de renderizar
-		useSalaStore.getState().reset();
+	test("renderiza shell com code + timer + assentos", () => {
 		useSalaStore.getState().setSala(makeSala());
 		useSalaStore.getState().setCurrentPlayerId("p_1");
-
 		renderArena();
-
-		expect(screen.getByTestId("seat-p_1")).toBeInTheDocument();
-		expect(screen.getByTestId("seat-p_2")).toBeInTheDocument();
-		// VOCÊ no p_1
-		expect(
-			screen
-				.getByTestId("seat-p_1")
-				.querySelector('[data-testid="seat-voc-badge"]'),
-		).not.toBeNull();
-		// p_2 não tem VOCÊ
-		expect(
-			screen
-				.getByTestId("seat-p_2")
-				.querySelector('[data-testid="seat-voc-badge"]'),
-		).toBeNull();
+		expect(screen.getByTestId("page-arena")).not.toBeNull();
+		expect(screen.getByTestId("arena-code").textContent).toContain("AB12");
+		expect(screen.getByTestId("share-pill").textContent).toContain("AB12");
+		expect(screen.getByTestId("timer-pill")).not.toBeNull();
+		expect(screen.getByTestId("timer-value").textContent).toBe("60");
+		expect(screen.getByTestId("seat-p_1")).not.toBeNull();
+		expect(screen.getByTestId("seat-p_2")).not.toBeNull();
+		expect(screen.getByTestId("theme-toggle")).not.toBeNull();
 	});
 
-	test("EmptyOverlay aparece quando só tem VOCÊ na sala", () => {
-		useSalaStore.getState().reset();
-		// Sala com só 1 player (VOCÊ)
+	test("deck renderiza 9 cartas; reveal desabilitado com 0 votos", () => {
+		useSalaStore.getState().setSala(makeSala());
+		useSalaStore.getState().setCurrentPlayerId("p_1");
+		const { container } = renderArena();
+		const cards = container.querySelectorAll('[data-testid^="deck-card-"]');
+		expect(cards.length).toBe(9);
+		const reveal = screen.getByTestId("reveal-button") as HTMLButtonElement;
+		expect(reveal.getAttribute("data-reveal-state")).toBe("awaiting");
+		expect(reveal.disabled).toBe(true);
+	});
+
+	test("solo mostra empty-overlay; reveal libera após voto", () => {
 		useSalaStore.getState().setSala(
 			makeSala({
-				players: [
-					{
-						id: "p_1",
-						uuid: "00000000-0000-4000-8000-000000000000",
-						nick: "Helder",
-						role: "host",
-						seatIndex: 0,
-						hasVoted: false,
-						value: null,
-						status: "connected",
-						joinedAt: 1_000_000,
-					},
-				],
+				players: [makePlayer()],
+				phase: "voting",
 			}),
 		);
 		useSalaStore.getState().setCurrentPlayerId("p_1");
-
+		useSalaStore.getState().markVoted("p_1", true);
 		renderArena();
-
-		// Pode ou não aparecer dependendo de sessionStorage. Em primeiro load sim.
-		// Verificamos o data-od-id presente no DOM
-		const overlay = screen.queryByTestId("empty-overlay");
-		// Se sessionStorage limpo (test default), aparece como região
-		// não-modal (redesign: convite incorporado ao estado de espera).
-		// Se sessionStorage tem '1', não aparece — ambos os casos são válidos
-		expect(
-			overlay === null || overlay.getAttribute("role") === "dialog",
-		).toBe(true);
-	});
-
-	test("RevealButton começa em estado 'awaiting' com 0 votos", () => {
-		useSalaStore.getState().reset();
-		useSalaStore.getState().setSala(makeSala({ phase: "idle" }));
-		useSalaStore.getState().setCurrentPlayerId("p_1");
-		renderArena();
-		const btn = screen.getByTestId("reveal-button");
-		expect(btn.getAttribute("data-reveal-state")).toBe("awaiting");
-	});
-
-	test("centro mostra 'Tem lugar para o time.' com 1 jogador", () => {
-		useSalaStore.getState().reset();
-		useSalaStore.getState().setSala(
-			makeSala({
-				players: [
-					{
-						id: "p_1",
-						uuid: "00000000-0000-4000-8000-000000000000",
-						nick: "Helder",
-						role: "host",
-						seatIndex: 0,
-						hasVoted: false,
-						value: null,
-						status: "connected",
-						joinedAt: 1_000_000,
-					},
-				],
-			}),
-		);
-		useSalaStore.getState().setCurrentPlayerId("p_1");
-		renderArena();
-		expect(screen.getByTestId("arena-table-copy")).toHaveTextContent(
-			/tem lugar para o time/i,
-		);
-		expect(screen.getByTestId("arena-table-sub")).toHaveTextContent(
-			/convide alguém/i,
-		);
-	});
-
-	test("centro mostra 'Todos votaram.' + regra do auto-reveal quando todos votaram", () => {
-		useSalaStore.getState().reset();
-		useSalaStore.getState().setSala(
-			makeSala({
-				players: [
-					{
-						id: "p_1",
-						uuid: "00000000-0000-4000-8000-000000000000",
-						nick: "Helder",
-						role: "host",
-						seatIndex: 0,
-						hasVoted: true,
-						value: "5",
-						status: "connected",
-						joinedAt: 1_000_000,
-					},
-					{
-						id: "p_2",
-						uuid: "00000000-0000-4000-8000-000000000001",
-						nick: "Maya",
-						role: "player",
-						seatIndex: 1,
-						hasVoted: true,
-						value: "8",
-						status: "connected",
-						joinedAt: 1_000_001,
-					},
-				],
-			}),
-		);
-		useSalaStore.getState().setCurrentPlayerId("p_1");
-		renderArena();
-		expect(screen.getByTestId("arena-table-copy")).toHaveTextContent(
-			/todos votaram/i,
-		);
-		expect(screen.getByTestId("arena-table-sub")).toHaveTextContent(
-			/revele agora ou aguarde — no zero, revela sozinho/i,
-		);
+		expect(screen.getByTestId("empty-overlay")).not.toBeNull();
+		const reveal = screen.getByTestId("reveal-button") as HTMLButtonElement;
+		expect(reveal.getAttribute("data-reveal-state")).toBe("ready");
+		expect(reveal.disabled).toBe(false);
 	});
 });

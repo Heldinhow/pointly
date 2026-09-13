@@ -1,87 +1,60 @@
 /**
  * Analytics — Google Analytics 4 (gtag.js) com privacy-first defaults.
  *
- * Stack: gtag.js direto (sem GTM). API mínima: init() + trackPageview() +
- * isEnabled(). Runtime loader via `document.createElement('script')` lazy
- * para que `bun run dev` (sem VITE_GA_MEASUREMENT_ID) não faça nenhum
- * request a `googletagmanager.com`.
+ * API mínima: init() + trackPageview() + isEnabled().
+ * Runtime loader via `document.createElement('script')` lazy para que
+ * `bun run dev` (sem VITE_GA_MEASUREMENT_ID) não faça nenhum request
+ * a `googletagmanager.com`.
  *
- * Privacy flags aplicados em init() (GA-08):
- *   - send_page_view: false — SPA: disparamos page_view manualmente
- *   - anonymize_ip: true — IP anonymized
+ * Privacy flags aplicados em init():
+ *   - send_page_view: false — SPA: page_view é disparado manualmente
+ *   - anonymize_ip: true
  *   - ads_data_redaction: true — sem advertising features
  *   - cookie_domain: 'none' — zero cookie no domínio Pointly
  *   - client_storage: 'none' — zero localStorage/sessionStorage do GA
  *
- * Strip de query string: callers passam pathname only (window.location.pathname).
- * `trackPageview` nunca aceita URL com query/hash — caller é responsável.
- *
- * Pré-requisito do admin GA4 (responsabilidade do operator):
- *   - Enhanced Measurement → "Page changes" OFF
- *   - Data retention → 2 months
- *   Veja ADR-0012 / docs/adr/0012-google-analytics-privacy-first.md.
- *
- * @see .specs/features/google-analytics/spec.md
- * @see .specs/features/google-analytics/context.md
- * @see docs/adr/0012-google-analytics-privacy-first.md
- * @see memory/ga4-spa-pageview-pattern (gotcha Enhanced Measurement)
+ * Pathname-only: callers passam `location.pathname`, NUNCA href
+ * (query string com código de sala vazaria pro Google).
  */
 
-import { getGaMeasurementId, type GaMeasurementId } from "./analytics-config";
-
-// ---------------------------------------------------------------------------
-// Module state
-// ---------------------------------------------------------------------------
-
-/** True após init() rodar com sucesso (gtag.js carregado + config aplicado). */
-let initialized = false;
-
-/** ID validado (formato G-XXXXXX). Snapshot no momento do init. */
-let activeId: GaMeasurementId | null = null;
-
-/** Pathname da última pageview disparada. Usado como page_referrer. */
-let lastPathname: string | null = null;
-
-// ---------------------------------------------------------------------------
-// Validation
-// ---------------------------------------------------------------------------
-
-/** Regex do formato GA4 Measurement ID (G-XXXXXX, 1-10 chars alfanuméricos). */
 const GA_ID_RE = /^G-[A-Z0-9]{1,10}$/;
 
-/**
- * Valida formato do GA Measurement ID.
- * Retorna string limpa se válido, ou null se inválido (vazio, lowercase, etc).
- */
-export function validateGaId(raw: string | undefined | null): GaMeasurementId | null {
+let initialized = false;
+let activeId: string | null = null;
+let lastPathname: string | null = null;
+
+/** Override de teste — apenas para testes. */
+let testTrackPageviewImpl: ((prev: string | null, next: string) => void) | null =
+	null;
+
+/** Override de teste p/ measurement id — apenas para testes. */
+let testGaIdOverride: string | undefined | null | undefined = undefined;
+
+/** Valida formato do GA Measurement ID. Retorna string limpa ou null. */
+export function validateGaId(raw: string | undefined | null): string | null {
 	if (!raw) return null;
 	const trimmed = raw.trim();
 	if (!GA_ID_RE.test(trimmed)) return null;
 	return trimmed;
 }
 
-// ---------------------------------------------------------------------------
-// Init
-// ---------------------------------------------------------------------------
+function getGaMeasurementId(): string | undefined {
+	if (testGaIdOverride !== undefined && testGaIdOverride !== null) {
+		return testGaIdOverride;
+	}
+	return import.meta.env.VITE_GA_MEASUREMENT_ID;
+}
 
 /**
- * Inicializa o Google Analytics 4 com privacy-first defaults.
- *
- * - Idempotente: chamadas múltiplas são no-ops após a primeira com sucesso.
- * - Em dev (sem ID configurada): no-op puro. Zero side effect, zero request.
- * - Em prod (com ID): injeta `<script src="googletagmanager.com/gtag/js?id=...">`
- *   lazy, define `window.dataLayer` + `window.gtag`, e chama
- *   `gtag('config', ID, { send_page_view: false, ...privacyFlags })`.
- *
- * Não chama `gtag('event', 'page_view')` — isso é responsabilidade do
- * `<PageviewTracker />` em mount + mudança de rota.
+ * Inicializa o GA4 com privacy-first defaults. Idempotente.
+ * No-op puro em dev (sem ID configurada). Não dispara page_view —
+ * isso é responsabilidade do `<PageviewTracker />`.
  */
 export function init(): void {
 	if (initialized) return;
 
 	const id = validateGaId(getGaMeasurementId());
 	if (!id) {
-		// Dev ou prod sem env var configurada. Sem warn em dev (caso comum).
 		if (typeof console !== "undefined" && getGaMeasurementId()) {
 			console.warn(
 				"[analytics] VITE_GA_MEASUREMENT_ID presente mas formato inválido. Esperado G-XXXXXX.",
@@ -92,11 +65,6 @@ export function init(): void {
 
 	activeId = id;
 
-	// gtag.js dataLayer pattern: stack antes do script carregar.
-	// Preserva `window.gtag` se já existir (ex.: test stub) — só define a
-	// implementação default se ausente. Isso evita reatribuir o stub dos
-	// testes a cada init(), o que faria com que calls subsequentes
-	// (config, event) bypassem o spy.
 	const w = window as unknown as {
 		dataLayer: unknown[];
 		gtag: (...args: unknown[]) => void;
@@ -109,14 +77,11 @@ export function init(): void {
 	}
 	w.gtag("js", new Date());
 
-	// Injeta snippet lazy. async=true permite não-bloqueante.
 	const script = document.createElement("script");
 	script.async = true;
 	script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`;
 	document.head.appendChild(script);
 
-	// Config com privacy-first defaults. NÃO dispara page_view aqui
-	// (send_page_view: false) — <PageviewTracker /> chama trackPageview.
 	w.gtag("config", id, {
 		send_page_view: false,
 		anonymize_ip: true,
@@ -128,31 +93,17 @@ export function init(): void {
 	initialized = true;
 }
 
-// ---------------------------------------------------------------------------
-// trackPageview
-// ---------------------------------------------------------------------------
-
 /**
  * Dispara um hit `page_view` para a nova rota.
  *
- * Padrão SPA correto (GA-19, memory ga4-spa-pageview-pattern):
- *   1. `gtag('config', ID, { send_page_view: false, page_referrer, page_location, update: true })`
- *      — merge sem reinit, atribui referrer + location novos.
- *   2. `gtag('event', 'page_view', { page_referrer, page_location })`
- *      — dispara o hit com os mesmos valores.
- *
- * @param prevPathname Pathname da rota anterior, ou `null` no mount inicial
- *   (GA interpreta como referrer direto/externo).
- * @param newPathname Pathname da rota nova. **Apenas pathname** — caller
- *   passa `window.location.pathname`, NUNCA `window.location.href`
- *   (query string com código de sala vazaria pro Google).
+ * @param prevPathname Pathname da rota anterior, ou `null` no mount inicial.
+ * @param newPathname Pathname da rota nova. **Apenas pathname** — nunca
+ *   URL com query/hash (código de sala vazaria pro Google).
  */
 export function trackPageview(
 	prevPathname: string | null,
 	newPathname: string,
 ): void {
-	// Permite override em testes (ex.: pageview-tracker.test.tsx) sem ter
-	// que mockar o módulo inteiro — abordagem mais surgical.
 	if (testTrackPageviewImpl) {
 		testTrackPageviewImpl(prevPathname, newPathname);
 		return;
@@ -176,45 +127,31 @@ export function trackPageview(
 	lastPathname = newPathname;
 }
 
-/** Override de teste — quando setado, `trackPageview` chama isso em vez do
- *  default. **Apenas para testes.** */
-let testTrackPageviewImpl:
-	| ((prev: string | null, next: string) => void)
-	| null = null;
+/** True se analytics está ativo (init() rodou com ID válida). */
+export function isEnabled(): boolean {
+	return initialized && activeId !== null;
+}
 
-/**
- * **Apenas para testes** — substitui a implementação de `trackPageview`.
- * Passar `null` pra resetar (volta ao default).
- */
+/** Retorna o pathname da última pageview disparada. Útil para testes. */
+export function getLastPathname(): string | null {
+	return lastPathname;
+}
+
+/** Apenas para testes — substitui a implementação de `trackPageview`. */
 export function __setTrackPageviewForTests(
 	impl: ((prev: string | null, next: string) => void) | null,
 ): void {
 	testTrackPageviewImpl = impl;
 }
 
-/**
- * Retorna o pathname da última pageview disparada. Útil para testes.
- */
-export function getLastPathname(): string | null {
-	return lastPathname;
+/** Apenas para testes — sobrescreve o measurement id lido do env. */
+export function __setGaMeasurementIdForTests(
+	value: string | undefined | null,
+): void {
+	testGaIdOverride = value;
 }
 
-// ---------------------------------------------------------------------------
-// isEnabled
-// ---------------------------------------------------------------------------
-
-/**
- * True se analytics está ativo (init() rodou em prod com ID válida).
- * False em dev ou antes do init() rodar. Útil pra debug e testes.
- */
-export function isEnabled(): boolean {
-	return initialized && activeId !== null;
-}
-
-/**
- * Reseta estado interno. **Apenas para testes** — não usar em produção.
- * Permite re-inicializar o analytics entre casos de teste sem reload.
- */
+/** Reseta estado interno. Apenas para testes — não usar em produção. */
 export function __resetForTests(): void {
 	initialized = false;
 	activeId = null;

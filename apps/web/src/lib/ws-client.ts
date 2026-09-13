@@ -1,20 +1,13 @@
 /**
- * WebSocket client wrapper — T23 (Phase 5).
+ * WebSocket client — factory com reconnect + heartbeat + validação Zod.
  *
- * Factory `createWSClient` que:
- *  - abre WebSocket na URL (default `import.meta.env.VITE_WS_URL` ou `ws://localhost:3001/ws`)
- *  - valida cada evento recebido com Zod (rejeita malformed → `console.warn`, drop)
- *  - expõe `send(event)` que valida com Zod antes de enviar
- *  - auto-reconnect com backoff exponencial (1s, 2s, 4s, …, max 30s)
- *  - heartbeat: envia `ping` a cada 5s; se `pong` não chega em 5s, fecha + reconnect
- *    → detection time máximo client-side: 10s (vs. 35s antes)
- *  - `status: 'idle' | 'connecting' | 'open' | 'closed' | 'error'`
- *  - `close()` para heartbeat e fecha WS sem reconnect
- *
- * @see .specs/features/planning-poker-v1/tasks.md T23
- * @see docs/adr/0008-zustand-zod-shared-schemas.md
+ * - URL: `VITE_WS_URL` > dev `ws://localhost:3001/ws` > `wss://<host>/ws`
+ * - Valida S→C com `ServerToClientEventSchema` (malformed → warn + drop)
+ * - Valida C→S com `ClientToServerEventSchema` antes de enviar
+ * - Reconnect com backoff exponencial 1s,2s,4s…cap 30s
+ * - Heartbeat: `ping` a cada 5s com socket aberto; sem `pong` em 5s → close + reconnect
+ * - `onOpen` dispara a cada (re)connect — loops enviam `hello` ali (uma vez por conexão)
  */
-
 import {
 	type ClientToServerEvent,
 	ClientToServerEventSchema,
@@ -22,40 +15,26 @@ import {
 	ServerToClientEventSchema,
 } from "@planning-poker/shared";
 
-// ---------------------------------------------------------------------------
-// Tipos públicos
-// ---------------------------------------------------------------------------
-
-/** Status observável do WebSocket. */
 export type WSStatus = "idle" | "connecting" | "open" | "closed" | "error";
 
-/** Opções da factory. */
 export type CreateWSClientOptions = {
-	/** URL do WS. Default: `import.meta.env.VITE_WS_URL ?? "ws://localhost:3001/ws"`. */
+	/** URL do WS. Default: `resolveWsUrl()`. */
 	url?: string;
-	/** Callback invocado para cada evento S→C validado pelo Zod. */
+	/** Callback para cada evento S→C validado. */
 	onEvent: (e: ServerToClientEvent) => void;
-	/**
-	 * Função de schedule de timers (default: `setTimeout`). Injetável pra testes
-	 * com fake timers (ex: `bun:test` `setSystemTime`/`useFakeTimers`).
-	 */
+	/** Callback a cada (re)connect com socket aberto. */
+	onOpen?: () => void;
+	/** Schedule de timers (default `setTimeout`). Injetável pra testes. */
 	setTimeoutFn?: typeof setTimeout;
-	/**
-	 * Função de clear de timers (default: `clearTimeout`). Injetável pra testes.
-	 */
+	/** Clear de timers (default `clearTimeout`). Injetável pra testes. */
 	clearTimeoutFn?: typeof clearTimeout;
-	/**
-	 * Override do constructor `WebSocket`. Injetável pra testes com mock
-	 * (em runtime, default = `globalThis.WebSocket`).
-	 */
+	/** Override do constructor WebSocket (mock em testes). */
 	WebSocketCtor?: typeof WebSocket;
-	/**
-	 * Cap de retries de reconnect. `Infinity` (default) = reconecta sempre.
-	 */
+	/** Cap de retries. Default `Infinity`. */
 	maxReconnectRetries?: number;
-	/** Override do intervalo de heartbeat (ms). Default: 5000. */
+	/** Intervalo do heartbeat em ms. Default 5000. */
 	heartbeatIntervalMs?: number;
-	/** Override do timeout pra esperar pong (ms). Default: 5000. */
+	/** Timeout de espera do pong em ms. Default 5000. */
 	heartbeatTimeoutMs?: number;
 };
 
@@ -66,61 +45,30 @@ export type WSClient = {
 	getStatus: () => WSStatus;
 };
 
-// ---------------------------------------------------------------------------
-// Constantes
-// ---------------------------------------------------------------------------
+export const RECONNECT_BASE_MS = 1_000;
+export const RECONNECT_MAX_MS = 30_000;
+export const DEFAULT_HEARTBEAT_INTERVAL_MS = 5_000;
+export const DEFAULT_HEARTBEAT_TIMEOUT_MS = 5_000;
 
-/** Backoff exponencial: 1s, 2s, 4s, 8s, 16s, 30s (cap). */
-const RECONNECT_BASE_MS = 1_000;
-const RECONNECT_MAX_MS = 30_000;
-/**
- * Heartbeat ping a cada 5s.
- *
- * Reduzido de 30s → 5s para detecção mais rápida de queda (fev/2026).
- * Custo: 12 pings/min por conexão — trivial em planning poker (≤12 seats).
- */
-const DEFAULT_HEARTBEAT_INTERVAL_MS = 5_000;
-/** Se pong não chega em 5s, fecha + reconnect. */
-const DEFAULT_HEARTBEAT_TIMEOUT_MS = 5_000;
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/** Backoff exponencial capado em 30s. */
-function reconnectDelay(attempt: number): number {
-	const exp = RECONNECT_BASE_MS * 2 ** attempt;
-	return Math.min(exp, RECONNECT_MAX_MS);
+/** Backoff exponencial capado em 30s: 1s,2s,4s,8s,16s,30s,… */
+export function reconnectDelay(attempt: number): number {
+	return Math.min(RECONNECT_BASE_MS * 2 ** attempt, RECONNECT_MAX_MS);
 }
 
-/** Lê env var com fallback (Vite injeta `import.meta.env.VITE_*`).
+/**
+ * Resolve a URL do WS.
  *
- * IMPORTANTE: usa acesso direto a `import.meta.env.*` — nunca alias pra
- * variável local. O define plugin do Vite (Rollup) substitui essas
- * expressões em build; se você colocar `const env = import.meta.env` antes,
- * Vite não acompanha o alias e deixa o check de runtime intacto no bundle.
- * Resultado histórico (2026-07-16): `if (env?.DEV)` rodava em prod,
- * devolvia `ws://localhost:3001/ws`, Safari bloqueava mixed content e
- * "Criar sala" parecia não criar salas.
- *
- * @see https://vitejs.dev/guide/env-and-mode.html#env-variables
+ * IMPORTANTE: acesso direto a `import.meta.env.*` (nunca alias) — o
+ * define do Vite só substitui acesso direto em build.
  */
-function defaultURL(): string {
+export function resolveWsUrl(): string {
 	try {
-		// 1. Override explícito via VITE_WS_URL no build (Dokploy injeta).
-		//    Acesso direto: Vite substitui pela string injetada em prod.
 		const fromEnv = import.meta.env.VITE_WS_URL;
 		if (typeof fromEnv === "string" && fromEnv.length > 0) return fromEnv;
-		// 2. Dev local: Vite roda em :5173 e o server Bun em :3001. WS via
-		//    proxy do Vite é instável em WS upgrades — conectar direto.
-		//    Acesso direto: Vite substitui DEV por `false` em prod build.
-		if (import.meta.env.DEV) {
-			return "ws://localhost:3001/ws";
-		}
+		if (import.meta.env.DEV) return "ws://localhost:3001/ws";
 	} catch {
-		// ignore — import.meta indisponível em testes Bun
+		// import.meta indisponível (bun test) — segue pros fallbacks
 	}
-	// 3. Default prod: URL relativa `/ws` no mesmo origin (wss://<host>/ws).
 	if (typeof window !== "undefined" && window.location) {
 		const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
 		return `${proto}//${window.location.host}/ws`;
@@ -128,26 +76,11 @@ function defaultURL(): string {
 	return "ws://localhost:3001/ws";
 }
 
-// ---------------------------------------------------------------------------
-// Factory
-// ---------------------------------------------------------------------------
-
-/**
- * Cria wrapper de WebSocket com reconnect + heartbeat + validação Zod.
- *
- * O client gerencia internamente:
- *  - reconexão automática em `close`/`error`
- *  - heartbeat ping/pong
- *  - estado `status` observável
- *
- * Caller controla ciclo de vida:
- *  - `connect()` para iniciar
- *  - `close()` para parar (sem reconnect)
- */
 export function createWSClient(options: CreateWSClientOptions): WSClient {
 	const {
 		url: urlOpt,
 		onEvent,
+		onOpen,
 		setTimeoutFn = setTimeout,
 		clearTimeoutFn = clearTimeout,
 		WebSocketCtor,
@@ -156,7 +89,7 @@ export function createWSClient(options: CreateWSClientOptions): WSClient {
 		heartbeatTimeoutMs = DEFAULT_HEARTBEAT_TIMEOUT_MS,
 	} = options;
 
-	const url = urlOpt ?? defaultURL();
+	const url = urlOpt ?? resolveWsUrl();
 
 	let ws: WebSocket | null = null;
 	let status: WSStatus = "idle";
@@ -165,10 +98,6 @@ export function createWSClient(options: CreateWSClientOptions): WSClient {
 	let heartbeatHandle: ReturnType<typeof setTimeout> | null = null;
 	let pongTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
 	let explicitlyClosed = false;
-
-	function setStatus(next: WSStatus): void {
-		status = next;
-	}
 
 	function clearReconnect(): void {
 		if (reconnectHandle !== null) {
@@ -190,26 +119,27 @@ export function createWSClient(options: CreateWSClientOptions): WSClient {
 
 	function scheduleHeartbeat(): void {
 		clearHeartbeat();
-		heartbeatHandle = setTimeoutFn(() => {
-			// Envia ping (validado por Zod em `send`)
-			try {
-				send({ type: "ping", payload: {} });
-			} catch {
-				// Falha de validação é improvável (PingPayloadSchema é vazio).
-				// Ignora.
-			}
-			// Espera pong em 5s
-			pongTimeoutHandle = setTimeoutFn(() => {
-				// Pong não chegou — fecha + reconecta
-				if (ws && ws.readyState === WebSocket.OPEN) {
-					try {
-						ws.close();
-					} catch {
-						// ignore
-					}
+		heartbeatHandle = setTimeoutFn(onHeartbeat, heartbeatIntervalMs);
+	}
+
+	function onHeartbeat(): void {
+		if (explicitlyClosed || !ws || ws.readyState !== WebSocket.OPEN) return;
+		try {
+			send({ type: "ping", payload: {} });
+		} catch {
+			// PingPayload é vazio — validação não falha na prática
+		}
+		pongTimeoutHandle = setTimeoutFn(() => {
+			if (ws && ws.readyState === WebSocket.OPEN) {
+				try {
+					ws.close();
+				} catch {
+					// ignore — o `close` agenda o reconnect
 				}
-			}, heartbeatTimeoutMs);
-		}, heartbeatIntervalMs);
+			}
+		}, heartbeatTimeoutMs);
+		// Reagenda o próximo ping (heartbeat contínuo enquanto aberto)
+		heartbeatHandle = setTimeoutFn(onHeartbeat, heartbeatIntervalMs);
 	}
 
 	function scheduleReconnect(): void {
@@ -219,83 +149,78 @@ export function createWSClient(options: CreateWSClientOptions): WSClient {
 		const delay = reconnectDelay(reconnectAttempt);
 		reconnectAttempt += 1;
 		reconnectHandle = setTimeoutFn(() => {
+			reconnectHandle = null;
 			openSocket();
 		}, delay);
+	}
+
+	function handleMessage(ev: MessageEvent): void {
+		let raw: unknown;
+		try {
+			raw = typeof ev.data === "string" ? JSON.parse(ev.data) : ev.data;
+		} catch (e) {
+			console.warn("[ws-client] failed to parse message:", e);
+			return;
+		}
+		const parsed = ServerToClientEventSchema.safeParse(raw);
+		if (!parsed.success) {
+			console.warn("[ws-client] malformed event dropped:", parsed.error.issues);
+			return;
+		}
+		if (parsed.data.type === "pong") {
+			if (pongTimeoutHandle !== null) {
+				clearTimeoutFn(pongTimeoutHandle);
+				pongTimeoutHandle = null;
+			}
+			return;
+		}
+		try {
+			onEvent(parsed.data);
+		} catch (e) {
+			console.warn("[ws-client] onEvent threw:", e);
+		}
 	}
 
 	function openSocket(): void {
 		const Ctor = WebSocketCtor ?? globalThis.WebSocket;
 		if (!Ctor) {
-			// Sem WebSocket (SSR / Node sem polyfill) — vai pra error.
-			setStatus("error");
+			status = "error";
 			return;
 		}
-		setStatus("connecting");
+		status = "connecting";
 		try {
 			ws = new Ctor(url);
 		} catch (e) {
 			console.warn("[ws-client] constructor threw:", e);
-			setStatus("error");
+			status = "error";
 			scheduleReconnect();
 			return;
 		}
 
 		ws.addEventListener("open", () => {
-			setStatus("open");
-			reconnectAttempt = 0; // reset backoff on successful connect
-			scheduleHeartbeat();
-		});
-
-		ws.addEventListener("message", (ev: MessageEvent) => {
-			let raw: unknown;
-			try {
-				raw = typeof ev.data === "string" ? JSON.parse(ev.data) : ev.data;
-			} catch (e) {
-				console.warn("[ws-client] failed to parse message:", e);
-				return;
-			}
-			const parsed = ServerToClientEventSchema.safeParse(raw);
-			if (!parsed.success) {
-				console.warn(
-					"[ws-client] malformed event dropped:",
-					parsed.error.issues,
-				);
-				return;
-			}
-			// Reset pong timeout (server respondeu) e re-agenda heartbeat.
-			if (parsed.data.type === "pong") {
-				if (pongTimeoutHandle !== null) {
-					clearTimeoutFn(pongTimeoutHandle);
-					pongTimeoutHandle = null;
-				}
-				scheduleHeartbeat();
-				return;
-			}
-			// Reset heartbeat em qualquer evento válido (mantém conexão viva).
+			status = "open";
+			reconnectAttempt = 0;
 			scheduleHeartbeat();
 			try {
-				onEvent(parsed.data);
+				onOpen?.();
 			} catch (e) {
-				console.warn("[ws-client] onEvent threw:", e);
+				console.warn("[ws-client] onOpen threw:", e);
 			}
 		});
-
+		ws.addEventListener("message", handleMessage);
 		ws.addEventListener("close", () => {
-			setStatus("closed");
+			status = "closed";
 			clearHeartbeat();
 			ws = null;
 			scheduleReconnect();
 		});
-
 		ws.addEventListener("error", () => {
-			setStatus("error");
-			// O evento `close` vai disparar logo após — reconnect vem dali.
+			status = "error";
+			// `close` dispara em seguida — reconnect vem dali
 		});
 	}
 
 	function send(event: ClientToServerEvent): void {
-		// Validação defensiva (Zod) — caller deveria ter tipado corretamente,
-		// mas protege contra payload inválido.
 		const parsed = ClientToServerEventSchema.safeParse(event);
 		if (!parsed.success) {
 			console.warn(
@@ -327,7 +252,7 @@ export function createWSClient(options: CreateWSClientOptions): WSClient {
 			}
 			ws = null;
 		}
-		setStatus("closed");
+		status = "closed";
 	}
 
 	function connect(): void {

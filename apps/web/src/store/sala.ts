@@ -1,29 +1,22 @@
 /**
- * useSalaStore — Zustand store para o estado Planning Poker no client.
+ * Sala store — Zustand (spell-rebuild).
  *
- * Phase 5 (T22). Single source of truth no frontend.
+ * Fonte client-side de verdade server-driven: todo snapshot chega via
+ * `room_state`/`welcome` e entra por `setSala`. Eventos incrementais
+ * (`vote_cast`, `votes_revealed`, `round_started`, `player_left`) aplicam
+ * patches locais; o próximo `room_state` reconcilia tudo.
  *
- * **Princípios**
- * 1. Estado canônico: `sala: SalaState` (validado por Zod via @planning-poker/shared).
- *    Toda mutation que muda a sala substitui o objeto inteiro (server-driven).
- * 2. Selectors granulares evitam re-render desnecessário: cada selector
- *    retorna uma referência nova SÓ quando o subset relevante muda.
- * 3. Imutabilidade: `set((s) => ...)` retorna novo objeto `SalaState`
- *    (cliente de T13 produz snapshots in-place no server, mas a action
- *    substitui por novo objeto via spread pra Zustand detectar mudança).
- *
- * **Pattern Zustand v5**
- *  - `import { create } from "zustand"`
- *  - `create<State>()((set, get) => ({ ... }))` (curried form p/ TS)
- *  - Selectors exportados como funções puras que recebem `state`.
- *    Hooks React ficam em `useSalaStore(selector)` com auto-shallow compare
- *    via `useShallow` (zustand v5).
- *
- * @see .specs/features/planning-poker-v1/tasks.md T22
- * @see docs/adr/0008-zustand-zod-shared-schemas.md
+ * Toasts/errores/navegação vivem em `src/lib/loops.ts` (via `toast()` de
+ * `@/components/feedback/toast`) — este store guarda só estado de sala.
  */
-
-import type { Phase, Player, SalaState, Vote } from "@planning-poker/shared";
+import type {
+	Phase,
+	Player,
+	SalaEndedReason,
+	SalaState,
+	Vote,
+} from "@planning-poker/shared";
+import { computeConsensus, isUnanimous } from "@planning-poker/shared";
 import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 
@@ -31,11 +24,7 @@ import { useShallow } from "zustand/react/shallow";
 // Tipos públicos
 // ---------------------------------------------------------------------------
 
-/**
- * Estado computado de consenso (preenchido no `applyReveal`).
- * Espelha `ConsensusStats` do shared, mas mantido aqui para composição
- * com `unanimous` que vive no evento `votes_revealed` (não em SalaState).
- */
+/** Stats pós-reveal. Espelha o payload `votes_revealed` do server. */
 export type ConsensusSnapshot = {
 	median: number | null;
 	mean: number | null;
@@ -43,16 +32,7 @@ export type ConsensusSnapshot = {
 	unanimous: boolean;
 };
 
-/** Toast efêmero para feedback rápido (voto, sala cheia, reconnect). */
-export type ToastKind = "info" | "success" | "error";
-export type Toast = { kind: ToastKind; text: string };
-
-/** Estado local de UI (sem persistência). */
-export type UIState = {
-	toast: Toast | null;
-};
-
-/** Estado completo do store. */
+/** Estado do store. */
 export type SalaStoreState = {
 	/** Snapshot mais recente do server. Null pré-connect. */
 	sala: SalaState | null;
@@ -60,88 +40,122 @@ export type SalaStoreState = {
 	currentPlayerId: string | null;
 	/** Stats pós-reveal (preenchido por `applyReveal`). */
 	consensus: ConsensusSnapshot | null;
-	/** UI efêmera (toasts, etc). */
-	ui: UIState;
-	/** Flag crítica do timer (≤30s). Setado por `setSala` se `critical: true`. */
+	/**
+	 * Timer ≤30s segundo o server (`room_state.critical`).
+	 * Recompute local de `timer` é fallback SÓ quando o server omite
+	 * `critical` (welcome, broadcasts sem critical).
+	 */
 	critical: boolean;
-	/** Reason do `sala_ended` (pra UI decidir redirect). */
-	salaEndedReason: string | null;
+	/**
+	 * True entre o primeiro voto da rodada e reveal/new-round.
+	 * Mirror do `timerActive` do server (sala.ts): timer só decrementa
+	 * enquanto ativo — sem voto, sem countdown (fresh round timer=60 parado).
+	 */
+	timerActive: boolean;
+	/** Reason do último `sala_ended` (pra UI decidir redirect). */
+	salaEndedReason: SalaEndedReason | null;
 };
 
-// ---------------------------------------------------------------------------
-// Actions
-// ---------------------------------------------------------------------------
+/** Hints do server para `setSala` (tudo opcional; ausência = derivação local). */
+export type SetSalaOpts = {
+	/**
+	 * `room_state.critical` quando presente. Server computa
+	 * `timerActive && 0<timer<=30` — usa direto, sem recomputar.
+	 */
+	critical?: boolean;
+	/**
+	 * Override explícito de `timerActive` (loops passa `true` em
+	 * vote_cast/room_state com votos). Sem hint, deriva do snapshot:
+	 * phase voting|revealable + timer>0 + (timer<60 ou há votos).
+	 */
+	timerActive?: boolean;
+};
 
 export type SalaStoreActions = {
-	/** Substitui `sala` pelo snapshot do server (room_state). */
-	setSala: (sala: SalaState) => void;
-	/** Define ID do player local (em welcome). */
+	/**
+	 * Substitui `sala` pelo snapshot do server (welcome/room_state).
+	 * `opts.critical` (room_state) vence o recompute local; `opts.timerActive`
+	 * vence a derivação (loops sinaliza vote_cast / room_state com votos).
+	 */
+	setSala: (sala: SalaState, opts?: SetSalaOpts) => void;
+	/** Sinaliza timer rodando/parado (loops chama em vote_cast/reveal/new-round). */
+	setTimerActive: (active: boolean) => void;
+	/** Define o ID do player local (welcome). */
 	setCurrentPlayerId: (id: string) => void;
-	/** Insere ou atualiza player (preserva imutabilidade). */
+	/** Insere ou atualiza um player (imutável). */
 	upsertPlayer: (player: Player) => void;
-	/** Remove player por id. */
+	/** Remove player por id (+prune em `votes`). */
 	removePlayerById: (id: string) => void;
-	/** Marca hasVoted (sem expor valor pré-reveal). */
+	/** Marca hasVoted sem expor valor pré-reveal. */
 	markVoted: (playerId: string, hasVoted: boolean) => void;
 	/** Aplica reveal: injeta votos + stats, phase → 'revealed'. */
-	applyReveal: (votes: Record<string, Vote>, stats: ConsensusSnapshot) => void;
-	/** Limpa votos, phase → 'voting', round++ (start_new_round). */
+	applyReveal: (
+		votes: Record<string, Vote>,
+		stats: ConsensusSnapshot,
+	) => void;
+	/** Nova rodada: phase → 'voting', timer 60, votos limpos (mirror server). */
 	resetForNewRound: (round: number) => void;
-	/** Registra fim de sala com reason. */
-	setSalaEnded: (reason: string) => void;
-	/** Push de toast efêmero. */
-	pushToast: (text: string, kind?: ToastKind) => void;
-	/** Dismiss do toast atual. */
-	dismissToast: () => void;
-	/** Reset completo (logout / reconnect novo). */
-	reset: () => void;
-	/**
-	 * Decrementa `sala.timer` em 1 e recomputa `critical` (timer > 0 && timer ≤ 30).
-	 * No-op quando `phase !== 'voting'` ou `timer <= 0` (server enviará `phase: 'revealed'`).
-	 * Mutação puramente client-side: o servidor reconcilia via `room_state` broadcasts
-	 * a cada 10s (T01). Ver ADR-002.
-	 */
+	/** Registra fim de sala. */
+	setSalaEnded: (reason: SalaEndedReason) => void;
+	/** Decrementa timer em 1 (só com timerActive em voting|revealable, piso 0). */
 	tickTimer: () => void;
+	/** Reset completo (desconectou / trocou de sala). */
+	reset: () => void;
 };
 
 export type SalaStore = SalaStoreState & SalaStoreActions;
 
 // ---------------------------------------------------------------------------
-// Constantes
+// Constantes + helpers
 // ---------------------------------------------------------------------------
 
-/** Estado inicial do store (pré-connect). */
 const INITIAL_STATE: SalaStoreState = {
 	sala: null,
 	currentPlayerId: null,
 	consensus: null,
-	ui: { toast: null },
 	critical: false,
+	timerActive: false,
 	salaEndedReason: null,
 };
 
-/** Regra crítica: timer ≤30s = coral. */
-const CRITICAL_THRESHOLD_SECONDS = 30;
+/** Timer entra em estado crítico em (0, 30]. */
+export const CRITICAL_THRESHOLD_SECONDS = 30;
+/** Segundos no início de cada rodada (mirror `TIMER_SECONDS` do server). */
+export const ROUND_TIMER_SECONDS = 60;
 
-// ---------------------------------------------------------------------------
-// Helpers internos
-// ---------------------------------------------------------------------------
-
-/** Helper: cria novo SalaState substituindo players. */
-function withPlayers(
-	sala: SalaState,
-	updater: (players: Player[]) => Player[],
-): SalaState {
-	return { ...sala, players: updater([...sala.players]) };
+function isCriticalTimer(timer: number): boolean {
+	return timer > 0 && timer <= CRITICAL_THRESHOLD_SECONDS;
 }
 
-/** Helper: atualiza player por id (ou retorna inalterado). */
-function mapPlayer(
-	players: Player[],
-	id: string,
-	fn: (p: Player) => Player,
-): Player[] {
-	return players.map((p) => (p.id === id ? fn(p) : p));
+/** Há voto conhecido no snapshot (map `votes` ou flag `hasVoted`). */
+function snapshotHasVotes(sala: SalaState): boolean {
+	if (Object.keys(sala.votes ?? {}).length > 0) return true;
+	return sala.players.some((p) => p.hasVoted);
+}
+
+/**
+ * Deriva `timerActive` quando o caller não passa hint (welcome, broadcasts
+ * sem contexto, callers diretos). Mirror do server: timer só roda em
+ * voting|revealable após o primeiro voto — fresh round (timer=60, sem votos)
+ * fica parado até o primeiro vote_cast.
+ */
+function deriveTimerActive(sala: SalaState): boolean {
+	if (sala.phase !== "voting" && sala.phase !== "revealable") return false;
+	if (sala.timer <= 0) return false;
+	if (sala.timer < ROUND_TIMER_SECONDS) return true;
+	return snapshotHasVotes(sala);
+}
+
+/** Deriva consensus client-side dos votos (fallback se room_state revealed chegar sem applyReveal). */
+function deriveConsensus(votes: Record<string, Vote>): ConsensusSnapshot {
+	const list = Object.values(votes);
+	const stats = computeConsensus(list);
+	return {
+		median: stats.median,
+		mean: stats.mean,
+		range: stats.range,
+		unanimous: isUnanimous(list),
+	};
 }
 
 // ---------------------------------------------------------------------------
@@ -151,23 +165,27 @@ function mapPlayer(
 export const useSalaStore = create<SalaStore>()((set) => ({
 	...INITIAL_STATE,
 
-	setSala: (sala) =>
+	setSala: (sala, opts) =>
 		set((s) => {
-			// Detecta critical a partir do timer (server pode mandar `critical`
-			// em RoomStateResponse, mas SalaState é a fonte canônica).
-			const critical =
-				sala.timer > 0 && sala.timer <= CRITICAL_THRESHOLD_SECONDS;
-			// Reset de consensus só se fase mudou para algo diferente de revealed.
-			const nextConsensus = sala.phase === "revealed" ? s.consensus : null;
-			// Espalha `sala` em objeto novo para garantir referência distinta
-			// e acionar re-render de selectors com shallow compare.
+			// Server é fonte da verdade quando manda `critical`; recompute
+			// local só como fallback (welcome / broadcasts sem critical).
+			const critical = opts?.critical ?? isCriticalTimer(sala.timer);
+			const timerActive = opts?.timerActive ?? deriveTimerActive(sala);
+			let nextConsensus: ConsensusSnapshot | null = null;
+			if (sala.phase === "revealed") {
+				nextConsensus =
+					s.consensus ?? deriveConsensus(sala.votes as Record<string, Vote>);
+			}
 			return {
 				sala: { ...sala },
 				critical,
+				timerActive,
 				consensus: nextConsensus,
 				salaEndedReason: null,
 			};
 		}),
+
+	setTimerActive: (active) => set({ timerActive: active }),
 
 	setCurrentPlayerId: (id) => set({ currentPlayerId: id }),
 
@@ -175,30 +193,31 @@ export const useSalaStore = create<SalaStore>()((set) => ({
 		set((s) => {
 			if (!s.sala) return s;
 			const exists = s.sala.players.some((p) => p.id === player.id);
-			const nextPlayers = exists
-				? mapPlayer(s.sala.players, player.id, () => player)
+			const players = exists
+				? s.sala.players.map((p) => (p.id === player.id ? player : p))
 				: [...s.sala.players, player];
-			return { sala: { ...s.sala, players: nextPlayers } };
+			return { sala: { ...s.sala, players } };
 		}),
 
 	removePlayerById: (id) =>
 		set((s) => {
 			if (!s.sala) return s;
-			const nextPlayers = s.sala.players.filter((p) => p.id !== id);
-			const nextVotes = { ...s.sala.votes };
-			delete nextVotes[id];
-			return {
-				sala: { ...s.sala, players: nextPlayers, votes: nextVotes },
-			};
+			const players = s.sala.players.filter((p) => p.id !== id);
+			const votes = { ...s.sala.votes };
+			delete votes[id];
+			return { sala: { ...s.sala, players, votes } };
 		}),
 
 	markVoted: (playerId, hasVoted) =>
 		set((s) => {
 			if (!s.sala) return s;
 			return {
-				sala: withPlayers(s.sala, (players) =>
-					mapPlayer(players, playerId, (p) => ({ ...p, hasVoted })),
-				),
+				sala: {
+					...s.sala,
+					players: s.sala.players.map((p) =>
+						p.id === playerId ? { ...p, hasVoted } : p,
+					),
+				},
 			};
 		}),
 
@@ -207,7 +226,8 @@ export const useSalaStore = create<SalaStore>()((set) => ({
 			if (!s.sala) return s;
 			return {
 				sala: { ...s.sala, phase: "revealed", votes: { ...votes } },
-				consensus: stats,
+				consensus: { ...stats },
+				timerActive: false,
 			};
 		}),
 
@@ -219,7 +239,7 @@ export const useSalaStore = create<SalaStore>()((set) => ({
 					...s.sala,
 					round,
 					phase: "voting",
-					timer: 60,
+					timer: ROUND_TIMER_SECONDS,
 					votes: {},
 					players: s.sala.players.map((p) => ({
 						...p,
@@ -229,134 +249,91 @@ export const useSalaStore = create<SalaStore>()((set) => ({
 				},
 				consensus: null,
 				critical: false,
+				timerActive: false,
 			};
 		}),
 
 	setSalaEnded: (reason) =>
 		set((s) => {
-			if (!s.sala) return { salaEndedReason: reason };
+			if (!s.sala) return { salaEndedReason: reason, timerActive: false };
 			return {
 				salaEndedReason: reason,
 				sala: { ...s.sala, phase: "idle" },
+				timerActive: false,
 			};
 		}),
-
-	pushToast: (text, kind = "info") => set({ ui: { toast: { kind, text } } }),
-
-	dismissToast: () => set((s) => ({ ui: { ...s.ui, toast: null } })),
 
 	tickTimer: () =>
 		set((s) => {
 			if (!s.sala) return s;
-			if (s.sala.phase !== "voting" && s.sala.phase !== "revealable") return s;
-			const nextTimer = Math.max(0, s.sala.timer - 1);
-			if (nextTimer === s.sala.timer) return s;
-			const critical = nextTimer > 0 && nextTimer <= CRITICAL_THRESHOLD_SECONDS;
-			return {
-				sala: { ...s.sala, timer: nextTimer },
-				critical,
-			};
+			if (!s.timerActive) return s;
+			if (s.sala.phase !== "voting" && s.sala.phase !== "revealable")
+				return s;
+			if (s.sala.timer <= 0) return s;
+			const timer = s.sala.timer - 1;
+			return { sala: { ...s.sala, timer }, critical: isCriticalTimer(timer) };
 		}),
 
 	reset: () => set({ ...INITIAL_STATE }),
 }));
 
 // ---------------------------------------------------------------------------
-// Selectors granulares (pure functions — retornam subset do state).
-//
-// **Pattern**: cada selector é uma função `(state: SalaStore) => T`.
-// Para usar em componente React, wrap em `useShallow` (zustand v5):
-//   const players = useSalaStore(useShallow((s) => s.sala?.players ?? []));
-//
-// `useShallow` faz shallow comparison do resultado, evitando re-render
-// quando o subset não mudou estruturalmente.
+// Selectors (funções puras) + hooks
 // ---------------------------------------------------------------------------
 
-/** Sala completa (null se pré-connect). */
 export const selectSala = (s: SalaStore): SalaState | null => s.sala;
-/** Lista de players (vazio se sem sala). */
-export const selectPlayers = (s: SalaStore): Player[] => s.sala?.players ?? [];
-/** Player local (null se pré-welcome). */
+export const selectPlayers = (s: SalaStore): Player[] =>
+	s.sala?.players ?? [];
 export const selectCurrentPlayer = (s: SalaStore): Player | null => {
 	if (!s.sala || !s.currentPlayerId) return null;
 	return s.sala.players.find((p) => p.id === s.currentPlayerId) ?? null;
 };
-/** Phase atual. Default 'idle' (não-conectado). */
 export const selectPhase = (s: SalaStore): Phase => s.sala?.phase ?? "idle";
-/** Timer atual em segundos. Default 60. */
 export const selectTimer = (s: SalaStore): number => s.sala?.timer ?? 60;
-/** Critical flag (timer ≤30s). */
 export const selectCritical = (s: SalaStore): boolean => s.critical;
-/** Round atual (1-based). */
+export const selectTimerActive = (s: SalaStore): boolean => s.timerActive;
 export const selectRound = (s: SalaStore): number => s.sala?.round ?? 1;
-/** Mapa de votos (playerId → Vote). */
 export const selectVotes = (s: SalaStore): Record<string, Vote> =>
-	s.sala?.votes ?? {};
-/** Stats pós-reveal. */
+	(s.sala?.votes ?? {}) as Record<string, Vote>;
 export const selectConsensus = (s: SalaStore): ConsensusSnapshot | null =>
 	s.consensus;
-/** Meu assento (alias semântico de selectCurrentPlayer). */
-export const selectMySeat = (s: SalaStore): Player | null =>
-	selectCurrentPlayer(s);
-/** Toast atual. */
-export const selectToast = (s: SalaStore): Toast | null => s.ui.toast;
-/** Reason do sala_ended (null se sala viva). */
-export const selectSalaEndedReason = (s: SalaStore): string | null =>
-	s.salaEndedReason;
-/** Host da sala (player com role='host'). */
-export const selectHost = (s: SalaStore): Player | null => {
-	if (!s.sala?.hostId) return null;
-	return s.sala.players.find((p) => p.id === s.sala!.hostId) ?? null;
-};
-/** Código da sala. */
-export const selectCode = (s: SalaStore): string | null => s.sala?.code ?? null;
-/** true se sou o host. */
-export const selectIsHost = (s: SalaStore): boolean => {
-	const me = selectCurrentPlayer(s);
-	return me?.role === "host";
-};
-/** true se sala está vazia (só eu). */
+export const selectCode = (s: SalaStore): string | null =>
+	s.sala?.code ?? null;
+export const selectVotedCount = (s: SalaStore): number =>
+	s.sala?.players.filter((p) => p.hasVoted).length ?? 0;
+export const selectMyVote = (s: SalaStore): Vote | null =>
+	selectCurrentPlayer(s)?.value ?? null;
+export const selectIsHost = (s: SalaStore): boolean =>
+	selectCurrentPlayer(s)?.role === "host";
 export const selectIsOnlyPlayer = (s: SalaStore): boolean => {
 	const players = selectPlayers(s);
 	return players.length === 1 && players[0]?.id === s.currentPlayerId;
 };
+export const selectSalaEndedReason = (s: SalaStore): SalaEndedReason | null =>
+	s.salaEndedReason;
 
-// ---------------------------------------------------------------------------
-// Hooks React ergonômicos (wrap selectors com useShallow).
-//
-// **Por que useShallow aqui:** Zustand v5 NÃO faz shallow compare automático
-// ao chamar `useSalaStore(fn)`. Sem useShallow, um selector que retorna
-// `[]` ou `{}` faria re-render a cada update do store (nova referência).
-// ---------------------------------------------------------------------------
-
-/** Hook: sala completa. */
+/** Sala completa (null pré-connect). */
 export const useSala = () => useSalaStore(useShallow(selectSala));
-/** Hook: lista de players. */
+/** Lista de players. */
 export const usePlayers = () => useSalaStore(useShallow(selectPlayers));
-/** Hook: player local. */
+/** Player local (null pré-welcome). */
 export const useCurrentPlayer = () =>
 	useSalaStore(useShallow(selectCurrentPlayer));
-/** Hook: phase atual. */
+/** Phase atual. */
 export const usePhase = () => useSalaStore(selectPhase);
-/** Hook: timer em segundos. */
+/** Timer em segundos. */
 export const useTimer = () => useSalaStore(selectTimer);
-/** Hook: critical flag. */
+/** Flag crítica (server-driven; fallback local quando server omite). */
 export const useCritical = () => useSalaStore(selectCritical);
-/** Hook: round. */
+/** Timer rodando (false em fresh round até o primeiro voto). */
+export const useTimerActive = () => useSalaStore(selectTimerActive);
+/** Round atual. */
 export const useRound = () => useSalaStore(selectRound);
-/** Hook: mapa de votos. */
+/** Mapa de votos. */
 export const useVotes = () => useSalaStore(useShallow(selectVotes));
-/** Hook: stats pós-reveal. */
+/** Stats pós-reveal. */
 export const useConsensus = () => useSalaStore(useShallow(selectConsensus));
-/** Hook: meu assento. */
-export const useMySeat = () => useSalaStore(useShallow(selectMySeat));
-/** Hook: toast atual. */
-export const useToast = () => useSalaStore(useShallow(selectToast));
-/** Hook: código da sala. */
+/** Código da sala. */
 export const useCode = () => useSalaStore(selectCode);
-/** Hook: true se sou o host. */
-export const useIsHost = () => useSalaStore(selectIsHost);
-/** Hook: true se sala tem só eu. */
-export const useIsOnlyPlayer = () => useSalaStore(selectIsOnlyPlayer);
-/** Hook: reason do sala_ended. */
-export const useSalaEndedReason = () => useSalaStore(selectSalaEndedReason);
+/** Voto do player local. */
+export const useMyVote = () => useSalaStore(selectMyVote);

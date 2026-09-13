@@ -1,79 +1,114 @@
 /**
- * Full page tests — T29 verify (≥1 of 5 minimum required).
- *
- * Cobre:
- *  - Render: headline "Sala cheia" + count 12/12 + CTAs
- *  - A11y: card com aria-label descritivo
- *  - Interação: clique em "Criar nova sala" navega para "/"
- *  - Interação: clique em "Voltar" aciona history.back
+ * full.test — sala cheia (spell-rebuild).
  */
-import { describe, expect, test } from "bun:test";
-import { MemoryRouter } from "react-router-dom";
-import { fireEvent, render, screen } from "../components/ui/test-helpers";
+import "../test-jsdom";
+
+// jsdom sem pretendToBeVisual não tem rAF — @testing-library/react exige.
+if (typeof globalThis.requestAnimationFrame === "undefined") {
+	globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number =>
+		setTimeout(() => cb(performance.now()), 16) as unknown as number;
+	globalThis.cancelAnimationFrame = (id: number): void => {
+		clearTimeout(id as unknown as ReturnType<typeof setTimeout>);
+	};
+}
+import { afterEach, describe, expect, test } from "bun:test";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Full } from "./full";
 
-function renderFull() {
+afterEach(() => {
+	cleanup();
+});
+
+function LocationProbe() {
+	const loc = useLocation();
+	return (
+		<div data-testid="location">
+			{loc.pathname}
+			{loc.search}
+		</div>
+	);
+}
+
+function renderFull(entry = "/full") {
 	return render(
 		<MemoryRouter
 			future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+			initialEntries={[entry]}
 		>
-			<Full />
+			<Routes>
+				<Route path="/full" element={<Full />} />
+				<Route path="/" element={<LocationProbe />} />
+				<Route path="/join" element={<LocationProbe />} />
+			</Routes>
 		</MemoryRouter>,
 	);
 }
 
-describe("Full page (sala cheia) — T29", () => {
-	test("renderiza headline 'Sala cheia' + count 12/12", () => {
+describe("Full", () => {
+	test("renderiza headline + contagem 12/12", () => {
+		renderFull();
+		expect(screen.getByTestId("page-full")).toBeTruthy();
+		const h1 = screen.getByRole("heading", { level: 1 });
+		expect(h1.textContent ?? "").toMatch(/sala cheia/i);
+		expect(screen.getByTestId("full-count").textContent).toBe("12/12");
+	});
+
+	test("h1 recebe autofocus", () => {
+		renderFull();
+		expect(document.activeElement).toBe(
+			screen.getByRole("heading", { level: 1 }),
+		);
+	});
+
+	test("Criar sala nova → /join?host=1", async () => {
 		renderFull();
 		expect(
-			screen.getByRole("heading", { level: 1, name: /sala cheia/i }),
-		).toBeInTheDocument();
-		expect(screen.getByTestId("full-count")).toHaveTextContent("12");
-		expect(screen.getByText(/\/ 12 · máximo atingido/i)).toBeInTheDocument();
+			screen.getByTestId("full-create-new").textContent ?? "",
+		).toMatch(/criar sala nova/i);
+		fireEvent.click(screen.getByTestId("full-create-new"));
+		await waitFor(() => {
+			expect(screen.getByTestId("location").textContent).toBe(
+				"/join?host=1",
+			);
+		});
 	});
 
-	test("renderiza CTA primário 'Criar sala nova' + 'Voltar'", () => {
+	test("Voltar ao início → /", async () => {
 		renderFull();
-		const createBtn = screen.getByTestId("full-create-new");
-		const retryBtn = screen.getByTestId("full-retry");
-		expect(createBtn).toBeInTheDocument();
-		expect(retryBtn).toBeInTheDocument();
-		// Ação primária da identidade atual
-		expect(createBtn.className).toContain("pointly-button-primary");
-		expect(createBtn).toHaveTextContent(/criar sala nova/i);
-		expect(retryBtn).toHaveTextContent(/voltar/i);
+		expect(screen.getByTestId("full-retry").textContent ?? "").toMatch(
+			/voltar ao início/i,
+		);
+		fireEvent.click(screen.getByTestId("full-retry"));
+		await waitFor(() => {
+			expect(screen.getByTestId("location").textContent).toBe("/");
+		});
 	});
 
-	test("card tem aria-label 'Sala cheia' (a11y)", () => {
-		renderFull();
-		expect(screen.getByLabelText(/sala cheia/i)).toBeInTheDocument();
-	});
-
-	test("click em 'Criar nova sala' navega para landing '/'", () => {
-		renderFull();
-		const createBtn = screen.getByTestId("full-create-new");
-		fireEvent.click(createBtn);
-		// MemoryRouter muda location; verificamos que o botão está acessível
-		// e que após click ele continua renderizável (sem erro). A navegação
-		// em si é testada em integration E2E (T44).
-		expect(createBtn).toBeInTheDocument();
-	});
-
-	test("sub copy menciona limite de 12 jogadores", () => {
-		renderFull();
+	test("?code= mostra qual sala está cheia + Tentar outro código → /join", async () => {
+		renderFull("/full?code=ab12");
+		expect(screen.getByRole("heading", { level: 1 }).textContent ?? "").toMatch(
+			/sala ab12 está cheia/i,
+		);
+		// contagem 12/12 mantida
+		expect(screen.getByTestId("full-count").textContent).toBe("12/12");
 		expect(
-			screen.getByText(/já tem 12 jogadores/i),
-		).toBeInTheDocument();
+			screen.getByTestId("full-try-other").textContent ?? "",
+		).toMatch(/tentar outro código/i);
+		fireEvent.click(screen.getByTestId("full-try-other"));
+		await waitFor(() => {
+			expect(screen.getByTestId("location").textContent).toBe("/join");
+		});
 	});
 
-	test("click em 'Voltar' (retry) navega sem reload", () => {
-		// Após o pass D, full.tsx trocou window.location.reload() por
-		// navigate("/") — bater reload(full-page) violaria o modelo SPA.
-		// Aqui só validamos que o botão permanece acessível após o click
-		// (a navegação real é testada em integration E2E T44).
+	test("sem ?code= não há terceiro CTA", () => {
 		renderFull();
-		const retryBtn = screen.getByTestId("full-retry");
-		fireEvent.click(retryBtn);
-		expect(retryBtn).toBeInTheDocument();
+		expect(screen.queryByTestId("full-try-other")).toBeNull();
 	});
 });
