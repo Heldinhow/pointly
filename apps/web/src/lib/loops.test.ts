@@ -8,6 +8,8 @@
  */
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import "../test-jsdom";
+import { createElement } from "react";
+import { cleanup, render, screen } from "@testing-library/react";
 import type { SalaState, ServerToClientEvent, Vote } from "@planning-poker/shared";
 import {
 	__resetProjectilesForTests,
@@ -28,7 +30,7 @@ import type {
 	WSStatus,
 } from "./ws-client";
 import { useSalaStore } from "@/store/sala";
-import { __resetToastsForTests } from "@/components/feedback/toast";
+import { __resetToastsForTests, ToastHost } from "@/components/feedback/toast";
 
 function makeSala(overrides: Partial<SalaState> = {}): SalaState {
 	return {
@@ -79,6 +81,7 @@ function makeStore(overrides: Partial<LoopsStoreApi> = {}): LoopsStoreApi & {
 const hooks: LoopsHooks = { navigate: mock(() => {}) };
 
 afterEach(() => {
+	cleanup();
 	__resetProjectilesForTests();
 	__resetToastsForTests();
 	useSalaStore.getState().reset();
@@ -119,7 +122,7 @@ describe("dispatchArenaEvent", () => {
 		expect(store.calls).toEqual([]);
 	});
 
-	test("vote_cast individual marca voto + liga timer; aggregate só toasta + liga timer", () => {
+	test("vote_cast atualiza votação e timer sem notificações sobre a mesa", () => {
 		const store = makeStore();
 		dispatchArenaEvent(
 			store,
@@ -139,6 +142,8 @@ describe("dispatchArenaEvent", () => {
 		// aggregate NUNCA adivinha quem votou (sem playerId no payload) —
 		// só liga o timer; o N-de-M reconcilia via room_state.
 		expect(store.calls).toEqual(["setTimerActive"]);
+		render(createElement(ToastHost));
+		expect(screen.queryByText(/escolheu uma carta|escolheram/)).toBeNull();
 	});
 
 	test("vote_cast ignorado quando phase revealed", () => {

@@ -15,6 +15,7 @@ import { cn } from "@/lib/cn";
 export interface StatsPillProps {
 	consensus: ConsensusSnapshot | null;
 	votes?: readonly Vote[];
+	compact?: boolean;
 }
 
 /** Mediana: inteira→sem decimais, senão 1 casa. */
@@ -47,7 +48,7 @@ export function groupVotes(votes: readonly Vote[]): VoteGroup[] {
 	}));
 }
 
-export function StatsPill({ consensus, votes }: StatsPillProps) {
+export function StatsPill({ consensus, votes, compact = false }: StatsPillProps) {
 	if (!consensus) return null;
 
 	const total = votes?.length ?? 0;
@@ -72,12 +73,11 @@ export function StatsPill({ consensus, votes }: StatsPillProps) {
 			data-testid="stats-pill"
 			data-stats-unanimous={consensus.unanimous ? "true" : "false"}
 			className={cn(
-				"flex w-full flex-col items-center gap-3 rounded-2xl border border-[#26262c] bg-[#101013] px-6 py-5 text-center shadow-[0_16px_48px_-24px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.05)]",
-				"[html.light_&]:border-zinc-200 [html.light_&]:bg-white [html.light_&]:shadow-[0_16px_40px_-24px_rgba(0,0,0,0.25)]",
-				"sm:flex-row sm:items-center sm:justify-center sm:gap-8 sm:text-left",
+				"flex w-full items-center justify-center gap-5 text-left",
+				compact ? "py-2" : "rounded-2xl border border-[#26262c] bg-[#101013] px-4 py-5 [html.light_&]:border-zinc-200 [html.light_&]:bg-white",
 			)}
 		>
-			<div className="flex flex-col items-center gap-1 sm:items-start">
+			<div className="flex flex-col items-center gap-1">
 		{unanimous ? (
 			<Badge
 				data-testid="stats-unanimous-badge"
@@ -89,23 +89,23 @@ export function StatsPill({ consensus, votes }: StatsPillProps) {
 		) : (
 				<span
 					data-testid="stats-eyebrow"
-					className="font-mono text-[10px] tracking-[0.18em] text-zinc-500 uppercase"
+					className="text-xs text-zinc-400 [html.light_&]:text-zinc-600"
 				>
 					{allCoffee ? "Pausa" : solo ? "Voto único" : "Mediana"}
 				</span>
 			)}
 			<span
 				data-testid="stats-result-value"
-				className="font-mono text-5xl font-semibold text-zinc-50 tabular-nums [html.light_&]:text-zinc-900"
+				className="font-mono text-4xl font-semibold text-zinc-50 tabular-nums [html.light_&]:text-zinc-900"
 			>
 				{allCoffee ? "☕" : formatMedian(consensus.median)}
 			</span>
 			</div>
 			<span
 				aria-hidden="true"
-				className="hidden h-12 w-px bg-[#26262c] sm:block [html.light_&]:bg-zinc-200"
+				className="h-12 w-px shrink-0 bg-[#26262c] [html.light_&]:bg-zinc-200"
 			/>
-			<div className="flex flex-col items-center gap-1.5 sm:items-start">
+			<div className="flex min-w-0 flex-col items-start gap-1.5">
 			<span
 				data-testid="stats-caption"
 				className="text-sm text-zinc-400 [html.light_&]:text-zinc-600"

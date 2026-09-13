@@ -6,7 +6,7 @@
  */
 import { afterEach, describe, expect, test } from "bun:test";
 import "../test-jsdom";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { Player, SalaState } from "@planning-poker/shared";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { useSalaStore } from "@/store/sala";
@@ -84,6 +84,39 @@ function renderArena(entry = "/arena?code=AB12") {
 }
 
 describe("Arena smoke", () => {
+	test("resultado troca instruções e timer por discussão", () => {
+		useSalaStore.getState().setSala(makeSala({ phase: "revealed" }));
+		useSalaStore.getState().setCurrentPlayerId("p_1");
+		renderArena();
+		expect(screen.getByTestId("arena-table-copy").textContent).toBe("Votos revelados.");
+		expect(screen.getByTestId("arena-table-sub").textContent).toBe("Conversem sobre as diferenças.");
+		expect(screen.getByText("Em discussão")).not.toBeNull();
+		expect(screen.queryByRole("timer")).toBeNull();
+	});
+
+	test("atalho N usa a mesma confirmação do clique e ignora tecla mantida", () => {
+		useSalaStore.getState().setSala(makeSala({ phase: "revealed" }));
+		useSalaStore.getState().setCurrentPlayerId("p_1");
+		renderArena();
+		const reveal = screen.getByTestId("reveal-button");
+		fireEvent.keyDown(window, { key: "n", repeat: true });
+		expect(reveal.getAttribute("data-reveal-confirm")).toBe("false");
+		fireEvent.keyDown(window, { key: "n" });
+		expect(reveal.getAttribute("data-reveal-confirm")).toBe("true");
+		fireEvent.keyDown(window, { key: "Escape" });
+		expect(reveal.getAttribute("data-reveal-confirm")).toBe("false");
+		fireEvent.click(reveal);
+		expect(reveal.getAttribute("data-reveal-confirm")).toBe("true");
+	});
+
+	test("mobile mantém votação antes dos participantes", () => {
+		useSalaStore.getState().setSala(makeSala());
+		useSalaStore.getState().setCurrentPlayerId("p_1");
+		renderArena();
+		const deck = screen.getByTestId("arena-deck-wrapper");
+		const seat = screen.getByTestId("seat-p_1");
+		expect(deck.compareDocumentPosition(seat) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+	});
 	test("renderiza shell com code + timer + assentos", () => {
 		useSalaStore.getState().setSala(makeSala());
 		useSalaStore.getState().setCurrentPlayerId("p_1");

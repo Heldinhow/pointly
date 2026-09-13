@@ -27,6 +27,6 @@ describe("RichButton", () => {
     );
     const btn = screen.getByRole("button", { name: "OK" });
     expect(btn.className).toContain("from-emerald-600/85");
-    expect(btn.className).toContain("h-10");
+    expect(btn.className).toContain("h-12");
   });
 });

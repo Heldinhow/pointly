@@ -11,7 +11,7 @@
  * `data-reveal-confirm`.
  */
 import type { Phase } from "@planning-poker/shared";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type Ref } from "react";
 import { RichButton } from "@/components/spell/rich-button";
 
 export type RevealButtonState = "awaiting" | "ready" | "post-reveal";
@@ -21,6 +21,7 @@ export interface RevealButtonProps {
 	votedCount: number;
 	onReveal: () => void;
 	onNewRound: () => void;
+	buttonRef?: Ref<HTMLButtonElement>;
 }
 
 export function deriveButtonState(
@@ -39,6 +40,7 @@ export function RevealButton({
 	votedCount,
 	onReveal,
 	onNewRound,
+	buttonRef,
 }: RevealButtonProps) {
 	const state = deriveButtonState(phase, votedCount);
 	const [confirming, setConfirming] = useState(false);
@@ -59,6 +61,15 @@ export function RevealButton({
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [phase]);
+
+	useEffect(() => {
+		if (!confirming) return;
+		const onKey = (event: KeyboardEvent) => {
+			if (event.key === "Escape") disarm();
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, [confirming]);
 
 	const handleClick = () => {
 		if (state === "awaiting") return;
@@ -90,6 +101,7 @@ export function RevealButton({
 
 	return (
 		<RichButton
+			ref={buttonRef}
 			type="button"
 			size="lg"
 			color={state === "ready" ? "emerald" : "zinc"}

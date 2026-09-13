@@ -9,6 +9,7 @@ import type { Player, ProjectileType } from "@planning-poker/shared";
 import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/spell/badge";
 import { cn } from "@/lib/cn";
+import { motion, useReducedMotion } from "motion/react";
 
 export interface SeatCardProps {
 	player: Player;
@@ -103,6 +104,7 @@ export function SeatCard({
 	const initials = getInitials(player.nick);
 	const showFaceNum = faceUp && player.value !== null;
 	const canThrow = faceUp && !isYou && typeof onThrow === "function";
+	const reducedMotion = useReducedMotion();
 
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [coolingDown, setCoolingDown] = useState(false);
@@ -159,7 +161,7 @@ export function SeatCard({
 			data-seat-you={isYou ? "true" : "false"}
 			className={cn(
 				"relative flex min-h-[56px] items-center gap-3 rounded-2xl border px-3 py-2.5 transition-colors duration-150",
-				"border-[#26262c] bg-[#101013] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] [html.light_&]:border-zinc-200 [html.light_&]:bg-white [html.light_&]:shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]",
+				"border-[#26262c] bg-[#101013] [html.light_&]:border-zinc-200 [html.light_&]:bg-white",
 				isYou
 					? "border-emerald-400/60 ring-1 ring-emerald-400/25"
 					: player.hasVoted && !faceUp
@@ -167,34 +169,17 @@ export function SeatCard({
 						: undefined,
 				player.status === "disconnected" && "opacity-60 saturate-50",
 				layout === "orbit" &&
-					"w-36 min-h-0 flex-col gap-1.5 rounded-2xl px-2 py-2.5 text-center sm:w-40",
+					"w-32 min-h-0 flex-col gap-1 rounded-xl px-2 py-2 text-center",
 			)}
 		>
-			{/* presença: ponto vivo no canto do avatar */}
-			<span
-				aria-hidden="true"
-				className={cn(
-					"absolute top-2.5 left-2.5 h-1.5 w-1.5 rounded-full sm:top-3 sm:left-3",
-					player.status === "disconnected"
-						? "bg-zinc-600"
-						: player.hasVoted
-							? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]"
-							: "bg-zinc-600",
-					layout === "orbit" && "top-2 left-1/2 -translate-x-[34px]",
-				)}
-			/>
 			<div
 				aria-hidden="true"
 				className={cn(
 					"flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-mono text-sm font-semibold",
 					player.status === "disconnected"
 						? "bg-zinc-800 text-zinc-500"
-						: player.hasVoted
-							? "bg-gradient-to-br from-emerald-400 via-emerald-600 to-emerald-900 text-emerald-50 ring-1 ring-emerald-300/40"
-							: isYou
-								? "bg-gradient-to-br from-zinc-500 via-zinc-700 to-zinc-950 text-zinc-50 ring-1 ring-white/15"
-								: "bg-gradient-to-br from-zinc-600 via-zinc-800 to-black text-zinc-100 ring-1 ring-white/10",
-					layout === "orbit" && "h-9 w-9 text-[13px]",
+						: "bg-zinc-800 text-zinc-200 [html.light_&]:bg-zinc-100 [html.light_&]:text-zinc-700",
+					layout === "orbit" && "hidden",
 				)}
 			>
 				{initials}
@@ -203,12 +188,13 @@ export function SeatCard({
 				className={cn(
 					"flex min-w-0 flex-1 flex-col",
 					layout === "orbit" && "w-full items-center",
+					layout === "row" && showFaceNum && "flex-row items-center justify-between gap-2",
 				)}
 			>
 				<span
 					data-testid="seat-nick"
 					className={cn(
-						"truncate text-sm font-medium text-zinc-100 [html.light_&]:text-zinc-900",
+						"min-w-0 truncate text-sm font-medium text-zinc-100 [html.light_&]:text-zinc-900",
 						layout === "orbit" && "w-full text-center text-xs",
 					)}
 				>
@@ -219,18 +205,21 @@ export function SeatCard({
 						</span>
 					)}
 					{isYou && (
-						<span className="ml-1.5 font-mono text-[10px] tracking-[0.12em] text-zinc-500 uppercase">
+						<span className="ml-1.5 text-xs text-zinc-400 [html.light_&]:text-zinc-600">
 							você
 						</span>
 					)}
 				</span>
 				{showFaceNum ? (
-					<span
+					<motion.span
 						data-testid="seat-face-num"
-						className="inline-flex min-h-[32px] min-w-[44px] items-center justify-center rounded-lg border border-emerald-400/50 bg-emerald-400 px-2 font-mono text-xl leading-tight font-semibold text-emerald-950 tabular-nums shadow-[0_4px_16px_-6px_rgba(52,211,153,0.6)] [html.light_&]:border-emerald-600/40 [html.light_&]:bg-emerald-400 [html.light_&]:text-emerald-950"
+						initial={reducedMotion ? false : { scale: 0.9, rotateY: -70 }}
+						animate={{ scale: 1, rotateY: 0 }}
+						transition={{ duration: reducedMotion ? 0 : 0.2, ease: "easeOut" }}
+						className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-emerald-400/40 bg-emerald-400 px-2 font-mono text-xl leading-tight font-semibold text-emerald-950 tabular-nums"
 					>
 						{player.value}
-					</span>
+					</motion.span>
 			) : (
 				<Badge
 					data-testid="seat-state"
@@ -239,16 +228,16 @@ export function SeatCard({
 							? "red"
 							: player.hasVoted
 								? "green"
-								: "blue"
+							: "default"
 					}
-					className="font-mono tracking-[0.12em] uppercase"
+					className={cn("self-start text-xs normal-case tracking-normal", layout === "orbit" && "self-center", !player.hasVoted && player.status !== "disconnected" && "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300")}
 				>
 					{stateLabel}
 				</Badge>
 			)}
 			</div>
 			{canThrow && (
-				<div ref={menuRef} className="relative shrink-0">
+				<div ref={menuRef} className={cn("relative shrink-0", layout === "orbit" && "absolute -right-3 -bottom-3")}>
 					<button
 						type="button"
 						aria-label={`Arremessar projétil em ${player.nick}`}
@@ -260,7 +249,7 @@ export function SeatCard({
 						onKeyDown={(e) => {
 							if (e.key === "Escape") setMenuOpen(false);
 						}}
-						className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-base opacity-60 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:outline-none disabled:cursor-wait disabled:opacity-30"
+						className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[#101013] text-base transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:outline-none disabled:cursor-wait disabled:opacity-30 [html.light_&]:bg-white"
 					>
 						🎯
 					</button>
@@ -268,7 +257,7 @@ export function SeatCard({
 						<div
 							role="menu"
 							aria-label={`Projéteis para ${player.nick}`}
-							className="absolute right-0 bottom-full z-30 mb-1 flex gap-1 rounded-xl border border-[#26262c] bg-[#17171b] p-1.5 shadow-xl"
+							className="absolute right-0 bottom-full z-30 mb-1 grid grid-cols-4 gap-1 rounded-xl border border-[#26262c] bg-[#17171b] p-1.5 shadow-xl [html.light_&]:border-zinc-300 [html.light_&]:bg-white"
 						>
 							{PROJECTILE_ORDER.map((type) => (
 								<button
@@ -278,7 +267,7 @@ export function SeatCard({
 									title={type}
 									aria-label={`${PROJECTILE_EMOJI[type]} ${type}`}
 									onClick={() => handleThrow(type)}
-									className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-lg hover:bg-zinc-700/60 focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:outline-none"
+									className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg text-lg hover:bg-zinc-700/20 focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:outline-none"
 								>
 									{PROJECTILE_EMOJI[type]}
 								</button>

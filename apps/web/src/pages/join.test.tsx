@@ -25,6 +25,7 @@ import {
 } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { setNick } from "@/lib/identity";
+import { ThemeProvider } from "@/theme/theme";
 import { Join } from "./join";
 
 afterEach(() => {
@@ -86,16 +87,18 @@ function LocationProbe() {
 
 function renderJoin(initialEntry = "/join") {
 	return render(
-		<MemoryRouter
-			future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-			initialEntries={[initialEntry]}
-		>
-			<Routes>
-				<Route path="/join" element={<Join />} />
-				<Route path="/arena" element={<LocationProbe />} />
-				<Route path="/" element={<div data-testid="home-marker">home</div>} />
-			</Routes>
-		</MemoryRouter>,
+		<ThemeProvider>
+			<MemoryRouter
+				future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+				initialEntries={[initialEntry]}
+			>
+				<Routes>
+					<Route path="/join" element={<Join />} />
+					<Route path="/arena" element={<LocationProbe />} />
+					<Route path="/" element={<div data-testid="home-marker">home</div>} />
+				</Routes>
+			</MemoryRouter>
+		</ThemeProvider>,
 	);
 }
 

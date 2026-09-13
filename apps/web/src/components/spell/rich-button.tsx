@@ -77,7 +77,7 @@ const textShadowMap: Record<Color, string> = {
 const sizeMap: Record<SizeVariant, string> = {
   sm: "h-8 rounded-md gap-1.5 px-3 text-sm",
   default: "h-9 px-4 py-2 text-sm rounded-md",
-  lg: "h-10 rounded-md px-6 text-base",
+  lg: "h-12 rounded-md px-6 text-base",
 };
 
 const RichButton = React.forwardRef<HTMLButtonElement, RichButtonProps>(

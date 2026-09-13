@@ -7,7 +7,7 @@
  * fallback quando o server omite). Este componente NUNCA re-deriva warning
  * do timer por conta própria.
  */
-import { useCritical, useRound, useTimer } from "@/store/sala";
+import { useCritical, usePhase, useRound, useTimer } from "@/store/sala";
 import { Badge } from "@/components/spell/badge";
 
 /** Segundos puros até 60; MM:SS acima. */
@@ -34,12 +34,16 @@ export function TimerPill(props: TimerPillProps = {}) {
 	const storeTimer = useTimer();
 	const storeRound = useRound();
 	const storeCritical = useCritical();
+	const phase = usePhase();
 
 	const timer = props.timer ?? storeTimer;
 	const round = props.round ?? storeRound;
 	// Fonte única: prop explícita ou store. Sem re-derivação do timer aqui —
 	// se o store diz não-crítico (server mandou critical=false), o pill obedece.
 	const isCritical = props.critical ?? storeCritical;
+	if (phase === "revealed") {
+		return <span data-testid="timer-pill" data-timer-critical="false" className="text-sm text-zinc-400 [html.light_&]:text-zinc-600">Em discussão</span>;
+	}
 
 	return (
 		<Badge

@@ -1,5 +1,5 @@
 /**
- * Join — entrada/criação de sala (spell-rebuild).
+ * Join — entrada/criação de sala.
  *
  * Modos vindos da querystring:
  *  - `?host=1`  → create  (só nick; server gera o código no hello)
@@ -11,10 +11,8 @@
  * sem navegar; rede/5xx toasta mas navega) → persiste uuid/nick/code →
  * navega com 200ms de delay (timeout limpo no unmount).
  *
- * O submit é RichButton `type="submit"` dentro do <form> (Enter e click
- * passam pelo onSubmit); onClick chama o mesmo `doSubmit` como redundância
- * e o `submittedRef` dedupa a chamada dupla do mesmo tick. data-testid é
- * atributo HTML padrão, repassado ao <button>.
+ * Visual segue a landing: mesma base dark, header, botões, passos e footer.
+ * A lógica e os testids são os mesmos de antes.
  */
 import {
 	useCallback,
@@ -24,9 +22,8 @@ import {
 	type FormEvent,
 } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Badge } from "@/components/spell/badge";
+import { Moon, Sun } from "lucide-react";
 import { CopyButton } from "@/components/spell/copy-button";
-import { RichButton } from "@/components/spell/rich-button";
 import { Spinner } from "@/components/spell/spinner";
 import { toast } from "@/components/feedback/toast";
 import {
@@ -40,18 +37,29 @@ import {
 	setNick as saveNick,
 	validateNick,
 } from "@/lib/identity";
+import { useTheme } from "@/theme/theme";
 
 type JoinMode = "create" | "invite" | "manual";
 
-const MODE_BADGE: Record<JoinMode, { variant: "violet" | "green" | "blue"; label: string }> = {
-	create: { variant: "violet", label: "Nova sala" },
-	invite: { variant: "green", label: "Convite" },
-	manual: { variant: "blue", label: "Entrar" },
+const MODE_LABEL: Record<JoinMode, string> = {
+	create: "Nova sala",
+	invite: "Convite",
+	manual: "Entrar",
 };
+
+const STEPS = [
+	{ title: "Crie", body: "Abra uma sala e compartilhe o código com o time." },
+	{ title: "Vote", body: "Cada pessoa escolhe uma carta em segredo." },
+	{ title: "Revele", body: "Revelem juntos e conversem sobre as diferenças." },
+] as const;
+
+const CONTROL = "inline-flex min-h-12 items-center justify-center rounded-lg px-5 text-sm font-medium focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090b] motion-safe:transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40";
+const INPUT = "h-12 w-full rounded-lg border border-zinc-700 bg-[#17171b] px-4 text-base placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090b] disabled:opacity-60 [html.light_&]:border-zinc-300 [html.light_&]:bg-white [html.light_&]:placeholder:text-zinc-500";
 
 export function Join() {
 	const [searchParams] = useSearchParams();
 	const navigate = useNavigate();
+	const { theme, toggle } = useTheme();
 
 	const isHost = searchParams.get("host") === "1";
 	const urlCode = normalizeCode(searchParams.get("code") ?? "");
@@ -77,7 +85,6 @@ export function Join() {
 	const submittedRef = useRef(false);
 
 	const codeInputVisible = !isHost && (mode !== "invite" || codeEditable);
-	const badge = MODE_BADGE[mode];
 
 	// Autofoco: nick vazio → nick; nick pré-preenchido → código (manual).
 	useEffect(() => {
@@ -228,221 +235,229 @@ export function Join() {
 		mode === "create" ? "Criar sala" : "Entrar na sala";
 
 	return (
-		<main
+		<div
 			data-testid="page-join"
-			className="flex min-h-dvh flex-col items-center bg-[#09090b] bg-[radial-gradient(ellipse_55%_30%_at_50%_0%,rgba(52,211,153,0.08),transparent_70%)] px-5 py-10 text-zinc-100 [html.light_&]:bg-zinc-100 [html.light_&]:text-zinc-900"
+			className="flex min-h-dvh flex-col bg-[#09090b] font-sans text-zinc-100 [html.light_&]:bg-[#f5f5f5] [html.light_&]:text-zinc-900"
 		>
-			<div className="grid w-full max-w-4xl items-start gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-				<div className="w-full max-w-md justify-self-center lg:justify-self-end">
+			<header className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between px-5 sm:px-8">
 				<Link
 					to="/"
-					className="flex items-center gap-2.5 rounded-md font-mono text-sm font-semibold tracking-[0.08em] text-zinc-300 uppercase hover:text-zinc-100 focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:outline-none [html.light_&]:text-zinc-600 [html.light_&]:hover:text-zinc-900"
+					aria-label="Pointly — página inicial"
+					className="flex items-center gap-2.5 rounded-md font-mono text-sm font-semibold tracking-[0.08em] uppercase focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090b]"
 				>
 					<span aria-hidden="true" className="grid grid-cols-2 gap-[3px]">
-						<span className="h-2 w-2 rounded-[3px] bg-zinc-300 [html.light_&]:bg-zinc-900" />
-						<span className="h-2 w-2 rounded-[3px] bg-zinc-300 [html.light_&]:bg-zinc-900" />
-						<span className="h-2 w-2 rounded-[3px] bg-zinc-300 [html.light_&]:bg-zinc-900" />
+						<span className="h-2 w-2 rounded-[3px] bg-current" />
+						<span className="h-2 w-2 rounded-[3px] bg-current" />
+						<span className="h-2 w-2 rounded-[3px] bg-current" />
 						<span className="h-2 w-2 rounded-[3px] bg-emerald-400" />
 					</span>
 					Pointly
 				</Link>
+				<nav className="flex items-center gap-2" aria-label="navegação principal">
+					<button
+						type="button"
+						data-testid="theme-toggle"
+						onClick={toggle}
+						aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
+						title={theme === "dark" ? "Tema claro" : "Tema escuro"}
+						className="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-800 text-zinc-300 [html.light_&]:border-zinc-300 [html.light_&]:text-zinc-600"
+					>
+						{theme === "dark" ? (
+							<Sun aria-hidden="true" className="h-5 w-5" />
+						) : (
+							<Moon aria-hidden="true" className="h-5 w-5" />
+						)}
+					</button>
+				</nav>
+			</header>
 
-				<div className="mt-6 rounded-2xl border border-[#26262c] bg-[#101013] p-6 shadow-[0_32px_80px_-40px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.05)] sm:p-8 [html.light_&]:border-zinc-200 [html.light_&]:bg-white">
-					<Badge variant={badge.variant}>{badge.label}</Badge>
-					<h1 className="mt-3 text-3xl font-medium tracking-tight">
-						{mode === "create"
-							? "Crie sua sala"
-							: mode === "invite"
-								? "Você foi convidado!"
-								: "Entrar na sala"}
-					</h1>
-					<p className="mt-2 text-sm leading-relaxed text-zinc-400 [html.light_&]:text-zinc-600">
-						{mode === "create"
-							? "Escolha seu nome — o código da sala é gerado na hora para convidar o time."
-							: mode === "invite"
-								? "Escolha como você quer aparecer para o time."
-								: "Informe o código da sala e escolha seu nome para entrar."}
-					</p>
+			<main className="mx-auto w-full max-w-6xl flex-1 px-5 pt-10 pb-12 sm:px-8 sm:pt-16">
+				<div className="grid items-start gap-12 lg:grid-cols-[1fr_1fr] lg:gap-16">
+					<div className="min-w-0 lg:pt-8">
+						<p className="font-mono text-xs tracking-[0.18em] text-zinc-500 uppercase">
+							{MODE_LABEL[mode]}
+						</p>
+						<h1 className="mt-3 max-w-[15ch] text-4xl font-medium tracking-tight text-balance sm:text-5xl">
+							{mode === "create"
+								? "Crie sua sala"
+								: mode === "invite"
+									? "Você foi convidado!"
+									: "Entrar na sala"}
+						</h1>
+						<p className="mt-4 max-w-[40ch] text-base leading-relaxed text-zinc-400 [html.light_&]:text-zinc-600">
+							{mode === "create"
+								? "Escolha seu nome — o código da sala é gerado na hora para convidar o time."
+								: mode === "invite"
+									? "Escolha como você quer aparecer para o time."
+									: "Informe o código da sala e escolha seu nome para entrar."}
+						</p>
 
-					{mode === "invite" && !codeEditable && inviteCode && (
-						<div className="mt-5 flex items-center gap-3 rounded-xl border border-emerald-400/25 bg-emerald-400/[0.06] px-4 py-3 [html.light_&]:border-emerald-700/25 [html.light_&]:bg-emerald-50">
-							<span className="font-mono text-[11px] tracking-[0.16em] text-zinc-400 uppercase [html.light_&]:text-zinc-500">Sala</span>
-							<strong
-								data-testid="join-code-display"
-								className="font-mono text-lg font-semibold tracking-[0.12em]"
-							>
-								{inviteCode}
-							</strong>
-							<span className="ml-auto">
-								<CopyButton
-									value={inviteCode}
-									onClick={handleInviteCopyFallback}
-								/>
-							</span>
-						</div>
-					)}
-
-					<form onSubmit={handleFormSubmit} className="mt-6 flex flex-col gap-5">
-						{codeInputVisible && (
-							<div>
-								<label
-									htmlFor="join-code-input"
-									className="mb-1.5 block font-mono text-xs tracking-[0.08em] text-zinc-400 uppercase [html.light_&]:text-zinc-500"
+						{mode === "invite" && !codeEditable && inviteCode && (
+							<div className="mt-6 flex items-center gap-3 border-y border-[#26262c] py-4 [html.light_&]:border-zinc-300">
+								<span className="font-mono text-xs tracking-[0.18em] text-zinc-500 uppercase">
+									Sala
+								</span>
+								<strong
+									data-testid="join-code-display"
+									className="font-mono text-lg font-semibold tracking-[0.12em]"
 								>
-									Código da sala
-								</label>
-								<input
-									id="join-code-input"
-									ref={codeRef}
-									type="text"
-									maxLength={4}
-									placeholder="ABCD"
-									autoComplete="off"
-									autoCapitalize="characters"
-									spellCheck={false}
-									value={localCode}
-									onChange={(e) => handleCodeChange(e.target.value)}
-									aria-invalid={codeError !== null}
-									aria-describedby={
-										codeError ? "join-code-error" : "join-code-hint"
-									}
-									disabled={checking}
-									data-testid="join-code"
-									className="h-13 w-full rounded-xl border border-[#2b2b31] bg-[#0b0b0f] px-4 py-3 font-mono text-lg tracking-[0.28em] uppercase placeholder:text-zinc-600 focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/30 focus:outline-none [html.light_&]:border-zinc-300 [html.light_&]:bg-zinc-50"
-								/>
-								{codeError ? (
-									<p
-										id="join-code-error"
-										role="alert"
-										data-testid="join-code-error"
-										className="mt-1.5 text-sm text-red-400"
-									>
-										{codeError}
-									</p>
-								) : (
-									<p id="join-code-hint" className="mt-1.5 text-xs text-zinc-500">
-										4 letras ou números · peça ao host que criou a sala.
-									</p>
-								)}
+									{inviteCode}
+								</strong>
+								<span className="ml-auto">
+									<CopyButton
+										value={inviteCode}
+										onClick={handleInviteCopyFallback}
+									/>
+								</span>
 							</div>
 						)}
 
-						<div>
-							<label
-								htmlFor="join-nick-input"
-								className="mb-1.5 block font-mono text-xs tracking-[0.08em] text-zinc-400 uppercase [html.light_&]:text-zinc-500"
-							>
-								Como você quer ser chamado
-							</label>
-							<input
-								id="join-nick-input"
-								ref={nickRef}
-								type="text"
-								maxLength={NICK_MAX}
-								placeholder="ex. Luna"
-								autoComplete="nickname"
-								value={nick}
-								onChange={(e) => handleNickChange(e.target.value)}
-								aria-invalid={nickError !== null}
-								aria-describedby={
-									nickError ? "join-nick-error" : "join-nick-hint"
-								}
-								disabled={checking}
-								data-testid="join-nick"
-								className="h-13 w-full rounded-xl border border-[#2b2b31] bg-[#0b0b0f] px-4 py-3 text-base placeholder:text-zinc-600 focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/30 focus:outline-none [html.light_&]:border-zinc-300 [html.light_&]:bg-zinc-50"
-							/>
-							{nickError ? (
-								<p
-									id="join-nick-error"
-									role="alert"
-									data-testid="join-nick-error"
-									className="mt-1.5 text-sm text-red-400"
-								>
-									{nickError}
-								</p>
-							) : (
-								<p
-									id="join-nick-hint"
-									className="mt-1.5 flex items-center justify-between text-xs text-zinc-500"
-								>
-									<span>De 2 a 20 caracteres</span>
-									<span aria-hidden="true">
-										{nick.length}/{NICK_MAX}
-									</span>
-								</p>
+						<form onSubmit={handleFormSubmit} className="mt-6 flex flex-col gap-5">
+							{codeInputVisible && (
+								<div>
+									<label
+										htmlFor="join-code-input"
+										className="mb-2 block text-sm font-medium"
+									>
+										Código da sala
+									</label>
+									<input
+										id="join-code-input"
+										ref={codeRef}
+										type="text"
+										maxLength={4}
+										placeholder="ABCD"
+										autoComplete="off"
+										autoCapitalize="characters"
+										spellCheck={false}
+										value={localCode}
+										onChange={(e) => handleCodeChange(e.target.value)}
+										aria-invalid={codeError !== null}
+										aria-describedby={
+											codeError ? "join-code-error" : "join-code-hint"
+										}
+										disabled={checking}
+										data-testid="join-code"
+										className={`${INPUT} font-mono text-lg tracking-[0.28em] uppercase`}
+									/>
+									{codeError ? (
+										<p
+											id="join-code-error"
+											role="alert"
+											data-testid="join-code-error"
+											className="mt-1.5 text-sm text-red-400"
+										>
+											{codeError}
+										</p>
+									) : (
+										<p id="join-code-hint" className="mt-1.5 text-sm text-zinc-400 [html.light_&]:text-zinc-600">
+											4 letras ou números · peça ao host que criou a sala.
+										</p>
+									)}
+								</div>
 							)}
-						</div>
 
-						<div className="flex flex-col gap-3 sm:flex-row">
-							<RichButton
-								type="submit"
-								color="emerald"
-								size="lg"
-								disabled={submitDisabled}
-								onClick={() => void doSubmit()}
-								data-testid="join-submit"
-								className="rounded-full sm:flex-1"
-							>
-								{checking ? (
-									<>
-										<Spinner size="sm" /> Verificando…
-									</>
+							<div>
+								<label
+									htmlFor="join-nick-input"
+									className="mb-2 block text-sm font-medium"
+								>
+									Como você quer ser chamado
+								</label>
+								<input
+									id="join-nick-input"
+									ref={nickRef}
+									type="text"
+									maxLength={NICK_MAX}
+									placeholder="ex. Luna"
+									autoComplete="nickname"
+									value={nick}
+									onChange={(e) => handleNickChange(e.target.value)}
+									aria-invalid={nickError !== null}
+									aria-describedby={
+										nickError ? "join-nick-error" : "join-nick-hint"
+									}
+									disabled={checking}
+									data-testid="join-nick"
+									className={INPUT}
+								/>
+								{nickError ? (
+									<p
+										id="join-nick-error"
+										role="alert"
+										data-testid="join-nick-error"
+										className="mt-1.5 text-sm text-red-400"
+									>
+										{nickError}
+									</p>
 								) : (
-									submitLabel
+									<p
+										id="join-nick-hint"
+										className="mt-1.5 flex items-center justify-between text-sm text-zinc-400 [html.light_&]:text-zinc-600"
+									>
+										<span>De 2 a 20 caracteres</span>
+										<span aria-hidden="true">
+											{nick.length}/{NICK_MAX}
+										</span>
+									</p>
 								)}
-							</RichButton>
-							<RichButton
-								color="zinc"
-								size="lg"
-								onClick={() => navigate("/")}
-								data-testid="join-back"
-								className="rounded-full"
-							>
-								Voltar
-							</RichButton>
-						</div>
-					</form>
-				</div>
-				</div>
+							</div>
 
-				<aside
-					aria-label="O que acontece a seguir"
-					className="hidden w-full max-w-md justify-self-start lg:block"
-				>
-					<div className="rounded-2xl border border-[#26262c] bg-gradient-to-b from-[#141419] to-[#0e0e12] p-6 [html.light_&]:border-zinc-200 [html.light_&]:from-white [html.light_&]:to-zinc-50">
-						<p className="font-mono text-[11px] tracking-[0.18em] text-zinc-500 uppercase">
-							Na mesa
-						</p>
-						<ul className="mt-4 flex flex-col gap-4">
-							<li className="flex gap-3">
-								<span aria-hidden="true" className="font-mono text-xs text-emerald-300 [html.light_&]:text-emerald-700">01</span>
-								<div>
-									<p className="text-sm font-medium">Entre com um apelido</p>
-									<p className="text-sm text-zinc-400 [html.light_&]:text-zinc-600">Sem conta, sem e-mail. Só um nome para o time reconhecer você.</p>
-								</div>
-							</li>
-							<li className="flex gap-3">
-								<span aria-hidden="true" className="font-mono text-xs text-emerald-300 [html.light_&]:text-emerald-700">02</span>
-								<div>
-									<p className="text-sm font-medium">Vote em segredo</p>
-									<p className="text-sm text-zinc-400 [html.light_&]:text-zinc-600">Cartas 0 · ½ · 1 · 2 · 3 · 5 · 8 · 13 · ☕. Ninguém vê até o reveal.</p>
-								</div>
-							</li>
-							<li className="flex gap-3">
-								<span aria-hidden="true" className="font-mono text-xs text-emerald-300 [html.light_&]:text-emerald-700">03</span>
-								<div>
-									<p className="text-sm font-medium">Revele e converse</p>
-									<p className="text-sm text-zinc-400 [html.light_&]:text-zinc-600">Mediana, média e intervalo na mesa. Timer de 60s revela sozinho.</p>
-								</div>
-							</li>
-						</ul>
-						<div className="mt-5 flex items-center gap-2 border-t border-[#26262c] pt-4 [html.light_&]:border-zinc-200">
-							<Badge variant="green">60s por rodada</Badge>
-							<Badge variant="blue">Até 12 pessoas</Badge>
-						</div>
+							<div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+								<button
+									type="submit"
+									disabled={submitDisabled}
+									onClick={() => void doSubmit()}
+									data-testid="join-submit"
+									className={`${CONTROL} w-full bg-zinc-100 text-zinc-950 [html.light_&]:bg-zinc-900 [html.light_&]:text-white sm:flex-1`}
+								>
+									{checking ? (
+										<>
+											<Spinner size="sm" /> Verificando…
+										</>
+									) : (
+										submitLabel
+									)}
+								</button>
+								<button
+									type="button"
+									onClick={() => navigate("/")}
+									data-testid="join-back"
+									className={`${CONTROL} border border-zinc-700 [html.light_&]:border-zinc-300`}
+								>
+									Voltar
+								</button>
+							</div>
+						</form>
 					</div>
-				</aside>
-			</div>
-		</main>
+
+					<aside aria-label="Na mesa" className="min-w-0 lg:pt-8">
+						<h2 className="text-lg font-medium">Na mesa</h2>
+						<p className="mt-1 text-sm text-zinc-400 [html.light_&]:text-zinc-600">
+							O que acontece depois que você entrar.
+						</p>
+						<ol className="mt-5 grid gap-7 border-t border-[#26262c] pt-8 [html.light_&]:border-zinc-300">
+							{STEPS.map((step, index) => (
+								<li key={step.title}>
+									<h3 className="text-lg font-medium">
+										<span className="mr-3 font-mono text-sm text-zinc-400 [html.light_&]:text-zinc-600">
+											{index + 1}.
+										</span>
+										{step.title}
+									</h3>
+									<p className="mt-2 max-w-[32ch] text-sm leading-relaxed text-zinc-400 [html.light_&]:text-zinc-600">
+										{step.body}
+									</p>
+								</li>
+							))}
+						</ol>
+					</aside>
+				</div>
+			</main>
+
+			<footer className="mx-auto w-full max-w-6xl px-5 py-6 text-sm text-zinc-400 sm:px-8 [html.light_&]:text-zinc-600">
+				Pointly · A ferramenta some, a conversa fica.
+			</footer>
+		</div>
 	);
 }

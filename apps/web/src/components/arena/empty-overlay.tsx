@@ -84,11 +84,8 @@ export function EmptyOverlay({ code, shareUrl, onDismiss }: EmptyOverlayProps) {
 			aria-labelledby="empty-overlay-title"
 			aria-describedby="empty-overlay-desc"
 			data-testid="empty-overlay"
-			className="w-full rounded-2xl border border-dashed border-emerald-400/30 bg-gradient-to-b from-[#12141a] to-[#101013] px-4 py-5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:px-6 [html.light_&]:border-emerald-700/30 [html.light_&]:bg-white [html.light_&]:from-white [html.light_&]:to-emerald-50/50"
+			className="w-full text-center"
 		>
-			<p className="font-mono text-[10px] tracking-[0.18em] text-emerald-300/80 uppercase [html.light_&]:text-emerald-700">
-				Sala aberta
-			</p>
 			<h2
 				id="empty-overlay-title"
 				className="mt-1 text-lg font-medium tracking-tight text-zinc-50 [html.light_&]:text-zinc-900"
@@ -99,8 +96,7 @@ export function EmptyOverlay({ code, shareUrl, onDismiss }: EmptyOverlayProps) {
 				id="empty-overlay-desc"
 				className="mx-auto mt-1 max-w-sm text-sm text-zinc-400 [html.light_&]:text-zinc-600"
 			>
-				Compartilhe o link — a mesa libera quando alguém entrar. Você já
-				pode escolher sua carta abaixo.
+				Compartilhe o convite. Enquanto o time chega, você já pode votar.
 			</p>
 			<div data-testid="empty-overlay-share" className="mt-3 flex gap-2">
 				<input
@@ -126,9 +122,9 @@ export function EmptyOverlay({ code, shareUrl, onDismiss }: EmptyOverlayProps) {
 				type="button"
 				data-testid="empty-overlay-dismiss"
 				onClick={handleDismiss}
-				className="mt-2 cursor-pointer text-sm text-zinc-500 underline-offset-4 hover:text-zinc-300 hover:underline focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:outline-none"
+				className="mt-1 min-h-11 cursor-pointer text-sm text-zinc-400 underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:outline-none [html.light_&]:text-zinc-600"
 			>
-				Entrar na mesa mesmo assim
+				Ocultar convite
 			</button>
 		</section>
 	);

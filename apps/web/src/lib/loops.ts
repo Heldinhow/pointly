@@ -242,9 +242,6 @@ export function dispatchArenaEvent(
 			store.setTimerActive(true);
 			if (event.payload.kind === "individual") {
 				store.markVoted(event.payload.playerId, true);
-				toast(`${event.payload.playerName} escolheu uma carta.`);
-			} else {
-				toast(`Mais ${event.payload.count} escolheram.`);
 			}
 			return;
 		}

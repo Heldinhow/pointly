@@ -89,11 +89,36 @@ describe("Landing", () => {
 		});
 	});
 
-	test("stats strip PT-BR", () => {
+	test("explica a sequência sem badges de benefícios", () => {
 		renderLanding();
-		expect(screen.getByText("Até 12 pessoas")).toBeTruthy();
-		expect(screen.getByText("Sem cadastro")).toBeTruthy();
-		expect(screen.getByText("Tempo real")).toBeTruthy();
+		expect(screen.getByRole("list", { name: "Como funciona" }).textContent).toMatch(/Crie.*Vote.*Revele/);
+		expect(screen.queryByRole("list", { name: "Destaques" })).toBeNull();
+	});
+
+	test("seleciona, troca o voto, revela quatro participantes e reinicia", () => {
+		renderLanding();
+		expect(screen.getByText(/mesa de exemplo.*escolha sua carta/i)).toBeTruthy();
+		const reveal = screen.getByRole("button", { name: "Revelar votos" }) as HTMLButtonElement;
+		expect(reveal.disabled).toBe(true);
+		expect(screen.getAllByTestId("seat-state").map((seat) => seat.textContent)).toEqual(["Votou", "Votou", "Votou", "Aguardando"]);
+		expect(screen.queryByTestId("stats-pill")).toBeNull();
+		fireEvent.click(screen.getByRole("button", { name: "Votar 5" }));
+		fireEvent.click(screen.getByRole("button", { name: "Votar 13" }));
+		expect(screen.getByRole("button", { name: "Votar 5" }).getAttribute("aria-pressed")).toBe("false");
+		expect(screen.getByRole("button", { name: "Votar 13" }).getAttribute("aria-pressed")).toBe("true");
+		expect(screen.queryByTestId("seat-face-num")).toBeNull();
+		expect(reveal.disabled).toBe(false);
+		fireEvent.click(reveal);
+		expect(screen.getAllByTestId("seat-face-num").map((seat) => seat.textContent)).toEqual(["3", "8", "5", "13"]);
+		expect(screen.getByTestId("stats-result-value").textContent).toBe("6.5");
+		expect(screen.getByTestId("stats-range-value").textContent).toBe("3–13");
+		fireEvent.click(screen.getByRole("button", { name: "Experimentar novamente" }));
+		expect(screen.queryByTestId("stats-pill")).toBeNull();
+		expect((screen.getByRole("button", { name: "Revelar votos" }) as HTMLButtonElement).disabled).toBe(true);
+		fireEvent.click(screen.getByRole("button", { name: "Votar 1" }));
+		fireEvent.click(screen.getByRole("button", { name: "Revelar votos" }));
+		expect(screen.getByTestId("stats-result-value").textContent).toBe("4");
+		expect(screen.getByTestId("stats-range-value").textContent).toBe("1–8");
 	});
 
 	test("header com toggle de tema + Entrar", () => {

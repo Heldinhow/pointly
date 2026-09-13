@@ -62,11 +62,11 @@ export function SharePill({ code }: { code: string }) {
 			<span aria-hidden="true" className="text-xs opacity-70">
 				{copied ? "✓" : "⧉"}
 			</span>
-			<span className="text-[10px] tracking-[0.16em] uppercase opacity-70">
-				Convidar
+			<span className="hidden text-xs sm:inline">
+				{copied ? "Copiado!" : "Convidar"}
 			</span>
-			<span className="text-sm font-bold tracking-[0.12em] tabular-nums">
-				{copied ? "Copiado!" : code || "—"}
+			<span data-testid="arena-code" className="text-sm font-bold tracking-[0.12em] tabular-nums">
+				{code || "—"}
 			</span>
 		</button>
 	);

@@ -46,15 +46,15 @@ const players: Player[] = [
 afterEach(cleanup);
 
 describe("seatPosition", () => {
-	test("índice 0 cai embaixo (top ~94%, left 50%)", () => {
+	test("índice 0 cai embaixo (top ~90%, left 50%)", () => {
 		const pos = seatPosition(0, 4);
 		expect(pos.left).toBe("50.00%");
-		expect(pos.top).toBe("94.00%");
+		expect(pos.top).toBe("90.00%");
 	});
 
 	test("distribui uniformemente na elipse", () => {
-		expect(seatPosition(2, 4).top).toBe("6.00%");
-		expect(seatPosition(1, 4).left).toBe("6.00%");
+		expect(seatPosition(2, 4).top).toBe("10.00%");
+		expect(seatPosition(1, 4).left).toBe("10.00%");
 	});
 });
 
@@ -88,8 +88,8 @@ describe("ArenaTable", () => {
 			/>,
 		);
 		const seat = getByTestId("seat-p_2").parentElement as HTMLElement;
-		// CSSOM normaliza "94.00%" → "94%"
-		expect(seat.style.top).toBe("94%");
+		// CSSOM normaliza "90.00%" → "90%"
+		expect(seat.style.top).toBe("90%");
 		expect(seat.style.left).toBe("50%");
 	});
 

@@ -3,10 +3,11 @@
  *
  * - Lê `?code` + sessionStorage (`pointly.nick`); sem nick → `/join` (preserva code)
  * - Conecta via `connectArena` (loops): hello por (re)connect + ticker local
- * - Header: badge da sala (code) + SharePill + theme toggle
- * - Palco: copy de estado (solo→convite; all-voted→CTA reveal; senão N de M)
- * - Grid de SeatCards + Deck (9) + RevealButton + StatsPill + TimerPill
- * - R revela (voting|revealable + ≥1 voto), N nova rodada (revealed); ignora inputs
+ * - Header: SharePill (código) + theme toggle
+ * - Centro: copy por fase + resultado compacto pós-reveal + RevealButton
+ * - Desktop: ArenaTable em órbita; mobile: votação antes da lista
+ * - Deck (9) + TimerPill (vira "Em discussão" pós-reveal)
+ * - R/N via mesmo clique do botão (confirmação unificada); ignora inputs/repeat
  * - Projéteis pós-reveal via ProjectileLayer
  * - Espelhos e2e: `__POINTLY_SALA__/__POINTLY_CONSENSUS__/__POINTLY_PLAYER_ID__`
  *   + DEV `__POINTLY_TEST__ { setSala, reset }`
@@ -21,10 +22,9 @@ import { ArenaTable } from "@/components/arena/arena-table";
 import { ProjectileLayer } from "@/components/arena/projectiles";
 import { RevealButton } from "@/components/arena/reveal-button";
 import { SeatCard } from "@/components/arena/seat-card";
-import { SharePill, buildShareUrl } from "@/components/arena/share-pill";
+import { SharePill } from "@/components/arena/share-pill";
 import { StatsPill } from "@/components/arena/stats-pill";
 import { TimerPill } from "@/components/arena/timer-pill";
-import { Badge } from "@/components/spell/badge";
 import {
 	connectArena,
 	readStoredCode,
@@ -40,8 +40,8 @@ function isTypingTarget(e: KeyboardEvent): boolean {
 	const t = e.target as HTMLElement | null;
 	if (!t) return false;
 	return (
-		t instanceof HTMLInputElement ||
-		t instanceof HTMLTextAreaElement ||
+		t instanceof window.HTMLInputElement ||
+		t instanceof window.HTMLTextAreaElement ||
 		t.isContentEditable
 	);
 }
@@ -59,6 +59,7 @@ export function Arena() {
 	// UUID validado (regenera se inválido) — mesma chave da join page.
 	const [uuid] = useState<string>(getOrCreateUUID);
 	const connRef = useRef<ArenaConnection | null>(null);
+	const revealRef = useRef<HTMLButtonElement>(null);
 
 	const sala = useSalaStore((s) => s.sala);
 	const currentPlayerId = useSalaStore((s) => s.currentPlayerId);
@@ -153,13 +154,17 @@ export function Arena() {
 	const code = sala?.code ?? urlCode;
 
 	const tableCopy =
-		playerCount <= 1
+		faceUp
+			? "Votos revelados."
+			: playerCount <= 1
 			? "Tem lugar para o time."
 			: votedCount === playerCount && playerCount > 0
 				? "Todos votaram."
 				: "Cada um no seu tempo.";
 	const tableSub =
-		playerCount <= 1
+		faceUp
+			? "Conversem sobre as diferenças."
+			: playerCount <= 1
 			? "Convide alguém para estimar com você."
 			: votedCount === playerCount && playerCount > 0
 				? "Revele agora ou aguarde — no zero, revela sozinho."
@@ -192,16 +197,20 @@ export function Arena() {
 	// Teclado: R revela, N nova rodada (fora de inputs)
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
-			if (e.metaKey || e.ctrlKey || e.altKey || isTypingTarget(e)) return;
+			if (e.repeat || e.metaKey || e.ctrlKey || e.altKey || isTypingTarget(e)) return;
 			const st = useSalaStore.getState();
 			const ph = st.sala?.phase ?? "idle";
 			const votes = st.sala?.players.filter((p) => p.hasVoted).length ?? 0;
 			if (e.key === "r" || e.key === "R") {
 				if ((ph === "voting" || ph === "revealable") && votes > 0) {
-					connRef.current?.requestReveal();
+					e.preventDefault();
+					revealRef.current?.click();
 				}
 			} else if (e.key === "n" || e.key === "N") {
-				if (ph === "revealed") connRef.current?.requestNewRound();
+				if (ph === "revealed") {
+					e.preventDefault();
+					revealRef.current?.click();
+				}
 			}
 		};
 		window.addEventListener("keydown", onKey);
@@ -216,14 +225,12 @@ export function Arena() {
 	// Centro da mesa (desktop) = copy da rodada + progresso + reveal.
 	// No mobile o mesmo bloco vive na seção de status — uma instância por vez.
 	const centerBlock = (
-		<>
+		<div className="w-full">
+			{isOnlyPlayer && code && !faceUp ? <EmptyOverlay code={code} /> : (
 			<section
 				aria-live="polite"
 				className="flex flex-col items-center gap-1.5 text-center"
 			>
-				<p className="font-mono text-[10px] tracking-[0.2em] text-emerald-300/70 uppercase [html.light_&]:text-emerald-700">
-					{faceUp ? "Veredito na mesa" : `Rodada ${String(sala?.round ?? 1).padStart(2, "0")}`}
-				</p>
 				<h2
 					data-testid="arena-table-copy"
 					className="max-w-[20ch] text-2xl font-medium tracking-tight text-balance"
@@ -247,24 +254,40 @@ export function Arena() {
 						/>
 					</div>
 				)}
-				{playerCount <= 1 && code && (
-					<p className="mt-1 max-w-full truncate font-mono text-xs text-zinc-500">
-						{buildShareUrl(window.location.origin, code)}
-					</p>
-				)}
 			</section>
+			)}
+			{faceUp && <div className="mt-3"><StatsPill consensus={consensus} votes={roundVotes} compact /></div>}
 			<div
 				data-testid="arena-reveal-wrapper"
-				className="mt-5 flex justify-center"
+				className="mt-4 flex justify-center"
 			>
 				<RevealButton
+					buttonRef={revealRef}
 					phase={phase}
 					votedCount={votedCount}
 					onReveal={handleReveal}
 					onNewRound={handleNewRound}
 				/>
 			</div>
-		</>
+		</div>
+	);
+
+	const deckBlock = (
+		<section
+			aria-label="Sua votação"
+			data-testid="arena-deck-wrapper"
+			className="w-full max-w-3xl border-t border-[#26262c] pt-4 pb-2 [html.light_&]:border-zinc-300"
+		>
+			<div className="mb-3 flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-center">
+				<h2 className="text-sm font-medium">
+					{faceUp ? "Você pode ajustar seu voto" : myVote !== null ? `Seu voto: ${myVote} · Você pode mudar de ideia` : "Qual é a sua estimativa?"}
+				</h2>
+				<p className="hidden text-xs text-zinc-400 sm:block [html.light_&]:text-zinc-600">
+					<kbd className="rounded border border-current/30 px-1 font-mono">{faceUp ? "N" : "R"}</kbd> {faceUp ? "nova rodada" : "revelar"}
+				</p>
+			</div>
+			<Deck currentVote={myVote} onSelect={handleCardSelect} />
+		</section>
 	);
 
 	return (
@@ -272,7 +295,7 @@ export function Arena() {
 			data-testid="page-arena"
 			className="flex min-h-dvh flex-col bg-[#09090b] bg-[radial-gradient(ellipse_70%_40%_at_50%_-5%,rgba(52,211,153,0.08),transparent_70%)] text-zinc-100 [html.light_&]:bg-zinc-100 [html.light_&]:bg-[radial-gradient(ellipse_70%_40%_at_50%_-5%,rgba(16,185,129,0.12),transparent_70%)] [html.light_&]:text-zinc-900"
 		>
-			<header className="sticky top-0 z-40 border-b border-[#26262c] bg-[#09090b]/85 backdrop-blur-md [html.light_&]:border-zinc-200 [html.light_&]:bg-white/85">
+			<header className="sticky top-0 z-40 border-b border-[#26262c] bg-[#09090b] [html.light_&]:border-zinc-200 [html.light_&]:bg-white">
 				<div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-2 px-4 py-2.5 sm:px-6">
 				<Link
 					to="/"
@@ -290,16 +313,6 @@ export function Arena() {
 					</span>
 				</Link>
 				<div className="flex items-center gap-2">
-				<Badge
-					data-testid="arena-code"
-					variant="blue"
-					aria-label={
-						code ? `Código da sala ${code}` : "Aguardando código da sala"
-					}
-					className="px-2.5 py-1.5 font-mono text-[13px] font-bold tracking-[0.2em] tabular-nums"
-				>
-					{code || "—"}
-				</Badge>
 					<SharePill code={code} />
 					<button
 						type="button"
@@ -327,17 +340,10 @@ export function Arena() {
 					: "Sala · rodada atual"}
 			</h1>
 
-			<main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center gap-6 px-4 py-6 sm:px-6">
+			<main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center gap-5 px-4 py-5 sm:px-6">
 				<div className="flex w-full flex-wrap items-center justify-center gap-2">
 					<TimerPill />
-					{playerCount > 0 && (
-						<span className="font-mono text-[11px] tracking-[0.16em] text-zinc-500 uppercase [html.light_&]:text-zinc-500">
-							{votedCount}/{playerCount} votaram
-						</span>
-					)}
 				</div>
-
-				{isOnlyPlayer && code && <EmptyOverlay code={code} />}
 
 				{isDesktop ? (
 					<ArenaTable
@@ -350,6 +356,7 @@ export function Arena() {
 				) : (
 					<>
 						{centerBlock}
+						{deckBlock}
 						<section
 							aria-label={`Jogadores na sala (${playerCount})`}
 							className="grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2"
@@ -367,27 +374,7 @@ export function Arena() {
 					</>
 				)}
 
-				{faceUp && (
-					<div className="w-full max-w-2xl">
-						<StatsPill consensus={consensus} votes={roundVotes} />
-					</div>
-				)}
-
-				<section
-					aria-label="Sua votação"
-					data-testid="arena-deck-wrapper"
-					className="w-full rounded-2xl border border-[#232329] bg-[#0e0e12]/80 px-4 pt-4 pb-5 sm:px-6 [html.light_&]:border-zinc-200 [html.light_&]:bg-white"
-				>
-					<div className="mb-3 flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-center">
-						<h2 className="text-sm font-medium text-zinc-200 [html.light_&]:text-zinc-900">
-							{faceUp ? "Ajuste seu voto ou aguarde a próxima rodada" : "Qual é a sua estimativa?"}
-						</h2>
-						<p className="font-mono text-[11px] tracking-[0.08em] text-zinc-500">
-							R revela · N nova rodada
-						</p>
-					</div>
-					<Deck currentVote={myVote} onSelect={handleCardSelect} />
-				</section>
+				{isDesktop && deckBlock}
 			</main>
 
 			<ProjectileLayer />
