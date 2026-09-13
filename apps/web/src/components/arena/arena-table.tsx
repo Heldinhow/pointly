@@ -69,38 +69,38 @@ export function ArenaTable({
 			onPointerMove={handlePointerMove}
 			className="group relative mx-auto aspect-[16/10] w-full max-w-4xl [html.light_&]:max-w-4xl"
 		>
-			{/* halo externo */}
+			{/* halo externo — estático, um único momento luminoso */}
 			<div
 				aria-hidden="true"
-				className="absolute -inset-3 rounded-[50%] bg-emerald-500/10 blur-3xl motion-safe:animate-pulse motion-safe:[animation-duration:6s] [html.light_&]:bg-emerald-500/20"
+				className="absolute -inset-3 rounded-[50%] bg-emerald-500/[0.07] blur-3xl [html.light_&]:bg-emerald-500/15"
 			/>
-			{/* trilho */}
+			{/* trilho — borda hairline + brilho ambiente contido */}
 			<div
 				aria-hidden="true"
-				className="absolute inset-[4%] rounded-[50%] border border-white/10 bg-gradient-to-b from-white/[0.05] to-transparent shadow-[0_0_120px_-20px_rgba(52,211,153,0.35)] [html.light_&]:border-zinc-300 [html.light_&]:from-white [html.light_&]:shadow-[0_0_120px_-30px_rgba(16,185,129,0.4)]"
+				className="absolute inset-[4%] rounded-[50%] border border-white/10 bg-gradient-to-b from-white/[0.06] to-transparent shadow-[0_0_100px_-24px_rgba(52,211,153,0.4),inset_0_1px_0_rgba(255,255,255,0.06)] [html.light_&]:border-zinc-300 [html.light_&]:from-white [html.light_&]:shadow-[0_0_100px_-32px_rgba(16,185,129,0.45)]"
 			/>
-			{/* feltro */}
+			{/* feltro — vinheta noturna + respiro esmeralda no topo */}
 			<div
 				aria-hidden="true"
-				className="absolute inset-[10%] rounded-[50%] border border-white/10 bg-[radial-gradient(ellipse_60%_50%_at_50%_28%,rgba(52,211,153,0.18),transparent_70%),radial-gradient(ellipse_at_center,#15151b_0%,#0a0a0e_72%)] [html.light_&]:border-zinc-300 [html.light_&]:bg-[radial-gradient(ellipse_60%_50%_at_50%_28%,rgba(16,185,129,0.22),transparent_70%),radial-gradient(ellipse_at_center,#ffffff_0%,#e7f0ea_75%)]"
+				className="absolute inset-[10%] rounded-[50%] border border-white/[0.08] bg-[radial-gradient(ellipse_55%_42%_at_50%_26%,rgba(52,211,153,0.16),transparent_70%),radial-gradient(ellipse_at_center,#17171e_0%,#0c0c11_62%,#08080b_100%)] [html.light_&]:border-zinc-300 [html.light_&]:bg-[radial-gradient(ellipse_55%_42%_at_50%_26%,rgba(16,185,129,0.2),transparent_70%),radial-gradient(ellipse_at_center,#ffffff_0%,#e9f1eb_72%,#dde8e0_100%)]"
 			/>
-			{/* costura interna */}
+			{/* costura interna — anel pontilhado contido */}
 			<div
 				aria-hidden="true"
-				className="absolute inset-[12.5%] rounded-[50%] border border-dashed border-white/10 [html.light_&]:border-emerald-900/20"
+				className="absolute inset-[12.5%] rounded-[50%] border border-dashed border-white/[0.09] [html.light_&]:border-emerald-900/25"
 			/>
 			{/* spotlight que segue o cursor (só com motion) */}
 			<div
 				aria-hidden="true"
 				className="absolute inset-[10%] rounded-[50%] opacity-0 transition-opacity duration-500 motion-safe:group-hover:opacity-100"
 				style={{
-					background: `radial-gradient(circle at ${spot.x}% ${spot.y}%, rgba(255,255,255,0.09) 0%, transparent 45%)`,
+					background: `radial-gradient(circle at ${spot.x}% ${spot.y}%, rgba(255,255,255,0.07) 0%, transparent 46%)`,
 				}}
 			/>
 
 			{/* inlay central */}
 			<div className="absolute inset-0 flex items-center justify-center">
-				<div className="w-full max-w-xs px-4 text-center">{center}</div>
+				<div className="w-full max-w-sm px-6 text-center">{center}</div>
 			</div>
 
 			{/* assentos em órbita */}
@@ -109,7 +109,7 @@ export function ArenaTable({
 				return (
 					<div
 						key={p.id}
-						className="absolute z-10 -translate-x-1/2 -translate-y-1/2"
+						className="absolute z-10 -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_8px_20px_rgba(0,0,0,0.45)]"
 						style={{ left: pos.left, top: pos.top }}
 					>
 						<SeatCard

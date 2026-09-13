@@ -51,21 +51,21 @@ export function SharePill({ code }: { code: string }) {
 						: "Aguardando código da sala"
 			}
 			className={cn(
-				"inline-flex min-h-[44px] cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1 font-mono",
-				"focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090b] focus-visible:outline-none",
+				"inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-full border px-3 py-1 font-mono transition-colors duration-150",
+				"focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090b] focus-visible:outline-none",
 				"disabled:cursor-not-allowed disabled:opacity-50",
 				copied
-					? "border-emerald-400/40 bg-emerald-950 text-emerald-200"
-					: "border-[#26262c] bg-[#101013] text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 [html.light_&]:border-zinc-300 [html.light_&]:bg-white [html.light_&]:text-zinc-700",
+					? "border-emerald-400/50 bg-emerald-950 text-emerald-200"
+					: "border-[#2b2b31] bg-[#101013] text-zinc-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:border-zinc-500 hover:text-zinc-100 [html.light_&]:border-zinc-300 [html.light_&]:bg-white [html.light_&]:text-zinc-700",
 			)}
 		>
 			<span aria-hidden="true" className="text-xs opacity-70">
 				{copied ? "✓" : "⧉"}
 			</span>
-			<span className="text-[10px] tracking-[0.14em] uppercase opacity-70">
-				Sala
+			<span className="text-[10px] tracking-[0.16em] uppercase opacity-70">
+				Convidar
 			</span>
-			<span className="text-sm font-bold tracking-wider tabular-nums">
+			<span className="text-sm font-bold tracking-[0.12em] tabular-nums">
 				{copied ? "Copiado!" : code || "—"}
 			</span>
 		</button>

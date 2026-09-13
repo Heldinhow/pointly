@@ -91,6 +91,7 @@ export function RevealButton({
 	return (
 		<RichButton
 			type="button"
+			size="lg"
 			color={state === "ready" ? "emerald" : "zinc"}
 			data-testid="reveal-button"
 			data-reveal-state={state}
@@ -110,7 +111,7 @@ export function RevealButton({
 						: "Aguardando votos para revelar"
 			}
 			title={state === "ready" ? "Atalho: R" : state === "post-reveal" ? "Atalho: N" : undefined}
-			className="min-h-[44px] rounded-full px-6"
+			className="min-h-[48px] rounded-full px-8 text-base"
 		>
 			{label}
 		</RichButton>

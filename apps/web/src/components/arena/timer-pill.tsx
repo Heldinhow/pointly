@@ -50,7 +50,7 @@ export function TimerPill(props: TimerPillProps = {}) {
 			data-testid="timer-pill"
 			data-timer-critical={isCritical ? "true" : "false"}
 			variant={isCritical ? "yellow" : "blue"}
-			className="gap-2 rounded-full px-3 py-1 font-mono tracking-[0.08em] uppercase"
+			className="gap-2 rounded-full border px-3.5 py-1.5 font-mono text-[13px] tracking-[0.08em] uppercase shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
 		>
 			{isCritical && (
 				<span aria-hidden="true" className="leading-none">

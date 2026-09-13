@@ -3,6 +3,8 @@
  */
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { Badge } from "@/components/spell/badge";
+import { RichButton } from "@/components/spell/rich-button";
 
 export function NotFound() {
 	const titleRef = useRef<HTMLHeadingElement>(null);
@@ -14,11 +16,11 @@ export function NotFound() {
 	return (
 		<div
 			data-testid="page-not-found"
-			className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-[#09090b] px-6 text-center text-zinc-100"
+			className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-[#09090b] bg-[radial-gradient(ellipse_55%_30%_at_50%_0%,rgba(52,211,153,0.07),transparent_70%)] px-6 text-center text-zinc-100 [html.light_&]:bg-zinc-100 [html.light_&]:text-zinc-900"
 		>
-			<p className="font-mono text-xs tracking-[0.2em] text-zinc-500 uppercase">
+			<Badge variant="blue" className="font-mono tracking-[0.2em] uppercase">
 				404
-			</p>
+			</Badge>
 			<h1
 				ref={titleRef}
 				tabIndex={-1}
@@ -26,23 +28,17 @@ export function NotFound() {
 			>
 				Essa página não existe.
 			</h1>
-			<p className="max-w-md text-base leading-relaxed text-zinc-400">
+			<p className="max-w-md text-base leading-relaxed text-zinc-400 [html.light_&]:text-zinc-600">
 				O endereço pode estar incompleto ou a sala já terminou. Volte ao
 				início para criar uma sala ou entre com um código.
 			</p>
 			<div className="flex flex-wrap items-center justify-center gap-3">
-				<Link
-					to="/"
-					className="rounded-md bg-zinc-100 px-5 py-3 font-mono text-xs font-semibold tracking-[0.08em] text-zinc-950 uppercase transition-colors hover:bg-white"
-				>
-					Ir para o início
-				</Link>
-				<Link
-					to="/join"
-					className="rounded-md border border-zinc-700 px-5 py-3 font-mono text-xs font-semibold tracking-[0.08em] text-zinc-200 uppercase transition-colors hover:border-zinc-500 hover:text-white"
-				>
-					Entrar com código
-				</Link>
+				<RichButton color="emerald" size="lg" asChild className="rounded-full">
+					<Link to="/">Ir para o início</Link>
+				</RichButton>
+				<RichButton color="zinc" size="lg" asChild className="rounded-full">
+					<Link to="/join">Entrar com código</Link>
+				</RichButton>
 			</div>
 		</div>
 	);

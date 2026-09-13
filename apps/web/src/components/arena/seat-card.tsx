@@ -158,19 +158,43 @@ export function SeatCard({
 			data-testid={`seat-${player.id}`}
 			data-seat-you={isYou ? "true" : "false"}
 			className={cn(
-				"relative flex min-h-[44px] items-center gap-3 rounded-xl border px-3 py-2",
-				"border-[#26262c] bg-[#101013] [html.light_&]:border-zinc-200 [html.light_&]:bg-white",
-				isYou && "border-emerald-400/50",
-				player.status === "disconnected" && "opacity-50",
+				"relative flex min-h-[56px] items-center gap-3 rounded-2xl border px-3 py-2.5 transition-colors duration-150",
+				"border-[#26262c] bg-[#101013] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] [html.light_&]:border-zinc-200 [html.light_&]:bg-white [html.light_&]:shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]",
+				isYou
+					? "border-emerald-400/60 ring-1 ring-emerald-400/25"
+					: player.hasVoted && !faceUp
+						? "border-emerald-400/25"
+						: undefined,
+				player.status === "disconnected" && "opacity-60 saturate-50",
 				layout === "orbit" &&
-					"w-36 min-h-0 flex-col gap-1.5 rounded-2xl px-2 py-2.5 text-center",
+					"w-36 min-h-0 flex-col gap-1.5 rounded-2xl px-2 py-2.5 text-center sm:w-40",
 			)}
 		>
+			{/* presença: ponto vivo no canto do avatar */}
+			<span
+				aria-hidden="true"
+				className={cn(
+					"absolute top-2.5 left-2.5 h-1.5 w-1.5 rounded-full sm:top-3 sm:left-3",
+					player.status === "disconnected"
+						? "bg-zinc-600"
+						: player.hasVoted
+							? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]"
+							: "bg-zinc-600",
+					layout === "orbit" && "top-2 left-1/2 -translate-x-[34px]",
+				)}
+			/>
 			<div
 				aria-hidden="true"
 				className={cn(
-					"flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-zinc-600 via-zinc-800 to-black font-mono text-sm font-semibold text-zinc-100",
-					layout === "orbit" && "h-8 w-8 text-xs",
+					"flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-mono text-sm font-semibold",
+					player.status === "disconnected"
+						? "bg-zinc-800 text-zinc-500"
+						: player.hasVoted
+							? "bg-gradient-to-br from-emerald-400 via-emerald-600 to-emerald-900 text-emerald-50 ring-1 ring-emerald-300/40"
+							: isYou
+								? "bg-gradient-to-br from-zinc-500 via-zinc-700 to-zinc-950 text-zinc-50 ring-1 ring-white/15"
+								: "bg-gradient-to-br from-zinc-600 via-zinc-800 to-black text-zinc-100 ring-1 ring-white/10",
+					layout === "orbit" && "h-9 w-9 text-[13px]",
 				)}
 			>
 				{initials}
@@ -203,7 +227,7 @@ export function SeatCard({
 				{showFaceNum ? (
 					<span
 						data-testid="seat-face-num"
-						className="font-mono text-lg leading-tight font-semibold text-emerald-300 tabular-nums [html.light_&]:text-emerald-700"
+						className="inline-flex min-h-[32px] min-w-[44px] items-center justify-center rounded-lg border border-emerald-400/50 bg-emerald-400 px-2 font-mono text-xl leading-tight font-semibold text-emerald-950 tabular-nums shadow-[0_4px_16px_-6px_rgba(52,211,153,0.6)] [html.light_&]:border-emerald-600/40 [html.light_&]:bg-emerald-400 [html.light_&]:text-emerald-950"
 					>
 						{player.value}
 					</span>

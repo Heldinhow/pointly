@@ -230,17 +230,24 @@ export function Join() {
 	return (
 		<main
 			data-testid="page-join"
-			className="flex min-h-dvh flex-col items-center bg-[#09090b] px-5 py-10 text-zinc-100"
+			className="flex min-h-dvh flex-col items-center bg-[#09090b] bg-[radial-gradient(ellipse_55%_30%_at_50%_0%,rgba(52,211,153,0.08),transparent_70%)] px-5 py-10 text-zinc-100 [html.light_&]:bg-zinc-100 [html.light_&]:text-zinc-900"
 		>
-			<div className="w-full max-w-md">
+			<div className="grid w-full max-w-4xl items-start gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+				<div className="w-full max-w-md justify-self-center lg:justify-self-end">
 				<Link
 					to="/"
-					className="font-mono text-sm font-semibold tracking-[0.08em] text-zinc-300 uppercase hover:text-zinc-100"
+					className="flex items-center gap-2.5 rounded-md font-mono text-sm font-semibold tracking-[0.08em] text-zinc-300 uppercase hover:text-zinc-100 focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:outline-none [html.light_&]:text-zinc-600 [html.light_&]:hover:text-zinc-900"
 				>
+					<span aria-hidden="true" className="grid grid-cols-2 gap-[3px]">
+						<span className="h-2 w-2 rounded-[3px] bg-zinc-300 [html.light_&]:bg-zinc-900" />
+						<span className="h-2 w-2 rounded-[3px] bg-zinc-300 [html.light_&]:bg-zinc-900" />
+						<span className="h-2 w-2 rounded-[3px] bg-zinc-300 [html.light_&]:bg-zinc-900" />
+						<span className="h-2 w-2 rounded-[3px] bg-emerald-400" />
+					</span>
 					Pointly
 				</Link>
 
-				<div className="mt-6 rounded-2xl border border-[#26262c] bg-[#101013] p-6 sm:p-8">
+				<div className="mt-6 rounded-2xl border border-[#26262c] bg-[#101013] p-6 shadow-[0_32px_80px_-40px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.05)] sm:p-8 [html.light_&]:border-zinc-200 [html.light_&]:bg-white">
 					<Badge variant={badge.variant}>{badge.label}</Badge>
 					<h1 className="mt-3 text-3xl font-medium tracking-tight">
 						{mode === "create"
@@ -249,7 +256,7 @@ export function Join() {
 								? "Você foi convidado!"
 								: "Entrar na sala"}
 					</h1>
-					<p className="mt-2 text-sm leading-relaxed text-zinc-400">
+					<p className="mt-2 text-sm leading-relaxed text-zinc-400 [html.light_&]:text-zinc-600">
 						{mode === "create"
 							? "Escolha seu nome — o código da sala é gerado na hora para convidar o time."
 							: mode === "invite"
@@ -258,8 +265,8 @@ export function Join() {
 					</p>
 
 					{mode === "invite" && !codeEditable && inviteCode && (
-						<div className="mt-5 flex items-center gap-3 rounded-xl border border-[#26262c] bg-[#17171b] px-4 py-3">
-							<span className="text-sm text-zinc-400">Sala</span>
+						<div className="mt-5 flex items-center gap-3 rounded-xl border border-emerald-400/25 bg-emerald-400/[0.06] px-4 py-3 [html.light_&]:border-emerald-700/25 [html.light_&]:bg-emerald-50">
+							<span className="font-mono text-[11px] tracking-[0.16em] text-zinc-400 uppercase [html.light_&]:text-zinc-500">Sala</span>
 							<strong
 								data-testid="join-code-display"
 								className="font-mono text-lg font-semibold tracking-[0.12em]"
@@ -280,7 +287,7 @@ export function Join() {
 							<div>
 								<label
 									htmlFor="join-code-input"
-									className="mb-1.5 block font-mono text-xs tracking-[0.08em] text-zinc-400 uppercase"
+									className="mb-1.5 block font-mono text-xs tracking-[0.08em] text-zinc-400 uppercase [html.light_&]:text-zinc-500"
 								>
 									Código da sala
 								</label>
@@ -301,7 +308,7 @@ export function Join() {
 									}
 									disabled={checking}
 									data-testid="join-code"
-									className="h-12 w-full rounded-lg border border-[#26262c] bg-[#09090b] px-4 font-mono text-lg tracking-[0.2em] uppercase placeholder:text-zinc-600"
+									className="h-13 w-full rounded-xl border border-[#2b2b31] bg-[#0b0b0f] px-4 py-3 font-mono text-lg tracking-[0.28em] uppercase placeholder:text-zinc-600 focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/30 focus:outline-none [html.light_&]:border-zinc-300 [html.light_&]:bg-zinc-50"
 								/>
 								{codeError ? (
 									<p
@@ -323,7 +330,7 @@ export function Join() {
 						<div>
 							<label
 								htmlFor="join-nick-input"
-								className="mb-1.5 block font-mono text-xs tracking-[0.08em] text-zinc-400 uppercase"
+								className="mb-1.5 block font-mono text-xs tracking-[0.08em] text-zinc-400 uppercase [html.light_&]:text-zinc-500"
 							>
 								Como você quer ser chamado
 							</label>
@@ -342,7 +349,7 @@ export function Join() {
 								}
 								disabled={checking}
 								data-testid="join-nick"
-								className="h-12 w-full rounded-lg border border-[#26262c] bg-[#09090b] px-4 text-base placeholder:text-zinc-600"
+								className="h-13 w-full rounded-xl border border-[#2b2b31] bg-[#0b0b0f] px-4 py-3 text-base placeholder:text-zinc-600 focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/30 focus:outline-none [html.light_&]:border-zinc-300 [html.light_&]:bg-zinc-50"
 							/>
 							{nickError ? (
 								<p
@@ -374,6 +381,7 @@ export function Join() {
 								disabled={submitDisabled}
 								onClick={() => void doSubmit()}
 								data-testid="join-submit"
+								className="rounded-full sm:flex-1"
 							>
 								{checking ? (
 									<>
@@ -388,12 +396,52 @@ export function Join() {
 								size="lg"
 								onClick={() => navigate("/")}
 								data-testid="join-back"
+								className="rounded-full"
 							>
 								Voltar
 							</RichButton>
 						</div>
 					</form>
 				</div>
+				</div>
+
+				<aside
+					aria-label="O que acontece a seguir"
+					className="hidden w-full max-w-md justify-self-start lg:block"
+				>
+					<div className="rounded-2xl border border-[#26262c] bg-gradient-to-b from-[#141419] to-[#0e0e12] p-6 [html.light_&]:border-zinc-200 [html.light_&]:from-white [html.light_&]:to-zinc-50">
+						<p className="font-mono text-[11px] tracking-[0.18em] text-zinc-500 uppercase">
+							Na mesa
+						</p>
+						<ul className="mt-4 flex flex-col gap-4">
+							<li className="flex gap-3">
+								<span aria-hidden="true" className="font-mono text-xs text-emerald-300 [html.light_&]:text-emerald-700">01</span>
+								<div>
+									<p className="text-sm font-medium">Entre com um apelido</p>
+									<p className="text-sm text-zinc-400 [html.light_&]:text-zinc-600">Sem conta, sem e-mail. Só um nome para o time reconhecer você.</p>
+								</div>
+							</li>
+							<li className="flex gap-3">
+								<span aria-hidden="true" className="font-mono text-xs text-emerald-300 [html.light_&]:text-emerald-700">02</span>
+								<div>
+									<p className="text-sm font-medium">Vote em segredo</p>
+									<p className="text-sm text-zinc-400 [html.light_&]:text-zinc-600">Cartas 0 · ½ · 1 · 2 · 3 · 5 · 8 · 13 · ☕. Ninguém vê até o reveal.</p>
+								</div>
+							</li>
+							<li className="flex gap-3">
+								<span aria-hidden="true" className="font-mono text-xs text-emerald-300 [html.light_&]:text-emerald-700">03</span>
+								<div>
+									<p className="text-sm font-medium">Revele e converse</p>
+									<p className="text-sm text-zinc-400 [html.light_&]:text-zinc-600">Mediana, média e intervalo na mesa. Timer de 60s revela sozinho.</p>
+								</div>
+							</li>
+						</ul>
+						<div className="mt-5 flex items-center gap-2 border-t border-[#26262c] pt-4 [html.light_&]:border-zinc-200">
+							<Badge variant="green">60s por rodada</Badge>
+							<Badge variant="blue">Até 12 pessoas</Badge>
+						</div>
+					</div>
+				</aside>
 			</div>
 		</main>
 	);

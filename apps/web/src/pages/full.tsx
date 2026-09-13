@@ -34,20 +34,26 @@ export function Full() {
 	return (
 		<main
 			data-testid="page-full"
-			className="flex min-h-dvh flex-col items-center bg-[#09090b] px-5 py-10 text-zinc-100"
+			className="flex min-h-dvh flex-col items-center bg-[#09090b] bg-[radial-gradient(ellipse_55%_30%_at_50%_0%,rgba(52,211,153,0.07),transparent_70%)] px-5 py-10 text-zinc-100 [html.light_&]:bg-zinc-100 [html.light_&]:text-zinc-900"
 		>
 			<div className="w-full max-w-md text-center">
 				<Link
 					to="/"
-					className="font-mono text-sm font-semibold tracking-[0.08em] text-zinc-300 uppercase hover:text-zinc-100"
+					className="inline-flex items-center gap-2.5 font-mono text-sm font-semibold tracking-[0.08em] text-zinc-300 uppercase hover:text-zinc-100 [html.light_&]:text-zinc-600 [html.light_&]:hover:text-zinc-900"
 				>
+					<span aria-hidden="true" className="grid grid-cols-2 gap-[3px]">
+						<span className="h-2 w-2 rounded-[3px] bg-current opacity-80" />
+						<span className="h-2 w-2 rounded-[3px] bg-current opacity-80" />
+						<span className="h-2 w-2 rounded-[3px] bg-current opacity-80" />
+						<span className="h-2 w-2 rounded-[3px] bg-emerald-400" />
+					</span>
 					Pointly
 				</Link>
 
-				<div className="mt-6 rounded-2xl border border-[#26262c] bg-[#101013] p-6 sm:p-8">
+				<div className="mt-6 rounded-2xl border border-[#26262c] bg-[#101013] p-6 shadow-[0_32px_80px_-40px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.05)] sm:p-8 [html.light_&]:border-zinc-200 [html.light_&]:bg-white">
 					<p
 						aria-hidden="true"
-						className="font-mono text-5xl font-semibold tracking-tight text-zinc-700"
+						className="font-mono text-6xl font-semibold tracking-tight text-zinc-700 [html.light_&]:text-zinc-300"
 					>
 						{MAX_PLAYERS}
 					</p>
@@ -78,20 +84,23 @@ export function Full() {
 						)}
 					</p>
 
-					<div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+					<div className="mt-6 flex flex-col gap-3">
 						<RichButton
 							color="emerald"
 							size="lg"
 							onClick={goCreate}
 							data-testid="full-create-new"
+							className="rounded-full"
 						>
 							Criar sala nova
 						</RichButton>
+						<div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
 						<RichButton
 							color="zinc"
 							size="lg"
 							onClick={goHome}
 							data-testid="full-retry"
+							className="rounded-full sm:flex-1"
 						>
 							Voltar ao início
 						</RichButton>
@@ -101,10 +110,12 @@ export function Full() {
 								size="lg"
 								onClick={goTryOther}
 								data-testid="full-try-other"
+								className="rounded-full sm:flex-1"
 							>
 								Tentar outro código
 							</RichButton>
 						)}
+						</div>
 					</div>
 				</div>
 			</div>

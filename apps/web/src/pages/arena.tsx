@@ -14,6 +14,7 @@
 import type { ProjectileType, SalaState, Vote } from "@planning-poker/shared";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Moon, Sun } from "lucide-react";
 import { Deck } from "@/components/arena/deck";
 import { EmptyOverlay } from "@/components/arena/empty-overlay";
 import { ArenaTable } from "@/components/arena/arena-table";
@@ -209,35 +210,52 @@ export function Arena() {
 
 	if (!nick) return null;
 
-	// Centro da mesa (desktop) = copy da rodada + reveal. No mobile o mesmo
-	// bloco vive na seção de status abaixo — uma instância por vez.
+	const progressPct =
+		playerCount > 0 ? Math.round((votedCount / playerCount) * 100) : 0;
+
+	// Centro da mesa (desktop) = copy da rodada + progresso + reveal.
+	// No mobile o mesmo bloco vive na seção de status — uma instância por vez.
 	const centerBlock = (
 		<>
 			<section
 				aria-live="polite"
-				className="flex flex-col items-center gap-1 text-center"
+				className="flex flex-col items-center gap-1.5 text-center"
 			>
+				<p className="font-mono text-[10px] tracking-[0.2em] text-emerald-300/70 uppercase [html.light_&]:text-emerald-700">
+					{faceUp ? "Veredito na mesa" : `Rodada ${String(sala?.round ?? 1).padStart(2, "0")}`}
+				</p>
 				<h2
 					data-testid="arena-table-copy"
-					className="text-xl font-medium tracking-tight"
+					className="max-w-[20ch] text-2xl font-medium tracking-tight text-balance"
 				>
 					{tableCopy}
 				</h2>
 				<p
 					data-testid="arena-table-sub"
-					className="text-sm text-zinc-400 [html.light_&]:text-zinc-600"
+					className="max-w-[32ch] text-sm text-zinc-400 [html.light_&]:text-zinc-600"
 				>
 					{tableSub}
 				</p>
+				{!faceUp && playerCount > 1 && (
+					<div
+						aria-hidden="true"
+						className="mt-2 h-1 w-40 overflow-hidden rounded-full bg-white/10 [html.light_&]:bg-zinc-900/10"
+					>
+						<div
+							className="h-full rounded-full bg-emerald-400 transition-[width] duration-300"
+							style={{ width: `${progressPct}%` }}
+						/>
+					</div>
+				)}
 				{playerCount <= 1 && code && (
-					<p className="mt-1 font-mono text-xs break-all text-zinc-500">
+					<p className="mt-1 max-w-full truncate font-mono text-xs text-zinc-500">
 						{buildShareUrl(window.location.origin, code)}
 					</p>
 				)}
 			</section>
 			<div
 				data-testid="arena-reveal-wrapper"
-				className="mt-4 flex justify-center"
+				className="mt-5 flex justify-center"
 			>
 				<RevealButton
 					phase={phase}
@@ -252,15 +270,24 @@ export function Arena() {
 	return (
 		<div
 			data-testid="page-arena"
-			className="flex min-h-dvh flex-col bg-[#09090b] text-zinc-100 [html.light_&]:bg-zinc-100 [html.light_&]:text-zinc-900"
+			className="flex min-h-dvh flex-col bg-[#09090b] bg-[radial-gradient(ellipse_70%_40%_at_50%_-5%,rgba(52,211,153,0.08),transparent_70%)] text-zinc-100 [html.light_&]:bg-zinc-100 [html.light_&]:bg-[radial-gradient(ellipse_70%_40%_at_50%_-5%,rgba(16,185,129,0.12),transparent_70%)] [html.light_&]:text-zinc-900"
 		>
-			<header className="flex items-center justify-between gap-2 border-b border-[#26262c] px-3 py-2 sm:px-5 [html.light_&]:border-zinc-200 [html.light_&]:bg-white">
+			<header className="sticky top-0 z-40 border-b border-[#26262c] bg-[#09090b]/85 backdrop-blur-md [html.light_&]:border-zinc-200 [html.light_&]:bg-white/85">
+				<div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-2 px-4 py-2.5 sm:px-6">
 				<Link
 					to="/"
 					aria-label="Pointly — página inicial"
-					className="font-mono text-sm font-bold tracking-[0.12em] uppercase focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:outline-none"
+					className="flex items-center gap-2.5 rounded-md focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:outline-none"
 				>
-					Pointly
+					<span aria-hidden="true" className="grid grid-cols-2 gap-[3px]">
+						<span className="h-2 w-2 rounded-[3px] bg-zinc-100 [html.light_&]:bg-zinc-900" />
+						<span className="h-2 w-2 rounded-[3px] bg-zinc-100 [html.light_&]:bg-zinc-900" />
+						<span className="h-2 w-2 rounded-[3px] bg-zinc-100 [html.light_&]:bg-zinc-900" />
+						<span className="h-2 w-2 rounded-[3px] bg-emerald-400" />
+					</span>
+					<span className="font-mono text-sm font-bold tracking-[0.12em] uppercase">
+						Pointly
+					</span>
 				</Link>
 				<div className="flex items-center gap-2">
 				<Badge
@@ -269,7 +296,7 @@ export function Arena() {
 					aria-label={
 						code ? `Código da sala ${code}` : "Aguardando código da sala"
 					}
-					className="px-2 py-1 font-mono font-bold tracking-[0.2em] tabular-nums"
+					className="px-2.5 py-1.5 font-mono text-[13px] font-bold tracking-[0.2em] tabular-nums"
 				>
 					{code || "—"}
 				</Badge>
@@ -282,10 +309,15 @@ export function Arena() {
 							theme === "dark" ? "Mudar para tema claro" : "Mudar para tema escuro"
 						}
 						title={theme === "dark" ? "Tema claro" : "Tema escuro"}
-						className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg border border-[#26262c] text-base [html.light_&]:border-zinc-300"
+						className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#2b2b31] text-zinc-300 transition-colors hover:border-zinc-500 hover:text-zinc-100 [html.light_&]:border-zinc-300 [html.light_&]:text-zinc-600 [html.light_&]:hover:text-zinc-900"
 					>
-						<span aria-hidden="true">{theme === "dark" ? "☀" : "☾"}</span>
+						{theme === "dark" ? (
+							<Sun aria-hidden="true" className="h-5 w-5" />
+						) : (
+							<Moon aria-hidden="true" className="h-5 w-5" />
+						)}
 					</button>
+				</div>
 				</div>
 			</header>
 
@@ -295,9 +327,14 @@ export function Arena() {
 					: "Sala · rodada atual"}
 			</h1>
 
-			<main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center gap-5 px-4 py-6 sm:px-6 md:max-w-5xl">
-				<div className="flex w-full items-center justify-center">
+			<main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center gap-6 px-4 py-6 sm:px-6">
+				<div className="flex w-full flex-wrap items-center justify-center gap-2">
 					<TimerPill />
+					{playerCount > 0 && (
+						<span className="font-mono text-[11px] tracking-[0.16em] text-zinc-500 uppercase [html.light_&]:text-zinc-500">
+							{votedCount}/{playerCount} votaram
+						</span>
+					)}
 				</div>
 
 				{isOnlyPlayer && code && <EmptyOverlay code={code} />}
@@ -314,8 +351,8 @@ export function Arena() {
 					<>
 						{centerBlock}
 						<section
-							aria-label="Jogadores na sala"
-							className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2"
+							aria-label={`Jogadores na sala (${playerCount})`}
+							className="grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2"
 						>
 							{(sala?.players ?? []).map((p) => (
 								<SeatCard
@@ -330,11 +367,27 @@ export function Arena() {
 					</>
 				)}
 
-				{faceUp && <StatsPill consensus={consensus} votes={roundVotes} />}
+				{faceUp && (
+					<div className="w-full max-w-2xl">
+						<StatsPill consensus={consensus} votes={roundVotes} />
+					</div>
+				)}
 
-				<div data-testid="arena-deck-wrapper" className="w-full">
+				<section
+					aria-label="Sua votação"
+					data-testid="arena-deck-wrapper"
+					className="w-full rounded-2xl border border-[#232329] bg-[#0e0e12]/80 px-4 pt-4 pb-5 sm:px-6 [html.light_&]:border-zinc-200 [html.light_&]:bg-white"
+				>
+					<div className="mb-3 flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-center">
+						<h2 className="text-sm font-medium text-zinc-200 [html.light_&]:text-zinc-900">
+							{faceUp ? "Ajuste seu voto ou aguarde a próxima rodada" : "Qual é a sua estimativa?"}
+						</h2>
+						<p className="font-mono text-[11px] tracking-[0.08em] text-zinc-500">
+							R revela · N nova rodada
+						</p>
+					</div>
 					<Deck currentVote={myVote} onSelect={handleCardSelect} />
-				</div>
+				</section>
 			</main>
 
 			<ProjectileLayer />
