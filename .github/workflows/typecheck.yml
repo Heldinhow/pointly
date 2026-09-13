@@ -1,0 +1,41 @@
+name: Typecheck
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: typecheck-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tsc:
+    name: TypeScript (${{ matrix.workspace }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace:
+          - apps/web
+          - apps/server
+          - packages/shared
+          - tests/e2e
+    defaults:
+      run:
+        working-directory: ${{ matrix.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.0
+
+      - name: Install dependencies
+        working-directory: ./
+        run: bun install --frozen-lockfile
+
+      - name: tsc --noEmit
+        run: bun run typecheck
