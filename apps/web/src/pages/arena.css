@@ -136,7 +136,6 @@
 .arena-reveal [data-slot="card-panel"] > div > span {
   display: none;
 }
-.arena-reveal [data-testid="reveal-ready"],
 .arena-reveal [data-testid="reveal-done"] {
   font-size: 11px;
   color: #d2e4d8;
@@ -219,7 +218,6 @@
   width: 100%;
   min-width: 0;
   font-size: 11px;
-  background: var(--card);
 }
 .arena-invite [data-slot="card-panel"] > div:first-child button {
   flex: 1;

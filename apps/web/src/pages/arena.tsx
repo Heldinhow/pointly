@@ -774,22 +774,15 @@ export function ArenaPage(): React.ReactElement {
                   {isRevealed
                     ? "Votos revelados. Discutam as diferenças."
                     : isReadyToReveal
-                      ? "Todos votaram. Escolham o momento de revelar."
+                      ? sala.timer > 0
+                        ? "Todos votaram · no zero, revela sozinho."
+                        : "Todos votaram."
                       : canReveal
                         ? "Com votos na mesa, qualquer player pode revelar."
                         : "Aguardando o primeiro voto para liberar o reveal."}
                 </CardDescription>
               </CardHeader>
               <CardPanel className="flex flex-col gap-3">
-                {isReadyToReveal ? (
-                  <p
-                    className="text-sm font-medium text-success-foreground"
-                    data-testid="reveal-ready"
-                  >
-                    Pronta para revelar · todos votaram. No zero, revela
-                    sozinho.
-                  </p>
-                ) : null}
                 {!isRevealed ? (
                   <div className="flex flex-wrap items-center gap-2">
                     <Button

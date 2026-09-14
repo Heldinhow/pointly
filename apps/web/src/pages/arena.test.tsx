@@ -444,7 +444,6 @@ describe("ArenaPage (ticket 06 — Timer e Reveal)", () => {
 		expect(screen.getByTestId("reveal-hint").textContent).toMatch(
 			/Aguardando o primeiro voto/,
 		);
-		expect(screen.queryByTestId("reveal-ready")).toBeNull();
 
 		fireEvent.keyDown(window, { key: "r" });
 		expect(socket.sentReveals).toBe(0);
@@ -527,8 +526,8 @@ describe("ArenaPage (ticket 06 — Timer e Reveal)", () => {
 		expect(screen.getByTestId("round-label").textContent).toMatch(
 			/Pronta para revelar/,
 		);
-		expect(screen.getByTestId("reveal-ready").textContent).toMatch(
-			/Pronta para revelar/,
+		expect(screen.getByTestId("reveal-hint").textContent).toMatch(
+			/Todos votaram.*no zero, revela sozinho/,
 		);
 		// Sem auto-reveal: continua pré-reveal com botão habilitado.
 		expect(screen.queryByTestId("reveal-done")).toBeNull();

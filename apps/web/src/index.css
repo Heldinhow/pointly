@@ -3,6 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+	color-scheme: light;
 	--font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
 	--font-mono: "Geist Mono", ui-monospace, monospace;
 	/* SSOT de cor (ex-brand.css): paleta verde produto. Não duplicar em outro arquivo. */
@@ -58,6 +59,7 @@
 
 .dark {
 	/* SSOT escuro (ex-brand.css). Não duplicar em outro arquivo. */
+	color-scheme: dark;
 	--accent: #2a3c30;
 	--accent-foreground: #ebf0e9;
 	--background: #141d19;

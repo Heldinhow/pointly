@@ -36,10 +36,10 @@ const SEATS = [
   [5, 50],
 ];
 const DEMO_SEATS = [
-  [27, 12],
-  [73, 12],
-  [73, 88],
-  [27, 88],
+  [27, 9],
+  [73, 9],
+  [73, 91],
+  [27, 91],
 ];
 
 export function PokerTable({
@@ -69,6 +69,8 @@ export function PokerTable({
           const isSelf = player?.id === playerId;
           const isHost = player?.id === hostId;
           const disconnected = player?.status === "disconnected";
+          const hideStatus =
+            !!player && !disconnected && revealed && player.value != null;
           return (
             <li
               key={player?.seatIndex ?? index}
@@ -110,19 +112,21 @@ export function PokerTable({
                       você
                     </span>
                   )}
-                  <span className="poker-status">
-                    {disconnected ? (
-                      "Desconectado"
-                    ) : revealed ? (
-                      (player.value ?? "Sem voto")
-                    ) : player.hasVoted ? (
-                      <>
-                        <CheckIcon aria-hidden="true" /> Votou
-                      </>
-                    ) : (
-                      "Aguardando"
-                    )}
-                  </span>
+                  {hideStatus ? null : (
+                    <span className="poker-status">
+                      {disconnected ? (
+                        "Desconectado"
+                      ) : revealed ? (
+                        (player.value ?? "Sem voto")
+                      ) : player.hasVoted ? (
+                        <>
+                          <CheckIcon aria-hidden="true" /> Votou
+                        </>
+                      ) : (
+                        "Aguardando"
+                      )}
+                    </span>
+                  )}
                   {player.hasVoted && (
                     <span
                       className={cn(

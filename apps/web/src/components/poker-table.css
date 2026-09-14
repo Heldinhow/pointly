@@ -6,6 +6,7 @@
 }
 .poker-felt {
   position: absolute;
+  z-index: 0;
   inset: 64px 45px;
   border: 10px solid var(--table-rail);
   border-radius: 180px;
@@ -43,6 +44,7 @@
 }
 .poker-seat {
   position: absolute;
+  z-index: 1;
   left: var(--seat-x);
   top: var(--seat-y);
   width: 84px;
@@ -56,6 +58,7 @@
 .poker-avatar {
   display: grid;
   position: relative;
+  isolation: isolate;
   place-items: center;
   width: 44px;
   height: 44px;
@@ -74,19 +77,30 @@
 }
 .poker-crown {
   position: absolute;
-  width: 15px;
-  height: 15px;
-  top: -10px;
-  right: -5px;
+  width: 16px;
+  height: 16px;
+  top: -12px;
+  right: -9px;
+  z-index: 4;
+  padding: 2px;
   color: var(--primary);
   background: var(--card);
-  border-radius: 3px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgb(20 40 30 / 25%);
 }
 .poker-name {
+  position: relative;
+  z-index: 3;
   margin-top: 6px;
   font-size: 12px;
   font-weight: 600;
+  line-height: 1.5;
   max-width: 82px;
+  padding: 0 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -97,8 +111,13 @@
   gap: 2px;
   font-size: 10px;
   color: var(--muted-foreground);
-  margin-top: 3px;
+  margin-top: 4px;
   white-space: nowrap;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 1px 7px;
+  line-height: 1.4;
 }
 .poker-status svg {
   width: 10px;
@@ -109,11 +128,15 @@
   top: -11px;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 3;
   font-size: 9px;
   padding: 1px 5px;
   background: var(--card);
   border-radius: 4px;
   color: var(--primary);
+}
+.poker-seat--self:has(.poker-crown) .poker-you {
+  left: 38%;
 }
 .poker-seat--empty .poker-avatar {
   width: 35px;
@@ -137,8 +160,9 @@
 }
 .poker-played-card {
   position: absolute;
-  right: -1px;
-  top: 0;
+  right: -8px;
+  top: 4px;
+  z-index: 2;
   display: grid;
   place-items: center;
   width: 27px;
@@ -240,7 +264,8 @@
     font-size: 11px;
   }
   .poker-played-card {
-    right: -2px;
+    right: -7px;
+    top: 2px;
     width: 22px;
     height: 32px;
   }
