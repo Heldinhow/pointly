@@ -1,383 +1,1340 @@
-/**
- * Arena — mesa de votação (Spell dark, coluna única responsiva).
- *
- * - Lê `?code` + sessionStorage (`pointly.nick`); sem nick → `/join` (preserva code)
- * - Conecta via `connectArena` (loops): hello por (re)connect + ticker local
- * - Header: SharePill (código) + theme toggle
- * - Centro: copy por fase + resultado compacto pós-reveal + RevealButton
- * - Desktop: ArenaTable em órbita; mobile: votação antes da lista
- * - Deck (9) + TimerPill (vira "Em discussão" pós-reveal)
- * - R/N via mesmo clique do botão (confirmação unificada); ignora inputs/repeat
- * - Projéteis pós-reveal via ProjectileLayer
- * - Espelhos e2e: `__POINTLY_SALA__/__POINTLY_CONSENSUS__/__POINTLY_PLAYER_ID__`
- *   + DEV `__POINTLY_TEST__ { setSala, reset }`
- */
-import type { ProjectileType, SalaState, Vote } from "@planning-poker/shared";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Moon, Sun } from "lucide-react";
-import { Deck } from "@/components/arena/deck";
-import { EmptyOverlay } from "@/components/arena/empty-overlay";
-import { ArenaTable } from "@/components/arena/arena-table";
-import { ProjectileLayer } from "@/components/arena/projectiles";
-import { RevealButton } from "@/components/arena/reveal-button";
-import { SeatCard } from "@/components/arena/seat-card";
-import { SharePill } from "@/components/arena/share-pill";
-import { StatsPill } from "@/components/arena/stats-pill";
-import { TimerPill } from "@/components/arena/timer-pill";
 import {
-	connectArena,
-	readStoredCode,
-	readStoredNick,
-	type ArenaConnection,
-} from "@/lib/loops";
-import { getOrCreateUUID } from "@/lib/identity";
-import { useDesktop } from "@/lib/use-desktop";
-import { useSalaStore } from "@/store/sala";
-import { useTheme } from "@/theme/theme";
+  CheckIcon,
+  CopyIcon,
+  EyeIcon,
+  EyeOffIcon,
+  LogOutIcon,
+  RotateCcwIcon,
+  TimerIcon,
+  UsersIcon,
+} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardPanel,
+  CardTitle,
+} from "@/components/ui/card";
+import { Deck } from "@/components/deck";
+import { Input } from "@/components/ui/input";
+import { PokerTable } from "@/components/poker-table";
+import "./arena.css";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  computeConsensus,
+  formatMean,
+  formatMedian,
+  formatRange,
+  groupVotes,
+  isUnanimous,
+  voteToNumber,
+} from "@/lib/deck";
+import type { Phase, Player, Vote } from "@/lib/protocol";
+import {
+  type ProjectileOutcome,
+  type ProjectileThrownPayload,
+  type ProjectileType,
+} from "@/lib/protocol";
+import { useSession } from "@/store/session";
+import { JoinError, friendlyJoinMessage } from "@/lib/errors";
+import { clearSession, loadSession } from "@/lib/identity";
+import { resolveWsUrl } from "@/lib/api";
+import { PointlySocket } from "@/lib/ws-client";
 
-function isTypingTarget(e: KeyboardEvent): boolean {
-	const t = e.target as HTMLElement | null;
-	if (!t) return false;
-	return (
-		t instanceof window.HTMLInputElement ||
-		t instanceof window.HTMLTextAreaElement ||
-		t.isContentEditable
-	);
+/** Limite duro do domínio: 12 assentos por sala. */
+export const SEAT_COUNT = 12;
+
+/**
+ * Janela da confirmação dupla de nova rodada: a primeira ativação (botão
+ * ou N) arma o estado de confirmação; sem a segunda ativação a tempo o
+ * comando volta ao estado inicial sem trafegar nada.
+ */
+export const NEW_ROUND_CONFIRM_TIMEOUT_MS = 5000;
+
+/**
+ * Issue #157 · Projéteis pós-reveal (7 interações com cooldown de 5s).
+ * Catálogo com rótulos pt-BR e emojis (origem e destino sempre explícitos
+ * no feed; desfecho · hit/dodge/deflect · vem do servidor via broadcast).
+ */
+export const PROJECTILE_COOLDOWN_MS = 5000;
+const PROJECTILE_FEED_LIMIT = 5;
+
+export const PROJECTILE_CATALOG: ReadonlyArray<{
+  type: ProjectileType;
+  label: string;
+  emoji: string;
+}> = [
+  { type: "paper_ball", label: "Bola de papel", emoji: "🧻" },
+  { type: "tomato", label: "Tomate", emoji: "🍅" },
+  { type: "coffee", label: "Café", emoji: "☕" },
+  { type: "rubber_duck", label: "Pato", emoji: "🦆" },
+  { type: "star", label: "Estrela", emoji: "⭐" },
+  { type: "heart", label: "Coração", emoji: "❤️" },
+  { type: "claps", label: "Aplausos", emoji: "👏" },
+];
+
+const PROJECTILE_OUTCOME_LABEL: Record<ProjectileOutcome, string> = {
+  hit: "acertou em cheio",
+  dodge: "foi desviado",
+  deflect: "foi rebatido",
+};
+
+export interface ProjectileFeedItem extends ProjectileThrownPayload {
+  key: number;
+  senderNick: string;
+  targetNick: string;
 }
 
-export function Arena() {
-	const [searchParams] = useSearchParams();
-	const navigate = useNavigate();
-	const { theme, toggle } = useTheme();
-	// Desktop = mesa com assentos em órbita; mobile = grade (nunca os dois:
-	// testids `seat-*` precisam ser únicos; jsdom cai na grade).
-	const isDesktop = useDesktop();
+/** Texto do feed com origem e destino claros (visível para a Sala). */
+export function projectileFeedText(item: {
+  senderNick: string;
+  targetNick: string;
+  projectileType: ProjectileType;
+  outcome: ProjectileOutcome;
+}): string {
+  const catalog = PROJECTILE_CATALOG.find(
+    (c) => c.type === item.projectileType,
+  );
+  const emoji = catalog ? `${catalog.emoji} ` : "";
+  const label = catalog?.label ?? item.projectileType;
+  const outcome = PROJECTILE_OUTCOME_LABEL[item.outcome] ?? item.outcome;
+  return `${item.senderNick} jogou ${emoji}${label} em ${item.targetNick} · ${outcome}.`;
+}
 
-	const urlCode = (searchParams.get("code") || "").toUpperCase();
-	const [nick] = useState<string>(() => readStoredNick() ?? "");
-	// UUID validado (regenera se inválido) — mesma chave da join page.
-	const [uuid] = useState<string>(getOrCreateUUID);
-	const connRef = useRef<ArenaConnection | null>(null);
-	const revealRef = useRef<HTMLButtonElement>(null);
+function resolveNick(
+  players: readonly Player[],
+  playerId: string,
+  fallback: string,
+): string {
+  return players.find((p) => p.id === playerId)?.nick ?? fallback;
+}
 
-	const sala = useSalaStore((s) => s.sala);
-	const currentPlayerId = useSalaStore((s) => s.currentPlayerId);
-	const consensus = useSalaStore((s) => s.consensus);
+const PHASE_LABEL: Record<Phase, string> = {
+  idle: "Aguardando votos",
+  voting: "Votando",
+  revealable: "Pronta para revelar",
+  revealed: "Revelada",
+};
 
-	// Sem nick → volta pro join preservando o code
-	useEffect(() => {
-		if (!nick) {
-			const code = urlCode || readStoredCode() || "";
-			navigate(code ? `/join?code=${code}` : "/join", { replace: true });
-		}
-	}, [nick, urlCode, navigate]);
+function phaseLabel(phase: Phase): string {
+  return PHASE_LABEL[phase] ?? phase;
+}
 
-	// Conexão única (StrictMode desligado no main — sem remount quebrando o WS)
-	useEffect(() => {
-		if (!nick || !uuid) return;
-		const conn = connectArena({ nick, code: urlCode, uuid, navigate });
-		connRef.current = conn;
-		return () => {
-			connRef.current = null;
-			conn.close();
-		};
-	}, [nick, urlCode, uuid, navigate]);
+/** Timer crítico na reta final (espelha `Sala.isCritical` do servidor). */
+function isTimerCritical(phase: Phase, timer: number): boolean {
+  return (
+    (phase === "voting" || phase === "revealable") && timer > 0 && timer <= 30
+  );
+}
 
-	// Guard de saída com sala ativa (reload/fechar aba)
-	useEffect(() => {
-		const onBeforeUnload = (e: BeforeUnloadEvent) => {
-			if (useSalaStore.getState().sala !== null) {
-				e.preventDefault();
-				e.returnValue = "";
-			}
-		};
-		window.addEventListener("beforeunload", onBeforeUnload);
-		return () => window.removeEventListener("beforeunload", onBeforeUnload);
-	}, []);
+function isTypingTarget(event: KeyboardEvent): boolean {
+  const target = event.target as
+    | (HTMLElement & {
+        tagName?: string;
+      })
+    | null;
+  if (!target) return false;
+  // Tag check funciona no browser e no jsdom (sem depender de globals
+  // como HTMLInputElement, ausentes no preload de testes).
+  const tag = (target.tagName ?? "").toUpperCase();
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+  if (
+    typeof (target as HTMLElement).isContentEditable === "boolean" &&
+    (target as HTMLElement).isContentEditable
+  ) {
+    return true;
+  }
+  return false;
+}
 
-	// Espelhos e2e no window
-	useEffect(() => {
-		const w = window as unknown as Record<string, unknown>;
-		const sync = () => {
-			const st = useSalaStore.getState();
-			w.__POINTLY_SALA__ = st.sala ?? undefined;
-			w.__POINTLY_CONSENSUS__ = st.consensus ?? undefined;
-			w.__POINTLY_PLAYER_ID__ = st.currentPlayerId;
-		};
-		sync();
-		const unsub = useSalaStore.subscribe(sync);
-		try {
-			if (import.meta.env.DEV) {
-				w.__POINTLY_TEST__ = {
-					setSala: (s: SalaState) => useSalaStore.getState().setSala(s),
-					reset: () => useSalaStore.getState().reset(),
-				};
-			}
-		} catch {
-			// import.meta indisponível fora do Vite — espelhos já bastam
-		}
-		return () => {
-			unsub();
-			try {
-				delete w.__POINTLY_SALA__;
-				delete w.__POINTLY_CONSENSUS__;
-				delete w.__POINTLY_PLAYER_ID__;
-				delete w.__POINTLY_TEST__;
-			} catch {
-				// ignore
-			}
-		};
-	}, []);
+/** Envia `reveal_votes` pelo socket da sessão (qualquer Player pode revelar). */
+function sendRevealThroughSession(): boolean {
+  const socket = useSession.getState().socket as unknown as {
+    sendRevealVotes?: () => boolean;
+  } | null;
+  if (!socket || typeof socket.sendRevealVotes !== "function") return false;
+  try {
+    return socket.sendRevealVotes();
+  } catch {
+    return false;
+  }
+}
 
-	const me = useMemo(
-		() => sala?.players.find((p) => p.id === currentPlayerId) ?? null,
-		[sala, currentPlayerId],
-	);
-	const myVote: Vote | null = me?.value ?? null;
-	const votedCount = useMemo(
-		() => sala?.players.filter((p) => p.hasVoted).length ?? 0,
-		[sala],
-	);
-	const roundVotes = useMemo(
-		() =>
-			(sala?.players ?? [])
-				.map((p) => p.value)
-				.filter((v): v is NonNullable<typeof v> => v !== null),
-		[sala],
-	);
-	const phase = sala?.phase ?? "idle";
-	const faceUp = phase === "revealed";
-	const playerCount = sala?.players.length ?? 0;
-	const isOnlyPlayer =
-		playerCount === 1 && sala?.players[0]?.id === currentPlayerId;
-	const code = sala?.code ?? urlCode;
+/** Envia `start_new_round` pelo socket da sessão (qualquer Player pode abrir). */
+function sendNewRoundThroughSession(): boolean {
+  const socket = useSession.getState().socket as unknown as {
+    sendStartNewRound?: () => boolean;
+  } | null;
+  if (!socket || typeof socket.sendStartNewRound !== "function") return false;
+  try {
+    return socket.sendStartNewRound();
+  } catch {
+    return false;
+  }
+}
 
-	const tableCopy =
-		faceUp
-			? "Votos revelados."
-			: playerCount <= 1
-			? "Tem lugar para o time."
-			: votedCount === playerCount && playerCount > 0
-				? "Todos votaram."
-				: "Cada um no seu tempo.";
-	const tableSub =
-		faceUp
-			? "Conversem sobre as diferenças."
-			: playerCount <= 1
-			? "Convide alguém para estimar com você."
-			: votedCount === playerCount && playerCount > 0
-				? "Revele agora ou aguarde — no zero, revela sozinho."
-				: `${votedCount} de ${playerCount} pessoas votaram`;
+/** Envia `throw_projectile` pelo socket da sessão (pós-reveal, issue #157). */
+function sendProjectileThroughSession(
+  targetPlayerId: string,
+  projectileType: ProjectileType,
+): boolean {
+  const socket = useSession.getState().socket as unknown as {
+    sendThrowProjectile?: (
+      targetPlayerId: string,
+      projectileType: ProjectileType,
+    ) => boolean;
+  } | null;
+  if (!socket || typeof socket.sendThrowProjectile !== "function") return false;
+  try {
+    return socket.sendThrowProjectile(targetPlayerId, projectileType);
+  } catch {
+    return false;
+  }
+}
 
-	const handleCardSelect = useCallback(
-		(value: Vote) => {
-			// Mesma carta = no-op client-side (server também suprime; evita round-trip)
-			if (value === myVote) return;
-			connRef.current?.castVote(value);
-		},
-		[myVote],
-	);
+async function copyText(text: string): Promise<void> {
+  const clipboard = navigator.clipboard;
+  if (clipboard && typeof clipboard.writeText === "function") {
+    await clipboard.writeText(text);
+    return;
+  }
+  // Fallback para contextos sem Async Clipboard API.
+  const area = document.createElement("textarea");
+  area.value = text;
+  area.setAttribute("readonly", "");
+  area.style.position = "absolute";
+  area.style.left = "-9999px";
+  document.body.appendChild(area);
+  area.select();
+  document.execCommand("copy");
+  document.body.removeChild(area);
+}
 
-	const handleReveal = useCallback(() => {
-		connRef.current?.requestReveal();
-	}, []);
+export function ArenaPage(): React.ReactElement {
+  const { code = "" } = useParams();
+  const navigate = useNavigate();
+  const sala = useSession((state) => state.sala);
+  const playerId = useSession((state) => state.playerId);
+  const nick = useSession((state) => state.nick);
+  const socket = useSession((state) => state.socket);
+  const disconnect = useSession((state) => state.disconnect);
 
-	const handleNewRound = useCallback(() => {
-		connRef.current?.requestNewRound();
-	}, []);
+  const [inviteHidden, setInviteHidden] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
+  const [connectionLost, setConnectionLost] = useState(false);
+  const [voteError, setVoteError] = useState<string | null>(null);
+  const [revealError, setRevealError] = useState<string | null>(null);
+  const [confirmingNewRound, setConfirmingNewRound] = useState(false);
+  const [newRoundError, setNewRoundError] = useState<string | null>(null);
+  // Issue #157 · Projéteis pós-reveal: alvo selecionado, erro de envio,
+  // cooldown client-side (espelho dos 5s do servidor) e feed de
+  // interações com origem/destino claros (broadcast para a Sala).
+  const [projectileTarget, setProjectileTarget] = useState<string | null>(null);
+  const [projectileError, setProjectileError] = useState<string | null>(null);
+  const [projectileCooldownUntil, setProjectileCooldownUntil] = useState(0);
+  const [projectileFeed, setProjectileFeed] = useState<ProjectileFeedItem[]>(
+    [],
+  );
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const projectileKeyRef = useRef(0);
+  // Ticket 09: F5 reconecta com o mesmo UUID a partir da sessão
+  // persistida (sem duplicar o Player · o servidor reidrata voto,
+  // assento e fase). `rejoinError` mantém a Arena legível com retry
+  // quando a sala sumiu (restart) ou a rede falhou.
+  const [rejoining, setRejoining] = useState(false);
+  const [rejoinError, setRejoinError] = useState<string | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
+  const rejoinKeyRef = useRef<string | null>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const newRoundTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Espelho mutável do `confirmingNewRound` para os handlers de teclado
+  // (o listener lê o valor fresco sem re-subscrever a cada render).
+  const confirmingRef = useRef(false);
+  confirmingRef.current = confirmingNewRound;
 
-	const handleThrow = useCallback(
-		(targetPlayerId: string, projectileType: ProjectileType) => {
-			connRef.current?.throwProjectile(targetPlayerId, projectileType);
-		},
-		[],
-	);
+  const routeCode = code.toUpperCase();
+  const sessionCode = sala?.code ?? "";
+  const hasSession =
+    sala !== null && socket !== null && sessionCode === routeCode;
 
-	// Teclado: R revela, N nova rodada (fora de inputs)
-	useEffect(() => {
-		const onKey = (e: KeyboardEvent) => {
-			if (e.repeat || e.metaKey || e.ctrlKey || e.altKey || isTypingTarget(e)) return;
-			const st = useSalaStore.getState();
-			const ph = st.sala?.phase ?? "idle";
-			const votes = st.sala?.players.filter((p) => p.hasVoted).length ?? 0;
-			if (e.key === "r" || e.key === "R") {
-				if ((ph === "voting" || ph === "revealable") && votes > 0) {
-					e.preventDefault();
-					revealRef.current?.click();
-				}
-			} else if (e.key === "n" || e.key === "N") {
-				if (ph === "revealed") {
-					e.preventDefault();
-					revealRef.current?.click();
-				}
-			}
-		};
-		window.addEventListener("keydown", onKey);
-		return () => window.removeEventListener("keydown", onKey);
-	}, []);
+  // Assina room_state no socket herdado da entrada: presença e votos ao
+  // vivo (<1s) sem recriar a conexão.
+  useEffect(() => {
+    if (!socket) return;
+    socket.setHandlers({
+      onRoomState: (next) => {
+        useSession.getState().updateSala(next);
+        // Reveal confirmado pelo servidor (manual ou auto no zero):
+        // limpa o erro de reveal pendente.
+        if (next.phase === "revealed") {
+          setRevealError(null);
+        } else if (confirmingRef.current) {
+          // Nova rodada confirmada (round incrementado, votos
+          // limpos, timer em 60s): volta ao estado inicial.
+          if (newRoundTimer.current) {
+            clearTimeout(newRoundTimer.current);
+            newRoundTimer.current = null;
+          }
+          setConfirmingNewRound(false);
+          setNewRoundError(null);
+        }
+      },
+      onClose: () => {
+        setConnectionLost(true);
+      },
+      onProjectileThrown: (event) => {
+        // Broadcast da Sala (issue #157): origem e destino claros
+        // para todos · remetente, alvo e quem só assiste veem o
+        // mesmo feed com o desfecho sorteado pelo servidor.
+        const current = useSession.getState().sala;
+        const players = current?.players ?? [];
+        projectileKeyRef.current += 1;
+        const item: ProjectileFeedItem = {
+          ...event,
+          key: projectileKeyRef.current,
+          senderNick: resolveNick(players, event.senderPlayerId, "Alguém"),
+          targetNick: resolveNick(players, event.targetPlayerId, "alguém"),
+        };
+        setProjectileFeed((prev) =>
+          [...prev, item].slice(-PROJECTILE_FEED_LIMIT),
+        );
+      },
+      onError: (_code, message) => {
+        const text = message || "Não foi possível completar a ação.";
+        // Erros de projétil (cooldown/arremesso) vão para o alerta
+        // de interações sem quebrar a sala (issue #157).
+        if (
+          /projectile|throw|cooldown|arremess|recarreg/i.test(text) ||
+          /projectile|throw|cooldown/i.test(_code)
+        ) {
+          setProjectileError(text);
+        } else if (
+          /new.?round|start_new|nova.?rodada/i.test(text) ||
+          /new.?round|start_new/i.test(_code)
+        ) {
+          if (newRoundTimer.current) {
+            clearTimeout(newRoundTimer.current);
+            newRoundTimer.current = null;
+          }
+          setConfirmingNewRound(false);
+          setNewRoundError(text);
+        } else if (/reveal/i.test(text) || /reveal/i.test(_code)) {
+          // Erros de reveal (invalid_phase com "reveal") vão para o
+          // alerta de reveal; o resto continua no alerta de voto.
+          setRevealError(text);
+        } else {
+          setVoteError(text || "Não foi possível registrar o voto.");
+        }
+      },
+    });
+  }, [socket]);
 
-	if (!nick) return null;
+  // Ticker local do timer: espelha o countdown do servidor (60s parados
+  // até o primeiro voto, contagem compartilhada depois). Cada navegador
+  // decrementa a partir do mesmo baseline do `room_state`, então os dois
+  // mostram o mesmo valor durante a contagem; o próximo `room_state`
+  // reconcilia (o servidor continua source of truth e dispara o
+  // auto-reveal no zero mesmo com faltantes).
+  useEffect(() => {
+    const id = setInterval(() => {
+      const current = useSession.getState().sala;
+      if (!current) return;
+      if (current.phase !== "voting" && current.phase !== "revealable") {
+        return;
+      }
+      if (current.timer <= 0) return;
+      const hasVotes =
+        current.players.some((p) => p.hasVoted) ||
+        Object.keys(current.votes ?? {}).length > 0;
+      // Sem nenhum voto a rodada fica parada nos 60s.
+      if (!hasVotes) return;
+      useSession
+        .getState()
+        .updateSala({ ...current, timer: current.timer - 1 });
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
 
-	const progressPct =
-		playerCount > 0 ? Math.round((votedCount / playerCount) * 100) : 0;
+  // Ticker do cooldown de projéteis (issue #157): força re-render a cada
+  // 500ms só enquanto há recarga ativa, para a contagem regressiva e a
+  // liberação dos botões acompanharem o relógio sem polling permanente.
+  useEffect(() => {
+    if (projectileCooldownUntil <= Date.now()) return;
+    const id = setInterval(() => {
+      setNowMs(Date.now());
+    }, 500);
+    return () => clearInterval(id);
+  }, [projectileCooldownUntil, nowMs]);
 
-	// Centro da mesa (desktop) = copy da rodada + progresso + reveal.
-	// No mobile o mesmo bloco vive na seção de status — uma instância por vez.
-	const centerBlock = (
-		<div className="w-full">
-			{isOnlyPlayer && code && !faceUp ? <EmptyOverlay code={code} /> : (
-			<section
-				aria-live="polite"
-				className="flex flex-col items-center gap-1.5 text-center"
-			>
-				<h2
-					data-testid="arena-table-copy"
-					className="max-w-[20ch] text-2xl font-medium tracking-tight text-balance"
-				>
-					{tableCopy}
-				</h2>
-				<p
-					data-testid="arena-table-sub"
-					className="max-w-[32ch] text-sm text-zinc-400 [html.light_&]:text-zinc-600"
-				>
-					{tableSub}
-				</p>
-				{!faceUp && playerCount > 1 && (
-					<div
-						aria-hidden="true"
-						className="mt-2 h-1 w-40 overflow-hidden rounded-full bg-white/10 [html.light_&]:bg-zinc-900/10"
-					>
-						<div
-							className="h-full rounded-full bg-emerald-400 transition-[width] duration-300"
-							style={{ width: `${progressPct}%` }}
-						/>
-					</div>
-				)}
-			</section>
-			)}
-			{faceUp && <div className="mt-3"><StatsPill consensus={consensus} votes={roundVotes} compact /></div>}
-			<div
-				data-testid="arena-reveal-wrapper"
-				className="mt-4 flex justify-center"
-			>
-				<RevealButton
-					buttonRef={revealRef}
-					phase={phase}
-					votedCount={votedCount}
-					onReveal={handleReveal}
-					onNewRound={handleNewRound}
-				/>
-			</div>
-		</div>
-	);
+  // Atalho R revela (qualquer Player, após pelo menos um voto). Ignora
+  // inputs, repeat e modificadores · mesmo guard do botão.
+  useEffect(() => {
+    function onKey(event: KeyboardEvent): void {
+      if (event.repeat || event.metaKey || event.ctrlKey || event.altKey) {
+        return;
+      }
+      if (isTypingTarget(event)) return;
+      if (event.key !== "r" && event.key !== "R") return;
+      const current = useSession.getState().sala;
+      if (!current) return;
+      if (current.phase !== "voting" && current.phase !== "revealable") {
+        return;
+      }
+      const hasVotes =
+        current.players.some((p) => p.hasVoted) ||
+        Object.keys(current.votes ?? {}).length > 0;
+      // Sem nenhum voto o reveal fica indisponível (também no teclado).
+      if (!hasVotes) return;
+      event.preventDefault();
+      setRevealError(null);
+      const sent = sendRevealThroughSession();
+      if (!sent) {
+        setRevealError("Sem conexão com a sala. Recarregue para revelar.");
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
-	const deckBlock = (
-		<section
-			aria-label="Sua votação"
-			data-testid="arena-deck-wrapper"
-			className="w-full max-w-3xl border-t border-[#26262c] pt-4 pb-2 [html.light_&]:border-zinc-300"
-		>
-			<div className="mb-3 flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-center">
-				<h2 className="text-sm font-medium">
-					{faceUp ? "Você pode ajustar seu voto" : myVote !== null ? `Seu voto: ${myVote} · Você pode mudar de ideia` : "Qual é a sua estimativa?"}
-				</h2>
-				<p className="hidden text-xs text-zinc-400 sm:block [html.light_&]:text-zinc-600">
-					<kbd className="rounded border border-current/30 px-1 font-mono">{faceUp ? "N" : "R"}</kbd> {faceUp ? "nova rodada" : "revelar"}
-				</p>
-			</div>
-			<Deck currentVote={myVote} onSelect={handleCardSelect} />
-		</section>
-	);
+  // Atalho N pede/confirma nova rodada (qualquer Player, só após o
+  // reveal). Exige a mesma confirmação dupla do botão: a primeira
+  // ativação arma, a segunda dentro da janela envia; sem a segunda a
+  // tempo o comando volta ao estado inicial. Ignora inputs, repeat e
+  // modificadores · mesmo guard do botão.
+  useEffect(() => {
+    function onKey(event: KeyboardEvent): void {
+      if (event.repeat || event.metaKey || event.ctrlKey || event.altKey) {
+        return;
+      }
+      if (isTypingTarget(event)) return;
+      if (event.key !== "n" && event.key !== "N") return;
+      const current = useSession.getState().sala;
+      if (!current || current.phase !== "revealed") return;
+      event.preventDefault();
+      if (!confirmingRef.current) {
+        setNewRoundError(null);
+        setConfirmingNewRound(true);
+        if (newRoundTimer.current) clearTimeout(newRoundTimer.current);
+        newRoundTimer.current = setTimeout(() => {
+          newRoundTimer.current = null;
+          setConfirmingNewRound(false);
+        }, NEW_ROUND_CONFIRM_TIMEOUT_MS);
+        return;
+      }
+      if (newRoundTimer.current) {
+        clearTimeout(newRoundTimer.current);
+        newRoundTimer.current = null;
+      }
+      setConfirmingNewRound(false);
+      setNewRoundError(null);
+      const sent = sendNewRoundThroughSession();
+      if (!sent) {
+        setNewRoundError(
+          "Sem conexão com a sala. Recarregue para abrir nova rodada.",
+        );
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
-	return (
-		<div
-			data-testid="page-arena"
-			className="flex min-h-dvh flex-col bg-[#09090b] bg-[radial-gradient(ellipse_70%_40%_at_50%_-5%,rgba(52,211,153,0.08),transparent_70%)] text-zinc-100 [html.light_&]:bg-zinc-100 [html.light_&]:bg-[radial-gradient(ellipse_70%_40%_at_50%_-5%,rgba(16,185,129,0.12),transparent_70%)] [html.light_&]:text-zinc-900"
-		>
-			<header className="sticky top-0 z-40 border-b border-[#26262c] bg-[#09090b] [html.light_&]:border-zinc-200 [html.light_&]:bg-white">
-				<div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-2 px-4 py-2.5 sm:px-6">
-				<Link
-					to="/"
-					aria-label="Pointly — página inicial"
-					className="flex items-center gap-2.5 rounded-md focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:outline-none"
-				>
-					<span aria-hidden="true" className="grid grid-cols-2 gap-[3px]">
-						<span className="h-2 w-2 rounded-[3px] bg-zinc-100 [html.light_&]:bg-zinc-900" />
-						<span className="h-2 w-2 rounded-[3px] bg-zinc-100 [html.light_&]:bg-zinc-900" />
-						<span className="h-2 w-2 rounded-[3px] bg-zinc-100 [html.light_&]:bg-zinc-900" />
-						<span className="h-2 w-2 rounded-[3px] bg-emerald-400" />
-					</span>
-					<span className="font-mono text-sm font-bold tracking-[0.12em] uppercase">
-						Pointly
-					</span>
-				</Link>
-				<div className="flex items-center gap-2">
-					<SharePill code={code} />
-					<button
-						type="button"
-						data-testid="theme-toggle"
-						onClick={toggle}
-						aria-label={
-							theme === "dark" ? "Mudar para tema claro" : "Mudar para tema escuro"
-						}
-						title={theme === "dark" ? "Tema claro" : "Tema escuro"}
-						className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#2b2b31] text-zinc-300 transition-colors hover:border-zinc-500 hover:text-zinc-100 [html.light_&]:border-zinc-300 [html.light_&]:text-zinc-600 [html.light_&]:hover:text-zinc-900"
-					>
-						{theme === "dark" ? (
-							<Sun aria-hidden="true" className="h-5 w-5" />
-						) : (
-							<Moon aria-hidden="true" className="h-5 w-5" />
-						)}
-					</button>
-				</div>
-				</div>
-			</header>
+  useEffect(() => {
+    return () => {
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      if (newRoundTimer.current) clearTimeout(newRoundTimer.current);
+    };
+  }, []);
 
-			<h1 className="sr-only">
-				{code
-					? `Sala ${code} · rodada ${String(sala?.round ?? 1).padStart(2, "0")}`
-					: "Sala · rodada atual"}
-			</h1>
+  // Ticket 09: sem sessão em memória, tenta recuperar via sessão
+  // persistida (F5 no meio da votação mantém voto, assento e fase sem
+  // duplicar o Player · o `hello` reusa o mesmo UUID e o servidor
+  // reidrata). Sem sessão persistida para esta rota, volta para a
+  // entrada com o código já preenchido (convite entra direto na sala).
+  // Sala inexistente (restart do servidor) limpa a sessão e volta.
+  useEffect(() => {
+    if (hasSession) return;
+    const target = routeCode ? `/join?code=${routeCode}` : "/join";
+    const persisted = loadSession();
+    if (!persisted || persisted.code !== routeCode) {
+      navigate(target, { replace: true });
+      return;
+    }
+    const key = `${routeCode}:${retryNonce}`;
+    if (rejoinKeyRef.current === key) return;
+    rejoinKeyRef.current = key;
+    let cancelled = false;
+    let liveSocket: PointlySocket | null = null;
+    setRejoining(true);
+    setRejoinError(null);
+    void (async () => {
+      const { uuid } = useSession.getState();
+      const socket = new PointlySocket({
+        onRoomState: (next) => {
+          useSession.getState().updateSala(next);
+        },
+      });
+      liveSocket = socket;
+      try {
+        const welcome = await socket.connect(resolveWsUrl(), {
+          uuid,
+          nick: persisted.nick,
+          code: persisted.code,
+        });
+        if (cancelled) {
+          socket.close({ silent: true });
+          return;
+        }
+        useSession.getState().setConnected({
+          nick: persisted.nick,
+          code: welcome.sala.code,
+          playerId: welcome.playerId,
+          role: welcome.role,
+          sala: welcome.sala,
+          socket,
+        });
+      } catch (error) {
+        if (cancelled) return;
+        if (
+          error instanceof JoinError &&
+          error.code === "sala_nao_encontrada"
+        ) {
+          try {
+            clearSession();
+          } catch {
+            // Storage indisponível · segue para a entrada.
+          }
+          navigate(target, { replace: true });
+          return;
+        }
+        const message =
+          error instanceof JoinError
+            ? friendlyJoinMessage(error.code, error.message)
+            : "Algo deu errado. Tente de novo.";
+        setRejoinError(message);
+      } finally {
+        if (!cancelled) setRejoining(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      // Remount do StrictMode antes do welcome: libera nova tentativa;
+      // após conectado o socket vive no store e não deve ser derrubado.
+      if (useSession.getState().socket === null) {
+        if (rejoinKeyRef.current === key) rejoinKeyRef.current = null;
+      }
+      try {
+        // Só fecha o socket ainda órfão (pré-welcome). Pós-welcome o
+        // socket está no store e pertence à sessão.
+        if (useSession.getState().socket !== liveSocket) {
+          liveSocket?.close({ silent: true });
+        }
+      } catch {
+        // Socket já morto · nada a fazer.
+      }
+    };
+  }, [hasSession, navigate, routeCode, retryNonce]);
 
-			<main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center gap-5 px-4 py-5 sm:px-6">
-				<div className="flex w-full flex-wrap items-center justify-center gap-2">
-					<TimerPill />
-				</div>
+  const inviteUrl = useMemo(() => {
+    if (!sala) return "";
+    return `${window.location.origin}/join?code=${sala.code}`;
+  }, [sala]);
 
-				{isDesktop ? (
-					<ArenaTable
-						players={sala?.players ?? []}
-						currentPlayerId={currentPlayerId}
-						faceUp={faceUp}
-						onThrow={handleThrow}
-						center={centerBlock}
-					/>
-				) : (
-					<>
-						{centerBlock}
-						{deckBlock}
-						<section
-							aria-label={`Jogadores na sala (${playerCount})`}
-							className="grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2"
-						>
-							{(sala?.players ?? []).map((p) => (
-								<SeatCard
-									key={p.id}
-									player={p}
-									isYou={p.id === currentPlayerId}
-									faceUp={faceUp}
-									onThrow={handleThrow}
-								/>
-							))}
-						</section>
-					</>
-				)}
+  if (!hasSession || !sala) {
+    if (rejoinError) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              Não foi possível reconectar
+            </CardTitle>
+            <CardDescription data-testid="rejoin-error">
+              {rejoinError}
+            </CardDescription>
+          </CardHeader>
+          <CardPanel className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              data-testid="rejoin-retry"
+              onClick={() => setRetryNonce((n) => n + 1)}
+            >
+              Tentar de novo
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                try {
+                  clearSession();
+                } catch {
+                  // Storage indisponível · só navega.
+                }
+                navigate(routeCode ? `/join?code=${routeCode}` : "/join", {
+                  replace: true,
+                });
+              }}
+            >
+              Voltar à entrada
+            </Button>
+          </CardPanel>
+        </Card>
+      );
+    }
+    return (
+      <Card>
+        <CardPanel className="flex items-center gap-3">
+          <Spinner
+            aria-label={rejoining ? "Reconectando" : "Carregando sala"}
+          />
+          <p className="text-sm text-muted-foreground">
+            {rejoining ? "Reconectando…" : "Carregando sala…"}
+          </p>
+        </CardPanel>
+      </Card>
+    );
+  }
 
-				{isDesktop && deckBlock}
-			</main>
+  const players = sala.players;
+  const connected = players.filter((p) => p.status === "connected");
+  const voted = connected.filter((p) => p.hasVoted).length;
+  const solo = connected.length <= 1;
+  const critical = isTimerCritical(sala.phase, sala.timer);
+  const showInvite = !inviteHidden || !solo;
+  const self = players.find((p) => p.id === playerId) ?? null;
+  const host = players.find((p) => p.id === sala.hostId) ?? null;
+  // Papel derivado do snapshot ao vivo (promoção de host chega via
+  // room_state) · nunca do `role` guardado no welcome.
+  const isSelfHost = playerId !== null && sala.hostId === playerId;
 
-			<ProjectileLayer />
-		</div>
-	);
+  const bySeat = new Map(players.map((p) => [p.seatIndex, p] as const));
+  const seats: Array<Player | null> = Array.from(
+    { length: SEAT_COUNT },
+    (_, index) => bySeat.get(index) ?? null,
+  );
+
+  const currentVote = (self?.value ?? null) as Vote | null;
+
+  // Resultados (issue 07): espelho client-side do consenso do servidor,
+  // calculado do `room_state` (source of truth). Pausa e ausência ficam
+  // fora dos cálculos; ½ vale 0,5 e 0 é voto válido.
+  const revealedVotes = Object.values(sala.votes ?? {});
+  const consensus = computeConsensus(revealedVotes);
+  const unanimousVotes = isUnanimous(revealedVotes);
+  const numericCount = revealedVotes.filter(
+    (vote) => voteToNumber(vote) !== null,
+  ).length;
+  const noNumerics = numericCount === 0;
+  const isSingleNumeric = numericCount === 1;
+  const isUnanimousSignal = numericCount >= 2 && unanimousVotes;
+  const voteGroups = groupVotes(revealedVotes);
+  const resultsAriaLabel = noNumerics
+    ? "Sem votos numéricos · pausa e ausência ficam fora dos cálculos"
+    : isSingleNumeric
+      ? `Voto único · média ${formatMean(consensus.mean)} · intervalo ${formatRange(consensus.range)}`
+      : isUnanimousSignal
+        ? `Votação unânime · média ${formatMean(consensus.mean)} · intervalo ${formatRange(consensus.range)}`
+        : `Estatísticas pós-reveal · média ${formatMean(consensus.mean)} · mediana ${formatMedian(consensus.median)} · intervalo ${formatRange(consensus.range)}`;
+
+  // Timer e Reveal (issue 06): qualquer Player revela após pelo menos um
+  // voto; sala "pronta para revelar" quando todos votaram sem revelar de
+  // imediato; auto-reveal no zero chega via room_state (phase revealed).
+  const totalVoted = players.filter((p) => p.hasVoted).length;
+  const canReveal =
+    totalVoted > 0 && (sala.phase === "voting" || sala.phase === "revealable");
+  const isReadyToReveal = sala.phase === "revealable";
+  const isRevealed = sala.phase === "revealed";
+
+  function handleReveal(): void {
+    if (!canReveal) return;
+    setRevealError(null);
+    const sent = sendRevealThroughSession();
+    if (!sent) {
+      setRevealError("Sem conexão com a sala. Recarregue para revelar.");
+    }
+  }
+
+  // Nova rodada (issue 08): qualquer Player abre após o reveal, mas com
+  // segunda ativação de confirmação (botão ou N). A primeira ativação
+  // arma e inicia a janela de expiração; sem a segunda a tempo o comando
+  // volta ao estado inicial sem trafegar nada.
+  function handleNewRoundRequest(): void {
+    if (!isRevealed) return;
+    if (!confirmingNewRound) {
+      setNewRoundError(null);
+      setConfirmingNewRound(true);
+      if (newRoundTimer.current) clearTimeout(newRoundTimer.current);
+      newRoundTimer.current = setTimeout(() => {
+        newRoundTimer.current = null;
+        setConfirmingNewRound(false);
+      }, NEW_ROUND_CONFIRM_TIMEOUT_MS);
+      return;
+    }
+    if (newRoundTimer.current) {
+      clearTimeout(newRoundTimer.current);
+      newRoundTimer.current = null;
+    }
+    setConfirmingNewRound(false);
+    setNewRoundError(null);
+    const sent = sendNewRoundThroughSession();
+    if (!sent) {
+      setNewRoundError(
+        "Sem conexão com a sala. Recarregue para abrir nova rodada.",
+      );
+    }
+  }
+
+  function handleCardSelect(value: Vote): void {
+    // Mesma carta em duplo clique é no-op: mantém o voto sem
+    // removê-lo e sem broadcast (espelha EVR-14 do servidor).
+    if (currentVote === value) return;
+    setVoteError(null);
+    const sent = socket?.sendCastVote(value) ?? false;
+    if (!sent) {
+      setVoteError("Sem conexão com a sala. Recarregue para votar.");
+    }
+  }
+
+  // Projéteis (issue #157): interações pós-reveal com cooldown de 5s.
+  // Alvos = demais players conectados (nunca a si mesmo). Durante a
+  // votação o envio fica indisponível com explicação; o segundo envio
+  // dentro do cooldown é recusado com feedback e sem quebrar a sala.
+  const availableTargets = players.filter(
+    (p) => p.id !== playerId && p.status === "connected",
+  );
+  const effectiveTargetId =
+    projectileTarget && availableTargets.some((p) => p.id === projectileTarget)
+      ? projectileTarget
+      : (availableTargets[0]?.id ?? null);
+  const effectiveTargetNick = effectiveTargetId
+    ? resolveNick(players, effectiveTargetId, "alvo")
+    : "alvo";
+  const projectileCooldownLeftMs = Math.max(0, projectileCooldownUntil - nowMs);
+  const isProjectileCooling = projectileCooldownLeftMs > 0;
+  const projectileCooldownSecs = Math.ceil(projectileCooldownLeftMs / 1000);
+
+  function handleThrowProjectile(projectileType: ProjectileType): void {
+    if (!isRevealed) return;
+    const remaining = projectileCooldownUntil - Date.now();
+    if (remaining > 0) {
+      // Segundo envio dentro do cooldown: recusa com feedback,
+      // sem trafegar nada e sem quebrar (acceptance #157).
+      setProjectileError(
+        `Recarregando · aguarde ${Math.ceil(remaining / 1000)}s para arremessar de novo.`,
+      );
+      return;
+    }
+    const targetId = effectiveTargetId;
+    if (!targetId) {
+      setProjectileError("Escolha outro player como alvo para interagir.");
+      return;
+    }
+    if (targetId === playerId) {
+      setProjectileError("Não é possível arremessar em si mesmo.");
+      return;
+    }
+    setProjectileError(null);
+    const sent = sendProjectileThroughSession(targetId, projectileType);
+    if (!sent) {
+      setProjectileError("Sem conexão com a sala. Recarregue para interagir.");
+      return;
+    }
+    setProjectileCooldownUntil(Date.now() + PROJECTILE_COOLDOWN_MS);
+    setNowMs(Date.now());
+  }
+
+  async function handleCopy(): Promise<void> {
+    setCopyError(false);
+    try {
+      await copyText(inviteUrl);
+      setCopied(true);
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 2500);
+    } catch {
+      setCopyError(true);
+    }
+  }
+
+  function handleLeave(): void {
+    // Ticket 09: saída voluntária avisa o servidor primeiro para a
+    // presença atualizar em tempo real nos demais (e promover novo
+    // Host quando o Host sai). F5 NÃO passa por aqui.
+    try {
+      (
+        socket as unknown as {
+          sendLeaveRoom?: () => boolean;
+        } | null
+      )?.sendLeaveRoom?.();
+    } catch {
+      // Falha de envio · o close abaixo ainda limpa localmente.
+    }
+    try {
+      socket?.close();
+    } catch {
+      // Socket já morto · só limpa a sessão.
+    }
+    disconnect();
+    navigate("/join");
+  }
+
+  return (
+    <div className="arena-page">
+      <header className="arena-toolbar">
+        <div className="arena-room-heading">
+          <span className="arena-room-symbol" aria-hidden="true">
+            <UsersIcon />
+          </span>
+          <div>
+            <h1 data-testid="sala-code">Sala {sala.code}</h1>
+            <p data-testid="round-label">
+              Rodada {sala.round} · {phaseLabel(sala.phase)}
+            </p>
+          </div>
+        </div>
+        <div className="arena-live-status">
+          <span data-testid="presence-line" aria-live="polite">
+            <UsersIcon aria-hidden="true" />
+            {connected.length} na sala · {voted}{" "}
+            {voted === 1 ? "votou" : "votaram"}
+          </span>
+          <span
+            className={
+              critical
+                ? "arena-clock arena-clock--critical text-destructive-foreground"
+                : "arena-clock"
+            }
+            data-testid="timer-line"
+            aria-live={critical ? "assertive" : "off"}
+          >
+            <TimerIcon aria-hidden="true" />
+            {sala.timer}s
+          </span>
+          <Button variant="ghost" onClick={handleLeave}>
+            <LogOutIcon aria-hidden="true" />
+            Sair da sala
+          </Button>
+        </div>
+      </header>
+      {connectionLost && (
+        <Alert variant="warning">
+          <AlertTitle>Conexão perdida</AlertTitle>
+          <AlertDescription>
+            O placar pode estar desatualizado. Recarregue a página para
+            reconectar.
+          </AlertDescription>
+        </Alert>
+      )}
+      <div className="arena-workspace">
+        <section
+          className="arena-play-area"
+          aria-label="Mesa de planning poker"
+        >
+          <div className="arena-table-caption">
+            <span>Mesa de planning poker</span>
+            <span>{connected.length} de 12 lugares</span>
+          </div>
+          <PokerTable
+            seats={seats}
+            playerId={playerId}
+            hostId={sala.hostId}
+            revealed={isRevealed}
+          >
+            <span className="arena-table-wordmark" aria-hidden="true">
+              Pointly
+            </span>
+            <Card className="arena-reveal">
+              <CardHeader>
+                <CardTitle className="text-base">
+                  {isRevealed
+                    ? "Cartas na mesa"
+                    : isReadyToReveal
+                      ? "Vamos revelar?"
+                      : "Qual é a sua estimativa?"}
+                </CardTitle>
+                <CardDescription data-testid="reveal-hint" aria-live="polite">
+                  {isRevealed
+                    ? "Votos revelados. Discutam as diferenças."
+                    : isReadyToReveal
+                      ? "Todos votaram. Escolham o momento de revelar."
+                      : canReveal
+                        ? "Com votos na mesa, qualquer player pode revelar."
+                        : "Aguardando o primeiro voto para liberar o reveal."}
+                </CardDescription>
+              </CardHeader>
+              <CardPanel className="flex flex-col gap-3">
+                {isReadyToReveal ? (
+                  <p
+                    className="text-sm font-medium text-success-foreground"
+                    data-testid="reveal-ready"
+                  >
+                    Pronta para revelar · todos votaram. No zero, revela
+                    sozinho.
+                  </p>
+                ) : null}
+                {!isRevealed ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      data-testid="reveal-button"
+                      disabled={!canReveal}
+                      onClick={handleReveal}
+                      aria-keyshortcuts="r"
+                      aria-label={
+                        canReveal
+                          ? "Revelar votos (atalho R)"
+                          : "Aguardando votos para revelar"
+                      }
+                      title={canReveal ? "Atalho: R" : undefined}
+                    >
+                      <EyeIcon aria-hidden="true" />
+                      Revelar votos
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      <kbd className="rounded border px-1 font-mono">R</kbd>{" "}
+                      revela
+                      {canReveal
+                        ? " · encerra a contagem e vai à discussão."
+                        : " · disponível após o primeiro voto."}
+                    </span>
+                  </div>
+                ) : (
+                  <p
+                    className="text-sm text-muted-foreground"
+                    data-testid="reveal-done"
+                  >
+                    Votos revelados · o timer zerou ou alguém revelou.
+                  </p>
+                )}
+                {revealError ? (
+                  <Alert variant="error">
+                    <AlertTitle>Não foi possível revelar</AlertTitle>
+                    <AlertDescription data-testid="reveal-error">
+                      {revealError}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+              </CardPanel>
+            </Card>
+          </PokerTable>
+          <Card className="arena-deck">
+            <CardHeader>
+              <CardTitle className="text-base">Sua estimativa</CardTitle>
+              <CardDescription data-testid="deck-selection" aria-live="polite">
+                {isRevealed
+                  ? currentVote
+                    ? currentVote === "☕"
+                      ? "Seu voto: pausa para café (conta presença, fora da média). Você pode ajustar · o resultado atualiza para todos."
+                      : `Seu voto: ${currentVote}. Você pode ajustar · o resultado atualiza para todos.`
+                    : "Vote mesmo após o reveal · o resultado atualiza para todos."
+                  : currentVote
+                    ? currentVote === "☕"
+                      ? "Seu voto: pausa para café (conta presença, fora da média)."
+                      : `Seu voto: ${currentVote}. Clique em outra carta para substituir.`
+                    : "Escolha uma carta para votar. Dá para trocar até o reveal."}
+              </CardDescription>
+            </CardHeader>
+            <CardPanel className="flex flex-col gap-3">
+              <Deck currentVote={currentVote} onSelect={handleCardSelect} />
+              {voteError ? (
+                <Alert variant="error">
+                  <AlertTitle>Não foi possível votar</AlertTitle>
+                  <AlertDescription data-testid="vote-error">
+                    {voteError}
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+            </CardPanel>
+          </Card>
+
+          <div className="arena-table-note">
+            <span>Estimativas independentes. Conversas em conjunto.</span>
+            <span>
+              <kbd>R</kbd> revelar · <kbd>N</kbd> nova rodada
+            </span>
+          </div>
+        </section>
+        <aside className="arena-sidebar" aria-label="Informações da sala">
+          <div className="arena-self" data-testid="self-line">
+            Você é <strong>{self?.nick ?? nick}</strong>
+            {isSelfHost ? " · Host da sala" : ""}
+            {host && host.id !== playerId ? (
+              <>
+                {" "}
+                · Host: <strong>{host.nick}</strong>
+              </>
+            ) : null}
+          </div>
+          {showInvite ? (
+            <Card className="arena-invite">
+              <CardHeader>
+                <CardTitle className="text-base">Convidar o time</CardTitle>
+                <CardDescription>
+                  Compartilhe o link e reúna o time à mesa.
+                </CardDescription>
+              </CardHeader>
+              <CardPanel className="flex flex-col gap-3">
+                <div className="flex gap-2">
+                  <Input
+                    readOnly
+                    value={inviteUrl}
+                    aria-label="Link de convite"
+                    onFocus={(event) => event.currentTarget.select()}
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      void handleCopy();
+                    }}
+                  >
+                    {copied ? (
+                      <CheckIcon aria-hidden="true" />
+                    ) : (
+                      <CopyIcon aria-hidden="true" />
+                    )}
+                    {copied ? "Copiado!" : "Copiar"}
+                  </Button>
+                </div>
+                <div aria-live="polite" className="min-h-5 text-sm">
+                  {copied ? (
+                    <span
+                      className="text-success-foreground"
+                      data-testid="copy-feedback"
+                    >
+                      Link copiado! É só enviar ao time.
+                    </span>
+                  ) : null}
+                  {copyError ? (
+                    <span className="text-destructive-foreground">
+                      Não foi possível copiar. Selecione o link e copie
+                      manualmente.
+                    </span>
+                  ) : null}
+                </div>
+                {solo ? (
+                  <div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setInviteHidden(true)}
+                    >
+                      <EyeOffIcon aria-hidden="true" />
+                      Ocultar convite
+                    </Button>
+                  </div>
+                ) : null}
+              </CardPanel>
+            </Card>
+          ) : (
+            <div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setInviteHidden(false)}
+              >
+                Mostrar convite
+              </Button>
+            </div>
+          )}
+
+          {isRevealed ? (
+            <Card className="arena-results">
+              <CardHeader>
+                <CardTitle className="text-base">Resultados</CardTitle>
+                <CardDescription>
+                  Média, mediana, menor e maior estimativa · pausa e ausência
+                  ficam fora dos cálculos.
+                </CardDescription>
+              </CardHeader>
+              <CardPanel>
+                <output
+                  aria-live="polite"
+                  aria-label={resultsAriaLabel}
+                  data-testid="stats-pill"
+                  data-stats-unanimous={isUnanimousSignal ? "true" : "false"}
+                  className="flex w-full flex-col gap-3"
+                >
+                  <div className="flex items-center gap-5">
+                    <div className="flex flex-col items-center gap-1">
+                      {isUnanimousSignal ? (
+                        <span
+                          data-testid="stats-unanimous-badge"
+                          className="rounded-full bg-success/12 px-2.5 py-0.5 font-mono text-xs tracking-widest text-success-foreground uppercase"
+                        >
+                          Unânime
+                        </span>
+                      ) : (
+                        <span
+                          data-testid="stats-eyebrow"
+                          className="text-xs text-muted-foreground"
+                        >
+                          {noNumerics
+                            ? "Sem votos numéricos"
+                            : isSingleNumeric
+                              ? "Voto único"
+                              : "Mediana"}
+                        </span>
+                      )}
+                      <span
+                        data-testid="stats-result-value"
+                        className="font-mono text-4xl font-semibold tabular-nums"
+                      >
+                        {formatMedian(consensus.median)}
+                      </span>
+                    </div>
+                    <span
+                      aria-hidden="true"
+                      className="h-12 w-px shrink-0 bg-border"
+                    />
+                    <div className="flex min-w-0 flex-col items-start gap-1.5">
+                      <span
+                        data-testid="stats-caption"
+                        className="text-sm text-muted-foreground"
+                      >
+                        média{" "}
+                        <span
+                          data-testid="stats-mean-value"
+                          className="font-mono text-foreground tabular-nums"
+                        >
+                          {formatMean(consensus.mean)}
+                        </span>{" "}
+                        · intervalo{" "}
+                        <span
+                          data-testid="stats-range-value"
+                          className="font-mono text-foreground tabular-nums"
+                        >
+                          {formatRange(consensus.range)}
+                        </span>
+                      </span>
+                      {voteGroups.length > 0 ? (
+                        <span
+                          data-testid="stats-distribution"
+                          className="flex flex-wrap gap-1.5"
+                        >
+                          {voteGroups.map((group) => (
+                            <span
+                              key={group.value}
+                              data-testid={`stats-pip-${group.value}`}
+                              title={`${group.count} ${group.count > 1 ? "votos" : "voto"} em ${group.value}`}
+                              className="rounded-full bg-muted px-2 py-0.5 font-mono text-xs tabular-nums"
+                            >
+                              {group.count}×{group.value}
+                            </span>
+                          ))}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                  {noNumerics ? (
+                    <p
+                      data-testid="stats-no-numerics"
+                      className="text-sm text-muted-foreground"
+                    >
+                      Só pausa ou ninguém votou · sem média, mediana nem
+                      intervalo.
+                    </p>
+                  ) : null}
+                </output>
+              </CardPanel>
+            </Card>
+          ) : null}
+
+          {isRevealed ? (
+            <Card className="arena-next-round">
+              <CardHeader>
+                <CardTitle className="text-base">Nova rodada</CardTitle>
+                <CardDescription
+                  data-testid="new-round-hint"
+                  aria-live="polite"
+                >
+                  {confirmingNewRound
+                    ? "Tem certeza? Ative de novo para confirmar · expira em alguns segundos."
+                    : "Prontos para a próxima estimativa? Clique duas vezes para começar."}
+                </CardDescription>
+              </CardHeader>
+              <CardPanel className="flex flex-col gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    data-testid="new-round-button"
+                    data-confirming={confirmingNewRound ? "true" : "false"}
+                    variant={confirmingNewRound ? "destructive" : "outline"}
+                    onClick={handleNewRoundRequest}
+                    aria-keyshortcuts="n"
+                    aria-label={
+                      confirmingNewRound
+                        ? "Confirmar nova rodada (atalho N)"
+                        : "Nova rodada (atalho N, exige confirmação)"
+                    }
+                    title="Atalho: N (duas vezes)"
+                  >
+                    <RotateCcwIcon aria-hidden="true" />
+                    {confirmingNewRound
+                      ? "Confirmar nova rodada"
+                      : "Nova rodada"}
+                  </Button>
+                  <span className="text-xs text-muted-foreground">
+                    <kbd className="rounded border px-1 font-mono">N</kbd>{" "}
+                    {confirmingNewRound
+                      ? "pressione de novo para confirmar."
+                      : "pede confirmação · um toque só não abre."}
+                  </span>
+                </div>
+                {newRoundError ? (
+                  <Alert variant="error">
+                    <AlertTitle>Não foi possível abrir nova rodada</AlertTitle>
+                    <AlertDescription data-testid="new-round-error">
+                      {newRoundError}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+              </CardPanel>
+            </Card>
+          ) : null}
+
+          {!isRevealed && (
+            <div className="arena-waiting">
+              <EyeOffIcon aria-hidden="true" />
+              <h2>Cada opinião conta.</h2>
+              <p>
+                As cartas ficam escondidas até a revelação. Escolha sem
+                influência do time.
+              </p>
+              {solo && (
+                <p data-testid="solo-hint">
+                  Você está sozinho. Copie o convite para chamar o time. Dá para
+                  votar sozinho para testar o fluxo.
+                </p>
+              )}
+            </div>
+          )}
+          <Card className="arena-reactions">
+            <CardHeader>
+              <CardTitle className="text-base">Interações</CardTitle>
+              <CardDescription data-testid="projectile-hint" aria-live="polite">
+                {isRevealed
+                  ? "Escolha alguém do time e envie uma reação."
+                  : "Envie uma reação ao time depois de revelar as cartas."}
+              </CardDescription>
+            </CardHeader>
+            <CardPanel className="flex flex-col gap-3">
+              {!isRevealed ? (
+                <p
+                  className="text-sm text-muted-foreground"
+                  data-testid="projectile-unavailable"
+                >
+                  Envio indisponível durante a votação. Aguarde o reveal para
+                  interagir com a Sala.
+                </p>
+              ) : availableTargets.length === 0 ? (
+                <p
+                  className="text-sm text-muted-foreground"
+                  data-testid="projectile-no-targets"
+                >
+                  Sem alvos por enquanto · chame o time para a Sala para
+                  interagir.
+                </p>
+              ) : (
+                <>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label
+                      htmlFor="projectile-target"
+                      className="text-sm text-muted-foreground"
+                    >
+                      Alvo
+                    </label>
+                    <select
+                      id="projectile-target"
+                      data-testid="projectile-target"
+                      value={effectiveTargetId ?? ""}
+                      onChange={(event) => {
+                        setProjectileTarget(event.target.value || null);
+                        setProjectileError(null);
+                      }}
+                      className="h-8 rounded-md border border-input bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background"
+                    >
+                      {availableTargets.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.nick}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div
+                    role="group"
+                    aria-label={`Interações para ${effectiveTargetNick}`}
+                    className="flex flex-wrap gap-2"
+                  >
+                    {PROJECTILE_CATALOG.map(({ type, label, emoji }) => (
+                      <Button
+                        key={type}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        data-testid={`projectile-${type}`}
+                        disabled={!isRevealed}
+                        onClick={() => handleThrowProjectile(type)}
+                        aria-label={`${label} em ${effectiveTargetNick}`}
+                        title={
+                          isProjectileCooling
+                            ? `Recarregando · aguarde ${projectileCooldownSecs}s`
+                            : `${label} em ${effectiveTargetNick}`
+                        }
+                      >
+                        <span aria-hidden="true">{emoji}</span>
+                        {label}
+                      </Button>
+                    ))}
+                  </div>
+                  {isProjectileCooling ? (
+                    <p
+                      className="text-xs text-muted-foreground"
+                      data-testid="projectile-cooldown"
+                      aria-live="polite"
+                    >
+                      Recarregando · aguarde {projectileCooldownSecs}s para
+                      arremessar de novo.
+                    </p>
+                  ) : null}
+                </>
+              )}
+              {projectileError ? (
+                <Alert variant="error">
+                  <AlertTitle>Não foi possível interagir</AlertTitle>
+                  <AlertDescription data-testid="projectile-error">
+                    {projectileError}
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+              {projectileFeed.length > 0 ? (
+                <ul
+                  aria-live="polite"
+                  aria-label="Interações recentes da Sala"
+                  data-testid="projectile-feed"
+                  className="flex flex-col gap-1.5"
+                >
+                  {projectileFeed.map((item) => (
+                    <li
+                      key={item.key}
+                      data-testid="projectile-feed-item"
+                      data-sender={item.senderPlayerId}
+                      data-target={item.targetPlayerId}
+                      data-outcome={item.outcome}
+                      className="rounded-lg border bg-card px-3 py-2 text-sm"
+                    >
+                      {projectileFeedText(item)}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </CardPanel>
+          </Card>
+        </aside>
+      </div>
+    </div>
+  );
 }

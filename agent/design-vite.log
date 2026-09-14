@@ -1,0 +1,60 @@
+pointly-web dev: 
+pointly-web dev:   VITE v6.4.3  ready in 559 ms
+pointly-web dev: 
+pointly-web dev:   ➜  Local:   http://localhost:5173/
+pointly-web dev:   ➜  Network: use --host to expose
+pointly-web dev: 23:17:57 [vite] (client) hmr update /@fs/C:\Users\heldi\pointly\apps\web\src\pages\home.tsx, /src/index.css
+pointly-web dev: 23:17:57 [vite] (client) hmr update /src/index.css, /src/pages/home.css
+pointly-web dev: 23:18:20 [vite] (client) hmr update /@fs/C:\Users\heldi\pointly\apps\web\src\pages\join.tsx, /src/index.css
+pointly-web dev: 23:18:20 [vite] (client) hmr update /@fs/C:\Users\heldi\pointly\apps\web\src\pages\not-found.tsx, /src/index.css
+pointly-web dev: 23:18:21 [vite] (client) page reload package.json
+pointly-web dev: 23:18:50 [vite] (client) hmr update /@fs/C:\Users\heldi\pointly\apps\web\src\pages\home.tsx, /src/index.css
+pointly-web dev: 23:18:50 [vite] (client) hmr update /src/index.css, /src/pages/home.css
+pointly-web dev: 23:18:55 [vite] (client) hmr update /src/index.css, /src/pages/join.css
+pointly-web dev: 23:19:26 [vite] (client) page reload src/pages/join.css
+pointly-web dev: 23:19:30 [vite] (client) hmr update /@fs/C:\Users\heldi\pointly\apps\web\src\pages\join.tsx, /src/index.css
+pointly-web dev: 23:19:45 [vite] (client) hmr update /@fs/C:\Users\heldi\pointly\apps\web\src\pages\join.tsx, /src/index.css
+pointly-web dev: 23:20:22 [vite] (client) hmr update /@fs/C:\Users\heldi\pointly\apps\web\src\pages\arena.tsx, /src/index.css
+pointly-web dev: 23:20:23 [vite] (client) hmr invalidate /@fs/C:\Users\heldi\pointly\apps\web\src\pages\arena.tsx Could not Fast Refresh ("PROJECTILE_CATALOG" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+pointly-web dev: 23:20:23 [vite] (client) hmr update /src/index.css, /src/App.tsx
+pointly-web dev: 23:21:58 [vite] (client) hmr update /@fs/C:\Users\heldi\pointly\apps\web\src\pages\home.tsx, /src/index.css
+pointly-web dev: 23:21:58 [vite] (client) hmr update /src/index.css, /src/pages/home.css
+pointly-web dev: 23:21:58 [vite] (client) hmr update /@fs/C:\Users\heldi\pointly\apps\web\src\pages\arena.tsx, /src/index.css
+pointly-web dev: 23:21:58 [vite] (client) page reload src/pages/join.test.tsx
+pointly-web dev: 23:21:59 [vite] (client) hmr invalidate /@fs/C:\Users\heldi\pointly\apps\web\src\pages\arena.tsx Could not Fast Refresh ("PROJECTILE_CATALOG" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+pointly-web dev: 23:21:59 [vite] (client) hmr update /src/index.css, /src/App.tsx
+pointly-web dev: 23:24:19 [vite] (client) hmr update /src/index.css, /src/components/poker-table.css
+pointly-web dev: 23:26:14 [vite] vite.config.ts changed, restarting server...
+pointly-web dev: 23:26:14 [vite] (client) page reload src/pages/arena.test.tsx
+pointly-web dev: 23:26:14 [vite] (client) hmr update /src/pages/arena.css, /src/index.css
+pointly-web dev: 23:26:14 [vite] (client) Re-optimizing dependencies because lockfile has changed
+pointly-web dev: 23:26:14 [vite] server restarted.
+pointly-web dev: 23:26:47 [vite] (client) hmr update /src/pages/home.tsx, /src/index.css
+pointly-web dev: 23:26:47 [vite] (client) hmr update /src/index.css, /src/pages/home.css
+pointly-web dev: 23:26:47 [vite] (client) hmr update /src/pages/join.tsx, /src/index.css
+pointly-web dev: 23:26:47 [vite] (client) hmr update /src/index.css, /src/pages/join.css
+pointly-web dev: 23:26:47 [vite] (client) hmr update /src/pages/not-found.tsx, /src/index.css
+pointly-web dev: 23:26:47 [vite] (client) hmr update /src/pages/arena.tsx, /src/index.css
+pointly-web dev: 23:26:47 [vite] (client) hmr update /src/brand.css, /src/index.css
+pointly-web dev: 23:26:47 [vite] (client) hmr update /src/index.css, /src/pages/arena.css
+pointly-web dev: 23:26:47 [vite] (client) hmr update /@fs/C:\Users\heldi\pointly\apps\web\src\components\poker-table.tsx, /src/index.css
+pointly-web dev: 23:26:47 [vite] (client) hmr update /src/App.tsx, /src/index.css
+pointly-web dev: 23:26:47 [vite] (client) hmr update /src/index.css, /src/components/poker-table.css
+pointly-web dev: 23:26:47 [vite] (client) hmr update /src/components/shell.tsx, /src/index.css
+pointly-web dev: 23:26:48 [vite] (client) hmr invalidate /src/pages/arena.tsx Could not Fast Refresh ("PROJECTILE_CATALOG" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+pointly-web dev: 23:26:48 [vite] (client) hmr update /src/App.tsx, /src/index.css
+pointly-web dev: 23:27:43 [vite] (client) hmr update /src/pages/join.tsx, /src/index.css
+pointly-web dev: 23:27:43 [vite] vite.config.ts changed, restarting server...
+pointly-web dev: 23:27:43 [vite] (client) hmr update /src/index.css, /src/pages/join.css
+pointly-web dev: 23:27:43 [vite] server restarted.
+pointly-web dev: 23:28:01 [vite] (client) hmr update /src/pages/join.tsx, /src/index.css
+pointly-web dev: 23:28:01 [vite] (client) hmr update /src/index.css, /src/pages/join.css
+pointly-web dev: 23:28:20 [vite] (client) hmr update /src/pages/home.tsx, /src/index.css
+pointly-web dev: 23:28:20 [vite] (client) hmr update /src/pages/join.tsx, /src/index.css
+pointly-web dev: 23:28:20 [vite] (client) hmr update /src/pages/join.tsx, /src/index.css
+pointly-web dev: 23:31:37 [vite] (client) hmr update /src/App.tsx, /src/index.css
+pointly-web dev: 23:31:37 [vite] (client) hmr update /src/pages/not-found.tsx, /src/index.css
+pointly-web dev: 23:31:37 [vite] (client) page reload src/App.test.tsx
+pointly-web dev: 23:31:37 [vite] (client) hmr update /src/index.css, /src/pages/home.css
+pointly-web dev: 23:31:37 [vite] (client) hmr update /src/App.tsx, /src/index.css
+pointly-web dev: 23:31:38 [vite] (client) page reload src/App.test.tsx

@@ -421,7 +421,8 @@ export class WSService {
 				unanimous: outcome.unanimous,
 			},
 		});
-		this.broadcastRoomState(code, ws);
+		// O autor também consome room_state para atualizar fase e resultados.
+		this.broadcastRoomState(code);
 	}
 
 	private handleStartNewRoundEvent(ws: BunWS): void {
@@ -440,7 +441,7 @@ export class WSService {
 			type: "round_started",
 			payload: { round: outcome.round },
 		});
-		this.broadcastRoomState(code, ws);
+		this.broadcastRoomState(code);
 	}
 
 	private handleLeaveRoomEvent(ws: BunWS): void {

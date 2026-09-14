@@ -1,269 +1,343 @@
-/**
- * WebSocket client — factory com reconnect + heartbeat + validação Zod.
- *
- * - URL: `VITE_WS_URL` > dev `ws://localhost:3001/ws` > `wss://<host>/ws`
- * - Valida S→C com `ServerToClientEventSchema` (malformed → warn + drop)
- * - Valida C→S com `ClientToServerEventSchema` antes de enviar
- * - Reconnect com backoff exponencial 1s,2s,4s…cap 30s
- * - Heartbeat: `ping` a cada 5s com socket aberto; sem `pong` em 5s → close + reconnect
- * - `onOpen` dispara a cada (re)connect — loops enviam `hello` ali (uma vez por conexão)
- */
+import { JoinError } from "./errors";
 import {
-	type ClientToServerEvent,
-	ClientToServerEventSchema,
-	type ServerToClientEvent,
-	ServerToClientEventSchema,
-} from "@planning-poker/shared";
+	buildCastVoteMessage,
+	buildLeaveRoomMessage,
+	buildRevealVotesMessage,
+	buildStartNewRoundMessage,
+	buildThrowProjectileMessage,
+	isDeckValue,
+	isProjectileType,
+	parseServerEvent,
+	type HelloPayload,
+	type ProjectileThrownPayload,
+	type ProjectileType,
+	type SalaState,
+	type Vote,
+	type WelcomePayload,
+} from "./protocol";
 
-export type WSStatus = "idle" | "connecting" | "open" | "closed" | "error";
+export type SocketStatus = "idle" | "connecting" | "ready" | "closed";
 
-export type CreateWSClientOptions = {
-	/** URL do WS. Default: `resolveWsUrl()`. */
-	url?: string;
-	/** Callback para cada evento S→C validado. */
-	onEvent: (e: ServerToClientEvent) => void;
-	/** Callback a cada (re)connect com socket aberto. */
-	onOpen?: () => void;
-	/** Schedule de timers (default `setTimeout`). Injetável pra testes. */
-	setTimeoutFn?: typeof setTimeout;
-	/** Clear de timers (default `clearTimeout`). Injetável pra testes. */
-	clearTimeoutFn?: typeof clearTimeout;
-	/** Override do constructor WebSocket (mock em testes). */
-	WebSocketCtor?: typeof WebSocket;
-	/** Cap de retries. Default `Infinity`. */
-	maxReconnectRetries?: number;
-	/** Intervalo do heartbeat em ms. Default 5000. */
-	heartbeatIntervalMs?: number;
-	/** Timeout de espera do pong em ms. Default 5000. */
-	heartbeatTimeoutMs?: number;
-};
+export interface PointlySocketEvents {
+	onRoomState?: (sala: SalaState, critical: boolean) => void;
+	onProjectileThrown?: (event: ProjectileThrownPayload) => void;
+	onClose?: () => void;
+	onError?: (code: string, message: string) => void;
+}
 
-export type WSClient = {
-	connect: () => void;
-	send: (event: ClientToServerEvent) => void;
-	close: () => void;
-	getStatus: () => WSStatus;
-};
-
-export const RECONNECT_BASE_MS = 1_000;
-export const RECONNECT_MAX_MS = 30_000;
-export const DEFAULT_HEARTBEAT_INTERVAL_MS = 5_000;
-export const DEFAULT_HEARTBEAT_TIMEOUT_MS = 5_000;
-
-/** Backoff exponencial capado em 30s: 1s,2s,4s,8s,16s,30s,… */
-export function reconnectDelay(attempt: number): number {
-	return Math.min(RECONNECT_BASE_MS * 2 ** attempt, RECONNECT_MAX_MS);
+interface PointlySocketOptions {
+	helloTimeoutMs?: number;
+	pingIntervalMs?: number;
+	pongTimeoutMs?: number;
 }
 
 /**
- * Resolve a URL do WS.
+ * Cliente WebSocket mínimo do ticket 03: conecta, envia hello, resolve com o
+ * welcome (ou rejeita com o erro do servidor) e mantém heartbeat ping/pong.
+ * Fechamento pós-ready (incluindo pong expirado) notifica `onClose`.
  *
- * IMPORTANTE: acesso direto a `import.meta.env.*` (nunca alias) — o
- * define do Vite só substitui acesso direto em build.
+ * Ticket 04: handlers podem ser atualizados pós-connect via `setHandlers`,
+ * para a Arena assinar `room_state` no socket criado pela entrada (handoff
+ * via store) sem recriar a conexão.
+ *
+ * Ticket 09: `sendLeaveRoom` para saída voluntária (remove o Player e
+ * broadcast para os demais); F5/recarregamento NÃO envia leave — a Arena
+ * reconecta com o mesmo UUID e o servidor reidrata sem duplicar.
  */
-export function resolveWsUrl(): string {
-	try {
-		const fromEnv = import.meta.env.VITE_WS_URL;
-		if (typeof fromEnv === "string" && fromEnv.length > 0) return fromEnv;
-		if (import.meta.env.DEV) return "ws://localhost:3001/ws";
-	} catch {
-		// import.meta indisponível (bun test) — segue pros fallbacks
-	}
-	if (typeof window !== "undefined" && window.location) {
-		const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-		return `${proto}//${window.location.host}/ws`;
-	}
-	return "ws://localhost:3001/ws";
-}
+export class PointlySocket {
+	private socket: WebSocket | null = null;
+	private status: SocketStatus = "idle";
+	private helloSettled = false;
+	private resolveHello: ((welcome: WelcomePayload) => void) | null = null;
+	private rejectHello: ((error: JoinError) => void) | null = null;
+	private helloTimer: ReturnType<typeof setTimeout> | null = null;
+	private pingTimer: ReturnType<typeof setInterval> | null = null;
+	private staleTimer: ReturnType<typeof setInterval> | null = null;
+	private lastPongAt = 0;
+	private events: PointlySocketEvents;
+	private readonly helloTimeoutMs: number;
+	private readonly pingIntervalMs: number;
+	private readonly pongTimeoutMs: number;
 
-export function createWSClient(options: CreateWSClientOptions): WSClient {
-	const {
-		url: urlOpt,
-		onEvent,
-		onOpen,
-		setTimeoutFn = setTimeout,
-		clearTimeoutFn = clearTimeout,
-		WebSocketCtor,
-		maxReconnectRetries = Number.POSITIVE_INFINITY,
-		heartbeatIntervalMs = DEFAULT_HEARTBEAT_INTERVAL_MS,
-		heartbeatTimeoutMs = DEFAULT_HEARTBEAT_TIMEOUT_MS,
-	} = options;
-
-	const url = urlOpt ?? resolveWsUrl();
-
-	let ws: WebSocket | null = null;
-	let status: WSStatus = "idle";
-	let reconnectAttempt = 0;
-	let reconnectHandle: ReturnType<typeof setTimeout> | null = null;
-	let heartbeatHandle: ReturnType<typeof setTimeout> | null = null;
-	let pongTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
-	let explicitlyClosed = false;
-
-	function clearReconnect(): void {
-		if (reconnectHandle !== null) {
-			clearTimeoutFn(reconnectHandle);
-			reconnectHandle = null;
-		}
+	constructor(
+		events: PointlySocketEvents = {},
+		options: PointlySocketOptions = {},
+	) {
+		this.events = { ...events };
+		this.helloTimeoutMs = options.helloTimeoutMs ?? 10_000;
+		this.pingIntervalMs = options.pingIntervalMs ?? 5_000;
+		this.pongTimeoutMs = options.pongTimeoutMs ?? 10_000;
 	}
 
-	function clearHeartbeat(): void {
-		if (heartbeatHandle !== null) {
-			clearTimeoutFn(heartbeatHandle);
-			heartbeatHandle = null;
-		}
-		if (pongTimeoutHandle !== null) {
-			clearTimeoutFn(pongTimeoutHandle);
-			pongTimeoutHandle = null;
-		}
+	getStatus(): SocketStatus {
+		return this.status;
 	}
 
-	function scheduleHeartbeat(): void {
-		clearHeartbeat();
-		heartbeatHandle = setTimeoutFn(onHeartbeat, heartbeatIntervalMs);
+	/**
+	 * Atualiza os handlers sem tocar na conexão. Usado pela Arena para
+	 * assinar `room_state` no socket vivo herdado da entrada.
+	 */
+	setHandlers(events: Partial<PointlySocketEvents>): void {
+		this.events = { ...this.events, ...events };
 	}
 
-	function onHeartbeat(): void {
-		if (explicitlyClosed || !ws || ws.readyState !== WebSocket.OPEN) return;
+	/**
+	 * Envia `cast_vote { value }`. Retorna false quando não há conexão
+	 * pronta ou o valor é inválido — o chamador mantém o estado local.
+	 * O servidor responde com `room_state` (o remetente recebe o estado
+	 * completo; `vote_cast` não carrega valor por privacidade).
+	 */
+	sendCastVote(value: Vote): boolean {
+		if (this.status !== "ready" || !this.socket) return false;
+		if (!isDeckValue(value)) return false;
 		try {
-			send({ type: "ping", payload: {} });
+			this.socket.send(JSON.stringify(buildCastVoteMessage(value)));
+			return true;
 		} catch {
-			// PingPayload é vazio — validação não falha na prática
+			return false;
 		}
-		pongTimeoutHandle = setTimeoutFn(() => {
-			if (ws && ws.readyState === WebSocket.OPEN) {
-				try {
-					ws.close();
-				} catch {
-					// ignore — o `close` agenda o reconnect
-				}
-			}
-		}, heartbeatTimeoutMs);
-		// Reagenda o próximo ping (heartbeat contínuo enquanto aberto)
-		heartbeatHandle = setTimeoutFn(onHeartbeat, heartbeatIntervalMs);
 	}
 
-	function scheduleReconnect(): void {
-		if (explicitlyClosed) return;
-		if (reconnectAttempt >= maxReconnectRetries) return;
-		clearReconnect();
-		const delay = reconnectDelay(reconnectAttempt);
-		reconnectAttempt += 1;
-		reconnectHandle = setTimeoutFn(() => {
-			reconnectHandle = null;
-			openSocket();
-		}, delay);
-	}
-
-	function handleMessage(ev: MessageEvent): void {
-		let raw: unknown;
+	/**
+	 * Envia `reveal_votes {}`. Qualquer Player pode revelar (servidor
+	 * democratizado, sem role check). Retorna false sem conexão pronta.
+	 * O servidor responde com `votes_revealed` + `room_state` (phase
+	 * `revealed`); auto-reveal no zero chega pelo mesmo caminho.
+	 */
+	sendRevealVotes(): boolean {
+		if (this.status !== "ready" || !this.socket) return false;
 		try {
-			raw = typeof ev.data === "string" ? JSON.parse(ev.data) : ev.data;
-		} catch (e) {
-			console.warn("[ws-client] failed to parse message:", e);
-			return;
-		}
-		const parsed = ServerToClientEventSchema.safeParse(raw);
-		if (!parsed.success) {
-			console.warn("[ws-client] malformed event dropped:", parsed.error.issues);
-			return;
-		}
-		if (parsed.data.type === "pong") {
-			if (pongTimeoutHandle !== null) {
-				clearTimeoutFn(pongTimeoutHandle);
-				pongTimeoutHandle = null;
-			}
-			return;
-		}
-		try {
-			onEvent(parsed.data);
-		} catch (e) {
-			console.warn("[ws-client] onEvent threw:", e);
+			this.socket.send(JSON.stringify(buildRevealVotesMessage()));
+			return true;
+		} catch {
+			return false;
 		}
 	}
 
-	function openSocket(): void {
-		const Ctor = WebSocketCtor ?? globalThis.WebSocket;
-		if (!Ctor) {
-			status = "error";
-			return;
-		}
-		status = "connecting";
+	/**
+	 * Envia `start_new_round {}`. Qualquer Player pode abrir nova rodada
+	 * (servidor democratizado, sem role check; exige phase `revealed`).
+	 * Retorna false sem conexão pronta. O servidor responde com
+	 * `round_started` + `room_state` (round incrementado, votos limpos,
+	 * timer em 60s, mesmos Players).
+	 */
+	sendStartNewRound(): boolean {
+		if (this.status !== "ready" || !this.socket) return false;
 		try {
-			ws = new Ctor(url);
-		} catch (e) {
-			console.warn("[ws-client] constructor threw:", e);
-			status = "error";
-			scheduleReconnect();
-			return;
+			this.socket.send(JSON.stringify(buildStartNewRoundMessage()));
+			return true;
+		} catch {
+			return false;
 		}
-
-		ws.addEventListener("open", () => {
-			status = "open";
-			reconnectAttempt = 0;
-			scheduleHeartbeat();
-			try {
-				onOpen?.();
-			} catch (e) {
-				console.warn("[ws-client] onOpen threw:", e);
-			}
-		});
-		ws.addEventListener("message", handleMessage);
-		ws.addEventListener("close", () => {
-			status = "closed";
-			clearHeartbeat();
-			ws = null;
-			scheduleReconnect();
-		});
-		ws.addEventListener("error", () => {
-			status = "error";
-			// `close` dispara em seguida — reconnect vem dali
-		});
 	}
 
-	function send(event: ClientToServerEvent): void {
-		const parsed = ClientToServerEventSchema.safeParse(event);
-		if (!parsed.success) {
-			console.warn(
-				"[ws-client] refusing to send invalid event:",
-				parsed.error.issues,
+	/**
+	 * Envia `leave_room {}`. Saída voluntária (botão "Sair da sala"):
+	 * o servidor remove o Player e broadcast `player_left` + `room_state`
+	 * para os demais em tempo real (promovendo novo Host quando o Host
+	 * sai). Retorna false sem conexão pronta. F5 NÃO chama este método.
+	 */
+	sendLeaveRoom(): boolean {
+		if (this.status !== "ready" || !this.socket) return false;
+		try {
+			this.socket.send(JSON.stringify(buildLeaveRoomMessage()));
+			return true;
+		} catch {
+			return false;
+		}
+	}
+
+	/**
+	 * Envia `throw_projectile { targetPlayerId, projectileType }` (issue #157).
+	 * Interação pós-reveal: o servidor valida o cooldown de 5s por sender,
+	 * sorteia o desfecho (hit/dodge/deflect) e faz broadcast
+	 * `projectile_thrown` para a Sala. Retorna false sem conexão pronta,
+	 * alvo vazio ou tipo inválido — o chamador mantém o estado local e
+	 * exibe feedback sem quebrar.
+	 */
+	sendThrowProjectile(
+		targetPlayerId: string,
+		projectileType: ProjectileType,
+	): boolean {
+		if (this.status !== "ready" || !this.socket) return false;
+		if (typeof targetPlayerId !== "string" || targetPlayerId.length === 0) {
+			return false;
+		}
+		if (!isProjectileType(projectileType)) return false;
+		try {
+			this.socket.send(
+				JSON.stringify(
+					buildThrowProjectileMessage(targetPlayerId, projectileType),
+				),
 			);
-			return;
-		}
-		if (!ws || ws.readyState !== WebSocket.OPEN) {
-			console.warn("[ws-client] cannot send — socket not open:", event.type);
-			return;
-		}
-		try {
-			ws.send(JSON.stringify(parsed.data));
-		} catch (e) {
-			console.warn("[ws-client] send failed:", e);
+			return true;
+		} catch {
+			return false;
 		}
 	}
 
-	function close(): void {
-		explicitlyClosed = true;
-		clearReconnect();
-		clearHeartbeat();
-		if (ws) {
+	connect(url: string, hello: HelloPayload): Promise<WelcomePayload> {
+		this.close({ silent: true });
+		this.status = "connecting";
+		this.helloSettled = false;
+
+		return new Promise<WelcomePayload>((resolve, reject) => {
+			this.resolveHello = resolve;
+			this.rejectHello = reject;
+
+			let socket: WebSocket;
 			try {
-				ws.close();
+				socket = new WebSocket(url);
 			} catch {
-				// ignore
+				this.status = "closed";
+				reject(new JoinError("connection_failed"));
+				return;
 			}
-			ws = null;
+			this.socket = socket;
+
+			this.helloTimer = setTimeout(() => {
+				this.failHello(new JoinError("hello_timeout"));
+			}, this.helloTimeoutMs);
+
+			socket.onopen = () => {
+				try {
+					socket.send(JSON.stringify({ type: "hello", payload: hello }));
+				} catch {
+					this.failHello(new JoinError("connection_failed"));
+				}
+			};
+			socket.onmessage = (event: MessageEvent) => {
+				this.handleMessage(typeof event.data === "string" ? event.data : "");
+			};
+			socket.onerror = () => {
+				if (!this.helloSettled) {
+					this.failHello(new JoinError("connection_failed"));
+				}
+			};
+			socket.onclose = () => {
+				const wasReady = this.status === "ready";
+				this.clearTimers();
+				this.socket = null;
+				this.status = "closed";
+				if (!this.helloSettled) {
+					this.helloSettled = true;
+					this.rejectHello?.(new JoinError("connection_failed"));
+					this.resolveHello = null;
+					this.rejectHello = null;
+				} else if (wasReady) {
+					this.events.onClose?.();
+				}
+			};
+		});
+	}
+
+	close(options: { silent?: boolean } = {}): void {
+		const socket = this.socket;
+		this.clearTimers();
+		this.socket = null;
+		if (this.status === "connecting" && !this.helloSettled) {
+			this.helloSettled = true;
+			this.rejectHello?.(new JoinError("connection_failed"));
+			this.resolveHello = null;
+			this.rejectHello = null;
 		}
-		status = "closed";
+		const wasReady = this.status === "ready";
+		this.status = "closed";
+		try {
+			socket?.close();
+		} catch {
+			// Socket já morto — nada a fazer.
+		}
+		if (wasReady && !options.silent) {
+			this.events.onClose?.();
+		}
 	}
 
-	function connect(): void {
-		explicitlyClosed = false;
-		reconnectAttempt = 0;
-		openSocket();
+	private failHello(error: JoinError): void {
+		if (this.helloSettled) return;
+		this.helloSettled = true;
+		this.clearTimers();
+		try {
+			this.socket?.close();
+		} catch {
+			// Socket já morto — nada a fazer.
+		}
+		this.socket = null;
+		this.status = "closed";
+		this.rejectHello?.(error);
+		this.resolveHello = null;
+		this.rejectHello = null;
 	}
 
-	function getStatus(): WSStatus {
-		return status;
+	private handleMessage(raw: string): void {
+		const event = parseServerEvent(raw);
+		if (!event) return;
+		switch (event.type) {
+			case "welcome": {
+				if (this.helloSettled || !this.resolveHello) return;
+				this.helloSettled = true;
+				if (this.helloTimer) clearTimeout(this.helloTimer);
+				this.helloTimer = null;
+				this.status = "ready";
+				this.startHeartbeat();
+				const resolve = this.resolveHello;
+				this.resolveHello = null;
+				this.rejectHello = null;
+				resolve(event.payload);
+				return;
+			}
+			case "error": {
+				if (!this.helloSettled) {
+					this.failHello(new JoinError(event.payload.code, event.payload.message));
+				} else if (this.status === "ready") {
+					this.events.onError?.(event.payload.code, event.payload.message);
+				}
+				return;
+			}
+			case "room_state": {
+				if (this.status === "ready") {
+					this.events.onRoomState?.(
+						event.payload.sala,
+						event.payload.critical === true,
+					);
+				}
+				return;
+			}
+			case "projectile_thrown": {
+				if (this.status === "ready") {
+					this.events.onProjectileThrown?.(event.payload);
+				}
+				return;
+			}
+			case "pong": {
+				this.lastPongAt = Date.now();
+				return;
+			}
+		}
 	}
 
-	return { connect, send, close, getStatus };
+	private startHeartbeat(): void {
+		this.lastPongAt = Date.now();
+		this.pingTimer = setInterval(() => {
+			try {
+				this.socket?.send(JSON.stringify({ type: "ping", payload: {} }));
+			} catch {
+				// Falha de envio — o onclose/stale cobre em seguida.
+			}
+		}, this.pingIntervalMs);
+		this.staleTimer = setInterval(() => {
+			if (Date.now() - this.lastPongAt > this.pongTimeoutMs) {
+				this.close();
+			}
+		}, this.pongTimeoutMs);
+	}
+
+	private clearTimers(): void {
+		if (this.helloTimer) clearTimeout(this.helloTimer);
+		if (this.pingTimer) clearInterval(this.pingTimer);
+		if (this.staleTimer) clearInterval(this.staleTimer);
+		this.helloTimer = null;
+		this.pingTimer = null;
+		this.staleTimer = null;
+	}
 }

@@ -1,0 +1,350 @@
+import {
+  ArrowRightIcon,
+  CheckIcon,
+  EyeIcon,
+  RotateCcwIcon,
+} from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardPanel } from "@/components/ui/card";
+import { Deck } from "@/components/deck";
+import { PokerTable } from "@/components/poker-table";
+import {
+  computeConsensus,
+  formatMean,
+  formatMedian,
+  formatRange,
+  groupVotes,
+  isUnanimous,
+  voteToNumber,
+} from "@/lib/deck";
+import type { Vote } from "@/lib/protocol";
+import "./home.css";
+
+const SIMULATED_TEAM: ReadonlyArray<{ nick: string; vote: Vote }> = [
+  { nick: "Bia", vote: "5" },
+  { nick: "Caio", vote: "8" },
+  { nick: "Dani", vote: "5" },
+];
+
+export function HomePage(): React.ReactElement {
+  const [myVote, setMyVote] = useState<Vote | null>(null);
+  const [revealed, setRevealed] = useState(false);
+  const revealedVotes: Array<Vote | string> =
+    myVote === null ? [] : [myVote, ...SIMULATED_TEAM.map((mate) => mate.vote)];
+  const consensus = computeConsensus(revealedVotes);
+  const unanimousVotes = isUnanimous(revealedVotes);
+  const numericCount = revealedVotes.filter(
+    (vote) => voteToNumber(vote) !== null,
+  ).length;
+  const noNumerics = numericCount === 0;
+  const isSingleNumeric = numericCount === 1;
+  const isUnanimousSignal = numericCount >= 2 && unanimousVotes;
+  const voteGroups = groupVotes(revealedVotes);
+  const resultsAriaLabel = noNumerics
+    ? "Sem votos numéricos · pausa e ausência ficam fora dos cálculos"
+    : isSingleNumeric
+      ? `Voto único · média ${formatMean(consensus.mean)} · intervalo ${formatRange(consensus.range)}`
+      : isUnanimousSignal
+        ? `Votação unânime · média ${formatMean(consensus.mean)} · intervalo ${formatRange(consensus.range)}`
+        : `Estatísticas pós-reveal · média ${formatMean(consensus.mean)} · mediana ${formatMedian(consensus.median)} · intervalo ${formatRange(consensus.range)}`;
+  const selectionText = revealed
+    ? myVote === "☕"
+      ? "Seu voto: pausa para café (conta presença, fora da média). Troque de carta · o resultado recalcula."
+      : `Seu voto: ${myVote}. Troque de carta · o resultado recalcula.`
+    : myVote === null
+      ? "Escolha uma carta para votar."
+      : myVote === "☕"
+        ? "Seu voto: pausa para café (conta presença, fora da média)."
+        : `Seu voto: ${myVote}. Clique em outra carta para substituir.`;
+  const seats = [
+    {
+      id: "you",
+      nick: "Você",
+      seatIndex: 0,
+      hasVoted: myVote !== null,
+      value: revealed ? myVote : null,
+      status: "connected" as const,
+    },
+    {
+      id: "bia",
+      nick: "Bia",
+      seatIndex: 1,
+      hasVoted: revealed,
+      value: revealed ? "5" : null,
+      status: "connected" as const,
+    },
+    {
+      id: "caio",
+      nick: "Caio",
+      seatIndex: 2,
+      hasVoted: revealed,
+      value: revealed ? "8" : null,
+      status: "connected" as const,
+    },
+    {
+      id: "dani",
+      nick: "Dani",
+      seatIndex: 3,
+      hasVoted: revealed,
+      value: revealed ? "5" : null,
+      status: "connected" as const,
+    },
+  ];
+  function handleSelect(value: Vote): void {
+    if (myVote !== value) setMyVote(value);
+  }
+  function handleReveal(): void {
+    if (myVote !== null && !revealed) setRevealed(true);
+  }
+  function handleRetry(): void {
+    setMyVote(null);
+    setRevealed(false);
+  }
+
+  return (
+    <div className="pt-home">
+      <div className="pt-home__shell">
+        <section className="pt-home__hero" data-testid="home-hero">
+          <div className="pt-home__hero-copy">
+            <p className="pt-home__eyebrow">
+              <span className="pt-home__eyebrow-line" /> Planning poker sem
+              cadastro
+            </p>
+            <h1>
+              Boas conversas.
+              <br />
+              <em>Melhores estimativas.</em>
+            </h1>
+            <p className="pt-home__hero-lede">
+              Reúna o time, escolha suas cartas e transforme estimativas
+              diferentes em uma conversa que faz o projeto avançar.
+            </p>
+            <div className="pt-home__hero-actions">
+              <Button
+                size="xl"
+                data-testid="home-cta-create"
+                render={<Link to="/join" />}
+              >
+                Criar sala <ArrowRightIcon aria-hidden="true" />
+              </Button>
+              <Link
+                to="/join?mode=join"
+                className="pt-home__text-link"
+                data-testid="home-cta-join"
+              >
+                Entrar com código
+              </Link>
+            </div>
+          </div>
+          <div className="pt-home__hero-visual">
+            <img
+              src="/images/planning-cards.webp"
+              alt="Cartas de planning poker sobre uma mesa de feltro verde"
+              width={1536}
+              height={1024}
+              fetchPriority="high"
+            />
+          </div>
+        </section>
+        <section className="pt-home__demo-wrap" id="demo" data-testid="demo">
+          <div className="pt-home__section-intro">
+            <div>
+              <h2>
+                Você escolhe.
+                <br />A sala revela.
+              </h2>
+            </div>
+            <p>
+              Veja a dinâmica antes de criar sua primeira sala. Os votos abaixo
+              são simulados para você sentir o fluxo.
+            </p>
+          </div>
+          <Card className="pt-home__demo-card">
+            <CardPanel className="pt-home__demo-panel">
+              <PokerTable
+                seats={seats}
+                playerId="you"
+                hostId="you"
+                revealed={revealed}
+                compact
+              >
+                <div className="pt-home__table-center">
+                  <span className="pt-home__table-kicker">
+                    História em votação
+                  </span>
+                  <strong>Checkout mobile</strong>
+                  <small>
+                    {revealed ? "Votos revelados" : "Escolha sua carta"}
+                  </small>
+                </div>
+              </PokerTable>
+              <p
+                className="pt-home__selection"
+                data-testid="demo-selection"
+                aria-live="polite"
+              >
+                {selectionText}
+              </p>
+              <Deck currentVote={myVote} onSelect={handleSelect} />
+              {!revealed ? (
+                <div className="pt-home__demo-action">
+                  <Button
+                    type="button"
+                    data-testid="demo-reveal"
+                    disabled={myVote === null}
+                    onClick={handleReveal}
+                    aria-label={
+                      myVote === null
+                        ? "Escolha uma carta para revelar"
+                        : "Revelar votos simulados"
+                    }
+                  >
+                    <EyeIcon aria-hidden="true" /> Revelar votos simulados
+                  </Button>
+                  <span data-testid="demo-reveal-hint" aria-live="polite">
+                    {myVote === null
+                      ? "Escolha sua estimativa para liberar o reveal."
+                      : "Com sua carta na mesa, revele os votos simulados."}
+                  </span>
+                </div>
+              ) : (
+                <div className="pt-home__results">
+                  <p
+                    data-testid="demo-revealed"
+                    className="pt-home__revealed-label"
+                  >
+                    <CheckIcon aria-hidden="true" /> Votos revelados. A conversa
+                    pode avançar.
+                  </p>
+                  <ul
+                    className="pt-home__vote-list"
+                    aria-label="Votos simulados"
+                    data-testid="demo-votes"
+                  >
+                    <li data-testid="demo-vote-voce">Você {myVote}</li>
+                    {SIMULATED_TEAM.map((mate) => (
+                      <li
+                        key={mate.nick}
+                        data-testid={`demo-vote-${mate.nick.toLowerCase()}`}
+                      >
+                        {mate.nick} {mate.vote}
+                      </li>
+                    ))}
+                  </ul>
+                  <output
+                    aria-live="polite"
+                    aria-label={resultsAriaLabel}
+                    data-testid="stats-pill"
+                    data-stats-unanimous={isUnanimousSignal ? "true" : "false"}
+                    className="pt-home__stats"
+                  >
+                    <div className="pt-home__stat-primary">
+                      {isUnanimousSignal ? (
+                        <span data-testid="stats-unanimous-badge">Unânime</span>
+                      ) : (
+                        <small data-testid="stats-eyebrow">
+                          {noNumerics
+                            ? "Sem votos numéricos"
+                            : isSingleNumeric
+                              ? "Voto único"
+                              : "Mediana"}
+                        </small>
+                      )}
+                      <strong data-testid="stats-result-value">
+                        {formatMedian(consensus.median)}
+                      </strong>
+                    </div>
+                    <div className="pt-home__stat-detail">
+                      <span data-testid="stats-caption">
+                        média{" "}
+                        <b data-testid="stats-mean-value">
+                          {formatMean(consensus.mean)}
+                        </b>{" "}
+                        · intervalo{" "}
+                        <b data-testid="stats-range-value">
+                          {formatRange(consensus.range)}
+                        </b>
+                      </span>
+                      {voteGroups.length > 0 && (
+                        <span
+                          data-testid="stats-distribution"
+                          className="pt-home__distribution"
+                        >
+                          {voteGroups.map((group) => (
+                            <span
+                              key={group.value}
+                              data-testid={`stats-pip-${group.value}`}
+                              title={`${group.count} ${group.count > 1 ? "votos" : "voto"} em ${group.value}`}
+                            >
+                              {group.count}×{group.value}
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                    </div>
+                  </output>
+                  {noNumerics && (
+                    <p
+                      data-testid="stats-no-numerics"
+                      className="pt-home__no-numerics"
+                    >
+                      Só pausa ou ninguém votou. Sem média, mediana nem
+                      intervalo.
+                    </p>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    data-testid="demo-retry"
+                    onClick={handleRetry}
+                  >
+                    <RotateCcwIcon aria-hidden="true" /> Tentar de novo
+                  </Button>
+                </div>
+              )}
+            </CardPanel>
+          </Card>
+        </section>
+        <section className="pt-home__how" id="como-funciona">
+          <div className="pt-home__section-intro pt-home__section-intro--how">
+            <div>
+              <h2>
+                Menos espera.
+                <br />
+                Mais alinhamento.
+              </h2>
+            </div>
+            <p>
+              O Pointly tira o ritual do caminho para o time focar na decisão.
+            </p>
+          </div>
+          <div className="pt-home__steps">
+            <article>
+              <span>01</span>
+              <h3>Abra uma sala</h3>
+              <p>
+                Um clique cria o espaço. Compartilhe o código onde seu time já
+                conversa.
+              </p>
+            </article>
+            <article>
+              <span>02</span>
+              <h3>Todos votam</h3>
+              <p>Cada estimativa fica escondida até a sala ser revelada.</p>
+            </article>
+            <article>
+              <span>03</span>
+              <h3>Revelem juntos</h3>
+              <p>
+                Compare os sinais, converse sobre o que divergiu e siga em
+                frente.
+              </p>
+            </article>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}

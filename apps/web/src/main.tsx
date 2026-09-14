@@ -1,29 +1,25 @@
-/**
- * Entry do app (scaffold spell-rebuild).
- *
- * StrictMode DESABILITADO de propósito: o ciclo mount/unmount/remount
- * quebra a inicialização do WebSocket client (`useArenaLoop`) — fecha
- * o socket antes de ele ser estabelecido. Em produção StrictMode é
- * no-op, então desabilitar aqui é seguro. (Decisão portada do cliente
- * anterior; worker da arena conta com isso.)
- */
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "./App";
-import { init as initAnalytics } from "./lib/analytics";
-import "@fontsource/geist/latin-400.css";
-import "@fontsource/geist/latin-500.css";
-import "@fontsource/geist/latin-600.css";
-import "@fontsource/geist/latin-700.css";
-import "@fontsource/geist-mono/latin-400.css";
-import "@fontsource/geist-mono/latin-500.css";
-import "@fontsource/geist-mono/latin-600.css";
+import { BrowserRouter } from "react-router-dom";
+import "@fontsource/geist";
+import "@fontsource/geist/500.css";
+import "@fontsource/geist/600.css";
+import "@fontsource/geist/700.css";
+import "@fontsource/geist-mono";
+import "@fontsource/geist-mono/500.css";
+import "@fontsource/geist-mono/600.css";
+import "@fontsource/geist-mono/700.css";
+import App from "./App";
 import "./index.css";
+import "./brand.css";
 
-initAnalytics();
+const root = document.getElementById("root");
+if (!root) throw new Error("Elemento #root não encontrado.");
 
-const rootEl = document.getElementById("root");
-if (!rootEl) {
-	throw new Error("Mount node #root not found in document.");
-}
-
-createRoot(rootEl).render(<App />);
+createRoot(root).render(
+	<StrictMode>
+		<BrowserRouter>
+			<App />
+		</BrowserRouter>
+	</StrictMode>,
+);

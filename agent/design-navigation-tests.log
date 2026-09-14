@@ -1,0 +1,36 @@
+bun test v1.3.14 (0d9b296a)
+
+src\App.test.tsx:
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+(pass) App (issue #158 — polimento e auditoria) > navegação para entrar com código atualiza o formulário já aberto [142.95ms]
+Warning: React does not recognize the `fetchPriority` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `fetchpriority` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+    at img
+    at div
+    at section
+    at div
+    at div
+    at HomePage (C:\Users\heldi\pointly\apps\web\src\pages\home.tsx:32:31)
+    at RenderedRoute (C:\Users\heldi\pointly\node_modules\.bun\react-router@6.28.0+f4eacebf2041cd4f\node_modules\react-router\dist\umd\react-router.development.js:542:9)
+    at Routes (C:\Users\heldi\pointly\node_modules\.bun\react-router@6.28.0+f4eacebf2041cd4f\node_modules\react-router\dist\umd\react-router.development.js:1275:9)
+    at main
+    at ShellMain (C:\Users\heldi\pointly\apps\web\src\components\shell.tsx:40:26)
+    at div
+    at App (C:\Users\heldi\pointly\apps\web\src\App.tsx:11:29)
+    at Router (C:\Users\heldi\pointly\node_modules\.bun\react-router@6.28.0+f4eacebf2041cd4f\node_modules\react-router\dist\umd\react-router.development.js:1214:9)
+    at MemoryRouter (C:\Users\heldi\pointly\node_modules\.bun\react-router@6.28.0+f4eacebf2041cd4f\node_modules\react-router\dist\umd\react-router.development.js:1106:9)
+(pass) App (issue #158 — polimento e auditoria) > skip link leva ao conteúdo principal [37.82ms]
+(pass) App (issue #158 — polimento e auditoria) > marcos de navegação presentes nas duas superfícies [14.85ms]
+
+src\pages\join.test.tsx:
+(pass) JoinPage > bloqueia envio com apelido inválido sem chamar rede [42.21ms]
+(pass) JoinPage > converte código digitado para maiúsculas [26.45ms]
+(pass) JoinPage > modo join na query abre o campo de código [17.57ms]
+(pass) JoinPage > link de convite preenche o código e entrar navega para a arena [122.83ms]
+(pass) JoinPage > código inexistente mostra Sala não encontrada sem abrir socket [52.08ms]
+(pass) JoinPage > reload na entrada mantém o apelido digitado [13.23ms]
+
+ 9 pass
+ 0 fail
+ 23 expect() calls
+Ran 9 tests across 2 files. [1440.00ms]

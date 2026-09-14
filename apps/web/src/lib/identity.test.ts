@@ -1,130 +1,117 @@
-/**
- * identity.test — unit tests da lógica compartilhada (spell-rebuild).
- */
-import "../test-jsdom";
-import { beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import {
-	API_BASE,
-	buildShareUrl,
-	getCode,
-	getNick,
-	getOrCreateUUID,
+	CodeSchema,
+	NickSchema,
+	clearSession,
+	getOrCreateUuid,
 	isValidCode,
+	loadSession,
 	normalizeCode,
-	setCode,
-	setNick,
-	validateNick,
+	saveSession,
 } from "./identity";
 
-beforeEach(() => {
-	sessionStorage.clear();
+afterEach(() => {
+	window.localStorage.clear();
 });
 
 describe("normalizeCode", () => {
-	test("maiúsculas direto", () => {
-		expect(normalizeCode("AB12")).toBe("AB12");
-	});
-
-	test("minúsculas viram maiúsculas", () => {
+	test("converte para maiúsculas", () => {
 		expect(normalizeCode("ab12")).toBe("AB12");
 	});
-
-	test("remove separadores e corta em 4", () => {
-		expect(normalizeCode("a b-c!d")).toBe("ABCD");
+	test("remove separadores e espaços", () => {
+		expect(normalizeCode("ab-d")).toBe("ABD");
+		expect(normalizeCode("a b1")).toBe("AB1");
+	});
+	test("limita a 4 caracteres", () => {
 		expect(normalizeCode("abcdef")).toBe("ABCD");
 	});
-
-	test("NFKD dobra acentos", () => {
-		expect(normalizeCode("éà1")).toBe("EA1");
+	test("é idempotente", () => {
+		expect(normalizeCode(normalizeCode("ab12!"))).toBe("AB12");
 	});
-
-	test("vazio → vazio", () => {
+	test("vazio continua vazio", () => {
 		expect(normalizeCode("")).toBe("");
-		expect(normalizeCode("---")).toBe("");
 	});
 });
 
 describe("isValidCode", () => {
-	test("4 alfanum maiúsculos → true", () => {
+	test("aceita 4 alfanuméricos maiúsculos", () => {
 		expect(isValidCode("AB12")).toBe(true);
-		expect(isValidCode("ZZ99")).toBe(true);
+		expect(isValidCode("ZZZZ")).toBe(true);
 	});
-
-	test("curto/longo → false", () => {
+	test("rejeita minúsculas, tamanho errado e símbolos", () => {
+		expect(isValidCode("ab12")).toBe(false);
 		expect(isValidCode("ABC")).toBe(false);
 		expect(isValidCode("ABCDE")).toBe(false);
+		expect(isValidCode("AB-D")).toBe(false);
 		expect(isValidCode("")).toBe(false);
 	});
+});
 
-	test("minúsculas e símbolos → false (normalizar antes)", () => {
-		expect(isValidCode("ab12")).toBe(false);
-		expect(isValidCode("AB!2")).toBe(false);
-		expect(isValidCode("AB 2")).toBe(false);
+describe("CodeSchema", () => {
+	test("aceita código válido e rejeita inválido", () => {
+		expect(CodeSchema.safeParse("AB12").success).toBe(true);
+		expect(CodeSchema.safeParse("ab12").success).toBe(false);
+		expect(CodeSchema.safeParse("ABC").success).toBe(false);
 	});
 });
 
-describe("validateNick", () => {
-	test("vazio → null (botão disabled em vez de erro)", () => {
-		expect(validateNick("")).toBeNull();
+describe("NickSchema", () => {
+	test("aceita apelidos válidos", () => {
+		for (const nick of ["An", "Ana", "Dev Front", "a".repeat(20)]) {
+			expect(NickSchema.safeParse(nick).success).toBe(true);
+		}
 	});
-
-	test("<2 chars → erro mínimo", () => {
-		expect(validateNick("A")).toBe("Use pelo menos 2 caracteres.");
+	test("rejeita curto, longo e espaços irregulares", () => {
+		for (const nick of ["", "A", "a".repeat(21), " Ana", "Ana ", "Dev  Front"]) {
+			expect(NickSchema.safeParse(nick).success).toBe(false);
+		}
 	});
-
-	test(">20 chars → erro máximo", () => {
-		expect(validateNick("a".repeat(21))).toBe("Use no máximo 20 caracteres.");
-	});
-
-	test("espaço duplo → erro", () => {
-		expect(validateNick("Hel  der")).toBe(
-			"Evite espaços duplos no meio do nome.",
-		);
-	});
-
-	test("espaço na borda → erro", () => {
-		expect(validateNick(" Helder")).toBe("Remova espaços no início e no fim.");
-		expect(validateNick("Helder ")).toBe("Remova espaços no início e no fim.");
-	});
-
-	test("válidos → null", () => {
-		expect(validateNick("He")).toBeNull();
-		expect(validateNick("Helder")).toBeNull();
-		expect(validateNick("a".repeat(20))).toBeNull();
-		expect(validateNick("Luna Silva")).toBeNull();
+	test("mensagens em pt-BR", () => {
+		const short = NickSchema.safeParse("");
+		if (short.success) throw new Error("deveria falhar");
+		expect(short.error.issues[0]?.message).toMatch(/2 caracteres/);
 	});
 });
 
-describe("sessionStorage (silent-fail)", () => {
-	test("nick roundtrip", () => {
-		expect(getNick()).toBeNull();
-		setNick("Luna");
-		expect(getNick()).toBe("Luna");
-	});
-
-	test("code roundtrip", () => {
-		expect(getCode()).toBeNull();
-		setCode("AB12");
-		expect(getCode()).toBe("AB12");
-	});
-
-	test("getOrCreateUUID é estável e formato UUID", () => {
-		const first = getOrCreateUUID();
+describe("getOrCreateUuid", () => {
+	test("é estável entre chamadas e tem formato UUID", () => {
+		const first = getOrCreateUuid();
+		const second = getOrCreateUuid();
+		expect(first).toBe(second);
 		expect(first).toMatch(
 			/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
 		);
-		expect(getOrCreateUUID()).toBe(first);
 	});
 });
 
-describe("urls", () => {
-	test("buildShareUrl", () => {
-		expect(buildShareUrl("https://pointly.space", "AB12")).toBe(
-			"https://pointly.space/join?code=AB12",
-		);
+describe("saveSession/loadSession/clearSession (ticket 09)", () => {
+	test("salva e recupera código normalizado + apelido", () => {
+		saveSession("ab12", "Ana");
+		expect(loadSession()).toEqual({ code: "AB12", nick: "Ana" });
 	});
 
-	test("API base relativa (proxy do Vite em dev)", () => {
-		expect(API_BASE).toBe("/api/v1");
+	test("sem sessão retorna null", () => {
+		expect(loadSession()).toBeNull();
+	});
+
+	test("clearSession apaga sem erro", () => {
+		saveSession("AB12", "Ana");
+		clearSession();
+		expect(loadSession()).toBeNull();
+	});
+
+	test("código inválido não persiste", () => {
+		saveSession("ABC", "Ana");
+		expect(loadSession()).toBeNull();
+	});
+
+	test("apelido curto não persiste", () => {
+		saveSession("AB12", "A");
+		expect(loadSession()).toBeNull();
+	});
+
+	test("JSON corrompido retorna null sem lançar", () => {
+		window.localStorage.setItem("pointly-session", "{invalido");
+		expect(loadSession()).toBeNull();
 	});
 });

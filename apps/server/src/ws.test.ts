@@ -235,6 +235,22 @@ describe("WSService — onMessage (hello + cast_vote + reveal + new_round)", () 
 		expect(ws.data.lastPongAt).toBeGreaterThanOrEqual(before);
 	});
 
+	test("reveal e nova rodada enviam o estado atualizado também a quem acionou", () => {
+		service.onOpen(ws);
+		service.onMessage(ws, JSON.stringify({ type: "hello", payload: {
+			uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana",
+		} }));
+		service.onMessage(ws, JSON.stringify({ type: "cast_vote", payload: { value: "5" } }));
+		service.onMessage(ws, JSON.stringify({ type: "reveal_votes", payload: {} }));
+		expect(ws.eventsOfType("room_state").at(-1)?.payload.sala.phase).toBe("revealed");
+		expect(ws.eventsOfType("room_state").at(-1)?.payload.sala.votes[ws.data.playerId!]).toBe("5");
+		service.onMessage(ws, JSON.stringify({ type: "start_new_round", payload: {} }));
+		const next = ws.eventsOfType("room_state").at(-1)?.payload.sala;
+		expect(next?.round).toBe(2);
+		expect(next?.phase).toBe("voting");
+		expect(next?.votes).toEqual({});
+	});
+
 	test("EVR-03: cast_vote em revealed com mesmo valor NÃO envia nenhum broadcast", () => {
 		// Setup: 2 players, vote, reveal (phase revealed)
 		service.onOpen(ws);
