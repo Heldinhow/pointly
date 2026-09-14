@@ -115,6 +115,9 @@ export function HomePage(): React.ReactElement {
                 Entrar com código
               </Link>
             </div>
+            <a href="#demo" className="pt-home__demo-link">
+              Experimente uma rodada
+            </a>
           </div>
           <div className="pt-home__hero-visual">
             <img
@@ -126,12 +129,18 @@ export function HomePage(): React.ReactElement {
             />
           </div>
         </section>
-        <section className="pt-home__demo-wrap" id="demo" data-testid="demo">
+        <section
+          className="pt-home__demo-wrap"
+          id="demo"
+          data-testid="demo"
+          tabIndex={-1}
+          aria-labelledby="demo-title"
+        >
           <div className="pt-home__section-intro">
             <div>
-              <h2>
-                Você escolhe.
-                <br />A sala revela.
+              <h2 id="demo-title">
+                Você escolhe.{" "}
+                <span className="pt-home__demo-title-end">A sala revela.</span>
               </h2>
             </div>
             <p>
@@ -288,39 +297,34 @@ export function HomePage(): React.ReactElement {
         <section className="pt-home__how" id="como-funciona">
           <div className="pt-home__section-intro pt-home__section-intro--how">
             <div>
-              <h2>
-                Menos espera.
-                <br />
-                Mais alinhamento.
-              </h2>
+              <h2>Agora, reúna seu time.</h2>
             </div>
-            <p>
-              O Pointly tira o ritual do caminho para o time focar na decisão.
-            </p>
           </div>
-          <div className="pt-home__steps">
-            <article>
-              <span>01</span>
-              <h3>Abra uma sala</h3>
-              <p>
-                Um clique cria o espaço. Compartilhe o código onde seu time já
-                conversa.
-              </p>
-            </article>
-            <article>
-              <span>02</span>
-              <h3>Todos votam</h3>
-              <p>Cada estimativa fica escondida até a sala ser revelada.</p>
-            </article>
-            <article>
-              <span>03</span>
-              <h3>Revelem juntos</h3>
-              <p>
-                Compare os sinais, converse sobre o que divergiu e siga em
-                frente.
-              </p>
-            </article>
-          </div>
+          <ol className="pt-home__steps" role="list">
+            <li>
+              <span aria-hidden="true">01</span>
+              <h3>Crie a sala</h3>
+              <p>Escolha seu apelido e comece sem cadastro.</p>
+            </li>
+            <li>
+              <span aria-hidden="true">02</span>
+              <h3>Compartilhe o código</h3>
+              <p>Convide o time onde vocês já conversam.</p>
+            </li>
+            <li>
+              <span aria-hidden="true">03</span>
+              <h3>Estimem juntos</h3>
+              <p>Revelem as cartas e conversem sobre as diferenças.</p>
+            </li>
+          </ol>
+          <Button
+            size="xl"
+            className="pt-home__closing-action"
+            data-testid="home-cta-create-bottom"
+            render={<Link to="/join" />}
+          >
+            Criar sala <ArrowRightIcon aria-hidden="true" />
+          </Button>
         </section>
       </div>
     </div>
