@@ -25,6 +25,7 @@ import {
 	type Phase,
 	type SalaState,
 	type Vote,
+	type VotesRevealedEvent,
 	computeConsensus,
 	isUnanimous,
 } from "@planning-poker/shared";
@@ -60,13 +61,7 @@ const SEAT_COUNT = 12;
 const TIMER_SECONDS = 60;
 const DISCONNECT_GRACE_MS = 60_000;
 
-export type RevealOutcome = {
-	votes: Record<string, Vote>;
-	median: number | null;
-	mean: number | null;
-	range: [number, number] | null;
-	unanimous: boolean;
-};
+export type RevealOutcome = VotesRevealedEvent;
 
 /**
  * Sala — uma partida Planning Poker. Mutável in-place; o hub serializa
@@ -265,15 +260,11 @@ export class Sala {
 	/**
 	 * Encontra o primeiro `seatIndex` livre em [0..11]. Sala cheia nunca
 	 * chega aqui (addPlayer lança antes). F-027.
+	 * Delega ao helper exportado (SSOT — antes loop duplicado aqui e
+	 * em `computeFirstFreeSeat`).
 	 */
 	private firstFreeSeat(): number {
-		const taken = new Set<number>();
-		for (const p of this.players.values()) taken.add(p.seatIndex);
-		for (let s = 0; s < SEAT_COUNT; s++) {
-			if (!taken.has(s)) return s;
-		}
-		// Não reachable (addPlayer já validou size < SEAT_COUNT), mas TS seguro:
-		throw new Error("no free seat — sala cheia");
+		return computeFirstFreeSeat([...this.players.values()]);
 	}
 
 	// -----------------------------------------------------------------------
@@ -384,9 +375,7 @@ export class Sala {
 			);
 		}
 
-		const voteList = Array.from(this.votes.values());
-		const stats = computeConsensus(voteList);
-		const unanimous = isUnanimous(voteList);
+		const stats = this.consensusSnapshot();
 		this.phase = "revealed";
 		this.stopTimer();
 
@@ -395,7 +384,7 @@ export class Sala {
 			median: stats.median,
 			mean: stats.mean,
 			range: stats.range,
-			unanimous,
+			unanimous: stats.unanimous,
 		};
 	}
 
@@ -516,16 +505,34 @@ export class Sala {
 	}
 
 	/**
+	 * Ponto único de cálculo de consenso sobre `this.votes` (SSOT).
+	 * Antes o trio `computeConsensus + isUnanimous + fromEntries` estava
+	 * copiado em `reveal()`, `recomputeConsensus()` e no `ws.ts`.
+	 */
+	private consensusSnapshot(): ConsensusStats & { unanimous: boolean } {
+		const voteList = Array.from(this.votes.values());
+		return { ...computeConsensus(voteList), unanimous: isUnanimous(voteList) };
+	}
+
+	/**
 	 * EVR-04: recalcula consensus a partir do estado atual de `votes`.
 	 * Side-effect-free (apenas lê `this.votes` e devolve stats).
 	 * Exposto como helper público para testes unitários (T6) e como
 	 * ponto único de recompute pós-reveal.
 	 */
 	recomputeConsensus(): ConsensusStats & { unanimous: boolean } {
-		const voteList = Array.from(this.votes.values());
-		const stats = computeConsensus(voteList);
-		const unanimous = isUnanimous(voteList);
-		return { ...stats, unanimous };
+		return this.consensusSnapshot();
+	}
+
+	/**
+	 * Consenso pronto para broadcast `votes_revealed` (usado pelo WS
+	 * em vez de recomputar `computeConsensus/isUnanimous` inline).
+	 */
+	getConsensusEvent(): RevealOutcome {
+		return {
+			votes: Object.fromEntries(this.votes),
+			...this.consensusSnapshot(),
+		};
 	}
 
 	/**

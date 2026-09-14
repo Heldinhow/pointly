@@ -16,11 +16,11 @@ import {
 	type ClientToServerEvent,
 	type ServerToClientEvent,
 	type SalaState,
+	type ThrowProjectilePayload,
 	type Vote,
-	computeConsensus,
-	isUnanimous,
 } from "@planning-poker/shared";
 import type { Hub } from "./hub";
+import type { Sala } from "./sala";
 import { handleCastVote } from "./handlers/cast-vote";
 import { handleHello } from "./handlers/hello";
 import { handleRevealVotes } from "./handlers/reveal-votes";
@@ -198,27 +198,8 @@ export class WSService {
 		}
 		for (const { code, tick, sala } of results) {
 			if (tick === "fired") {
-				const salaState = sala.toState();
-				const votesValues = Array.from(sala.votes.values());
-				const stats = computeConsensus(votesValues);
-				const unanimous = isUnanimous(votesValues);
-				this.broadcast(code, {
-					type: "votes_revealed",
-					payload: {
-						votes: Object.fromEntries(sala.votes),
-						median: stats.median,
-						mean: stats.mean,
-						range: stats.range,
-						unanimous,
-					},
-				});
-				const event: ServerToClientEvent = salaState.critical
-					? {
-							type: "room_state",
-							payload: { sala: stripCritical(salaState), critical: true },
-						}
-					: { type: "room_state", payload: { sala: stripCritical(salaState) } };
-				this.broadcast(code, event);
+				this.broadcastConsensus(code, sala);
+				this.broadcast(code, toRoomStateEvent(sala.toState()));
 				this.lastBroadcastAt.set(code, now);
 			} else if (tick === "ticking") {
 				const last = this.lastBroadcastAt.get(code) ?? 0;
@@ -232,28 +213,7 @@ export class WSService {
 		// 3. Grace period cleanup (T18)
 		const removed = this.hub.tickGracePeriod(now);
 		for (const { code, playerId } of removed) {
-			this.broadcast(code, {
-				type: "player_left",
-				payload: { playerId },
-			});
-			// Sala pode ter sumido; check
-			const sala = this.hub.getSala(code);
-			if (sala) {
-				const salaState = sala.toState();
-				const event: ServerToClientEvent = salaState.critical
-					? {
-							type: "room_state",
-							payload: { sala: stripCritical(salaState), critical: true },
-						}
-					: { type: "room_state", payload: { sala: stripCritical(salaState) } };
-				this.broadcast(code, event);
-			} else {
-				// Sala vazia → fim
-				this.broadcast(code, {
-					type: "sala_ended",
-					payload: { reason: "last_left" },
-				});
-			}
+			this.broadcastMembershipChange(code, playerId);
 		}
 	}
 
@@ -324,15 +284,8 @@ export class WSService {
 	}
 
 	private handleCastVoteEvent(ws: BunWS, value: Vote | null): void {
-		const playerId = ws.data.playerId;
-		if (!playerId) {
-			this.sendError(
-				ws,
-				"invalid_phase",
-				"Sala desconhecida. Envie hello primeiro.",
-			);
-			return;
-		}
+		const playerId = this.requireWsPlayer(ws);
+		if (!playerId) return;
 		const outcome = handleCastVote(this.hub, playerId, { value });
 		if (!outcome.ok) {
 			this.sendError(ws, outcome.code, outcome.message);
@@ -353,19 +306,7 @@ export class WSService {
 		if (!sala) return;
 
 		if (sala.phase === "revealed") {
-			const voteList = Array.from(sala.votes.values());
-			const stats = computeConsensus(voteList);
-			const unanimous = isUnanimous(voteList);
-			this.broadcast(code, {
-				type: "votes_revealed",
-				payload: {
-					votes: Object.fromEntries(sala.votes),
-					median: stats.median,
-					mean: stats.mean,
-					range: stats.range,
-					unanimous,
-				},
-			});
+			this.broadcastConsensus(code, sala);
 		} else {
 			// Vote cast event: individual se primeiro da rodada, aggregate se seguinte
 			const isFirst = outcome.isFirstVoteOfRound;
@@ -398,19 +339,14 @@ export class WSService {
 	}
 
 	private handleRevealVotesEvent(ws: BunWS): void {
-		const playerId = ws.data.playerId;
-		if (!playerId) {
-			this.sendError(ws, "invalid_phase", "Sala desconhecida.");
-			return;
-		}
+		const playerId = this.requireWsPlayer(ws);
+		if (!playerId) return;
 		const outcome = handleRevealVotes(this.hub, playerId);
 		if (!outcome.ok) {
 			this.sendError(ws, outcome.code, outcome.message);
 			return;
 		}
 		const code = ws.data.code!;
-		const sala = this.hub.getSala(code);
-		if (!sala) return;
 		this.broadcast(code, {
 			type: "votes_revealed",
 			payload: {
@@ -426,11 +362,8 @@ export class WSService {
 	}
 
 	private handleStartNewRoundEvent(ws: BunWS): void {
-		const playerId = ws.data.playerId;
-		if (!playerId) {
-			this.sendError(ws, "invalid_phase", "Sala desconhecida.");
-			return;
-		}
+		const playerId = this.requireWsPlayer(ws);
+		if (!playerId) return;
 		const outcome = handleStartNewRound(this.hub, playerId);
 		if (!outcome.ok) {
 			this.sendError(ws, outcome.code, outcome.message);
@@ -451,19 +384,8 @@ export class WSService {
 		ws.data.playerId = null;
 		ws.data.code = null;
 		if (removed.code) {
-			this.broadcast(removed.code, {
-				type: "player_left",
-				payload: { playerId },
-			});
-			const sala = this.hub.getSala(removed.code);
-			if (sala) {
-				this.broadcastRoomState(removed.code, ws);
-			} else {
-				this.broadcast(removed.code, {
-					type: "sala_ended",
-					payload: { reason: "last_left" },
-				});
-			}
+			// O leaver não recebe o room_state (já saiu) — `except: ws`.
+			this.broadcastMembershipChange(removed.code, playerId, ws);
 		}
 	}
 
@@ -474,13 +396,10 @@ export class WSService {
 
 	private handleThrowProjectileEvent(
 		ws: BunWS,
-		payload: import("@planning-poker/shared").ThrowProjectilePayload,
+		payload: ThrowProjectilePayload,
 	): void {
-		const playerId = ws.data.playerId;
-		if (!playerId) {
-			this.sendError(ws, "invalid_phase", "Sala desconhecida.");
-			return;
-		}
+		const playerId = this.requireWsPlayer(ws);
+		if (!playerId) return;
 		const outcome = handleThrowProjectile(this.hub, playerId, payload);
 		if (!outcome.ok) {
 			this.sendError(ws, outcome.code, outcome.message);
@@ -501,6 +420,60 @@ export class WSService {
 	// -----------------------------------------------------------------------
 	// Broadcast helpers
 	// -----------------------------------------------------------------------
+
+	/**
+	 * Guard de autenticação do socket — SSOT (antes 4x `if (!playerId)`
+	 * com mensagens levemente diferentes). Envia erro e retorna null.
+	 */
+	private requireWsPlayer(ws: BunWS): string | null {
+		const playerId = ws.data.playerId;
+		if (!playerId) {
+			this.sendError(
+				ws,
+				"invalid_phase",
+				"Sala desconhecida. Envie hello primeiro.",
+			);
+			return null;
+		}
+		return playerId;
+	}
+
+	/**
+	 * Broadcast `votes_revealed` a partir do consenso da sala (SSOT —
+	 * antes payload de 5 campos montado inline 3x com
+	 * `computeConsensus/isUnanimous` duplicados).
+	 */
+	private broadcastConsensus(code: string, sala: Sala): void {
+		this.broadcast(code, {
+			type: "votes_revealed",
+			payload: sala.getConsensusEvent(),
+		});
+	}
+
+	/**
+	 * Trio `player_left` → `room_state`/`sala_ended` (SSOT — antes copiado
+	 * no grace cleanup e no leave voluntário).
+	 */
+	private broadcastMembershipChange(
+		code: string,
+		playerId: string,
+		except?: BunWS,
+	): void {
+		this.broadcast(code, {
+			type: "player_left",
+			payload: { playerId },
+		});
+		// Sala pode ter sumido; check
+		if (this.hub.getSala(code)) {
+			this.broadcastRoomState(code, except);
+		} else {
+			// Sala vazia → fim
+			this.broadcast(code, {
+				type: "sala_ended",
+				payload: { reason: "last_left" },
+			});
+		}
+	}
 
 	/**
 	 * Envia event pra todas as conexões dessa sala EXCETO `except`.
@@ -536,11 +509,7 @@ export class WSService {
 			}, "debug");
 		}
 		const state = sala.toState();
-		const salaPayload = stripCritical(state);
-		const event: ServerToClientEvent = state.critical
-			? { type: "room_state", payload: { sala: salaPayload, critical: true } }
-			: { type: "room_state", payload: { sala: salaPayload } };
-		this.broadcast(code, event, except);
+		this.broadcast(code, toRoomStateEvent(state), except);
 	}
 
 	private sendEvent(ws: BunWS, event: ServerToClientEvent): void {
@@ -566,6 +535,19 @@ export class WSService {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Envelope `room_state` com flag `critical` (SSOT — antes ternário
+ * copiado 4x: tick fired, grace cleanup, broadcastRoomState, welcome).
+ */
+function toRoomStateEvent(
+	state: SalaState & { critical: boolean },
+): ServerToClientEvent {
+	const sala = stripCritical(state);
+	return state.critical
+		? { type: "room_state", payload: { sala, critical: true } }
+		: { type: "room_state", payload: { sala } };
+}
 
 /**
  * Strip campo `critical` antes de enviar como SalaState puro.

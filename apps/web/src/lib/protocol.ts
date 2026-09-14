@@ -27,11 +27,19 @@ export const DECK_VALUES = [
 ] as const;
 export type Vote = (typeof DECK_VALUES)[number];
 
-export function isDeckValue(value: unknown): value is Vote {
+/** Guarda genérico para uniões de string — antes 3x `typeof+includes`. */
+function isOneOf<const T extends readonly string[]>(
+	values: T,
+	value: unknown,
+): value is T[number] {
 	return (
 		typeof value === "string" &&
-		(DECK_VALUES as readonly string[]).includes(value)
+		(values as readonly string[]).includes(value)
 	);
+}
+
+export function isDeckValue(value: unknown): value is Vote {
+	return isOneOf(DECK_VALUES, value);
 }
 
 export interface Player {
@@ -137,19 +145,13 @@ export const PROJECTILE_OUTCOMES = ["hit", "dodge", "deflect"] as const;
 export type ProjectileOutcome = (typeof PROJECTILE_OUTCOMES)[number];
 
 export function isProjectileType(value: unknown): value is ProjectileType {
-	return (
-		typeof value === "string" &&
-		(PROJECTILE_TYPES as readonly string[]).includes(value)
-	);
+	return isOneOf(PROJECTILE_TYPES, value);
 }
 
 export function isProjectileOutcome(
 	value: unknown,
 ): value is ProjectileOutcome {
-	return (
-		typeof value === "string" &&
-		(PROJECTILE_OUTCOMES as readonly string[]).includes(value)
-	);
+	return isOneOf(PROJECTILE_OUTCOMES, value);
 }
 
 export interface ThrowProjectilePayload {

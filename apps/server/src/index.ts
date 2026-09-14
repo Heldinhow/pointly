@@ -21,6 +21,7 @@
  */
 
 import { Hono } from "hono";
+import { RoomCodeSchema } from "@planning-poker/shared";
 import { Hub } from "./hub";
 import { WSService } from "./ws";
 import { Logger } from "./ws-logger";
@@ -84,7 +85,8 @@ app.get("/api/v1/health", (c) =>
  */
 app.get("/api/v1/salas/:code", (c) => {
 	const code = c.req.param("code").toUpperCase();
-	if (!/^[A-Z0-9]{4}$/.test(code)) {
+	// SSOT: mesmo RoomCodeSchema do contrato compartilhado (antes regex duplicado).
+	if (!RoomCodeSchema.safeParse(code).success) {
 		return c.json({ error: "invalid_code" }, 400);
 	}
 	const sala = hub.getSala(code);

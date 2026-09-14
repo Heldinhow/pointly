@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { safeGet, safeRemove, safeSet } from "./storage";
 
 /**
  * Identidade client-side: UUID persistido (reconnect), rascunho do apelido
@@ -12,30 +13,16 @@ const SESSION_KEY = "pointly-session";
 const UUID_PATTERN =
 	/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const memoryFallback = new Map<string, string>();
-
 function readStored(key: string): string | null {
-	try {
-		return window.localStorage.getItem(key);
-	} catch {
-		return memoryFallback.get(key) ?? null;
-	}
+	return safeGet(key);
 }
 
 function writeStored(key: string, value: string): void {
-	try {
-		window.localStorage.setItem(key, value);
-	} catch {
-		memoryFallback.set(key, value);
-	}
+	safeSet(key, value);
 }
 
 function removeStored(key: string): void {
-	try {
-		window.localStorage.removeItem(key);
-	} catch {
-		memoryFallback.delete(key);
-	}
+	safeRemove(key);
 }
 
 function randomUuid(): string {

@@ -5,34 +5,33 @@
 :root {
 	--font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
 	--font-mono: "Geist Mono", ui-monospace, monospace;
-	--radius: 0.625rem;
-	--accent: --alpha(var(--color-black) / 4%);
-	--accent-foreground: var(--color-neutral-800);
-	--background: var(--color-white);
-	--border: --alpha(var(--color-black) / 8%);
-	--card: var(--color-white);
-	--card-foreground: var(--color-neutral-800);
+	/* SSOT de cor (ex-brand.css): paleta verde produto. Não duplicar em outro arquivo. */
+	--radius: 0.75rem;
+	--accent: #e4ece4;
+	--accent-foreground: #202b27;
+	--background: #f4f6f3;
+	--border: #dce3db;
+	--card: #ffffff;
+	--card-foreground: #202b27;
 	--destructive: var(--color-red-500);
 	--destructive-foreground: var(--color-red-700);
-	--foreground: var(--color-neutral-800);
+	--foreground: #202b27;
 	--info: var(--color-blue-500);
 	--info-foreground: var(--color-blue-700);
-	--input: --alpha(var(--color-black) / 10%);
-	--muted: --alpha(var(--color-black) / 4%);
-	--muted-foreground: color-mix(
-		in srgb,
-		var(--color-neutral-500) 90%,
-		var(--color-black)
-	);
-	--popover: var(--color-white);
-	--popover-foreground: var(--color-neutral-800);
-	--primary: var(--color-neutral-800);
-	--primary-foreground: var(--color-neutral-50);
-	--ring: var(--color-neutral-400);
-	--secondary: --alpha(var(--color-black) / 4%);
-	--secondary-foreground: var(--color-neutral-800);
+	--input: #b7c4b9;
+	--muted: #e9eee8;
+	--muted-foreground: #606e65;
+	--popover: #ffffff;
+	--popover-foreground: #202b27;
+	--primary: #17634f;
+	--primary-foreground: #ffffff;
+	--ring: #38856c;
+	--secondary: #e5ece4;
+	--secondary-foreground: #304d3b;
 	--success: var(--color-emerald-500);
-	--success-foreground: var(--color-emerald-700);
+	--success-foreground: #17634f;
+	--table-rail: #d6e1d4;
+	--table-wordmark: #c4dbcd;
 	--warning: var(--color-amber-500);
 	--warning-foreground: var(--color-amber-700);
 	--chart-1: var(--color-orange-600);
@@ -58,44 +57,36 @@
 }
 
 .dark {
-	--accent: --alpha(var(--color-white) / 4%);
-	--accent-foreground: var(--color-neutral-100);
-	--background: color-mix(
-		in srgb,
-		var(--color-neutral-950) 95%,
-		var(--color-white)
-	);
-	--border: --alpha(var(--color-white) / 6%);
-	--card: color-mix(in srgb, var(--background) 98%, var(--color-white));
-	--card-foreground: var(--color-neutral-100);
+	/* SSOT escuro (ex-brand.css). Não duplicar em outro arquivo. */
+	--accent: #2a3c30;
+	--accent-foreground: #ebf0e9;
+	--background: #141d19;
+	--border: #334439;
+	--card: #1b2721;
+	--card-foreground: #ebf0e9;
 	--destructive: color-mix(
 		in srgb,
 		var(--color-red-500) 90%,
 		var(--color-white)
 	);
 	--destructive-foreground: var(--color-red-400);
-	--foreground: var(--color-neutral-100);
+	--foreground: #ebf0e9;
 	--info: var(--color-blue-500);
 	--info-foreground: var(--color-blue-400);
-	--input: --alpha(var(--color-white) / 8%);
-	--muted: --alpha(var(--color-white) / 4%);
-	/* Auditoria #158: texto secundário sobre superfícies `muted` no tema
-	escuro batia ~4,2:1 (abaixo dos 4,5 do AA). Base em neutral-400 eleva
-	para ~6,3:1 sobre `muted` e ~7,3:1 sobre o fundo, mantendo a hierarquia. */
-	--muted-foreground: color-mix(
-		in srgb,
-		var(--color-neutral-400) 90%,
-		var(--color-white)
-	);
-	--popover: color-mix(in srgb, var(--background) 98%, var(--color-white));
-	--popover-foreground: var(--color-neutral-100);
-	--primary: var(--color-neutral-100);
-	--primary-foreground: var(--color-neutral-800);
-	--ring: var(--color-neutral-500);
-	--secondary: --alpha(var(--color-white) / 4%);
-	--secondary-foreground: var(--color-neutral-100);
+	--input: #556b5c;
+	--muted: #24332a;
+	--muted-foreground: #a8b6aa;
+	--popover: #1b2721;
+	--popover-foreground: #ebf0e9;
+	--primary: #a9d6ad;
+	--primary-foreground: #183523;
+	--ring: #8abb91;
+	--secondary: #2b3d30;
+	--secondary-foreground: #c8dfc8;
 	--success: var(--color-emerald-500);
-	--success-foreground: var(--color-emerald-400);
+	--success-foreground: #a9d6ad;
+	--table-rail: #394d3e;
+	--table-wordmark: #c4dbcd;
 	--warning: var(--color-amber-500);
 	--warning-foreground: var(--color-amber-400);
 	--chart-1: var(--color-blue-700);
@@ -148,6 +139,8 @@
 	--color-secondary-foreground: var(--secondary-foreground);
 	--color-success: var(--success);
 	--color-success-foreground: var(--success-foreground);
+	--color-table-rail: var(--table-rail);
+	--color-table-wordmark: var(--table-wordmark);
 	--color-warning: var(--warning);
 	--color-warning-foreground: var(--warning-foreground);
 	--color-chart-1: var(--chart-1);

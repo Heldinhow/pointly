@@ -19,10 +19,9 @@
 import { randomUUID } from "node:crypto";
 import {
 	generateUniqueCode,
-	type SalaState,
 	type Player,
 } from "@planning-poker/shared";
-import { computeFirstFreeSeat, Sala, SALA_SEAT_COUNT } from "./sala";
+import { Sala } from "./sala";
 import type { TickResult } from "./types";
 
 export type { TickResult } from "./types";
@@ -305,15 +304,3 @@ export class HubError extends Error {
 export function makePlayerId(): string {
 	return `p_${randomUUID().replace(/-/g, "").slice(0, 12)}`;
 }
-
-/**
- * Helper pra formatar SalaState pro wire format (re-export para uso dos handlers).
- */
-export function snapshotSala(sala: Sala): SalaState & { critical: boolean } {
-	return sala.toState();
-}
-
-/**
- * Re-exports para evitar import circular em handlers.
- */
-export { SALA_SEAT_COUNT, computeFirstFreeSeat };

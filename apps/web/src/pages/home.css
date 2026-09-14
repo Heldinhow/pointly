@@ -24,23 +24,6 @@
 .pt-home__hero-copy {
   max-width: 680px;
 }
-.pt-home__eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 0 22px;
-  color: var(--home-primary);
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-.pt-home__eyebrow-line {
-  width: 27px;
-  height: 1px;
-  background: currentColor;
-}
 .pt-home h1,
 .pt-home h2,
 .pt-home h3 {
@@ -105,9 +88,6 @@
   gap: 16px;
   margin-bottom: 30px;
 }
-.pt-home__section-intro .pt-home__eyebrow {
-  margin-bottom: 16px;
-}
 .pt-home h2 {
   font-size: clamp(30px, 3.3vw, 42px);
   font-weight: 550;
@@ -135,7 +115,7 @@
   text-align: center;
 }
 .pt-home__table-kicker {
-  color: #c4dbcd;
+  color: var(--table-wordmark);
   font-family: var(--font-mono), monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
@@ -146,7 +126,7 @@
   letter-spacing: -0.04em;
 }
 .pt-home__table-center small {
-  color: #c4dbcd;
+  color: var(--table-wordmark);
   font-size: 12px;
 }
 .pt-home__selection {
@@ -367,12 +347,5 @@
   }
   .pt-home__distribution {
     justify-content: center;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .pt-home * {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
   }
 }

@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { OTPField, OTPFieldInput } from "@/components/ui/otp-field";
 import { checkSala, resolveWsUrl } from "@/lib/api";
 import { JoinError, friendlyJoinMessage } from "@/lib/errors";
+import { firstIssueMessage } from "@/lib/forms";
 import {
   CodeSchema,
   NickSchema,
@@ -33,20 +34,6 @@ import { useSession } from "@/store/session";
 import "./join.css";
 
 type Mode = "create" | "join";
-
-function firstIssueMessage(error: unknown): string {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "issues" in error &&
-    Array.isArray((error as { issues: unknown }).issues)
-  ) {
-    const issues = (error as { issues: Array<{ message?: unknown }> }).issues;
-    const message = issues[0]?.message;
-    if (typeof message === "string") return message;
-  }
-  return "Valor inválido.";
-}
 
 export function JoinPage(): React.ReactElement {
   const navigate = useNavigate();
@@ -191,7 +178,6 @@ export function JoinPage(): React.ReactElement {
   return (
     <div className="join-page">
       <section className="join-intro" aria-labelledby="join-intro-title">
-        <p className="join-eyebrow">Vamos começar</p>
         <h1 id="join-intro-title">
           Seu time.
           <br />

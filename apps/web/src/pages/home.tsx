@@ -11,14 +11,11 @@ import { Card, CardPanel } from "@/components/ui/card";
 import { Deck } from "@/components/deck";
 import { PokerTable } from "@/components/poker-table";
 import {
-  computeConsensus,
   formatMean,
   formatMedian,
   formatRange,
-  groupVotes,
-  isUnanimous,
-  voteToNumber,
 } from "@/lib/deck";
+import { useConsensusStats, voteSelectionText } from "@/lib/stats";
 import type { Vote } from "@/lib/protocol";
 import "./home.css";
 
@@ -33,31 +30,15 @@ export function HomePage(): React.ReactElement {
   const [revealed, setRevealed] = useState(false);
   const revealedVotes: Array<Vote | string> =
     myVote === null ? [] : [myVote, ...SIMULATED_TEAM.map((mate) => mate.vote)];
-  const consensus = computeConsensus(revealedVotes);
-  const unanimousVotes = isUnanimous(revealedVotes);
-  const numericCount = revealedVotes.filter(
-    (vote) => voteToNumber(vote) !== null,
-  ).length;
-  const noNumerics = numericCount === 0;
-  const isSingleNumeric = numericCount === 1;
-  const isUnanimousSignal = numericCount >= 2 && unanimousVotes;
-  const voteGroups = groupVotes(revealedVotes);
-  const resultsAriaLabel = noNumerics
-    ? "Sem votos numéricos · pausa e ausência ficam fora dos cálculos"
-    : isSingleNumeric
-      ? `Voto único · média ${formatMean(consensus.mean)} · intervalo ${formatRange(consensus.range)}`
-      : isUnanimousSignal
-        ? `Votação unânime · média ${formatMean(consensus.mean)} · intervalo ${formatRange(consensus.range)}`
-        : `Estatísticas pós-reveal · média ${formatMean(consensus.mean)} · mediana ${formatMedian(consensus.median)} · intervalo ${formatRange(consensus.range)}`;
-  const selectionText = revealed
-    ? myVote === "☕"
-      ? "Seu voto: pausa para café (conta presença, fora da média). Troque de carta · o resultado recalcula."
-      : `Seu voto: ${myVote}. Troque de carta · o resultado recalcula.`
-    : myVote === null
-      ? "Escolha uma carta para votar."
-      : myVote === "☕"
-        ? "Seu voto: pausa para café (conta presença, fora da média)."
-        : `Seu voto: ${myVote}. Clique em outra carta para substituir.`;
+  const {
+    consensus,
+    noNumerics,
+    isSingleNumeric,
+    isUnanimousSignal,
+    voteGroups,
+    resultsAriaLabel,
+  } = useConsensusStats(revealedVotes);
+  const selectionText = voteSelectionText(myVote, { revealed });
   const seats = [
     {
       id: "you",
@@ -108,18 +89,15 @@ export function HomePage(): React.ReactElement {
       <div className="pt-home__shell">
         <section className="pt-home__hero" data-testid="home-hero">
           <div className="pt-home__hero-copy">
-            <p className="pt-home__eyebrow">
-              <span className="pt-home__eyebrow-line" /> Planning poker sem
-              cadastro
-            </p>
             <h1>
               Boas conversas.
               <br />
               <em>Melhores estimativas.</em>
             </h1>
             <p className="pt-home__hero-lede">
-              Reúna o time, escolha suas cartas e transforme estimativas
-              diferentes em uma conversa que faz o projeto avançar.
+              Planning poker sem cadastro. Reúna o time, escolha suas cartas
+              e transforme estimativas diferentes em uma conversa que faz o
+              projeto avançar.
             </p>
             <div className="pt-home__hero-actions">
               <Button

@@ -25,24 +25,33 @@ import { PokerTable } from "@/components/poker-table";
 import "./arena.css";
 import { Spinner } from "@/components/ui/spinner";
 import {
-  computeConsensus,
   formatMean,
   formatMedian,
   formatRange,
-  groupVotes,
-  isUnanimous,
-  voteToNumber,
 } from "@/lib/deck";
+import {
+  hasAnyVotes,
+  useConsensusStats,
+  voteSelectionText,
+} from "@/lib/stats";
 import type { Phase, Player, Vote } from "@/lib/protocol";
 import {
-  type ProjectileOutcome,
   type ProjectileThrownPayload,
   type ProjectileType,
 } from "@/lib/protocol";
 import { useSession } from "@/store/session";
 import { JoinError, friendlyJoinMessage } from "@/lib/errors";
+import { SOCKET_ERROR_COPY } from "@/lib/forms";
 import { clearSession, loadSession } from "@/lib/identity";
+import { safeClear } from "@/lib/storage";
+import { copyText } from "@/lib/clipboard";
 import { resolveWsUrl } from "@/lib/api";
+import {
+  PROJECTILE_CATALOG,
+  PROJECTILE_COOLDOWN_MS,
+  PROJECTILE_FEED_LIMIT,
+  projectileFeedText,
+} from "@/lib/projectiles";
 import { PointlySocket } from "@/lib/ws-client";
 
 /** Limite duro do domínio: 12 assentos por sala. */
@@ -55,54 +64,18 @@ export const SEAT_COUNT = 12;
  */
 export const NEW_ROUND_CONFIRM_TIMEOUT_MS = 5000;
 
-/**
- * Issue #157 · Projéteis pós-reveal (7 interações com cooldown de 5s).
- * Catálogo com rótulos pt-BR e emojis (origem e destino sempre explícitos
- * no feed; desfecho · hit/dodge/deflect · vem do servidor via broadcast).
- */
-export const PROJECTILE_COOLDOWN_MS = 5000;
-const PROJECTILE_FEED_LIMIT = 5;
-
-export const PROJECTILE_CATALOG: ReadonlyArray<{
-  type: ProjectileType;
-  label: string;
-  emoji: string;
-}> = [
-  { type: "paper_ball", label: "Bola de papel", emoji: "🧻" },
-  { type: "tomato", label: "Tomate", emoji: "🍅" },
-  { type: "coffee", label: "Café", emoji: "☕" },
-  { type: "rubber_duck", label: "Pato", emoji: "🦆" },
-  { type: "star", label: "Estrela", emoji: "⭐" },
-  { type: "heart", label: "Coração", emoji: "❤️" },
-  { type: "claps", label: "Aplausos", emoji: "👏" },
-];
-
-const PROJECTILE_OUTCOME_LABEL: Record<ProjectileOutcome, string> = {
-  hit: "acertou em cheio",
-  dodge: "foi desviado",
-  deflect: "foi rebatido",
+// Re-exports de compat (SSOT em `@/lib/projectiles`).
+export {
+  PROJECTILE_CATALOG,
+  PROJECTILE_COOLDOWN_MS,
+  PROJECTILE_FEED_LIMIT,
+  projectileFeedText,
 };
 
 export interface ProjectileFeedItem extends ProjectileThrownPayload {
   key: number;
   senderNick: string;
   targetNick: string;
-}
-
-/** Texto do feed com origem e destino claros (visível para a Sala). */
-export function projectileFeedText(item: {
-  senderNick: string;
-  targetNick: string;
-  projectileType: ProjectileType;
-  outcome: ProjectileOutcome;
-}): string {
-  const catalog = PROJECTILE_CATALOG.find(
-    (c) => c.type === item.projectileType,
-  );
-  const emoji = catalog ? `${catalog.emoji} ` : "";
-  const label = catalog?.label ?? item.projectileType;
-  const outcome = PROJECTILE_OUTCOME_LABEL[item.outcome] ?? item.outcome;
-  return `${item.senderNick} jogou ${emoji}${label} em ${item.targetNick} · ${outcome}.`;
 }
 
 function resolveNick(
@@ -151,30 +124,35 @@ function isTypingTarget(event: KeyboardEvent): boolean {
   return false;
 }
 
-/** Envia `reveal_votes` pelo socket da sessão (qualquer Player pode revelar). */
-function sendRevealThroughSession(): boolean {
-  const socket = useSession.getState().socket as unknown as {
-    sendRevealVotes?: () => boolean;
-  } | null;
-  if (!socket || typeof socket.sendRevealVotes !== "function") return false;
+/**
+ * Envio genérico pelo socket da sessão — SSOT do guard + try/catch.
+ * Antes 3x `sendReveal/NewRound/ProjectileThroughSession` + 1x leave inline.
+ */
+function sendThroughSession<K extends "sendRevealVotes" | "sendStartNewRound" | "sendThrowProjectile" | "sendLeaveRoom">(
+  method: K,
+  ...args: K extends "sendThrowProjectile" ? [string, ProjectileType] : []
+): boolean {
+  const socket = useSession.getState().socket as unknown as Record<
+    K,
+    (...a: never[]) => boolean
+  > | null;
+  if (!socket || typeof socket[method] !== "function") return false;
   try {
-    return socket.sendRevealVotes();
+    // Chamada como método (sem desestruturar) para preservar o `this`.
+    return (socket[method] as (...a: unknown[]) => boolean)(...args);
   } catch {
     return false;
   }
 }
 
+/** Envia `reveal_votes` pelo socket da sessão (qualquer Player pode revelar). */
+function sendRevealThroughSession(): boolean {
+  return sendThroughSession("sendRevealVotes");
+}
+
 /** Envia `start_new_round` pelo socket da sessão (qualquer Player pode abrir). */
 function sendNewRoundThroughSession(): boolean {
-  const socket = useSession.getState().socket as unknown as {
-    sendStartNewRound?: () => boolean;
-  } | null;
-  if (!socket || typeof socket.sendStartNewRound !== "function") return false;
-  try {
-    return socket.sendStartNewRound();
-  } catch {
-    return false;
-  }
+  return sendThroughSession("sendStartNewRound");
 }
 
 /** Envia `throw_projectile` pelo socket da sessão (pós-reveal, issue #157). */
@@ -182,36 +160,7 @@ function sendProjectileThroughSession(
   targetPlayerId: string,
   projectileType: ProjectileType,
 ): boolean {
-  const socket = useSession.getState().socket as unknown as {
-    sendThrowProjectile?: (
-      targetPlayerId: string,
-      projectileType: ProjectileType,
-    ) => boolean;
-  } | null;
-  if (!socket || typeof socket.sendThrowProjectile !== "function") return false;
-  try {
-    return socket.sendThrowProjectile(targetPlayerId, projectileType);
-  } catch {
-    return false;
-  }
-}
-
-async function copyText(text: string): Promise<void> {
-  const clipboard = navigator.clipboard;
-  if (clipboard && typeof clipboard.writeText === "function") {
-    await clipboard.writeText(text);
-    return;
-  }
-  // Fallback para contextos sem Async Clipboard API.
-  const area = document.createElement("textarea");
-  area.value = text;
-  area.setAttribute("readonly", "");
-  area.style.position = "absolute";
-  area.style.left = "-9999px";
-  document.body.appendChild(area);
-  area.select();
-  document.execCommand("copy");
-  document.body.removeChild(area);
+  return sendThroughSession("sendThrowProjectile", targetPlayerId, projectileType);
 }
 
 export function ArenaPage(): React.ReactElement {
@@ -348,11 +297,8 @@ export function ArenaPage(): React.ReactElement {
         return;
       }
       if (current.timer <= 0) return;
-      const hasVotes =
-        current.players.some((p) => p.hasVoted) ||
-        Object.keys(current.votes ?? {}).length > 0;
       // Sem nenhum voto a rodada fica parada nos 60s.
-      if (!hasVotes) return;
+      if (!hasAnyVotes(current.players, current.votes)) return;
       useSession
         .getState()
         .updateSala({ ...current, timer: current.timer - 1 });
@@ -385,16 +331,14 @@ export function ArenaPage(): React.ReactElement {
       if (current.phase !== "voting" && current.phase !== "revealable") {
         return;
       }
-      const hasVotes =
-        current.players.some((p) => p.hasVoted) ||
-        Object.keys(current.votes ?? {}).length > 0;
+      const hasVotes = hasAnyVotes(current.players, current.votes);
       // Sem nenhum voto o reveal fica indisponível (também no teclado).
       if (!hasVotes) return;
       event.preventDefault();
       setRevealError(null);
       const sent = sendRevealThroughSession();
       if (!sent) {
-        setRevealError("Sem conexão com a sala. Recarregue para revelar.");
+        setRevealError(SOCKET_ERROR_COPY.reveal);
       }
     }
     window.addEventListener("keydown", onKey);
@@ -434,9 +378,7 @@ export function ArenaPage(): React.ReactElement {
       setNewRoundError(null);
       const sent = sendNewRoundThroughSession();
       if (!sent) {
-        setNewRoundError(
-          "Sem conexão com a sala. Recarregue para abrir nova rodada.",
-        );
+        setNewRoundError(SOCKET_ERROR_COPY.newRound);
       }
     }
     window.addEventListener("keydown", onKey);
@@ -503,11 +445,7 @@ export function ArenaPage(): React.ReactElement {
           error instanceof JoinError &&
           error.code === "sala_nao_encontrada"
         ) {
-          try {
-            clearSession();
-          } catch {
-            // Storage indisponível · segue para a entrada.
-          }
+          safeClear(clearSession);
           navigate(target, { replace: true });
           return;
         }
@@ -568,11 +506,7 @@ export function ArenaPage(): React.ReactElement {
               type="button"
               variant="outline"
               onClick={() => {
-                try {
-                  clearSession();
-                } catch {
-                  // Storage indisponível · só navega.
-                }
+                safeClear(clearSession);
                 navigate(routeCode ? `/join?code=${routeCode}` : "/join", {
                   replace: true,
                 });
@@ -622,22 +556,14 @@ export function ArenaPage(): React.ReactElement {
   // calculado do `room_state` (source of truth). Pausa e ausência ficam
   // fora dos cálculos; ½ vale 0,5 e 0 é voto válido.
   const revealedVotes = Object.values(sala.votes ?? {});
-  const consensus = computeConsensus(revealedVotes);
-  const unanimousVotes = isUnanimous(revealedVotes);
-  const numericCount = revealedVotes.filter(
-    (vote) => voteToNumber(vote) !== null,
-  ).length;
-  const noNumerics = numericCount === 0;
-  const isSingleNumeric = numericCount === 1;
-  const isUnanimousSignal = numericCount >= 2 && unanimousVotes;
-  const voteGroups = groupVotes(revealedVotes);
-  const resultsAriaLabel = noNumerics
-    ? "Sem votos numéricos · pausa e ausência ficam fora dos cálculos"
-    : isSingleNumeric
-      ? `Voto único · média ${formatMean(consensus.mean)} · intervalo ${formatRange(consensus.range)}`
-      : isUnanimousSignal
-        ? `Votação unânime · média ${formatMean(consensus.mean)} · intervalo ${formatRange(consensus.range)}`
-        : `Estatísticas pós-reveal · média ${formatMean(consensus.mean)} · mediana ${formatMedian(consensus.median)} · intervalo ${formatRange(consensus.range)}`;
+  const {
+    consensus,
+    noNumerics,
+    isSingleNumeric,
+    isUnanimousSignal,
+    voteGroups,
+    resultsAriaLabel,
+  } = useConsensusStats(revealedVotes);
 
   // Timer e Reveal (issue 06): qualquer Player revela após pelo menos um
   // voto; sala "pronta para revelar" quando todos votaram sem revelar de
@@ -653,7 +579,7 @@ export function ArenaPage(): React.ReactElement {
     setRevealError(null);
     const sent = sendRevealThroughSession();
     if (!sent) {
-      setRevealError("Sem conexão com a sala. Recarregue para revelar.");
+      setRevealError(SOCKET_ERROR_COPY.reveal);
     }
   }
 
@@ -681,9 +607,7 @@ export function ArenaPage(): React.ReactElement {
     setNewRoundError(null);
     const sent = sendNewRoundThroughSession();
     if (!sent) {
-      setNewRoundError(
-        "Sem conexão com a sala. Recarregue para abrir nova rodada.",
-      );
+      setNewRoundError(SOCKET_ERROR_COPY.newRound);
     }
   }
 
@@ -694,7 +618,7 @@ export function ArenaPage(): React.ReactElement {
     setVoteError(null);
     const sent = socket?.sendCastVote(value) ?? false;
     if (!sent) {
-      setVoteError("Sem conexão com a sala. Recarregue para votar.");
+      setVoteError(SOCKET_ERROR_COPY.vote);
     }
   }
 
@@ -739,7 +663,7 @@ export function ArenaPage(): React.ReactElement {
     setProjectileError(null);
     const sent = sendProjectileThroughSession(targetId, projectileType);
     if (!sent) {
-      setProjectileError("Sem conexão com a sala. Recarregue para interagir.");
+      setProjectileError(SOCKET_ERROR_COPY.interact);
       return;
     }
     setProjectileCooldownUntil(Date.now() + PROJECTILE_COOLDOWN_MS);
@@ -762,15 +686,7 @@ export function ArenaPage(): React.ReactElement {
     // Ticket 09: saída voluntária avisa o servidor primeiro para a
     // presença atualizar em tempo real nos demais (e promover novo
     // Host quando o Host sai). F5 NÃO passa por aqui.
-    try {
-      (
-        socket as unknown as {
-          sendLeaveRoom?: () => boolean;
-        } | null
-      )?.sendLeaveRoom?.();
-    } catch {
-      // Falha de envio · o close abaixo ainda limpa localmente.
-    }
+    sendThroughSession("sendLeaveRoom");
     try {
       socket?.close();
     } catch {
@@ -923,17 +839,12 @@ export function ArenaPage(): React.ReactElement {
             <CardHeader>
               <CardTitle className="text-base">Sua estimativa</CardTitle>
               <CardDescription data-testid="deck-selection" aria-live="polite">
-                {isRevealed
-                  ? currentVote
-                    ? currentVote === "☕"
-                      ? "Seu voto: pausa para café (conta presença, fora da média). Você pode ajustar · o resultado atualiza para todos."
-                      : `Seu voto: ${currentVote}. Você pode ajustar · o resultado atualiza para todos.`
-                    : "Vote mesmo após o reveal · o resultado atualiza para todos."
-                  : currentVote
-                    ? currentVote === "☕"
-                      ? "Seu voto: pausa para café (conta presença, fora da média)."
-                      : `Seu voto: ${currentVote}. Clique em outra carta para substituir.`
-                    : "Escolha uma carta para votar. Dá para trocar até o reveal."}
+                {!isRevealed && currentVote === null
+                  ? "Escolha uma carta para votar. Dá para trocar até o reveal."
+                  : voteSelectionText(currentVote, {
+                      revealed: isRevealed,
+                      adjustable: true,
+                    })}
               </CardDescription>
             </CardHeader>
             <CardPanel className="flex flex-col gap-3">

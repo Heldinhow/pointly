@@ -14,7 +14,6 @@
   max-width: 480px;
   padding: 0;
 }
-.join-eyebrow,
 .join-card-kicker {
   margin: 0 0 18px;
   color: var(--primary);
@@ -224,12 +223,5 @@
   .join-mode-button {
     padding-inline: 8px;
     font-size: 12px;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .join-card,
-  .join-mode-button,
-  .join-submit {
-    transition: none !important;
   }
 }

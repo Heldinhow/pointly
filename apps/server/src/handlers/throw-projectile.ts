@@ -1,21 +1,21 @@
-import type {
-	ThrowProjectilePayload,
-	ProjectileOutcome,
+import {
+	rollProjectileOutcome,
+	type ProjectileOutcome,
+	type ThrowProjectilePayload,
 } from "@planning-poker/shared";
 import type { Hub } from "../hub";
-import { SalaError } from "../sala";
+import { Sala } from "../sala";
+import {
+	mapDomainError,
+	requireSala,
+	type HandlerErrorCode,
+} from "./_shared";
 
 export type ThrowProjectileOutcome =
 	| { ok: true; outcome: ProjectileOutcome }
 	| {
 			ok: false;
-			code:
-				| "invalid_phase"
-				| "sala_cheia"
-				| "sala_nao_encontrada"
-				| "invalid_vote"
-				| "invalid_nick"
-				| "internal_error";
+			code: HandlerErrorCode;
 			message: string;
 	  };
 
@@ -29,14 +29,9 @@ export function handleThrowProjectile(
 	payload: ThrowProjectilePayload,
 	now: number = Date.now(),
 ): ThrowProjectileOutcome {
-	const sala = hub.getSalaForPlayer(playerId);
-	if (!sala) {
-		return {
-			ok: false,
-			code: "sala_nao_encontrada",
-			message: `Player ${playerId} não está em nenhuma sala.`,
-		};
-	}
+	const salaOrError = requireSala(hub, playerId, "sala_nao_encontrada");
+	if (!(salaOrError instanceof Sala)) return salaOrError;
+	const sala = salaOrError;
 
 	const target = sala.getPlayer(payload.targetPlayerId);
 	if (!target) {
@@ -50,21 +45,8 @@ export function handleThrowProjectile(
 	try {
 		sala.throwProjectile(playerId, now);
 
-		// Sorteia o desfecho: 80% hit (0.20 a 1.0), 15% dodge (0.05 a 0.20), 5% deflect (0.0 a 0.05)
-		const rand = Math.random();
-		let outcome: ProjectileOutcome = "hit";
-		if (rand < 0.05) {
-			outcome = "deflect";
-		} else if (rand < 0.2) {
-			outcome = "dodge";
-		}
-
-		return { ok: true, outcome };
+		return { ok: true, outcome: rollProjectileOutcome() };
 	} catch (e) {
-		if (e instanceof SalaError) {
-			return { ok: false, code: e.code, message: e.message };
-		}
-		const message = e instanceof Error ? e.message : String(e);
-		return { ok: false, code: "internal_error", message };
+		return mapDomainError(e);
 	}
 }

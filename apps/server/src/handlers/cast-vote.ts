@@ -16,7 +16,12 @@
 
 import type { CastVotePayload, Vote } from "@planning-poker/shared";
 import type { Hub } from "../hub";
-import { SalaError } from "../sala";
+import { Sala } from "../sala";
+import {
+	mapDomainError,
+	requireSala,
+	type HandlerErrorCode,
+} from "./_shared";
 
 export type CastVoteOutcome =
 	| {
@@ -29,13 +34,7 @@ export type CastVoteOutcome =
 	  }
 	| {
 			ok: false;
-			code:
-				| "invalid_vote"
-				| "invalid_phase"
-				| "sala_cheia"
-				| "sala_nao_encontrada"
-				| "invalid_nick"
-				| "internal_error";
+			code: HandlerErrorCode;
 			message: string;
 	  };
 
@@ -52,14 +51,9 @@ export function handleCastVote(
 	payload: CastVotePayload,
 ): CastVoteOutcome {
 	// 1. Localiza sala e player
-	const sala = hub.getSalaForPlayer(playerId);
-	if (!sala) {
-		return {
-			ok: false,
-			code: "invalid_vote",
-			message: `Player ${playerId} não está em nenhuma sala.`,
-		};
-	}
+	const salaOrError = requireSala(hub, playerId, "invalid_vote");
+	if (!(salaOrError instanceof Sala)) return salaOrError;
+	const sala = salaOrError;
 	const player = sala.getPlayer(playerId);
 	if (!player) {
 		return {
@@ -86,11 +80,7 @@ export function handleCastVote(
 	try {
 		result = sala.castVote(playerId, payload.value as Vote);
 	} catch (e) {
-		if (e instanceof SalaError) {
-			return { ok: false, code: e.code, message: e.message };
-		}
-		const message = e instanceof Error ? e.message : String(e);
-		return { ok: false, code: "internal_error", message };
+		return mapDomainError(e);
 	}
 
 	// 5. Hub notifica sala sobre first-vote (inicia timer)

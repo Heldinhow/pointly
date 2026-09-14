@@ -1,46 +1,5 @@
-:root {
-  --background: #f4f6f3;
-  --foreground: #202b27;
-  --card: #ffffff;
-  --card-foreground: #202b27;
-  --muted: #e9eee8;
-  --muted-foreground: #606e65;
-  --border: #dce3db;
-  --input: #b7c4b9;
-  --primary: #17634f;
-  --primary-foreground: #ffffff;
-  --ring: #38856c;
-  --accent: #e4ece4;
-  --accent-foreground: #202b27;
-  --secondary: #e5ece4;
-  --secondary-foreground: #304d3b;
-  --popover: #ffffff;
-  --popover-foreground: #202b27;
-  --table-rail: #d6e1d4;
-  --success-foreground: #17634f;
-  --radius: 0.75rem;
-}
-.dark {
-  --background: #141d19;
-  --foreground: #ebf0e9;
-  --card: #1b2721;
-  --card-foreground: #ebf0e9;
-  --muted: #24332a;
-  --muted-foreground: #a8b6aa;
-  --border: #334439;
-  --input: #556b5c;
-  --primary: #a9d6ad;
-  --primary-foreground: #183523;
-  --ring: #8abb91;
-  --accent: #2a3c30;
-  --accent-foreground: #ebf0e9;
-  --secondary: #2b3d30;
-  --secondary-foreground: #c8dfc8;
-  --popover: #1b2721;
-  --popover-foreground: #ebf0e9;
-  --table-rail: #394d3e;
-  --success-foreground: #a9d6ad;
-}
+/* Tokens de cor vivem em index.css (:root/.dark = SSOT). Este arquivo mantém
+   só layout/estrutura da marca para não duplicar :root. */
 body {
   margin: 0;
   font-family: var(--font-sans);

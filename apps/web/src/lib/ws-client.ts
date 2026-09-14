@@ -82,20 +82,28 @@ export class PointlySocket {
 	}
 
 	/**
+	 * Envio genérico — SSOT do guard `ready` + stringify + try/catch.
+	 * Antes copiado 5x em cada `send*`.
+	 */
+	private send(message: unknown): boolean {
+		if (this.status !== "ready" || !this.socket) return false;
+		try {
+			this.socket.send(JSON.stringify(message));
+			return true;
+		} catch {
+			return false;
+		}
+	}
+
+	/**
 	 * Envia `cast_vote { value }`. Retorna false quando não há conexão
 	 * pronta ou o valor é inválido — o chamador mantém o estado local.
 	 * O servidor responde com `room_state` (o remetente recebe o estado
 	 * completo; `vote_cast` não carrega valor por privacidade).
 	 */
 	sendCastVote(value: Vote): boolean {
-		if (this.status !== "ready" || !this.socket) return false;
 		if (!isDeckValue(value)) return false;
-		try {
-			this.socket.send(JSON.stringify(buildCastVoteMessage(value)));
-			return true;
-		} catch {
-			return false;
-		}
+		return this.send(buildCastVoteMessage(value));
 	}
 
 	/**
@@ -105,13 +113,7 @@ export class PointlySocket {
 	 * `revealed`); auto-reveal no zero chega pelo mesmo caminho.
 	 */
 	sendRevealVotes(): boolean {
-		if (this.status !== "ready" || !this.socket) return false;
-		try {
-			this.socket.send(JSON.stringify(buildRevealVotesMessage()));
-			return true;
-		} catch {
-			return false;
-		}
+		return this.send(buildRevealVotesMessage());
 	}
 
 	/**
@@ -122,13 +124,7 @@ export class PointlySocket {
 	 * timer em 60s, mesmos Players).
 	 */
 	sendStartNewRound(): boolean {
-		if (this.status !== "ready" || !this.socket) return false;
-		try {
-			this.socket.send(JSON.stringify(buildStartNewRoundMessage()));
-			return true;
-		} catch {
-			return false;
-		}
+		return this.send(buildStartNewRoundMessage());
 	}
 
 	/**
@@ -138,13 +134,7 @@ export class PointlySocket {
 	 * sai). Retorna false sem conexão pronta. F5 NÃO chama este método.
 	 */
 	sendLeaveRoom(): boolean {
-		if (this.status !== "ready" || !this.socket) return false;
-		try {
-			this.socket.send(JSON.stringify(buildLeaveRoomMessage()));
-			return true;
-		} catch {
-			return false;
-		}
+		return this.send(buildLeaveRoomMessage());
 	}
 
 	/**
@@ -159,21 +149,13 @@ export class PointlySocket {
 		targetPlayerId: string,
 		projectileType: ProjectileType,
 	): boolean {
-		if (this.status !== "ready" || !this.socket) return false;
 		if (typeof targetPlayerId !== "string" || targetPlayerId.length === 0) {
 			return false;
 		}
 		if (!isProjectileType(projectileType)) return false;
-		try {
-			this.socket.send(
-				JSON.stringify(
-					buildThrowProjectileMessage(targetPlayerId, projectileType),
-				),
-			);
-			return true;
-		} catch {
-			return false;
-		}
+		return this.send(
+			buildThrowProjectileMessage(targetPlayerId, projectileType),
+		);
 	}
 
 	connect(url: string, hello: HelloPayload): Promise<WelcomePayload> {

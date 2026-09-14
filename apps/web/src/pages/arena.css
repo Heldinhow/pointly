@@ -86,7 +86,7 @@
   padding: 0 8px 18px;
 }
 .arena-table-wordmark {
-  color: #c4dbcd;
+  color: var(--table-wordmark);
   font-size: 25px;
   font-weight: 700;
   letter-spacing: -0.06em;

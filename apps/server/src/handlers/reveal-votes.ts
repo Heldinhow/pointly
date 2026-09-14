@@ -9,7 +9,12 @@
 
 import type { Vote } from "@planning-poker/shared";
 import type { Hub } from "../hub";
-import { SalaError } from "../sala";
+import { Sala } from "../sala";
+import {
+	mapDomainError,
+	requireSala,
+	type HandlerErrorCode,
+} from "./_shared";
 
 export type RevealVotesOutcome =
 	| {
@@ -22,13 +27,7 @@ export type RevealVotesOutcome =
 	  }
 	| {
 			ok: false;
-			code:
-				| "invalid_phase"
-				| "sala_cheia"
-				| "sala_nao_encontrada"
-				| "invalid_vote"
-				| "invalid_nick"
-				| "internal_error";
+			code: HandlerErrorCode;
 			message: string;
 	  };
 
@@ -39,14 +38,9 @@ export function handleRevealVotes(
 	hub: Hub,
 	playerId: string,
 ): RevealVotesOutcome {
-	const sala = hub.getSalaForPlayer(playerId);
-	if (!sala) {
-		return {
-			ok: false,
-			code: "invalid_phase",
-			message: `Player ${playerId} não está em nenhuma sala.`,
-		};
-	}
+	const salaOrError = requireSala(hub, playerId, "invalid_phase");
+	if (!(salaOrError instanceof Sala)) return salaOrError;
+	const sala = salaOrError;
 
 	try {
 		const outcome = sala.reveal(playerId);
@@ -59,10 +53,6 @@ export function handleRevealVotes(
 			unanimous: outcome.unanimous,
 		};
 	} catch (e) {
-		if (e instanceof SalaError) {
-			return { ok: false, code: e.code, message: e.message };
-		}
-		const message = e instanceof Error ? e.message : String(e);
-		return { ok: false, code: "internal_error", message };
+		return mapDomainError(e);
 	}
 }
