@@ -1,77 +1,54 @@
+import { z } from "zod";
+
 /**
- * identity — lógica compartilhada de identidade (spell-rebuild).
- *
- * Centraliza o que landing/join/arena consomem:
- *  - normalização/validação de código de sala (4 alfanum maiúsculos)
- *  - validação de apelido (PT-BR, retorna erro ou null)
- *  - persistência best-effort em sessionStorage (privacidade-by-default:
- *    fechar a aba apaga tudo; falhas de storage nunca quebram o fluxo)
- *  - construção da URL de convite + base da API REST
+ * Identidade client-side: UUID persistido (reconnect), rascunho do apelido
+ * (sobrevive ao reload na entrada) e normalização/validação do código.
  */
 
-/** Base relativa da API — o Vite proxya `/api` → :3001 em dev. */
-export const API_BASE = "/api/v1";
+const UUID_KEY = "pointly-uuid";
+const NICK_DRAFT_KEY = "pointly-nick-draft";
+const SESSION_KEY = "pointly-session";
 
-export const NICK_MIN = 2;
-export const NICK_MAX = 20;
-
-const CODE_RE = /^[A-Z0-9]{4}$/;
-const UUID_RE =
+const UUID_PATTERN =
 	/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const K_UUID = "pointly.uuid";
-const K_NICK = "pointly.nick";
-const K_CODE = "pointly.code";
+const memoryFallback = new Map<string, string>();
 
-/**
- * Normaliza código de sala: NFKD (dobra acentos), remove tudo que não
- * for [A-Za-z0-9], corta em 4, maiúsculas. `"ab-c!"` → `"ABC"`.
- */
-export function normalizeCode(raw: string): string {
-	return raw
-		.normalize("NFKD")
-		.replace(/[^A-Za-z0-9]/g, "")
-		.slice(0, 4)
-		.toUpperCase();
-}
-
-/** Código válido = exatamente 4 chars [A-Z0-9] (já normalizado). */
-export function isValidCode(code: string): boolean {
-	return CODE_RE.test(code);
-}
-
-/**
- * Valida apelido. Retorna a mensagem de erro PT-BR ou `null` quando ok.
- * String vazia → `null` (o botão de submit fica disabled em vez de
- * mostrar erro para quem ainda está digitando).
- */
-export function validateNick(nick: string): string | null {
-	if (nick.length === 0) return null;
-	if (nick.length < NICK_MIN) return "Use pelo menos 2 caracteres.";
-	if (nick.length > NICK_MAX) return "Use no máximo 20 caracteres.";
-	if (/ {2,}/.test(nick)) return "Evite espaços duplos no meio do nome.";
-	if (nick !== nick.trim()) return "Remova espaços no início e no fim.";
-	return null;
-}
-
-function read(key: string): string | null {
+function readStored(key: string): string | null {
 	try {
-		if (typeof sessionStorage === "undefined") return null;
-		return sessionStorage.getItem(key);
+		return window.localStorage.getItem(key);
 	} catch {
-		return null;
+		return memoryFallback.get(key) ?? null;
 	}
 }
 
-function write(key: string, value: string): void {
+function writeStored(key: string, value: string): void {
 	try {
-		sessionStorage.setItem(key, value);
+		window.localStorage.setItem(key, value);
 	} catch {
-		/* storage indisponível (SSR / aba privada) — segue sem persistir */
+		memoryFallback.set(key, value);
 	}
 }
 
-function fallbackUUID(): string {
+function removeStored(key: string): void {
+	try {
+		window.localStorage.removeItem(key);
+	} catch {
+		memoryFallback.delete(key);
+	}
+}
+
+function randomUuid(): string {
+	try {
+		if (
+			typeof crypto !== "undefined" &&
+			typeof crypto.randomUUID === "function"
+		) {
+			return crypto.randomUUID();
+		}
+	} catch {
+		// Ambiente sem Web Crypto — cai para o fallback abaixo.
+	}
 	return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
 		const r = Math.floor(Math.random() * 16);
 		const v = c === "x" ? r : (r & 0x3) | 0x8;
@@ -79,43 +56,93 @@ function fallbackUUID(): string {
 	});
 }
 
+/** UUID estável do navegador; regenera se o armazenado for inválido. */
+export function getOrCreateUuid(): string {
+	const stored = readStored(UUID_KEY);
+	if (stored && UUID_PATTERN.test(stored)) return stored;
+	const fresh = randomUuid();
+	writeStored(UUID_KEY, fresh);
+	return fresh;
+}
+
+export function loadNickDraft(): string {
+	return readStored(NICK_DRAFT_KEY) ?? "";
+}
+
+export function saveNickDraft(nick: string): void {
+	writeStored(NICK_DRAFT_KEY, nick);
+}
+
 /**
- * Lê o UUID de `pointly.uuid`; se ausente/inválido, gera (crypto.randomUUID
- * com fallback), persiste best-effort e retorna.
+ * Sessão persistida para continuidade (ticket 09): código da sala + apelido
+ * usados no F5 para reenviar `hello` com o mesmo UUID sem duplicar o Player.
+ * O servidor reidrata voto, assento e fase a partir do UUID.
  */
-export function getOrCreateUUID(): string {
-	const stored = read(K_UUID);
-	if (stored && UUID_RE.test(stored)) return stored;
-	const uuid =
-		typeof crypto !== "undefined" &&
-		typeof crypto.randomUUID === "function"
-			? crypto.randomUUID()
-			: fallbackUUID();
-	write(K_UUID, uuid);
-	return uuid;
+export interface PersistedSession {
+	code: string;
+	nick: string;
 }
 
-/** Apelido persistido na aba (pré-preenche o join). */
-export function getNick(): string | null {
-	return read(K_NICK);
+export function saveSession(code: string, nick: string): void {
+	const normalized = normalizeCode(code);
+	if (!isValidCode(normalized)) return;
+	const trimmed = nick.trim();
+	if (trimmed.length < 2) return;
+	writeStored(
+		SESSION_KEY,
+		JSON.stringify({ code: normalized, nick: trimmed }),
+	);
 }
 
-/** Persiste o apelido. Nunca lança. */
-export function setNick(nick: string): void {
-	write(K_NICK, nick);
+export function loadSession(): PersistedSession | null {
+	const raw = readStored(SESSION_KEY);
+	if (!raw) return null;
+	try {
+		const parsed = JSON.parse(raw) as Partial<PersistedSession>;
+		if (
+			typeof parsed.code !== "string" ||
+			typeof parsed.nick !== "string" ||
+			!isValidCode(normalizeCode(parsed.code)) ||
+			parsed.nick.trim().length < 2
+		) {
+			return null;
+		}
+		return { code: normalizeCode(parsed.code), nick: parsed.nick.trim() };
+	} catch {
+		return null;
+	}
 }
 
-/** Código da última sala nesta aba. */
-export function getCode(): string | null {
-	return read(K_CODE);
+export function clearSession(): void {
+	removeStored(SESSION_KEY);
 }
 
-/** Persiste o código da sala. Nunca lança. */
-export function setCode(code: string): void {
-	write(K_CODE, code);
+/**
+ * Normaliza código digitado: maiúsculas, só A-Z0-9, no máximo 4.
+ * Idempotente — pode rodar a cada tecla sem acumular efeitos.
+ */
+export function normalizeCode(raw: string): string {
+	return raw
+		.toUpperCase()
+		.replace(/[^A-Z0-9]/g, "")
+		.slice(0, 4);
 }
 
-/** URL de convite: `${origin}/join?code=${code}`. */
-export function buildShareUrl(origin: string, code: string): string {
-	return `${origin}/join?code=${code}`;
+export function isValidCode(code: string): boolean {
+	return /^[A-Z0-9]{4}$/.test(code);
 }
+
+export const NickSchema = z
+	.string()
+	.min(2, "Apelido precisa de ao menos 2 caracteres.")
+	.max(20, "Apelido pode ter no máximo 20 caracteres.")
+	.refine((value) => value === value.trim(), {
+		message: "Apelido não pode começar ou terminar com espaço.",
+	})
+	.refine((value) => !/\s{2}/.test(value), {
+		message: "Apelido não pode ter espaços duplos.",
+	});
+
+export const CodeSchema = z
+	.string()
+	.regex(/^[A-Z0-9]{4}$/, "Código tem 4 letras ou números.");

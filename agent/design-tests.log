@@ -1,0 +1,161 @@
+bun test v1.3.14 (0d9b296a)
+
+src\App.test.tsx:
+Warning: React does not recognize the `fetchPriority` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `fetchpriority` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+    at img
+    at div
+    at section
+    at div
+    at div
+    at HomePage (C:\Users\heldi\pointly\apps\web\src\pages\home.tsx:32:31)
+    at RenderedRoute (C:\Users\heldi\pointly\node_modules\.bun\react-router@6.28.0+f4eacebf2041cd4f\node_modules\react-router\dist\umd\react-router.development.js:542:9)
+    at Routes (C:\Users\heldi\pointly\node_modules\.bun\react-router@6.28.0+f4eacebf2041cd4f\node_modules\react-router\dist\umd\react-router.development.js:1275:9)
+    at main
+    at ShellMain (C:\Users\heldi\pointly\apps\web\src\components\shell.tsx:40:26)
+    at div
+    at App (C:\Users\heldi\pointly\apps\web\src\App.tsx:11:29)
+    at Router (C:\Users\heldi\pointly\node_modules\.bun\react-router@6.28.0+f4eacebf2041cd4f\node_modules\react-router\dist\umd\react-router.development.js:1214:9)
+    at MemoryRouter (C:\Users\heldi\pointly\node_modules\.bun\react-router@6.28.0+f4eacebf2041cd4f\node_modules\react-router\dist\umd\react-router.development.js:1106:9)
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+(pass) App (issue #158 — polimento e auditoria) > skip link leva ao conteúdo principal [101.55ms]
+(pass) App (issue #158 — polimento e auditoria) > marcos de navegação presentes nas duas superfícies [25.90ms]
+
+src\components\deck.test.tsx:
+(pass) Deck (ticket 05 — Votar) > renderiza o deck completo com 9 cartas [9.59ms]
+(pass) Deck (ticket 05 — Votar) > aria-pressed reflete a escolha atual sem desabilitar cartas [5.79ms]
+(pass) Deck (ticket 05 — Votar) > clique seleciona a carta e pausa tem rótulo acessível [8.07ms]
+(pass) Deck (ticket 05 — Votar) > seleção tem indicador estático e elevação só com movimento (issue #158) [3.93ms]
+
+src\lib\api.test.ts:
+(pass) checkSala > 200 retorna existência com contagem e fase [0.57ms]
+(pass) checkSala > 200 sem campos usa padrões [0.09ms]
+(pass) checkSala > 404 retorna missing [0.08ms]
+(pass) checkSala > 400 retorna invalid [0.07ms]
+(pass) checkSala > falha de rede vira JoinError de conexão [0.25ms]
+
+src\lib\deck.test.ts:
+(pass) deck (ticket 05 — Votar) > deck completo com 9 cartas na ordem do contrato [0.04ms]
+(pass) deck (ticket 05 — Votar) > ½ vale 0,5 e zero é voto válido [0.08ms]
+(pass) deck (ticket 05 — Votar) > pausa marca participação mas fica fora dos cálculos [0.05ms]
+(pass) consenso (ticket 07 — Resultados) > ½ computa como 0,5 e 0 é voto válido [11.80ms]
+(pass) consenso (ticket 07 — Resultados) > média, mediana e intervalo de [5, 8] [0.20ms]
+(pass) consenso (ticket 07 — Resultados) > mediana ímpar pega o centro [0.05ms]
+(pass) consenso (ticket 07 — Resultados) > pausa e ausência ficam fora dos cálculos [0.05ms]
+(pass) consenso (ticket 07 — Resultados) > unanimidade ignora pausa e exige ao menos um numérico [0.12ms]
+(pass) consenso (ticket 07 — Resultados) > agrupamento preserva a ordem do deck com a pausa por último [0.13ms]
+(pass) consenso (ticket 07 — Resultados) > formatos: mediana inteira sem decimais, média 1dp, intervalo com en-dash [0.13ms]
+
+src\lib\identity.test.ts:
+(pass) normalizeCode > converte para maiúsculas [0.14ms]
+(pass) normalizeCode > remove separadores e espaços [0.04ms]
+(pass) normalizeCode > limita a 4 caracteres [0.05ms]
+(pass) normalizeCode > é idempotente [0.04ms]
+(pass) normalizeCode > vazio continua vazio [0.02ms]
+(pass) isValidCode > aceita 4 alfanuméricos maiúsculos [0.07ms]
+(pass) isValidCode > rejeita minúsculas, tamanho errado e símbolos [0.06ms]
+(pass) CodeSchema > aceita código válido e rejeita inválido [1.09ms]
+(pass) NickSchema > aceita apelidos válidos [0.49ms]
+(pass) NickSchema > rejeita curto, longo e espaços irregulares [0.29ms]
+(pass) NickSchema > mensagens em pt-BR [0.23ms]
+(pass) getOrCreateUuid > é estável entre chamadas e tem formato UUID [0.11ms]
+(pass) saveSession/loadSession/clearSession (ticket 09) > salva e recupera código normalizado + apelido [0.19ms]
+(pass) saveSession/loadSession/clearSession (ticket 09) > sem sessão retorna null [0.04ms]
+(pass) saveSession/loadSession/clearSession (ticket 09) > clearSession apaga sem erro [0.19ms]
+(pass) saveSession/loadSession/clearSession (ticket 09) > código inválido não persiste [0.07ms]
+(pass) saveSession/loadSession/clearSession (ticket 09) > apelido curto não persiste [0.04ms]
+(pass) saveSession/loadSession/clearSession (ticket 09) > JSON corrompido retorna null sem lançar [0.07ms]
+
+src\lib\protocol.test.ts:
+(pass) protocol — projéteis (issue #157) > isProjectileType aceita os 7 tipos e rejeita desconhecidos [0.14ms]
+(pass) protocol — projéteis (issue #157) > isProjectileOutcome aceita hit/dodge/deflect [0.07ms]
+(pass) protocol — projéteis (issue #157) > buildThrowProjectileMessage monta o evento C→S [2.21ms]
+(pass) protocol — projéteis (issue #157) > parseServerEvent aceita projectile_thrown válido [0.24ms]
+(pass) protocol — projéteis (issue #157) > parseServerEvent rejeita projectile_thrown malformado [0.04ms]
+
+src\lib\ws-client.test.ts:
+(pass) PointlySocket > hello resolve com welcome [1.81ms]
+(pass) PointlySocket > erro do servidor rejeita com o código [0.71ms]
+(pass) PointlySocket > lixo antes do welcome é ignorado [0.54ms]
+(pass) PointlySocket > room_state pós-welcome chega no onRoomState (presença ao vivo) [214.91ms]
+(pass) PointlySocket > heartbeat ping/pong mantém a conexão viva [262.66ms]
+(pass) PointlySocket > cast_vote envia o valor e erro pós-ready chega no onError [159.24ms]
+(pass) PointlySocket > reveal_votes envia payload vazio após ready [155.73ms]
+(pass) PointlySocket > start_new_round envia payload vazio após ready [169.56ms]
+(pass) PointlySocket > leave_room envia payload vazio após ready (saída voluntária) [169.96ms]
+(pass) PointlySocket > throw_projectile envia alvo+tipo e broadcast chega no onProjectileThrown [154.49ms]
+(pass) PointlySocket > hello sem resposta rejeita por timeout [109.25ms]
+
+src\pages\arena.test.tsx:
+(pass) ArenaPage (ticket 04) > identifica sala, rodada, eu e host com 12 assentos [38.53ms]
+(pass) ArenaPage (ticket 04) > segundo navegador aparece ao vivo com assento e votos corretos [40.09ms]
+(pass) ArenaPage (ticket 04) > copiar o convite mostra confirmação e o link entra direto na sala [91.77ms]
+(pass) ArenaPage (ticket 04) > convite é ocultável quando solo e volta com mostrar [76.56ms]
+(pass) ArenaPage (ticket 04) > com companhia o convite fica sempre visível [29.35ms]
+(pass) ArenaPage (ticket 04) > entrada tardia com rodada em andamento mostra fase, votos e timer [14.33ms]
+(pass) ArenaPage (ticket 04) > sem sessão redireciona para a entrada com o código [17.50ms]
+(pass) ArenaPage (ticket 05 — Votar) > deck completo com 9 cartas e seleção inicial vazia [17.36ms]
+(pass) ArenaPage (ticket 05 — Votar) > clicar numa carta envia cast_vote uma vez [13.65ms]
+(pass) ArenaPage (ticket 05 — Votar) > duplo clique na mesma carta não perde nem duplica o voto [12.64ms]
+(pass) ArenaPage (ticket 05 — Votar) > substituir estimativa envia o novo valor [12.35ms]
+(pass) ArenaPage (ticket 05 — Votar) > segundo navegador vê só Aguardando/Votou antes do reveal, nunca valores [12.76ms]
+(pass) ArenaPage (ticket 05 — Votar) > pausa conta presença e mostra seleção própria sem vazar valor alheio [13.21ms]
+(pass) ArenaPage (ticket 05 — Votar) > erro do servidor ao votar mostra alerta sem quebrar a mesa [41.99ms]
+(pass) ArenaPage (ticket 06 — Timer e Reveal) > sem nenhum voto o reveal fica indisponível (botão e R) [14.95ms]
+(pass) ArenaPage (ticket 06 — Timer e Reveal) > com voto na mesa o botão revela e o R revela [15.21ms]
+(pass) ArenaPage (ticket 06 — Timer e Reveal) > R maiúsculo/minúsculo revela; repeat, modificadores e inputs ignoram [14.23ms]
+(pass) ArenaPage (ticket 06 — Timer e Reveal) > todos-votaram informa prontidão sem auto-revelar [33.88ms]
+(pass) ArenaPage (ticket 06 — Timer e Reveal) > zerar o timer revela sozinho via room_state [32.46ms]
+(pass) ArenaPage (ticket 06 — Timer e Reveal) > timer parado nos 60s sem votos e em contagem após o primeiro voto [2473.19ms]
+(pass) ArenaPage (ticket 06 — Timer e Reveal) > estado crítico na reta final usa estilo destrutivo e live assertivo [12.15ms]
+(pass) ArenaPage (ticket 06 — Timer e Reveal) > erro de reveal mostra alerta próprio sem quebrar a mesa [36.29ms]
+(pass) ArenaPage (ticket 07 — Resultados) > ½ vale 0,5 e 0 é válido; pausa e ausência fora dos cálculos [19.04ms]
+(pass) ArenaPage (ticket 07 — Resultados) > unanimidade é sinalizada de relance [17.38ms]
+(pass) ArenaPage (ticket 07 — Resultados) > voto único é sinalizado de relance [15.77ms]
+(pass) ArenaPage (ticket 07 — Resultados) > só pausa informa ausência de numéricos sem média nem intervalo [19.09ms]
+(pass) ArenaPage (ticket 07 — Resultados) > reveal sem nenhum voto informa ausência de numéricos [18.28ms]
+(pass) ArenaPage (ticket 07 — Resultados) > pré-reveal não mostra estatísticas [15.34ms]
+(pass) ArenaPage (ticket 07 — Resultados) > alterar o voto após o reveal recalcula para todos [37.61ms]
+(pass) ArenaPage (ticket 07 — Resultados) > deck segue enabled após o reveal e envia a troca [15.56ms]
+(pass) ArenaPage (ticket 08 — Nova Rodada) > pré-reveal não mostra nova rodada e N é ignorado [12.47ms]
+(pass) ArenaPage (ticket 08 — Nova Rodada) > um clique único não abre nova rodada (arma confirmação) [20.90ms]
+(pass) ArenaPage (ticket 08 — Nova Rodada) > segundo clique confirma e envia start_new_round uma vez [23.45ms]
+(pass) ArenaPage (ticket 08 — Nova Rodada) > confirmação expirada volta ao estado inicial sem enviar [5462.09ms]
+(pass) ArenaPage (ticket 08 — Nova Rodada) > atalho N exige a mesma confirmação dupla [34.92ms]
+(pass) ArenaPage (ticket 08 — Nova Rodada) > N ignora repeat, modificadores e inputs [36.86ms]
+(pass) ArenaPage (ticket 08 — Nova Rodada) > após a troca: número incrementado, votos zerados, timer em 60s, mesmos players [54.81ms]
+(pass) ArenaPage (ticket 08 — Nova Rodada) > erro de nova rodada mostra alerta próprio sem quebrar a mesa [44.40ms]
+(pass) ArenaPage (ticket 09 — Sessão e continuidade) > F5 no meio da votação recupera voto, assento e fase sem duplicar o Player [75.24ms]
+(pass) ArenaPage (ticket 09 — Sessão e continuidade) > sala inexistente no rejoin limpa a sessão e volta para a entrada [41.18ms]
+(pass) ArenaPage (ticket 09 — Sessão e continuidade) > saída voluntária envia leave_room e limpa a sessão [37.75ms]
+(pass) ArenaPage (ticket 09 — Sessão e continuidade) > saída do Host promove o mais antigo sem travar a rodada [32.83ms]
+(pass) ArenaPage (issue #157 — Projéteis) > durante a votação o envio fica indisponível com explicação [11.05ms]
+(pass) ArenaPage (issue #157 — Projéteis) > pós-reveal lista as 7 interações com alvo e envia ao clicar [25.89ms]
+(pass) ArenaPage (issue #157 — Projéteis) > segundo envio no cooldown é recusado com feedback e sem quebrar [23.93ms]
+(pass) ArenaPage (issue #157 — Projéteis) > sala vê a interação com origem e destino claros [33.19ms]
+(pass) ArenaPage (issue #157 — Projéteis) > erro de cooldown do servidor vira feedback sem quebrar [31.85ms]
+(pass) ArenaPage (issue #158 — polimento e auditoria) > atalho R é descobrível por tecnologia assistiva [13.41ms]
+(pass) ArenaPage (issue #158 — polimento e auditoria) > atalho N é descobrível por tecnologia assistiva [13.74ms]
+(pass) ArenaPage (issue #158 — polimento e auditoria) > seletor de alvo tem rótulo visível e foco alcançável por teclado [12.71ms]
+
+src\pages\home.test.tsx:
+(pass) HomePage (ticket 10 — Inicial com demonstração) > proposta de valor e CTAs visíveis no topo sem rolagem [9.29ms]
+(pass) HomePage (ticket 10 — Inicial com demonstração) > estado inicial: deck presente, reveal bloqueado, sem stats [6.97ms]
+(pass) HomePage (ticket 10 — Inicial com demonstração) > demo completa sem socket: escolher, revelar e ver stats [15.20ms]
+(pass) HomePage (ticket 10 — Inicial com demonstração) > duplo clique na mesma carta mantém o voto [11.58ms]
+(pass) HomePage (ticket 10 — Inicial com demonstração) > pausa conta presença mas fica fora dos cálculos [10.85ms]
+(pass) HomePage (ticket 10 — Inicial com demonstração) > trocar a carta após o reveal recalcula ao vivo [13.04ms]
+(pass) HomePage (ticket 10 — Inicial com demonstração) > tentar de novo reseta estimativa, simulados e stats [14.55ms]
+
+src\pages\join.test.tsx:
+(pass) JoinPage > bloqueia envio com apelido inválido sem chamar rede [17.64ms]
+(pass) JoinPage > converte código digitado para maiúsculas [20.22ms]
+(pass) JoinPage > modo join na query abre o campo de código [11.91ms]
+(pass) JoinPage > link de convite preenche o código e entrar navega para a arena [105.21ms]
+(pass) JoinPage > código inexistente mostra Sala não encontrada sem abrir socket [34.76ms]
+(pass) JoinPage > reload na entrada mantém o apelido digitado [9.00ms]
+
+ 118 pass
+ 0 fail
+ 453 expect() calls
+Ran 118 tests across 10 files. [12.18s]

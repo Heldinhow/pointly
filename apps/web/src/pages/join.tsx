@@ -1,463 +1,330 @@
-/**
- * Join — entrada/criação de sala.
- *
- * Modos vindos da querystring:
- *  - `?host=1`  → create  (só nick; server gera o código no hello)
- *  - `?code=` válido → invite (nick + código travado do link)
- *  - senão      → manual (nick + input de código)
- *
- * Fluxo de submit: valida nick → valida código (host pula) → convidados
- * fazem pre-check `GET /api/v1/salas/:code` (200 navega; 404 erro inline
- * sem navegar; rede/5xx toasta mas navega) → persiste uuid/nick/code →
- * navega com 200ms de delay (timeout limpo no unmount).
- *
- * Visual segue a landing: mesma base dark, header, botões, passos e footer.
- * A lógica e os testids são os mesmos de antes.
- */
+import { CircleAlertIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
-	useCallback,
-	useEffect,
-	useRef,
-	useState,
-	type FormEvent,
-} from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Moon, Sun } from "lucide-react";
-import { CopyButton } from "@/components/spell/copy-button";
-import { Spinner } from "@/components/spell/spinner";
-import { toast } from "@/components/feedback/toast";
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardPanel,
+  CardTitle,
+} from "@/components/ui/card";
 import {
-	API_BASE,
-	NICK_MAX,
-	getOrCreateUUID,
-	isValidCode,
-	normalizeCode,
-	getNick as readNick,
-	setCode as saveCode,
-	setNick as saveNick,
-	validateNick,
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { OTPField, OTPFieldInput } from "@/components/ui/otp-field";
+import { checkSala, resolveWsUrl } from "@/lib/api";
+import { JoinError, friendlyJoinMessage } from "@/lib/errors";
+import {
+  CodeSchema,
+  NickSchema,
+  loadNickDraft,
+  normalizeCode,
+  saveNickDraft,
 } from "@/lib/identity";
-import { useTheme } from "@/theme/theme";
+import { PointlySocket } from "@/lib/ws-client";
+import { useSession } from "@/store/session";
+import "./join.css";
 
-type JoinMode = "create" | "invite" | "manual";
+type Mode = "create" | "join";
 
-const MODE_LABEL: Record<JoinMode, string> = {
-	create: "Nova sala",
-	invite: "Convite",
-	manual: "Entrar",
-};
+function firstIssueMessage(error: unknown): string {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "issues" in error &&
+    Array.isArray((error as { issues: unknown }).issues)
+  ) {
+    const issues = (error as { issues: Array<{ message?: unknown }> }).issues;
+    const message = issues[0]?.message;
+    if (typeof message === "string") return message;
+  }
+  return "Valor inválido.";
+}
 
-const STEPS = [
-	{ title: "Crie", body: "Abra uma sala e compartilhe o código com o time." },
-	{ title: "Vote", body: "Cada pessoa escolhe uma carta em segredo." },
-	{ title: "Revele", body: "Revelem juntos e conversem sobre as diferenças." },
-] as const;
+export function JoinPage(): React.ReactElement {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const uuid = useSession((state) => state.uuid);
+  const sessionNick = useSession((state) => state.nick);
+  const setConnected = useSession((state) => state.setConnected);
 
-const CONTROL = "inline-flex min-h-12 items-center justify-center rounded-lg px-5 text-sm font-medium focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090b] motion-safe:transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40";
-const INPUT = "h-12 w-full rounded-lg border border-zinc-700 bg-[#17171b] px-4 text-base placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090b] disabled:opacity-60 [html.light_&]:border-zinc-300 [html.light_&]:bg-white [html.light_&]:placeholder:text-zinc-500";
+  const [mode, setMode] = useState<Mode>(() =>
+    searchParams.get("code") || searchParams.get("mode") === "join"
+      ? "join"
+      : "create",
+  );
+  const [nick, setNick] = useState(() => sessionNick || loadNickDraft());
+  const [code, setCode] = useState(() =>
+    normalizeCode(searchParams.get("code") ?? ""),
+  );
+  const [nickError, setNickError] = useState<string | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const socketRef = useRef<PointlySocket | null>(null);
+  const navigatedRef = useRef(false);
 
-export function Join() {
-	const [searchParams] = useSearchParams();
-	const navigate = useNavigate();
-	const { theme, toggle } = useTheme();
+  useEffect(() => {
+    setMode(
+      searchParams.get("code") || searchParams.get("mode") === "join"
+        ? "join"
+        : "create",
+    );
+    setCode(normalizeCode(searchParams.get("code") ?? ""));
+    setCodeError(null);
+    setFormError(null);
+  }, [searchParams]);
 
-	const isHost = searchParams.get("host") === "1";
-	const urlCode = normalizeCode(searchParams.get("code") ?? "");
-	const inviteCode = isValidCode(urlCode) ? urlCode : null;
-	const mode: JoinMode = isHost ? "create" : inviteCode ? "invite" : "manual";
+  useEffect(() => {
+    return () => {
+      if (!navigatedRef.current) {
+        socketRef.current?.close({ silent: true });
+        socketRef.current = null;
+      }
+    };
+  }, []);
 
-	const [nick, setNickValue] = useState<string>(() => readNick() ?? "");
-	const [localCode, setLocalCode] = useState<string>(() => urlCode);
-	const [nickError, setNickError] = useState<string | null>(() =>
-		validateNick(readNick() ?? ""),
-	);
-	const [codeError, setCodeError] = useState<string | null>(null);
-	const [checking, setChecking] = useState(false);
-	// invite vira editável quando o pre-check dá 404 (revela o input).
-	const [codeEditable, setCodeEditable] = useState(false);
+  function handleNickChange(value: string): void {
+    setNick(value);
+    saveNickDraft(value);
+    if (nickError) setNickError(null);
+  }
 
-	const nickRef = useRef<HTMLInputElement>(null);
-	const codeRef = useRef<HTMLInputElement>(null);
-	const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	// Dedupe: click no type="submit" dispara onClick + submit nativo no
-	// mesmo tick; o ref barra a segunda chamada. Resetado nos caminhos
-	// que permanecem na página (validação/404) para permitir retry.
-	const submittedRef = useRef(false);
+  function handleCodeChange(value: string): void {
+    setCode(normalizeCode(value));
+    if (codeError) setCodeError(null);
+  }
 
-	const codeInputVisible = !isHost && (mode !== "invite" || codeEditable);
+  function switchMode(next: Mode): void {
+    setMode(next);
+    setFormError(null);
+    setCodeError(null);
+  }
 
-	// Autofoco: nick vazio → nick; nick pré-preenchido → código (manual).
-	useEffect(() => {
-		const prefilled = (readNick() ?? "").length > 0;
-		if (prefilled && !isHost && mode !== "invite") {
-			codeRef.current?.focus();
-		} else {
-			nickRef.current?.focus();
-		}
-	}, [isHost, mode]);
+  async function handleSubmit(event: React.FormEvent): Promise<void> {
+    event.preventDefault();
+    if (busy) return;
 
-	// 404 / código inválido → foco + seleção no campo de código.
-	useEffect(() => {
-		if (codeError && codeInputVisible) {
-			codeRef.current?.focus();
-			codeRef.current?.select();
-		}
-	}, [codeError, codeInputVisible]);
+    const nickResult = NickSchema.safeParse(nick);
+    if (!nickResult.success) {
+      setNickError(firstIssueMessage(nickResult.error));
+    } else {
+      setNickError(null);
+    }
 
-	// Timeout de navegação limpo no unmount.
-	useEffect(() => {
-		return () => {
-			if (timeoutRef.current) clearTimeout(timeoutRef.current);
-		};
-	}, []);
+    let codeValue: string | undefined;
+    if (mode === "join") {
+      const codeResult = CodeSchema.safeParse(code);
+      if (!codeResult.success) {
+        setCodeError(firstIssueMessage(codeResult.error));
+      } else {
+        setCodeError(null);
+        codeValue = codeResult.data;
+      }
+    }
 
-	// Escape volta para a landing (fora do voo de verificação).
-	useEffect(() => {
-		if (checking) return;
-		const onKey = (e: KeyboardEvent) => {
-			if (e.key === "Escape") {
-				e.preventDefault();
-				navigate("/");
-			}
-		};
-		window.addEventListener("keydown", onKey);
-		return () => window.removeEventListener("keydown", onKey);
-	}, [checking, navigate]);
+    if (!nickResult.success || (mode === "join" && !codeValue)) return;
 
-	const handleNickChange = useCallback((value: string) => {
-		setNickValue(value);
-		setNickError(validateNick(value));
-	}, []);
+    setBusy(true);
+    setFormError(null);
+    try {
+      if (mode === "join" && codeValue) {
+        const check = await checkSala(codeValue);
+        if (check.status === "missing") {
+          setFormError("Sala não encontrada. Confira o código.");
+          setBusy(false);
+          return;
+        }
+        if (check.status === "invalid") {
+          setCodeError("Código inválido. Use 4 letras ou números.");
+          setBusy(false);
+          return;
+        }
+      }
 
-	const handleCodeChange = useCallback((value: string) => {
-		setLocalCode(normalizeCode(value));
-		// Editar o código limpa o erro anterior (padrão de forms curtos).
-		// React faz bail-out quando o valor é igual — sem render extra.
-		setCodeError(null);
-	}, []);
+      const socket = new PointlySocket({
+        onRoomState: (sala) => {
+          // Ticket 04: presença/votos ao vivo — o primeiro navegador
+          // recebe room_state quando o segundo entra (<1s).
+          useSession.getState().updateSala(sala);
+        },
+        onClose: () => {
+          if (!navigatedRef.current) {
+            setFormError(friendlyJoinMessage("connection_failed"));
+            setBusy(false);
+          }
+        },
+      });
+      socketRef.current = socket;
+      const welcome = await socket.connect(resolveWsUrl(), {
+        uuid,
+        nick: nickResult.data,
+        ...(codeValue ? { code: codeValue } : {}),
+      });
+      setConnected({
+        nick: nickResult.data,
+        code: welcome.sala.code,
+        playerId: welcome.playerId,
+        role: welcome.role,
+        sala: welcome.sala,
+        socket,
+      });
+      navigatedRef.current = true;
+      navigate(`/s/${welcome.sala.code}`);
+    } catch (error) {
+      if (error instanceof JoinError) {
+        setFormError(friendlyJoinMessage(error.code, error.message));
+      } else {
+        setFormError("Algo deu errado. Tente de novo.");
+      }
+      setBusy(false);
+    }
+  }
 
-	// Fallback do CopyButton do convite quando não há Clipboard API:
-	// copia via textarea + execCommand (mesmo padrão do share-pill).
-	const handleInviteCopyFallback = useCallback(() => {
-		const clipboard =
-			typeof navigator !== "undefined"
-				? (navigator.clipboard as unknown as
-						| { writeText?: (text: string) => Promise<void> }
-						| undefined)
-				: undefined;
-		if (clipboard?.writeText) return;
-		if (!inviteCode) return;
-		try {
-			const ta = document.createElement("textarea");
-			ta.value = inviteCode;
-			ta.style.position = "fixed";
-			ta.style.opacity = "0";
-			document.body.appendChild(ta);
-			ta.select();
-			document.execCommand("copy");
-			document.body.removeChild(ta);
-		} catch {
-			// sem feedback falso
-		}
-	}, [inviteCode]);
+  return (
+    <div className="join-page">
+      <section className="join-intro" aria-labelledby="join-intro-title">
+        <p className="join-eyebrow">Vamos começar</p>
+        <h1 id="join-intro-title">
+          Seu time.
+          <br />
+          Na mesma mesa.
+        </h1>
+        <p className="join-intro-copy">
+          Abra uma sala para começar uma rodada ou use o código de um convite.
+          Sem cadastro, sem espera.
+        </p>
+        <img
+          className="join-intro-image"
+          src="/images/planning-cards.webp"
+          alt="Cartas de planejamento sobre uma mesa"
+          width={1536}
+          height={1024}
+        />
+      </section>
 
-	const doSubmit = useCallback(async () => {
-		if (submittedRef.current || checking) return;
+      <Card className="join-card">
+        <CardHeader className="join-card-header">
+          <CardTitle>Criar ou entrar</CardTitle>
+          <CardDescription>
+            Sem cadastro, só um apelido para a mesa.
+          </CardDescription>
+        </CardHeader>
+        <CardPanel className="join-card-panel">
+          <form
+            id="join-form"
+            className="join-form"
+            onSubmit={(event) => {
+              void handleSubmit(event);
+            }}
+          >
+            <div
+              className="join-mode-switch"
+              role="group"
+              aria-label="Criar sala ou entrar com código"
+            >
+              <Button
+                className="join-mode-button"
+                type="button"
+                variant={mode === "create" ? "default" : "outline"}
+                aria-pressed={mode === "create"}
+                onClick={() => switchMode("create")}
+              >
+                Criar sala
+              </Button>
+              <Button
+                className="join-mode-button"
+                type="button"
+                variant={mode === "join" ? "default" : "outline"}
+                aria-pressed={mode === "join"}
+                onClick={() => switchMode("join")}
+              >
+                Entrar com código
+              </Button>
+            </div>
 
-		const nickErr = validateNick(nick);
-		setNickError(nickErr);
-		if (nickErr) {
-			nickRef.current?.focus();
-			return;
-		}
+            <Field invalid={nickError !== null}>
+              <FieldLabel htmlFor="nick">Apelido</FieldLabel>
+              <Input
+                className="join-input"
+                id="nick"
+                name="nick"
+                value={nick}
+                maxLength={20}
+                autoComplete="nickname"
+                placeholder="Como o time te chama?"
+                aria-invalid={nickError ? true : undefined}
+                aria-describedby={nickError ? "nick-error" : "nick-hint"}
+                onChange={(event) => handleNickChange(event.target.value)}
+              />
+              <FieldDescription id="nick-hint">
+                2 a 20 caracteres, sem espaços duplos.
+              </FieldDescription>
+              {nickError ? (
+                <FieldError id="nick-error" match={true}>
+                  {nickError}
+                </FieldError>
+              ) : null}
+            </Field>
 
-		// Host cria sala nova — pula validação e pre-check de código.
-		if (isHost) {
-			submittedRef.current = true;
-			setChecking(true);
-			getOrCreateUUID();
-			saveNick(nick);
-			timeoutRef.current = setTimeout(() => navigate("/arena"), 200);
-			return;
-		}
+            {mode === "join" ? (
+              <Field invalid={codeError !== null}>
+                <FieldLabel htmlFor="code">Código da sala</FieldLabel>
+                <OTPField
+                  className="join-otp"
+                  id="code"
+                  name="code"
+                  length={4}
+                  validationType="alphanumeric"
+                  normalizeValue={(value) => value.toUpperCase()}
+                  value={code}
+                  onValueChange={handleCodeChange}
+                  autoComplete="one-time-code"
+                  aria-invalid={codeError ? true : undefined}
+                  aria-describedby={codeError ? "code-error" : "code-hint"}
+                >
+                  {[0, 1, 2, 3].map((index) => (
+                    <OTPFieldInput key={index} />
+                  ))}
+                </OTPField>
+                <FieldDescription id="code-hint">
+                  4 letras ou números. Cole o código do convite.
+                </FieldDescription>
+                {codeError ? (
+                  <FieldError id="code-error" match={true}>
+                    {codeError}
+                  </FieldError>
+                ) : null}
+              </Field>
+            ) : null}
 
-		const activeCode =
-			inviteCode && !codeEditable ? inviteCode : localCode;
-		if (!isValidCode(activeCode)) {
-			setCodeError("Código inválido. Use 4 letras ou números.");
-			return;
-		}
-
-		submittedRef.current = true;
-		setChecking(true);
-		setCodeError(null);
-
-		try {
-			const resp = await fetch(`${API_BASE}/salas/${activeCode}`);
-			if (resp.status === 404) {
-				submittedRef.current = false;
-				setChecking(false);
-				setCodeError("Sala não encontrada. Confira o código.");
-				if (inviteCode) setCodeEditable(true);
-				return;
-			}
-			if (!resp.ok) {
-				toast("Não foi possível confirmar a sala. Tentando entrar mesmo assim.", {
-					variant: "error",
-				});
-			}
-		} catch {
-			toast("Sem conexão para verificar a sala. Tentando entrar mesmo assim.", {
-				variant: "error",
-			});
-		}
-
-		getOrCreateUUID();
-		saveNick(nick);
-		saveCode(activeCode);
-		timeoutRef.current = setTimeout(
-			() => navigate(`/arena?code=${activeCode}`),
-			200,
-		);
-	}, [nick, isHost, inviteCode, codeEditable, localCode, checking, navigate]);
-
-	const handleFormSubmit = useCallback(
-		(e: FormEvent<HTMLFormElement>) => {
-			e.preventDefault();
-			void doSubmit();
-		},
-		[doSubmit],
-	);
-
-	const submitDisabled =
-		nick.length === 0 || nickError !== null || checking;
-	const submitLabel =
-		mode === "create" ? "Criar sala" : "Entrar na sala";
-
-	return (
-		<div
-			data-testid="page-join"
-			className="flex min-h-dvh flex-col bg-[#09090b] font-sans text-zinc-100 [html.light_&]:bg-[#f5f5f5] [html.light_&]:text-zinc-900"
-		>
-			<header className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between px-5 sm:px-8">
-				<Link
-					to="/"
-					aria-label="Pointly — página inicial"
-					className="flex items-center gap-2.5 rounded-md font-mono text-sm font-semibold tracking-[0.08em] uppercase focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090b]"
-				>
-					<span aria-hidden="true" className="grid grid-cols-2 gap-[3px]">
-						<span className="h-2 w-2 rounded-[3px] bg-current" />
-						<span className="h-2 w-2 rounded-[3px] bg-current" />
-						<span className="h-2 w-2 rounded-[3px] bg-current" />
-						<span className="h-2 w-2 rounded-[3px] bg-emerald-400" />
-					</span>
-					Pointly
-				</Link>
-				<nav className="flex items-center gap-2" aria-label="navegação principal">
-					<button
-						type="button"
-						data-testid="theme-toggle"
-						onClick={toggle}
-						aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
-						title={theme === "dark" ? "Tema claro" : "Tema escuro"}
-						className="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-800 text-zinc-300 [html.light_&]:border-zinc-300 [html.light_&]:text-zinc-600"
-					>
-						{theme === "dark" ? (
-							<Sun aria-hidden="true" className="h-5 w-5" />
-						) : (
-							<Moon aria-hidden="true" className="h-5 w-5" />
-						)}
-					</button>
-				</nav>
-			</header>
-
-			<main className="mx-auto w-full max-w-6xl flex-1 px-5 pt-10 pb-12 sm:px-8 sm:pt-16">
-				<div className="grid items-start gap-12 lg:grid-cols-[1fr_1fr] lg:gap-16">
-					<div className="min-w-0 lg:pt-8">
-						<p className="font-mono text-xs tracking-[0.18em] text-zinc-500 uppercase">
-							{MODE_LABEL[mode]}
-						</p>
-						<h1 className="mt-3 max-w-[15ch] text-4xl font-medium tracking-tight text-balance sm:text-5xl">
-							{mode === "create"
-								? "Crie sua sala"
-								: mode === "invite"
-									? "Você foi convidado!"
-									: "Entrar na sala"}
-						</h1>
-						<p className="mt-4 max-w-[40ch] text-base leading-relaxed text-zinc-400 [html.light_&]:text-zinc-600">
-							{mode === "create"
-								? "Escolha seu nome — o código da sala é gerado na hora para convidar o time."
-								: mode === "invite"
-									? "Escolha como você quer aparecer para o time."
-									: "Informe o código da sala e escolha seu nome para entrar."}
-						</p>
-
-						{mode === "invite" && !codeEditable && inviteCode && (
-							<div className="mt-6 flex items-center gap-3 border-y border-[#26262c] py-4 [html.light_&]:border-zinc-300">
-								<span className="font-mono text-xs tracking-[0.18em] text-zinc-500 uppercase">
-									Sala
-								</span>
-								<strong
-									data-testid="join-code-display"
-									className="font-mono text-lg font-semibold tracking-[0.12em]"
-								>
-									{inviteCode}
-								</strong>
-								<span className="ml-auto">
-									<CopyButton
-										value={inviteCode}
-										onClick={handleInviteCopyFallback}
-									/>
-								</span>
-							</div>
-						)}
-
-						<form onSubmit={handleFormSubmit} className="mt-6 flex flex-col gap-5">
-							{codeInputVisible && (
-								<div>
-									<label
-										htmlFor="join-code-input"
-										className="mb-2 block text-sm font-medium"
-									>
-										Código da sala
-									</label>
-									<input
-										id="join-code-input"
-										ref={codeRef}
-										type="text"
-										maxLength={4}
-										placeholder="ABCD"
-										autoComplete="off"
-										autoCapitalize="characters"
-										spellCheck={false}
-										value={localCode}
-										onChange={(e) => handleCodeChange(e.target.value)}
-										aria-invalid={codeError !== null}
-										aria-describedby={
-											codeError ? "join-code-error" : "join-code-hint"
-										}
-										disabled={checking}
-										data-testid="join-code"
-										className={`${INPUT} font-mono text-lg tracking-[0.28em] uppercase`}
-									/>
-									{codeError ? (
-										<p
-											id="join-code-error"
-											role="alert"
-											data-testid="join-code-error"
-											className="mt-1.5 text-sm text-red-400"
-										>
-											{codeError}
-										</p>
-									) : (
-										<p id="join-code-hint" className="mt-1.5 text-sm text-zinc-400 [html.light_&]:text-zinc-600">
-											4 letras ou números · peça ao host que criou a sala.
-										</p>
-									)}
-								</div>
-							)}
-
-							<div>
-								<label
-									htmlFor="join-nick-input"
-									className="mb-2 block text-sm font-medium"
-								>
-									Como você quer ser chamado
-								</label>
-								<input
-									id="join-nick-input"
-									ref={nickRef}
-									type="text"
-									maxLength={NICK_MAX}
-									placeholder="ex. Luna"
-									autoComplete="nickname"
-									value={nick}
-									onChange={(e) => handleNickChange(e.target.value)}
-									aria-invalid={nickError !== null}
-									aria-describedby={
-										nickError ? "join-nick-error" : "join-nick-hint"
-									}
-									disabled={checking}
-									data-testid="join-nick"
-									className={INPUT}
-								/>
-								{nickError ? (
-									<p
-										id="join-nick-error"
-										role="alert"
-										data-testid="join-nick-error"
-										className="mt-1.5 text-sm text-red-400"
-									>
-										{nickError}
-									</p>
-								) : (
-									<p
-										id="join-nick-hint"
-										className="mt-1.5 flex items-center justify-between text-sm text-zinc-400 [html.light_&]:text-zinc-600"
-									>
-										<span>De 2 a 20 caracteres</span>
-										<span aria-hidden="true">
-											{nick.length}/{NICK_MAX}
-										</span>
-									</p>
-								)}
-							</div>
-
-							<div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-								<button
-									type="submit"
-									disabled={submitDisabled}
-									onClick={() => void doSubmit()}
-									data-testid="join-submit"
-									className={`${CONTROL} w-full bg-zinc-100 text-zinc-950 [html.light_&]:bg-zinc-900 [html.light_&]:text-white sm:flex-1`}
-								>
-									{checking ? (
-										<>
-											<Spinner size="sm" /> Verificando…
-										</>
-									) : (
-										submitLabel
-									)}
-								</button>
-								<button
-									type="button"
-									onClick={() => navigate("/")}
-									data-testid="join-back"
-									className={`${CONTROL} border border-zinc-700 [html.light_&]:border-zinc-300`}
-								>
-									Voltar
-								</button>
-							</div>
-						</form>
-					</div>
-
-					<aside aria-label="Na mesa" className="min-w-0 lg:pt-8">
-						<h2 className="text-lg font-medium">Na mesa</h2>
-						<p className="mt-1 text-sm text-zinc-400 [html.light_&]:text-zinc-600">
-							O que acontece depois que você entrar.
-						</p>
-						<ol className="mt-5 grid gap-7 border-t border-[#26262c] pt-8 [html.light_&]:border-zinc-300">
-							{STEPS.map((step, index) => (
-								<li key={step.title}>
-									<h3 className="text-lg font-medium">
-										<span className="mr-3 font-mono text-sm text-zinc-400 [html.light_&]:text-zinc-600">
-											{index + 1}.
-										</span>
-										{step.title}
-									</h3>
-									<p className="mt-2 max-w-[32ch] text-sm leading-relaxed text-zinc-400 [html.light_&]:text-zinc-600">
-										{step.body}
-									</p>
-								</li>
-							))}
-						</ol>
-					</aside>
-				</div>
-			</main>
-
-			<footer className="mx-auto w-full max-w-6xl px-5 py-6 text-sm text-zinc-400 sm:px-8 [html.light_&]:text-zinc-600">
-				Pointly · A ferramenta some, a conversa fica.
-			</footer>
-		</div>
-	);
+            {formError ? (
+              <Alert variant="error">
+                <CircleAlertIcon aria-hidden="true" />
+                <AlertTitle>Não foi possível entrar</AlertTitle>
+                <AlertDescription>{formError}</AlertDescription>
+              </Alert>
+            ) : null}
+          </form>
+        </CardPanel>
+        <CardFooter className="join-card-footer">
+          <Button
+            className="join-submit"
+            type="submit"
+            form="join-form"
+            loading={busy}
+          >
+            {mode === "create" ? "Criar sala" : "Entrar na sala"}
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
+  );
 }

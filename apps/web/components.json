@@ -1,0 +1,19 @@
+{
+	"$schema": "https://ui.shadcn.com/schema.json",
+	"style": "default",
+	"tailwind": {
+		"baseColor": "neutral",
+		"css": "src/index.css"
+	},
+	"aliases": {
+		"components": "@/components",
+		"hooks": "@/hooks",
+		"lib": "@/lib",
+		"ui": "@/components/ui",
+		"utils": "@/lib/utils"
+	},
+	"iconLibrary": "lucide",
+	"registries": {
+		"@coss": "https://coss.com/ui/r/{name}.json"
+	}
+}

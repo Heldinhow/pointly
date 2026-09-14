@@ -1,26 +1,52 @@
-/**
- * App — root component (scaffold spell-rebuild).
- *
- * ThemeProvider (dark default) > MotionConfig (reducedMotion="user") >
- * NetworkBanner + AppRouter + ToastHost.
- *
- * Páginas (landing/join/arena/full) e peças spell são plugadas
- * pelos workers paralelos — este arquivo só compõe a casca.
- */
-import { MotionConfig } from "motion/react";
-import { NetworkBanner } from "@/components/analytics";
-import { ToastHost } from "@/components/feedback/toast";
-import { AppRouter } from "@/routes";
-import { ThemeProvider } from "@/theme/theme";
+import { Link, Route, Routes, useLocation } from "react-router-dom";
+import { Brand, ShellHeader, ShellMain, SkipLink } from "@/components/shell";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { useTheme } from "@/lib/theme";
+import { ArenaPage } from "@/pages/arena";
+import { HomePage } from "@/pages/home";
+import { JoinPage } from "@/pages/join";
+import { NotFoundPage } from "@/pages/not-found";
 
-export function App() {
-	return (
-		<ThemeProvider>
-			<MotionConfig reducedMotion="user">
-				<NetworkBanner />
-				<AppRouter />
-				<ToastHost />
-			</MotionConfig>
-		</ThemeProvider>
-	);
+export default function App(): React.ReactElement {
+  const { theme, toggle } = useTheme();
+  const { pathname } = useLocation();
+  const inArena = pathname.startsWith("/s/");
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-background text-foreground">
+      <SkipLink />
+      <ShellHeader>
+        {inArena ? (
+          <Brand />
+        ) : (
+          <Link to="/" aria-label="Pointly, início">
+            <Brand />
+          </Link>
+        )}
+        <div className="site-nav">
+          {!inArena && (
+            <nav aria-label="Navegação principal">
+              <Link to="/">Início</Link>
+              <Link to="/join?mode=join">Entrar com código</Link>
+            </nav>
+          )}
+          <ThemeToggle theme={theme} onToggle={toggle} />
+        </div>
+      </ShellHeader>
+      <ShellMain id="conteudo">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/join" element={<JoinPage />} />
+          <Route path="/s/:code" element={<ArenaPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </ShellMain>
+      {!inArena && (
+        <footer className="site-footer">
+          <span>Pointly · Planning poker, juntos.</span>
+          <span>Sem cadastro. Direto à conversa.</span>
+        </footer>
+      )}
+    </div>
+  );
 }
