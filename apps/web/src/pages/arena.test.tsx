@@ -530,7 +530,7 @@ describe("ArenaPage (ticket 06 — Timer e Reveal)", () => {
 			/Todos votaram.*no zero, revela sozinho/,
 		);
 		// Sem auto-reveal: continua pré-reveal com botão habilitado.
-		expect(screen.queryByTestId("reveal-done")).toBeNull();
+		expect(screen.getByTestId("reveal-button")).toBeTruthy();
 		const button = screen.getByTestId("reveal-button") as HTMLButtonElement;
 		expect(button.disabled).toBe(false);
 		expect(screen.getByTestId("timer-line").textContent).toMatch(/44s/);
@@ -548,7 +548,7 @@ describe("ArenaPage (ticket 06 — Timer e Reveal)", () => {
 		await waitFor(() =>
 			expect(screen.getByTestId("timer-line").textContent).toMatch(/43s/),
 		);
-		expect(screen.queryByTestId("reveal-done")).toBeNull();
+		expect(screen.getByTestId("reveal-button")).toBeTruthy();
 	});
 
 	test("zerar o timer revela sozinho via room_state", async () => {
@@ -565,7 +565,7 @@ describe("ArenaPage (ticket 06 — Timer e Reveal)", () => {
 		});
 		renderArena();
 
-		expect(screen.queryByTestId("reveal-done")).toBeNull();
+		expect(screen.getByTestId("reveal-button")).toBeTruthy();
 
 		await act(async () => {
 			socket.emitRoomState(
@@ -585,7 +585,9 @@ describe("ArenaPage (ticket 06 — Timer e Reveal)", () => {
 				/Revelada/,
 			),
 		);
-		expect(screen.getByTestId("reveal-done")).toBeTruthy();
+		expect(screen.getByTestId("reveal-hint").textContent).toMatch(
+			/Discutam as diferenças/,
+		);
 		expect(screen.queryByTestId("reveal-button")).toBeNull();
 		expect(screen.getByTestId("timer-line").textContent).toMatch(/0s/);
 	});

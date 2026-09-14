@@ -758,9 +758,6 @@ export function ArenaPage(): React.ReactElement {
             hostId={sala.hostId}
             revealed={isRevealed}
           >
-            <span className="arena-table-wordmark" aria-hidden="true">
-              Pointly
-            </span>
             <Card className="arena-reveal">
               <CardHeader>
                 <CardTitle className="text-base">
@@ -782,50 +779,45 @@ export function ArenaPage(): React.ReactElement {
                         : "Aguardando o primeiro voto para liberar o reveal."}
                 </CardDescription>
               </CardHeader>
-              <CardPanel className="flex flex-col gap-3">
-                {!isRevealed ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      type="button"
-                      data-testid="reveal-button"
-                      disabled={!canReveal}
-                      onClick={handleReveal}
-                      aria-keyshortcuts="r"
-                      aria-label={
-                        canReveal
-                          ? "Revelar votos (atalho R)"
-                          : "Aguardando votos para revelar"
-                      }
-                      title={canReveal ? "Atalho: R" : undefined}
-                    >
-                      <EyeIcon aria-hidden="true" />
-                      Revelar votos
-                    </Button>
-                    <span className="text-xs text-muted-foreground">
-                      <kbd className="rounded border px-1 font-mono">R</kbd>{" "}
-                      revela
-                      {canReveal
-                        ? " · encerra a contagem e vai à discussão."
-                        : " · disponível após o primeiro voto."}
-                    </span>
-                  </div>
-                ) : (
-                  <p
-                    className="text-sm text-muted-foreground"
-                    data-testid="reveal-done"
-                  >
-                    Votos revelados · o timer zerou ou alguém revelou.
-                  </p>
-                )}
-                {revealError ? (
-                  <Alert variant="error">
-                    <AlertTitle>Não foi possível revelar</AlertTitle>
-                    <AlertDescription data-testid="reveal-error">
-                      {revealError}
-                    </AlertDescription>
-                  </Alert>
-                ) : null}
-              </CardPanel>
+              {!isRevealed || revealError ? (
+                <CardPanel className="flex flex-col gap-3">
+                  {!isRevealed && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        type="button"
+                        data-testid="reveal-button"
+                        disabled={!canReveal}
+                        onClick={handleReveal}
+                        aria-keyshortcuts="r"
+                        aria-label={
+                          canReveal
+                            ? "Revelar votos (atalho R)"
+                            : "Aguardando votos para revelar"
+                        }
+                        title={canReveal ? "Atalho: R" : undefined}
+                      >
+                        <EyeIcon aria-hidden="true" />
+                        Revelar votos
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        <kbd className="rounded border px-1 font-mono">R</kbd>{" "}
+                        revela
+                        {canReveal
+                          ? " · encerra a contagem e vai à discussão."
+                          : " · disponível após o primeiro voto."}
+                      </span>
+                    </div>
+                  )}
+                  {revealError ? (
+                    <Alert variant="error">
+                      <AlertTitle>Não foi possível revelar</AlertTitle>
+                      <AlertDescription data-testid="reveal-error">
+                        {revealError}
+                      </AlertDescription>
+                    </Alert>
+                  ) : null}
+                </CardPanel>
+              ) : null}
             </Card>
           </PokerTable>
           <Card className="arena-deck">

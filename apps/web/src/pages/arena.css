@@ -85,13 +85,6 @@
   color: var(--muted-foreground);
   padding: 0 8px 18px;
 }
-.arena-table-wordmark {
-  color: var(--table-wordmark);
-  font-size: 25px;
-  font-weight: 700;
-  letter-spacing: -0.06em;
-  margin-bottom: 12px;
-}
 .arena-reveal {
   --foreground: #f2f7f3;
   --muted-foreground: #c3dbce;
@@ -135,10 +128,6 @@
 }
 .arena-reveal [data-slot="card-panel"] > div > span {
   display: none;
-}
-.arena-reveal [data-testid="reveal-done"] {
-  font-size: 11px;
-  color: #d2e4d8;
 }
 .arena-deck {
   border: 1px solid var(--border);
@@ -350,9 +339,6 @@
   }
   .arena-workspace {
     gap: 20px;
-  }
-  .arena-table-wordmark {
-    font-size: 23px;
   }
   .arena-reveal [data-slot="card-title"] {
     font-size: 17px;
