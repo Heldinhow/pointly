@@ -1,0 +1,45 @@
+.git
+.github
+.gitignore
+.gitattributes
+.idea
+.vscode
+.DS_Store
+**/.DS_Store
+
+# Build artifacts
+**/node_modules
+**/dist
+**/.vite
+**/build
+**/.next
+**/.turbo
+
+# Test artifacts
+**/coverage
+**/.nyc_output
+tests/**/test-results
+tests/**/playwright-report
+tests/**/blob-report
+
+# Logs / scratch
+*.log
+logs/
+scratch/
+
+# Docs & design assets (not needed in runtime image)
+README.md
+CONTEXT.md
+DESIGN-HANDOFF.md
+DESIGN-MANIFEST.json
+plan.md
+docs/
+design/
+.specs/
+.agents/
+.pi-subagents/
+
+# Env files (injected via Dokploy UI, never committed)
+.env
+.env.*
+!.env.example

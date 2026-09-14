@@ -9,14 +9,10 @@ FROM oven/bun:${BUN_VERSION}-alpine AS deps
 WORKDIR /app
 ENV NODE_ENV=development
 # Copy the full workspace tree so bun can resolve all workspaces during install.
-# The bun.lockb was generated with ALL workspaces present (including tests/*);
-# Bun's --frozen-lockfile compares the workspace snapshot against the lockfile,
-# so missing workspaces → phantom drift → "lockfile had changes".
-COPY package.json bun.lockb bunfig.toml ./
+COPY package.json bun.lock bunfig.toml ./
 COPY tsconfig.base.json ./
 COPY apps ./apps
 COPY packages ./packages
-COPY tests ./tests
 COPY scripts ./scripts
 RUN bun install --frozen-lockfile
 
@@ -39,7 +35,7 @@ ENV NODE_ENV=production
 ARG VITE_GA_MEASUREMENT_ID
 ENV VITE_GA_MEASUREMENT_ID=$VITE_GA_MEASUREMENT_ID
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json bun.lockb bunfig.toml ./
+COPY package.json bun.lock bunfig.toml ./
 COPY tsconfig.base.json ./
 COPY apps ./apps
 COPY packages ./packages
@@ -53,7 +49,7 @@ WORKDIR /app
 RUN apk add --no-cache tini
 ENV NODE_ENV=production BUN_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json bun.lockb bunfig.toml ./
+COPY package.json bun.lock bunfig.toml ./
 COPY tsconfig.base.json ./
 COPY apps ./apps
 COPY packages ./packages

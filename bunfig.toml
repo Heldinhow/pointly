@@ -1,0 +1,9 @@
+# Bun workspace + runtime config for Pointly
+#
+# linker = "hoisted": instala tudo em /app/node_modules (raiz).
+# O Dockerfile copia só /app/node_modules entre stages, então o layout
+# isolado (padrão) quebraria o build — deps de apps/web ficariam em
+# apps/web/node_modules, fora do COPY.
+
+[install]
+linker = "hoisted"
