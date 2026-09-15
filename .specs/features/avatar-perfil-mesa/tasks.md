@@ -109,11 +109,13 @@ T7 → T8 → T9
 
 **Done when**:
 
-- [ ] HelloPayloadSchema aceita avatar opcional e rejeita acima do teto
-- [ ] UpdateAvatarPayloadSchema aceita string válida ou null e entra na discriminated union
-- [ ] PlayerJoined carrega avatar opcional (ou documentado que não carrega)
-- [ ] Gate check passes: `bun --filter @planning-poker/shared test`
-- [ ] Test count: ≥5 tests pass (hello com/sem avatar, update set/clear, teto, união dispatch)
+- [x] HelloPayloadSchema aceita avatar opcional e rejeita acima do teto
+- [x] UpdateAvatarPayloadSchema aceita string válida ou null e entra na discriminated union
+- [x] PlayerJoined carrega avatar opcional (ou documentado que não carrega)
+- [x] Gate check passes: `bun --filter @planning-poker/shared test`
+- [x] Test count: ≥5 tests pass (hello com/sem avatar, update set/clear, teto, união dispatch)
+
+**Status**: ✅ Complete (T2)
 
 **Tests**: unit
 **Gate**: quick

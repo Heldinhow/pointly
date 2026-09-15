@@ -9,6 +9,7 @@
  */
 import { z } from "zod";
 import {
+	AvatarSchema,
 	RoomCodeSchema,
 	SalaStateSchema,
 	UuidSchema,
@@ -29,6 +30,8 @@ export const HelloPayloadSchema = z.object({
 	code: RoomCodeSchema.optional(),
 	/** entrar como espectador: assiste sem votar nem ocupar assento. Só com code. */
 	spectate: z.boolean().optional(),
+	/** avatar dataURL (teto ~40KB). Ausente = iniciais. */
+	avatar: AvatarSchema.optional(),
 });
 export type HelloPayload = z.infer<typeof HelloPayloadSchema>;
 
@@ -61,6 +64,17 @@ export type LeaveRoomPayload = z.infer<typeof LeaveRoomPayloadSchema>;
 /** `ping { }` — heartbeat client→server (T17). Sem payload. */
 export const PingPayloadSchema = z.object({}).strict();
 export type PingPayload = z.infer<typeof PingPayloadSchema>;
+
+/**
+ * `update_avatar { avatar }` — troca mid-sala (AV-06). String válida
+ * define/substitui; null remove (volta a iniciais).
+ */
+export const UpdateAvatarPayloadSchema = z
+	.object({
+		avatar: AvatarSchema.nullable(),
+	})
+	.strict();
+export type UpdateAvatarPayload = z.infer<typeof UpdateAvatarPayloadSchema>;
 
 export const ProjectileTypeSchema = z.enum([
 	"paper_ball",
@@ -99,6 +113,10 @@ export const ClientToServerEventSchema = z.discriminatedUnion("type", [
 	z.object({ type: z.literal("leave_room"), payload: LeaveRoomPayloadSchema }),
 	z.object({ type: z.literal("ping"), payload: PingPayloadSchema }),
 	z.object({
+		type: z.literal("update_avatar"),
+		payload: UpdateAvatarPayloadSchema,
+	}),
+	z.object({
 		type: z.literal("throw_projectile"),
 		payload: ThrowProjectilePayloadSchema,
 	}),
@@ -136,7 +154,8 @@ export const RoomStateResponseSchema = z.object({
 });
 export type RoomStateResponse = z.infer<typeof RoomStateResponseSchema>;
 
-/** `player_joined` — outro player entrou na sala. */
+/** `player_joined` — outro player entrou na sala. Avatar opcional:
+ * presente quando o join carregou imagem; ausente = iniciais. */
 export const PlayerJoinedEventSchema = z.object({
 	player: z.lazy(() =>
 		z.object({
@@ -144,6 +163,7 @@ export const PlayerJoinedEventSchema = z.object({
 			nick: NickSchema,
 			seatIndex: z.number().int().min(-1).max(11),
 			role: RoleSchema,
+			avatar: AvatarSchema.optional(),
 		}),
 	),
 });

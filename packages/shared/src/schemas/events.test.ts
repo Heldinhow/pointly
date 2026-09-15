@@ -21,6 +21,7 @@ import {
 	SalaEndedReasonSchema,
 	ServerToClientEventSchema,
 	StartNewRoundPayloadSchema,
+	UpdateAvatarPayloadSchema,
 	VoteCastEventSchema,
 	VotesRevealedEventSchema,
 	WelcomeResponseSchema,
@@ -432,6 +433,99 @@ describe("ServerToClientEventSchema (discriminated union)", () => {
 		const r = ServerToClientEventSchema.safeParse({
 			type: "pong",
 			payload: {},
+		});
+		expect(r.success).toBe(true);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Avatar na mesa (T2, AV-03)
+// ---------------------------------------------------------------------------
+
+describe("HelloPayloadSchema avatar", () => {
+	const UUID = "550e8400-e29b-41d4-a716-446655440000";
+	const JPEG = "data:image/jpeg;base64,/9j/4AAQ";
+
+	test("aceita hello com avatar válido", () => {
+		const r = HelloPayloadSchema.safeParse({ uuid: UUID, nick: "Ana", avatar: JPEG });
+		expect(r.success).toBe(true);
+		if (r.success) expect(r.data.avatar).toBe(JPEG);
+	});
+
+	test("aceita hello sem avatar (fallback iniciais)", () => {
+		const r = HelloPayloadSchema.safeParse({ uuid: UUID, nick: "Ana" });
+		expect(r.success).toBe(true);
+	});
+
+	test("rejeita hello com avatar acima do teto", () => {
+		const oversized = `data:image/jpeg;base64,${"A".repeat(40000)}`;
+		const r = HelloPayloadSchema.safeParse({ uuid: UUID, nick: "Ana", avatar: oversized });
+		expect(r.success).toBe(false);
+	});
+});
+
+describe("UpdateAvatarPayloadSchema", () => {
+	test("aceita set com dataURL válida", () => {
+		const r = UpdateAvatarPayloadSchema.safeParse({
+			avatar: "data:image/png;base64,iVBORw0KGgo=",
+		});
+		expect(r.success).toBe(true);
+	});
+
+	test("aceita clear com avatar null", () => {
+		const r = UpdateAvatarPayloadSchema.safeParse({ avatar: null });
+		expect(r.success).toBe(true);
+		if (r.success) expect(r.data.avatar).toBeNull();
+	});
+
+	test("rejeita avatar acima do teto", () => {
+		const oversized = `data:image/webp;base64,${"A".repeat(40000)}`;
+		expect(UpdateAvatarPayloadSchema.safeParse({ avatar: oversized }).success).toBe(false);
+	});
+
+	test("rejeita formato fora do v1 (gif)", () => {
+		expect(
+			UpdateAvatarPayloadSchema.safeParse({ avatar: "data:image/gif;base64,R0lGODlh" })
+				.success,
+		).toBe(false);
+	});
+});
+
+describe("ClientToServerEventSchema update_avatar", () => {
+	test("dispatch update_avatar set via união", () => {
+		const r = ClientToServerEventSchema.safeParse({
+			type: "update_avatar",
+			payload: { avatar: "data:image/jpeg;base64,/9j/4AAQ" },
+		});
+		expect(r.success).toBe(true);
+	});
+
+	test("dispatch update_avatar clear via união", () => {
+		const r = ClientToServerEventSchema.safeParse({
+			type: "update_avatar",
+			payload: { avatar: null },
+		});
+		expect(r.success).toBe(true);
+	});
+});
+
+describe("PlayerJoinedEventSchema avatar", () => {
+	test("aceita player_joined sem avatar", () => {
+		const r = PlayerJoinedEventSchema.safeParse({
+			player: { id: "p2", nick: "Bob", seatIndex: 1, role: "player" },
+		});
+		expect(r.success).toBe(true);
+	});
+
+	test("aceita player_joined com avatar", () => {
+		const r = PlayerJoinedEventSchema.safeParse({
+			player: {
+				id: "p2",
+				nick: "Bob",
+				seatIndex: 1,
+				role: "player",
+				avatar: "data:image/webp;base64,UklGRg==",
+			},
 		});
 		expect(r.success).toBe(true);
 	});
