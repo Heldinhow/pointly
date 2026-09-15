@@ -361,11 +361,19 @@ describe("WSService — wire format validation", () => {
 });
 
 // ---------------------------------------------------------------------------
-// T01: reconciliation cadence (10s) per ADR-002
+// Tick: heartbeat + grace period (sem timer)
 // ---------------------------------------------------------------------------
 
-describe("WSService — tick reconciliation cadence (10s)", () => {
-	function setupVotingSala(): string {
+describe("WSService — tick heartbeat + grace period", () => {
+	test("fecha conexão com heartbeat expirado", () => {
+		service.onOpen(ws);
+		ws.data.lastPongAt = Date.now() - 20_000;
+		service.tick(Date.now());
+		expect(ws.closed).toBe(true);
+		expect(ws.closeCode).toBe(1011);
+	});
+
+	test("tick sozinho não broadcasta room_state (só eventos disparam)", () => {
 		service.onOpen(ws);
 		service.onMessage(
 			ws,
@@ -374,7 +382,6 @@ describe("WSService — tick reconciliation cadence (10s)", () => {
 				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
 			}),
 		);
-		// 2º player para que phase fique 'voting' (1 só player → revealable)
 		const ws2 = new MockBunWS("127.0.0.2");
 		service.onOpen(ws2);
 		service.onMessage(
@@ -392,147 +399,19 @@ describe("WSService — tick reconciliation cadence (10s)", () => {
 			ws,
 			JSON.stringify({ type: "cast_vote", payload: { value: "5" } }),
 		);
-		// só Ana votou → phase permanece 'voting' (Bob ainda não votou)
 		const sala = hub.getSalaForPlayer(ws.data.playerId!)!;
 		expect(sala.phase).toBe("voting");
-		sala.timer = 50; // impede auto-reveal durante o teste
-		return sala.code;
-	}
 
-	test("broadcasta room_state imediatamente quando timer 'fired' (auto-reveal)", () => {
-		const code = setupVotingSala();
-		const sala = hub.getSala(code)!;
-		sala.timer = 1; // próximo tick → fired
-
-		const before = ws.eventsOfType("room_state").length;
-		service.tick(Date.now());
-		const after = ws.eventsOfType("room_state").length;
-
-		// 'fired' deve gerar pelo menos um room_state extra
-		expect(after).toBeGreaterThan(before);
-		expect(sala.phase).toBe("revealed");
-	});
-
-	test("broadcasta room_state para sala 'ticking' quando >= 10s se passaram", () => {
-		const code = setupVotingSala();
-		const sala = hub.getSala(code)!;
-		sala.timer = 50;
-
-		const t1 = 1_000_000;
-		service.tick(t1); // primeiro tick: lastBroadcastAt=0, então now-0 >= 10000 → broadcast
 		const baseline = ws.eventsOfType("room_state").length;
-
-		// avança 9s: ainda não deve broadcastar (9 < 10)
-		service.tick(t1 + 9_000);
+		const t = Date.now();
+		service.tick(t);
+		service.tick(t + 1_000);
+		service.tick(t + 11_000);
 		expect(ws.eventsOfType("room_state").length).toBe(baseline);
-
-		// avança mais 2s (total 11s): deve broadcastar
-		service.tick(t1 + 11_000);
-		expect(ws.eventsOfType("room_state").length).toBeGreaterThan(baseline);
+		expect(sala.phase).toBe("voting");
 	});
 
-	test("NÃO broadcasta room_state para sala 'ticking' quando < 10s se passaram", () => {
-		const code = setupVotingSala();
-		const sala = hub.getSala(code)!;
-		sala.timer = 50;
-
-		const t1 = 2_000_000;
-		service.tick(t1); // primeiro tick: broadcast (lastBroadcastAt era 0)
-		const after1 = ws.eventsOfType("room_state").length;
-
-		// 5 ticks de 1s cada — todos < 10s desde t1
-		for (let i = 1; i <= 5; i++) {
-			service.tick(t1 + i * 1000);
-		}
-		const after5 = ws.eventsOfType("room_state").length;
-		expect(after5).toBe(after1); // sem broadcasts extras
-	});
-
-	test("timestamps de broadcast são independentes por sala", () => {
-		// sala A: host (Ana) + player (Cris). Cris não vota → phase 'voting'
-		const wsA = new MockBunWS("127.0.0.1");
-		service.onOpen(wsA);
-		service.onMessage(
-			wsA,
-			JSON.stringify({
-				type: "hello",
-				payload: { uuid: "00000000-0000-4000-8000-000000000002", nick: "Ana" },
-			}),
-		);
-		const codeA = wsA.data.code!;
-		const wsA2 = new MockBunWS("127.0.0.3");
-		service.onOpen(wsA2);
-		service.onMessage(
-			wsA2,
-			JSON.stringify({
-				type: "hello",
-				payload: {
-					uuid: "00000000-0000-8000-0000-000000000004",
-					nick: "Cris",
-					code: codeA,
-				},
-			}),
-		);
-		service.onMessage(
-			wsA,
-			JSON.stringify({ type: "cast_vote", payload: { value: "5" } }),
-		);
-		const salaA = hub.getSala(codeA)!;
-		expect(salaA.phase).toBe("voting");
-		salaA.timer = 50;
-
-		// sala B: host (Bob) + player (Diana). Diana não vota → phase 'voting'
-		const wsB = new MockBunWS("127.0.0.2");
-		service.onOpen(wsB);
-		service.onMessage(
-			wsB,
-			JSON.stringify({
-				type: "hello",
-				payload: { uuid: "00000000-0000-4000-8000-000000000003", nick: "Bob" },
-			}),
-		);
-		const codeB = wsB.data.code!;
-		const wsB2 = new MockBunWS("127.0.0.4");
-		service.onOpen(wsB2);
-		service.onMessage(
-			wsB2,
-			JSON.stringify({
-				type: "hello",
-				payload: {
-					uuid: "00000000-0000-8000-0000-000000000005",
-					nick: "Diana",
-					code: codeB,
-				},
-			}),
-		);
-		service.onMessage(
-			wsB,
-			JSON.stringify({ type: "cast_vote", payload: { value: "8" } }),
-		);
-		const salaB = hub.getSala(codeB)!;
-		expect(salaB.phase).toBe("voting");
-		salaB.timer = 50;
-
-		// t=10000: ambos broadcastam (lastBroadcastAt=0 para ambos)
-		service.tick(10_000);
-		const a1 = wsA.eventsOfType("room_state").length;
-		const b1 = wsB.eventsOfType("room_state").length;
-		expect(a1).toBeGreaterThan(0);
-		expect(b1).toBeGreaterThan(0);
-
-		// t=15000 (5s depois): nenhum deve broadcastar
-		service.tick(15_000);
-		expect(wsA.eventsOfType("room_state").length).toBe(a1);
-		expect(wsB.eventsOfType("room_state").length).toBe(b1);
-
-		// t=21000 (11s após último broadcast da A, 11s após último da B):
-		// ambos devem broadcastar
-		service.tick(21_000);
-		expect(wsA.eventsOfType("room_state").length).toBeGreaterThan(a1);
-		expect(wsB.eventsOfType("room_state").length).toBeGreaterThan(b1);
-	});
-
-	test("NÃO broadcasta para sala em fase 'idle' (sem voting)", () => {
+	test("NÃO broadcasta para sala em fase 'idle' via tick", () => {
 		service.onOpen(ws);
 		service.onMessage(
 			ws,

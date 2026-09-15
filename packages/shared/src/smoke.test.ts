@@ -62,10 +62,9 @@ describe("Barrel `@planning-poker/shared` smoke test", () => {
 					joinedAt: 1700000000000,
 				},
 			],
-			phase: "voting" as const,
-			round: 1,
-			timer: 45,
-			votes: { p1: "5" as const },
+		phase: "voting" as const,
+		round: 1,
+		votes: { p1: "5" as const },
 			createdAt: 1700000000000,
 		};
 

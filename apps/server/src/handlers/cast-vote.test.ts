@@ -40,7 +40,7 @@ describe("handleCastVote — voto normal (F-009, F-013)", () => {
 		expect(player.value).toBe("5");
 	});
 
-	test("primeiro voto: isFirstVoteOfRound=true e inicia timer", () => {
+	test("primeiro voto: isFirstVoteOfRound=true e sai de idle", () => {
 		const { id, code } = addPlayer(
 			"00000000-0000-4000-8000-000000000001",
 			"Ana",
@@ -50,7 +50,6 @@ describe("handleCastVote — voto normal (F-009, F-013)", () => {
 		if (result.ok) expect(result.isFirstVoteOfRound).toBe(true);
 		const sala = hub.getSala(code)!;
 		expect(sala.phase).not.toBe("idle");
-		expect(sala.timer).toBe(60);
 	});
 });
 

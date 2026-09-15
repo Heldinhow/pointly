@@ -9,7 +9,7 @@
  *  - /api/v1/health (T6)
  *  - WebSocket /ws (T17): dispatch handlers (T13/T14/T15/T16)
  *  - Cleanup service (T18): periodic tick + SIGTERM handler
- *  - Heartbeat: WS service tick() chama Hub.tickAllTimers + tickGracePeriod
+ *  - Heartbeat: WS service tick() verifica timeout + tickGracePeriod
  *
  * Documentação de referência:
  * - ADR-0005  In-memory state, sem DB/Redis
@@ -127,7 +127,7 @@ if (import.meta.main) {
 	});
 	cleanup.start();
 
-	// Heartbeat timer: 1s tick chama wsService.tick() → timers + grace period
+	// Heartbeat: tick verifica heartbeat timeout + grace period
 	const heartbeat = setInterval(() => wsService.tick(), 1000);
 	if (typeof heartbeat.unref === "function") heartbeat.unref();
 

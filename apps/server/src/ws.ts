@@ -60,7 +60,6 @@ export type BunWS = {
 };
 
 const HEARTBEAT_TIMEOUT_MS = 15_000;
-const RECONCILE_INTERVAL_MS = 10_000;
 
 /**
  * Service entry — processa uma mensagem recebida do cliente.
@@ -72,11 +71,6 @@ export class WSService {
 	private readonly rateLimiter: RateLimiter;
 	private readonly connections: Set<BunWS> = new Set();
 	private readonly byIP: Map<BunWS, string> = new Map();
-	/**
-	 * Per-room timestamp (epoch ms) da última broadcastRoomState durante voting.
-	 * Usado para cadência de reconciliação (10s por sala) — T01.
-	 */
-	private readonly lastBroadcastAt: Map<string, number> = new Map();
 
 	constructor(
 		hub: Hub,
@@ -168,7 +162,7 @@ export class WSService {
 	}
 
 	/**
-	 * Heartbeat tick. Roda a cada 1s. Verifica timeout e decrementa timers.
+	 * Heartbeat tick. Roda periodicamente. Verifica timeout e limpa grace period.
 	 */
 	tick(now: number = Date.now()): void {
 		// 1. Heartbeat timeout per-connection
@@ -183,36 +177,7 @@ export class WSService {
 				ws.close(1011, "heartbeat_timeout");
 			}
 		}
-		// 2. Sala timers (auto-reveal + reconciliation cadence)
-		let results: Array<{ code: string; tick: "idle" | "ticking" | "fired"; sala: import("./sala").Sala }> = [];
-		try {
-			results = this.hub.tickAllTimers(now);
-		} catch (e) {
-			// EVR-01 hardening: tick pode disparar 'invalid_phase' se
-			// houver race entre edição pós-reveal e heartbeat (fix BUG A
-			// em Sala.castVote elimina a causa raiz; este guard é
-			// defense-in-depth pra nunca derrubar o hub por um bug
-			// futuro análogo). Loga e segue — a próxima tick de 1s
-			// retoma naturalmente.
-			const msg = e instanceof Error ? e.message : String(e);
-			this.logger.error("tick_error", msg);
-			// Continua para grace period cleanup mesmo se timers explodiram.
-		}
-		for (const { code, tick, sala } of results) {
-			if (tick === "fired") {
-				this.broadcastConsensus(code, sala);
-				this.broadcast(code, toRoomStateEvent(sala.toState()));
-				this.lastBroadcastAt.set(code, now);
-			} else if (tick === "ticking") {
-				const last = this.lastBroadcastAt.get(code) ?? 0;
-				if (now - last >= RECONCILE_INTERVAL_MS) {
-					this.broadcastRoomState(code);
-					this.lastBroadcastAt.set(code, now);
-				}
-			}
-			// tick === 'idle' → sem broadcast
-		}
-		// 3. Grace period cleanup (T18)
+		// 2. Grace period cleanup (T18)
 		const removed = this.hub.tickGracePeriod(now);
 		for (const { code, playerId } of removed) {
 			this.broadcastMembershipChange(code, playerId);
@@ -281,7 +246,7 @@ export class WSService {
 			payload: {
 				playerId: outcome.playerId,
 				role: outcome.role,
-				sala: stripCritical(outcome.sala),
+				sala: outcome.sala,
 			},
 		});
 		this.broadcastRoomState(outcome.sala.code, ws);
@@ -558,24 +523,8 @@ export class WSService {
 // ---------------------------------------------------------------------------
 
 /**
- * Envelope `room_state` com flag `critical` (SSOT — antes ternário
- * copiado 4x: tick fired, grace cleanup, broadcastRoomState, welcome).
+ * Envelope `room_state` (SSOT).
  */
-function toRoomStateEvent(
-	state: SalaState & { critical: boolean },
-): ServerToClientEvent {
-	const sala = stripCritical(state);
-	return state.critical
-		? { type: "room_state", payload: { sala, critical: true } }
-		: { type: "room_state", payload: { sala } };
-}
-
-/**
- * Strip campo `critical` antes de enviar como SalaState puro.
- * (events em SalaState enviam critical separado via RoomStateResponse.)
- */
-function stripCritical(state: SalaState & { critical: boolean }): SalaState {
-	const { critical: _critical, ...rest } = state;
-	void _critical;
-	return rest;
+function toRoomStateEvent(state: SalaState): ServerToClientEvent {
+	return { type: "room_state", payload: { sala: state } };
 }

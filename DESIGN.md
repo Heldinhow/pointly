@@ -177,7 +177,7 @@ Duas famílias, papéis rígidos. `Inter` BANIDO (já conforme via `@fontsource/
 
 - **Headlines (`headline-display` / `headline-sm` / `headline-md`):** Geist Semi-Bold, track-tight (`-0.04em` a `-0.065em`), leading comprimido (`1.08`). Home H1 `clamp(38px, 4.4vw, 58px)` → mobile `clamp(30px, 6.8vw, 48px)` em 2 linhas com `<em>` em Pine Signal na segunda. Home H2 `clamp(30px, 3.3vw, 42px)`. Arena H1 `20px / -0.04em / 650` (`18px` no mobile).
 - **Body (`body-lg` / `body-md` / `body-sm`):** Geist 400, leading relaxado (`1.55–1.7`), cor Moss/Faded Sage. Lede hero `17px`, max `430px`. Sidebar/cards `12–13px`. Corpo nunca < `14px` (`12px` só em metadata densa da arena).
-- **Labels e dados (`label-caps` / `timer` / `stats`):** Geist Mono com `tnum`. Timer `14px/500`, stats `38–40px/600 tabular-nums`, kickers `10–11px uppercase tracking 0.09–0.1em`, pips de distribuição `11px`, kbd. **Todo número de votação/resultado é mono tabular.**
+- **Labels e dados (`label-caps` / `stats`):** Geist Mono com `tnum`. Stats `38–40px/600 tabular-nums`, kickers `10–11px uppercase tracking 0.09–0.1em`, pips de distribuição `11px`, kbd. **Todo número de votação/resultado é mono tabular.**
 - Serifadas genéricas (`Times`, `Georgia`, `Garamond`, `Palatino`) banidas — se serif um dia for preciso, só modernas distintivas (`Fraunces`, `Instrument Serif`); serif sempre banida na arena/dashboard.
 
 ## Layout

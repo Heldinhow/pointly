@@ -138,7 +138,6 @@ describe("WelcomeResponseSchema", () => {
 		],
 		phase: "idle",
 		round: 1,
-		timer: 60,
 		votes: {},
 		createdAt: 1700000000000,
 	};
@@ -362,7 +361,6 @@ describe("ServerToClientEventSchema (discriminated union)", () => {
 		players: [],
 		phase: "revealed" as const,
 		round: 1,
-		timer: 0,
 		votes: {},
 		createdAt: 1700000000000,
 	};
@@ -375,10 +373,10 @@ describe("ServerToClientEventSchema (discriminated union)", () => {
 		expect(r.success).toBe(true);
 	});
 
-	test("aceita room_state com critical flag", () => {
+	test("aceita room_state válido", () => {
 		const r = ServerToClientEventSchema.safeParse({
 			type: "room_state",
-			payload: { sala: baseSala, critical: true },
+			payload: { sala: baseSala },
 		});
 		expect(r.success).toBe(true);
 	});

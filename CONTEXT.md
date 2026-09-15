@@ -29,7 +29,7 @@ Posição fixa de um jogador ao redor da mesa em formato de elipse. Cada assento
 _Avoid_: cadeira, seat, slot
 
 **Rodada**:
-Ciclo completo de votação dentro de uma sala: idle → voting (após o primeiro voto) → revealable (todos conectados votaram) → revealed (após reveal ou auto-reveal por timer).
+Ciclo completo de votação dentro de uma sala: idle → voting (após o primeiro voto) → revealable (todos conectados votaram) → revealed (após reveal manual).
 _Avoid_: round, partida, turno
 
 **Voto**:
@@ -37,7 +37,7 @@ Escolha de uma carta do deck por um jogador. Privado até o reveal; pode ser tro
 _Avoid_: escolha, seleção
 
 **Reveal**:
-Ato de expor todos os votos simultaneamente. Disparado por qualquer player manualmente ou pelo timer ao expirar.
+Ato de expor todos os votos simultaneamente. Disparado por qualquer player manualmente, sem pressa de tempo.
 _Avoid_: mostrar, expor, abrir
 
 **Mediana**:
@@ -47,10 +47,6 @@ _Avoid_: média, average, mean
 **Deck**:
 Conjunto fixo de 9 cartas usadas para votar: `0, ½, 1, 2, 3, 5, 8, 13, ☕`. Sequência Fibonacci + pausa explícita.
 _Avoid_: baralho, cards, conjunto
-
-**Timer**:
-Contador regressivo de 60 segundos por rodada. Entra em estado crítico (coral) quando ≤30s; auto-reveal ao chegar a zero.
-_Avoid_: cronômetro, contagem
 
 **Projétil**:
 Objeto virtual arremessável (ex: tomate, café, patinho de borracha) que possui animação e efeitos visuais próprios.

@@ -5,9 +5,7 @@
  *  - Map<playerId, Player> com uuid + nick + seatIndex + voto
  *  - phase: idle → voting → revealable → revealed → (loop) → voting
  *  - round: contador 1-based (incrementado em `startNewRound`)
- *  - timer: 60s regressivo, started no primeiro voto da rodada,
- *           decrementado via `tick()` (chamado pelo hub a cada 1s),
- *           dispara auto-reveal em 0
+ *  - sem timer: votação sem pressa, reveal só manual
  *
  * Domain: Sala é container efêmero (CONTEXT.md).
  * Registrada no `Hub` (T17) por `Map<codigo, Sala>`. Removida quando o
@@ -30,7 +28,6 @@ import {
 	computeConsensus,
 	isUnanimous,
 } from "@planning-poker/shared";
-import type { TickResult } from "./types";
 
 // ---------------------------------------------------------------------------
 // Errors
@@ -60,7 +57,6 @@ export class SalaError extends Error {
 // ---------------------------------------------------------------------------
 
 const SEAT_COUNT = 12;
-const TIMER_SECONDS = 60;
 const DISCONNECT_GRACE_MS = 60_000;
 /** Espectadores extras além dos 12 assentos (não votam, seatIndex -1). */
 const SPECTATOR_CAP = 12;
@@ -76,17 +72,9 @@ export class Sala {
 	readonly createdAt: number;
 	hostId: string | null;
 	round: number = 1;
-	timer: number = TIMER_SECONDS;
 	phase: Phase = "idle";
 	readonly players: Map<string, Player> = new Map();
 	readonly votes: Map<string, Vote> = new Map();
-
-	/**
-	 * Indica se timer está rodando. True entre primeiro voto da rodada
-	 * e reveal (manual ou auto). Após revelar, para. Reset em startNewRound.
-	 * Tick driver é o heartbeat em `index.ts` — Sala não agenda seu próprio interval.
-	 */
-	private timerActive: boolean = false;
 
 	/**
 	 * Server-internal: timestamp (epoch ms) de quando cada player
@@ -199,7 +187,6 @@ export class Sala {
 		// Sala ficou vazia: limpa hostId e reseta estado
 		if (this.players.size === 0) {
 			this.hostId = null;
-			this.stopTimer();
 			this.phase = "idle";
 		}
 		return { promoted: promotedId };
@@ -340,7 +327,7 @@ export class Sala {
 	 *  - `value === null` → `invalid_vote` (un-vote proibido — spec F-012)
 	 *  - `value ∉ DECK_VALUES` → `invalid_vote`
 	 *  - Marca `hasVoted = true`, atualiza in-place (F-011 idempotência)
-	 *  - Se primeiro voto da rodada, inicia timer 60s (F-013) e phase → 'voting'
+	 *  - Se primeiro voto da rodada, phase → 'voting'
 	 *  - Se todos os conectados votaram, phase → 'revealable'
 	 *
 	 * @returns `{ changed: boolean }` — `false` quando o voto é idêntico
@@ -403,16 +390,6 @@ export class Sala {
 			this.phase = "voting";
 		}
 
-		// Inicia timer no primeiro voto da rodada (F-013).
-		// EVR-01 (edit-vote-after-reveal): em fase 'revealed' o timer já
-		// foi parado por `reveal()`. Re-iniciar aqui reinjetaria o
-		// countdown de 60s inadvertidamente, e o tick subsequente
-		// chamaria `reveal("__auto_reveal__")` numa sala que já está
-		// revelada → `invalid_phase`. Gate explícito por fase.
-		if (this.phase !== "revealed" && !this.timerActive) {
-			this.startTimer();
-		}
-
 		// Phase 'voting' → 'revealable' se todos conectados votaram (F-014 prep)
 		if (this.allConnectedVoted() && this.phase === "voting") {
 			this.phase = "revealable";
@@ -428,7 +405,7 @@ export class Sala {
 	 *  - `phase === 'voting' || phase === 'revealable'` aceito
 	 *  - Calcula stats via `computeConsensus` (F-020)
 	 *  - Detecta unanimous via `isUnanimous`
-	 *  - Phase → 'revealed', para timer
+	 *  - Phase → 'revealed'
 	 */
 	reveal(_playerId: string): RevealOutcome {
 		if (this.phase !== "voting" && this.phase !== "revealable") {
@@ -440,7 +417,6 @@ export class Sala {
 
 		const stats = this.consensusSnapshot();
 		this.phase = "revealed";
-		this.stopTimer();
 
 		return {
 			votes: Object.fromEntries(this.votes),
@@ -473,7 +449,6 @@ export class Sala {
 	 *  - `phase === 'revealed'` aceito
 	 *  - Limpa votes e hasVoted de todos players
 	 *  - Incrementa round
-	 *  - Reset timer (próximo cast_vote inicia contagem)
 	 *  - Phase → 'voting'
 	 */
 	startNewRound(): void {
@@ -488,64 +463,7 @@ export class Sala {
 		}
 		this.votes.clear();
 		this.round += 1;
-		this.timer = TIMER_SECONDS;
 		this.phase = "voting";
-		this.stopTimer();
-	}
-
-	// -----------------------------------------------------------------------
-	// Timer
-	// -----------------------------------------------------------------------
-
-	/**
-	 * Inicia timer regressivo de 60s. Tickado externamente pelo heartbeat
-	 * em `index.ts` via `hub.tickAllTimers()`. Idempotente — se já ativo, no-op.
-	 */
-	private startTimer(): void {
-		if (this.timerActive) return;
-		this.timer = TIMER_SECONDS;
-		this.timerActive = true;
-	}
-
-	/**
-	 * Para o timer. Não reseta `timer` (deixa o último valor para UI mostrar).
-	 * O heartbeat driver continua rodando — `tick()` apenas vê `timerActive=false`
-	 * e retorna `'idle'`.
-	 */
-	private stopTimer(): void {
-		this.timerActive = false;
-	}
-
-	/**
-	 * Decrementa 1s do timer. Se chegar a 0, dispara auto-reveal.
-	 * Público — chamado pelo hub a cada 1s do heartbeat.
-	 *
-	 * @param now timestamp epoch ms (mantido para compatibilidade de assinatura
-	 *   com o hub e com testes que controlam tempo).
-	 * @returns TickResult:
-	 *   - `'idle'` se timer não está ativo OU decrementou mas phase !== 'voting'
-	 *   - `'ticking'` se decrementou e phase === 'voting'
-	 *   - `'fired'` se decrementou para 0 e auto-reveal disparou
-	 */
-	tick(now: number = Date.now()): TickResult {
-		void now;
-		if (!this.timerActive) return "idle";
-		this.timer = Math.max(0, this.timer - 1);
-		if (this.timer <= 0) {
-			// Auto-reveal (F-015)
-			this.reveal("__auto_reveal__");
-			return "fired";
-		}
-		return this.phase === "voting" || this.phase === "revealable"
-			? "ticking"
-			: "idle";
-	}
-
-	/**
-	 * Indica se timer está em estado crítico (≤30s). F-014 — UI coral.
-	 */
-	isCritical(): boolean {
-		return this.timerActive && this.timer > 0 && this.timer <= 30;
 	}
 
 	// -----------------------------------------------------------------------
@@ -623,19 +541,16 @@ export class Sala {
 
 	/**
 	 * Snapshot serializável para broadcast `room_state` (F sala_state_event).
-	 * Inclui `critical` flag derivada do timer (F-014).
 	 */
-	toState(): SalaState & { critical: boolean } {
+	toState(): SalaState {
 		return {
 			code: this.code,
 			hostId: this.hostId,
 			players: Array.from(this.players.values()),
 			phase: this.phase,
 			round: this.round,
-			timer: this.timer,
 			votes: Object.fromEntries(this.votes),
 			createdAt: this.createdAt,
-			critical: this.isCritical(),
 		};
 	}
 
@@ -672,7 +587,5 @@ export function computeFirstFreeSeat(players: readonly Player[]): number {
 export const SALA_SEAT_COUNT = SEAT_COUNT;
 /** Espectadores extras além dos 12 assentos. */
 export const SALA_SPECTATOR_CAP = SPECTATOR_CAP;
-/** Constante: timer inicial / máximo em segundos. */
-export const SALA_TIMER_SECONDS = TIMER_SECONDS;
 /** Constante: grace period pra remover player disconnected. */
 export const SALA_DISCONNECT_GRACE_MS = DISCONNECT_GRACE_MS;

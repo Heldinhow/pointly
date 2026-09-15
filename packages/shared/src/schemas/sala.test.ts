@@ -169,7 +169,6 @@ describe("SalaStateSchema", () => {
 		players: [basePlayer],
 		phase: "idle" as const,
 		round: 1,
-		timer: 60,
 		votes: {},
 		createdAt: 1700000000000,
 	};
@@ -189,8 +188,10 @@ describe("SalaStateSchema", () => {
 		expect(r.success).toBe(false);
 	});
 
-	test("rejeita sala com timer > 60", () => {
-		const r = SalaStateSchema.safeParse({ ...validSala, timer: 120 });
+	test("rejeita sala sem votes", () => {
+		const { votes: _dropped, ...semVotes } = validSala;
+		void _dropped;
+		const r = SalaStateSchema.safeParse(semVotes);
 		expect(r.success).toBe(false);
 	});
 

@@ -45,7 +45,6 @@ function salaFor(code: string, playerId: string): SalaState {
 		],
 		phase: "idle",
 		round: 1,
-		timer: 60,
 		votes: {},
 		createdAt: Date.now(),
 	};

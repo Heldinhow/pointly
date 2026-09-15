@@ -7,7 +7,7 @@
  *  - `phase === 'revealed'` aceito
  *  - Limpa votes e hasVoted de todos
  *  - Incrementa round
- *  - Phase → 'voting', reset timer (próximo cast_vote reinicia contagem)
+ *  - Phase → 'voting'
  *
  * @see spec US-3 (F-025, F-026)
  */

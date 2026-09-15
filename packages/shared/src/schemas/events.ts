@@ -149,8 +149,6 @@ export type WelcomeResponse = z.infer<typeof WelcomeResponseSchema>;
  */
 export const RoomStateResponseSchema = z.object({
 	sala: SalaStateSchema,
-	/** timer ≤30s entra em estado coral (UI critical). Spec US-2 AC5. */
-	critical: z.boolean().optional(),
 });
 export type RoomStateResponse = z.infer<typeof RoomStateResponseSchema>;
 
@@ -216,7 +214,7 @@ export const VotesRevealedEventSchema = z.object({
 });
 export type VotesRevealedEvent = z.infer<typeof VotesRevealedEventSchema>;
 
-/** `round_started` — host clicou nova rodada. votes limpos, timer reset. */
+/** `round_started` — host clicou nova rodada. votes limpos. */
 export const RoundStartedEventSchema = z.object({
 	round: z.number().int().positive(),
 });

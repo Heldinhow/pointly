@@ -7,7 +7,7 @@
  *  - Coordena os handlers (hello/cast_vote/reveal/...) — cada um chama Hub,
  *    Hub aplica a mutação na Sala e devolve outcome para o broadcast
  *  - Fornece `findPlayerForConnection()` para T13a reconnect
- *  - Owns o periodic cleanup do grace period (60s) e timer ticks (1s)
+ *  - Owns o periodic cleanup do grace period (60s)
  *
  * O Hub é o único lugar que tem autorização pra chamar mutações em Sala.
  * Handlers T13-T16 são wrappers finos que validam input e delegam ao Hub.
@@ -22,9 +22,6 @@ import {
 	type Player,
 } from "@planning-poker/shared";
 import { Sala } from "./sala";
-import type { TickResult } from "./types";
-
-export type { TickResult } from "./types";
 
 // ---------------------------------------------------------------------------
 // Hub — connection tracking
@@ -242,26 +239,7 @@ export class Hub {
 	}
 
 	/**
-	 * Timer tick: cada Sala roda seu próprio decrement. Hub chama tick() em cada.
-	 * @returns per-room tick result para a WS layer decidir cadência de broadcast.
-	 * Lista vazia quando nenhuma sala existe.
-	 */
-	tickAllTimers(now: number = Date.now()): {
-		code: string;
-		tick: TickResult;
-		sala: Sala;
-	}[] {
-		const out: { code: string; tick: TickResult; sala: Sala }[] = [];
-		for (const [code, sala] of this.salas) {
-			const tick = sala.tick(now);
-			out.push({ code, tick, sala });
-		}
-		return out;
-	}
-
-	/**
-	 * Shutdown gracioso — T18 SIGTERM. Para todos os timers das salas.
-	 * Sala é removida do Map in-memory; clientes recebem `sala_ended` no broadcast.
+	 * Shutdown gracioso — T18 SIGTERM. Sala é removida do Map in-memory; clientes recebem `sala_ended` no broadcast.
 	 */
 	shutdown(): void {
 		// Salas em memória são descartadas quando o processo morre.

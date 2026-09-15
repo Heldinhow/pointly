@@ -10,7 +10,7 @@
  * @see .specs/features/planning-poker-v1/tasks.md T19
  */
 
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { beforeEach, describe, expect, test } from "bun:test";
 import { Hub } from "./hub";
 import { handleCastVote } from "./handlers/cast-vote";
 import { handleHello } from "./handlers/hello";
@@ -22,13 +22,6 @@ let hub: Hub;
 
 beforeEach(() => {
 	hub = new Hub();
-});
-
-afterEach(() => {
-	// Limpa timers ativos em todas as salas (evita handles zumbis).
-	for (const sala of hub.salas.values()) {
-		sala["stopTimer"](); // acesso por index — só usado nos testes
-	}
 });
 
 // ---------------------------------------------------------------------------
@@ -142,79 +135,47 @@ describe("T19 — happy path: criar → join → vote → reveal", () => {
 });
 
 // ---------------------------------------------------------------------------
-// T19 — Cenário 2: timer expira sem todos votarem → auto-reveal (F-015)
+// T19 — Cenário 2: votação parcial aguarda reveal manual (sem timer)
 // ---------------------------------------------------------------------------
 
-describe("T19 — timer expira → auto-reveal", () => {
-	test("auto-reveal dispara quando timer chega a 0 com votos parciais", () => {
+describe("T19 — votação parcial aguarda reveal manual", () => {
+	test("votos parciais ficam em voting até reveal manual", () => {
 		const { code, players } = bootSalaWithPlayers(3);
 		const anaId = players.Host!;
 		const bobId = players.P2!;
 
 		const sala = hub.getSala(code)!;
 
-		// Apenas Ana vota — Bob fica idle
+		// Apenas Ana vota — Bob fica sem votar
 		const anaVote = handleCastVote(hub, anaId, { value: "5" });
 		expect(anaVote.ok).toBe(true);
 		expect(sala.phase).toBe("voting");
 
-		// Avança o timer tick a tick — em algum momento deve auto-revelar
-		// O sala.tick() retorna 'fired' quando o último tick dispara auto-reveal.
-		let autoRevealed = false;
-		// Budget: 60 ticks (timer começa em 60)
-		for (let i = 0; i < 65 && !autoRevealed; i++) {
-			if (sala.tick() === "fired") {
-				autoRevealed = true;
-			}
-		}
-
-		expect(autoRevealed).toBe(true);
-		expect(sala.phase).toBe("revealed");
+		// Sem timer: nada revela sozinho, fase segue voting
+		expect(sala.phase).toBe("voting");
 
 		// Voto de Ana está preservado no votes Map
 		expect(sala.votes.get(anaId)).toBe("5");
 		expect(sala.votes.has(bobId)).toBe(false); // Bob nunca votou
 
-		// Stats calculadas com 1 voto — SalaState guarda votes; median vive no
-		// snapshot do handler `reveal_votes`, não em toState().
 		const state = sala.toState();
 		expect(state.votes[anaId]).toBe("5");
 		expect(state.votes[bobId]).toBeUndefined();
 
 		// Bob NÃO votou, então hasVoted=false preservado
 		expect(sala.getPlayer(bobId)?.hasVoted).toBe(false);
+
+		// Reveal manual funciona com votos parciais
+		const reveal = handleRevealVotes(hub, anaId);
+		expect(reveal.ok).toBe(true);
+		expect(sala.phase).toBe("revealed");
 	});
 
-	test("timer não decrementa quando sala está idle (sem votos)", () => {
+	test("sala idle permanece idle sem votos", () => {
 		const { code } = bootSalaWithPlayers(2);
 		const sala = hub.getSala(code)!;
 		expect(sala.phase).toBe("idle");
-
-		const initialTimer = sala.timer;
-		// ticks antes do primeiro voto não devem ter efeito
-		for (let i = 0; i < 5; i++) sala.tick();
-		expect(sala.timer).toBe(initialTimer);
 		expect(sala.phase).toBe("idle");
-	});
-
-	test("isCritical (≤30s) reflete timer ativo", () => {
-		const { code, players } = bootSalaWithPlayers(2);
-		const anaId = players.Host!;
-		const sala = hub.getSala(code)!;
-
-		handleCastVote(hub, anaId, { value: "5" });
-		expect(sala.isCritical()).toBe(false);
-
-		// Avança para exatamente 30s
-		for (let i = 0; i < 30; i++) sala.tick();
-		expect(sala.timer).toBe(30);
-		// exatamente 30s = crítico (≤30s)
-		expect(sala.isCritical()).toBe(true);
-
-		// Mais um tick → 29s, ainda crítico
-		sala.tick();
-		expect(sala.timer).toBe(29);
-		expect(sala.isCritical()).toBe(true);
 	});
 });
 
@@ -300,44 +261,35 @@ describe("T19 — start_new_round reseta estado", () => {
 // ---------------------------------------------------------------------------
 
 describe("T19 — invariantes do state machine", () => {
-	test("primeiro voto da rodada transiciona idle → voting e inicia timer", () => {
+	test("primeiro voto da rodada transiciona idle → voting", () => {
 		const { code, players } = bootSalaWithPlayers(2);
 		const anaId = players.Host!;
 		const sala = hub.getSala(code)!;
 
 		expect(sala.phase).toBe("idle");
-		expect(sala.timer).toBe(60);
 
 		const result = handleCastVote(hub, anaId, { value: "3" });
 		expect(result.ok).toBe(true);
 		if (result.ok) expect(result.isFirstVoteOfRound).toBe(true);
 
 		expect(sala.phase).toBe("voting");
-		// Timer resetado para 60 no primeiro voto da rodada
-		expect(sala.timer).toBe(60);
 	});
 
-	test("change vote mantém timer rodando (não é novo first vote)", () => {
+	test("change vote não é novo first vote", () => {
 		const { code, players } = bootSalaWithPlayers(2);
 		const anaId = players.Host!;
 		const sala = hub.getSala(code)!;
 
 		handleCastVote(hub, anaId, { value: "3" });
-		const firstTickBefore = sala.timer;
+		expect(sala.phase).toBe("voting");
 
-		// Avança 5 ticks
-		for (let i = 0; i < 5; i++) sala.tick();
-		const tickAfter = sala.timer;
-		expect(tickAfter).toBeLessThan(firstTickBefore);
-
-		// Change vote — NÃO reseta timer, NÃO é first vote
+		// Change vote — NÃO é first vote
 		const change = handleCastVote(hub, anaId, { value: "8" });
 		expect(change.ok).toBe(true);
 		if (change.ok) expect(change.isFirstVoteOfRound).toBe(false);
 
-		// Timer continuou de onde estava (não resetou pra 60)
-		expect(sala.timer).toBe(tickAfter);
-		expect(sala.timer).toBeLessThan(60);
+		expect(sala.phase).toBe("voting");
+		expect(sala.getPlayer(anaId)?.value).toBe("8");
 	});
 
 	test("todos os conectados votam → voting → revealable (F-014 prep)", () => {
@@ -359,10 +311,9 @@ describe("T19 — invariantes do state machine", () => {
 		handleCastVote(hub, carolId, { value: "5" });
 		expect(sala.phase).toBe("revealable");
 
-		// Snapshot tem critical=false (timer > 30)
+		// Snapshot sem timer
 		const state = sala.toState();
 		expect(state.phase).toBe("revealable");
-		expect(state.critical).toBe(false);
 		expect(state.votes).toEqual({
 			[anaId]: "5",
 			[bobId]: "5",
@@ -411,7 +362,6 @@ describe("T19 — invariantes do state machine", () => {
 			players: state.players,
 			phase: state.phase,
 			round: state.round,
-			timer: state.timer,
 			votes: state.votes,
 			createdAt: state.createdAt,
 		});

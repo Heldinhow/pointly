@@ -20,7 +20,7 @@ import {
 export type SocketStatus = "idle" | "connecting" | "ready" | "closed";
 
 export interface PointlySocketEvents {
-	onRoomState?: (sala: SalaState, critical: boolean) => void;
+	onRoomState?: (sala: SalaState) => void;
 	onProjectileThrown?: (event: ProjectileThrownPayload) => void;
 	onClose?: () => void;
 	onError?: (code: string, message: string) => void;
@@ -111,7 +111,7 @@ export class PointlySocket {
 	 * Envia `reveal_votes {}`. Qualquer Player pode revelar (servidor
 	 * democratizado, sem role check). Retorna false sem conexão pronta.
 	 * O servidor responde com `votes_revealed` + `room_state` (phase
-	 * `revealed`); auto-reveal no zero chega pelo mesmo caminho.
+	 * `revealed`).
 	 */
 	sendRevealVotes(): boolean {
 		return this.send(buildRevealVotesMessage());
@@ -122,7 +122,7 @@ export class PointlySocket {
 	 * (servidor democratizado, sem role check; exige phase `revealed`).
 	 * Retorna false sem conexão pronta. O servidor responde com
 	 * `round_started` + `room_state` (round incrementado, votos limpos,
-	 * timer em 60s, mesmos Players).
+	 * mesmos Players).
 	 */
 	sendStartNewRound(): boolean {
 		return this.send(buildStartNewRoundMessage());
@@ -290,10 +290,7 @@ export class PointlySocket {
 			}
 			case "room_state": {
 				if (this.status === "ready") {
-					this.events.onRoomState?.(
-						event.payload.sala,
-						event.payload.critical === true,
-					);
+					this.events.onRoomState?.(event.payload.sala);
 				}
 				return;
 			}

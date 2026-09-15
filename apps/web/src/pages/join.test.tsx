@@ -101,7 +101,6 @@ function welcomeMessage(code: string): string {
 				players: [],
 				phase: "idle",
 				round: 1,
-				timer: 60,
 				votes: {},
 				createdAt: 1,
 			},

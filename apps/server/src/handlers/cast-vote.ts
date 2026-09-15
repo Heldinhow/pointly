@@ -8,7 +8,7 @@
  *  - `value !== null` (un-vote proibido — spec)
  *  - `value ∈ DECK_VALUES`
  *  - Marca `hasVoted = true`, atualiza in-place (F-011)
- *  - Se primeiro voto: phase → 'voting' + inicia timer 60s (F-013)
+ *  - Se primeiro voto: phase → 'voting'
  *  - Se todos votaram: phase → 'revealable'
  *
  * @see spec US-2 (F-009 a F-014)
@@ -81,13 +81,6 @@ export function handleCastVote(
 		result = sala.castVote(playerId, payload.value as Vote);
 	} catch (e) {
 		return mapDomainError(e);
-	}
-
-	// 5. Hub notifica sala sobre first-vote (inicia timer)
-	if (isFirstVoteOfRound) {
-		// timer já foi iniciado dentro de Sala.castVote; mas o Hub pode
-		// precisar agendar tick periódico. Por ora, sala.startTimer()
-		// já configura o setInterval interno (60s timer self-managing).
 	}
 
 	return { ok: true, isFirstVoteOfRound, changed: result.changed };

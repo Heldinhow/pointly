@@ -55,19 +55,6 @@
   width: 15px;
   height: 15px;
 }
-.arena-live-status .arena-clock {
-  color: var(--foreground);
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font: 500 14px var(--font-mono);
-  min-width: 77px;
-}
-.arena-live-status .arena-clock--critical {
-  color: var(--destructive-foreground);
-  border-color: var(--destructive);
-}
 .arena-workspace {
   position: relative;
   display: grid;

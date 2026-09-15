@@ -100,7 +100,7 @@ export type Vote = z.infer<typeof VoteSchema>;
  * Estado da rodada (ADR-0002 grilling: reveal/new_round democratizados).
  *
  *   idle        — round zerado, sem votos. Aguardando 1º voto.
- *   voting      — ≥1 voto entrou. Timer 60s rodando.
+ *   voting      — ≥1 voto entrou. Reveal manual.
  *   revealable  — todos conectados votaram (pre-reveal). UI mostra "Revelar votos".
  *   revealed    — votos virados face-up, stats calculadas. Aguardando "Nova rodada".
  */
@@ -161,8 +161,6 @@ export const SalaStateSchema = z.object({
 	phase: PhaseSchema,
 	/** contador da rodada (1-based). Incrementa em start_new_round (T16). */
 	round: z.number().int().min(0),
-	/** segundos restantes do timer. 60 = início, 30 = critical, 0 = auto-reveal. */
-	timer: z.number().int().min(0).max(60),
 	/** mapa playerId → Vote (apenas quem votou nesta rodada). */
 	votes: z.record(z.string(), VoteSchema),
 	/** epoch ms — usado pelo client pra detectar sala stale. */

@@ -62,7 +62,6 @@ export interface SalaState {
 	players: Player[];
 	phase: Phase;
 	round: number;
-	timer: number;
 	votes: Record<string, Vote | string>;
 	createdAt: number;
 }
@@ -84,7 +83,6 @@ export interface WelcomePayload {
 
 export interface RoomStatePayload {
 	sala: SalaState;
-	critical?: boolean;
 }
 
 export interface ServerErrorPayload {
@@ -224,7 +222,6 @@ function isSalaState(value: unknown): value is SalaState {
 		typeof sala.code === "string" &&
 		Array.isArray(sala.players) &&
 		typeof sala.round === "number" &&
-		typeof sala.timer === "number" &&
 		typeof sala.phase === "string" &&
 		typeof sala.votes === "object" &&
 		sala.votes !== null
@@ -271,10 +268,7 @@ export function parseServerEvent(raw: string): ServerToClientEvent | null {
 			if (!isSalaState(payload.sala)) return null;
 			return {
 				type: "room_state",
-				payload:
-					payload.critical === true
-						? { sala: payload.sala, critical: true }
-						: { sala: payload.sala },
+				payload: { sala: payload.sala },
 			};
 		}
 		case "pong":

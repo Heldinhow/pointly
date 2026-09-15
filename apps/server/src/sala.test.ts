@@ -1,14 +1,13 @@
 /**
  * Sala tests — T12 verify (≥8 unit tests).
  *
- * Cobre state machine, timer, e regras de negócio.
+ * Cobre state machine e regras de negócio (sem timer: reveal só manual).
  */
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { beforeEach, describe, expect, test } from "bun:test";
 import {
 	Sala,
 	SALA_DISCONNECT_GRACE_MS,
 	SALA_SEAT_COUNT,
-	SALA_TIMER_SECONDS,
 	SalaError,
 } from "./sala";
 import type { Player } from "@planning-poker/shared";
@@ -44,11 +43,6 @@ beforeEach(() => {
 	sala = new Sala("ABCD", host, 1_000);
 });
 
-afterEach(() => {
-	// cleanup any active timers
-	sala["stopTimer"](); // acesso por index — só usado nos testes
-});
-
 // ---------------------------------------------------------------------------
 // Constructor + initial state
 // ---------------------------------------------------------------------------
@@ -59,7 +53,6 @@ describe("Sala — constructor", () => {
 		expect(sala.hostId).toBe("p1");
 		expect(sala.phase).toBe("idle");
 		expect(sala.round).toBe(1);
-		expect(sala.timer).toBe(SALA_TIMER_SECONDS);
 		expect(sala.playerCount).toBe(1);
 	});
 
@@ -102,11 +95,10 @@ describe("Sala — addPlayer", () => {
 // ---------------------------------------------------------------------------
 
 describe("Sala — castVote", () => {
-	test("primeiro voto: idle → voting (ou revealable, se 1 só player) + timer 60s (F-013)", () => {
+	test("primeiro voto: idle → voting (ou revealable, se 1 só player) (F-013)", () => {
 		sala.castVote("p1", "5");
 		// com 1 só player, vai direto voting → revealable
 		expect(["voting", "revealable"]).toContain(sala.phase);
-		expect(sala.timer).toBe(SALA_TIMER_SECONDS);
 	});
 
 	test("change vote in-place (idempotência F-011)", () => {
@@ -235,91 +227,6 @@ describe("Sala — startNewRound", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Timer (tick + auto-reveal)
-// ---------------------------------------------------------------------------
-
-describe("Sala — tick + auto-reveal", () => {
-	test("tick decrementa 1s e dispara auto-reveal em 0 (F-015)", () => {
-		sala.castVote("p1", "5");
-		// 1 player: phase vai direto voting → revealable
-		expect(["voting", "revealable"]).toContain(sala.phase);
-		// avança manualmente para reduzir duração do teste
-		sala.timer = 2;
-		// phase='revealable' → tick retorna 'ticking'
-		expect(sala.tick()).toBe("ticking");
-		expect(["voting", "revealable"]).toContain(sala.phase);
-		expect(sala.timer).toBe(1);
-		expect(sala.tick()).toBe("fired");
-		expect(sala.phase).toBe("revealed");
-	});
-
-	test("isCritical: true quando timer ≤ 30 e > 0 (F-014)", () => {
-		sala.castVote("p1", "5");
-		sala.timer = 30;
-		expect(sala.isCritical()).toBe(true);
-		sala.timer = 31;
-		expect(sala.isCritical()).toBe(false);
-		sala.timer = 1;
-		expect(sala.isCritical()).toBe(true);
-	});
-
-	test("isCritical: false quando timer parado (idle)", () => {
-		// sem cast_vote, timer não está ativo
-		expect(sala.isCritical()).toBe(false);
-	});
-});
-
-// ---------------------------------------------------------------------------
-// TickResult enum (T01)
-// ---------------------------------------------------------------------------
-
-describe("Sala — tick returns TickResult", () => {
-	test("retorna 'ticking' quando phase='voting' e timer entre 0 e 60", () => {
-		// 2 players: p1 vota, p2 não vota → phase fica em 'voting'
-		sala.addPlayer(makePlayer("p2", "Bob", "player", 1_001));
-		sala.castVote("p1", "5");
-		expect(sala.phase).toBe("voting");
-		expect(sala.tick()).toBe("ticking");
-		expect(sala.timer).toBe(59);
-		expect(sala.tick()).toBe("ticking");
-		expect(sala.timer).toBe(58);
-	});
-
-	test("retorna 'fired' quando timer decrementa de 1 para 0", () => {
-		// 2 players: p1 vota, p2 não vota → phase 'voting'
-		sala.addPlayer(makePlayer("p2", "Bob", "player", 1_001));
-		sala.castVote("p1", "5");
-		expect(sala.phase).toBe("voting");
-		sala.timer = 1;
-		expect(sala.tick()).toBe("fired");
-		expect(sala.phase).toBe("revealed");
-		expect(sala.timer).toBe(0);
-	});
-
-	test("retorna 'ticking' quando phase='revealable'", () => {
-		// 1 player: phase vai direto voting → revealable
-		sala.castVote("p1", "5");
-		expect(sala.phase).toBe("revealable");
-		sala.timer = 30;
-		expect(sala.tick()).toBe("ticking");
-		expect(sala.timer).toBe(29);
-	});
-
-	test("retorna 'idle' quando phase='revealed'", () => {
-		sala.castVote("p1", "5");
-		sala.reveal("p1");
-		expect(sala.phase).toBe("revealed");
-		expect(sala.tick()).toBe("idle");
-	});
-
-	test("retorna 'idle' quando phase='idle' (sem voto)", () => {
-		expect(sala.phase).toBe("idle");
-		expect(sala.tick()).toBe("idle");
-		expect(sala.timer).toBe(60);
-	});
-});
-
-// ---------------------------------------------------------------------------
 // toState + SalaState snapshot
 // ---------------------------------------------------------------------------
 
@@ -335,13 +242,6 @@ describe("Sala — toState", () => {
 		expect(state.votes).toEqual({ p1: "5", p2: "8" });
 		expect(state.phase).toBe("revealable");
 	});
-
-	test("critical flag é true quando timer ≤ 30 e > 0", () => {
-		sala.castVote("p1", "5");
-		sala.timer = 25;
-		const state = sala.toState();
-		expect(state.critical).toBe(true);
-	});
 });
 
 // ---------------------------------------------------------------------------
@@ -349,7 +249,7 @@ describe("Sala — toState", () => {
 // ---------------------------------------------------------------------------
 
 describe("Sala — post-reveal edit", () => {
-	test("EVR-01: castVote em revealed NÃO reinicia timer (BUG A fix)", () => {
+	test("EVR-01: castVote em revealed mantém phase revealed", () => {
 		// Setup: 2 players, voting → reveal
 		sala.addPlayer(makePlayer("p2", "Bia"));
 		sala.castVote("p1", "5");
@@ -357,12 +257,11 @@ describe("Sala — post-reveal edit", () => {
 		expect(sala.phase).toBe("revealable");
 		sala.reveal("p1");
 		expect(sala.phase).toBe("revealed");
-		const timerBefore = sala.timer;
 		// Act: edit pós-reveal
 		const result = sala.castVote("p1", "8");
 		// Assert
 		expect(result).toEqual({ changed: true });
-		expect(sala.timer).toBe(timerBefore); // timer NÃO mudou
+		expect(sala.phase).toBe("revealed");
 	});
 
 	test("EVR-14: castVote em revealed com mesmo valor retorna { changed: false } sem mutação", () => {
@@ -410,17 +309,14 @@ describe("Sala — post-reveal edit", () => {
 		expect(after.range).toEqual([5, 8]);
 	});
 
-	test("EVR-13: auto-reveal não dispara após edit pós-reveal (defesa contra bug silencioso)", () => {
+	test("edit pós-reveal mantém phase revealed", () => {
 		sala.addPlayer(makePlayer("p2", "Bia"));
 		sala.castVote("p1", "5");
 		sala.castVote("p2", "5");
 		sala.reveal("p1");
 		expect(sala.phase).toBe("revealed");
-		// Edit pós-reveal
+		// Edit pós-reveal não muda a fase
 		sala.castVote("p1", "8");
-		// 1 tick NÃO dispara auto-reveal nem joga invalid_phase
-		// (gate em T1 evita o tick → startTimer → reveal("__auto_reveal__") loop)
-		expect(() => sala.tick()).not.toThrow();
 		expect(sala.phase).toBe("revealed");
 	});
 });
@@ -432,10 +328,6 @@ describe("Sala — post-reveal edit", () => {
 describe("Constantes exportadas", () => {
 	test("SALA_SEAT_COUNT = 12", () => {
 		expect(SALA_SEAT_COUNT).toBe(12);
-	});
-
-	test("SALA_TIMER_SECONDS = 60", () => {
-		expect(SALA_TIMER_SECONDS).toBe(60);
 	});
 
 	test("SALA_DISCONNECT_GRACE_MS = 60_000", () => {

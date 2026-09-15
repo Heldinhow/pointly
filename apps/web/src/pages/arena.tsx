@@ -5,7 +5,6 @@ import {
   EyeOffIcon,
   LogOutIcon,
   RotateCcwIcon,
-  TimerIcon,
   UsersIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -74,13 +73,6 @@ const PHASE_LABEL: Record<Phase, string> = {
 
 function phaseLabel(phase: Phase): string {
   return PHASE_LABEL[phase] ?? phase;
-}
-
-/** Timer crítico na reta final (espelha `Sala.isCritical` do servidor). */
-function isTimerCritical(phase: Phase, timer: number): boolean {
-  return (
-    (phase === "voting" || phase === "revealable") && timer > 0 && timer <= 30
-  );
 }
 
 function isTypingTarget(event: KeyboardEvent): boolean {
@@ -225,13 +217,13 @@ export function ArenaPage(): React.ReactElement {
     socket.setHandlers({
       onRoomState: (next) => {
         useSession.getState().updateSala(next);
-        // Reveal confirmado pelo servidor (manual ou auto no zero):
+        // Reveal confirmado pelo servidor (manual):
         // limpa o erro de reveal pendente.
         if (next.phase === "revealed") {
           setRevealError(null);
         } else if (confirmingRef.current) {
           // Nova rodada confirmada (round incrementado, votos
-          // limpos, timer em 60s): volta ao estado inicial.
+          // limpos): volta ao estado inicial.
           if (newRoundTimer.current) {
             clearTimeout(newRoundTimer.current);
             newRoundTimer.current = null;
@@ -284,29 +276,6 @@ export function ArenaPage(): React.ReactElement {
       },
     });
   }, [socket]);
-
-  // Ticker local do timer: espelha o countdown do servidor (60s parados
-  // até o primeiro voto, contagem compartilhada depois). Cada navegador
-  // decrementa a partir do mesmo baseline do `room_state`, então os dois
-  // mostram o mesmo valor durante a contagem; o próximo `room_state`
-  // reconcilia (o servidor continua source of truth e dispara o
-  // auto-reveal no zero mesmo com faltantes).
-  useEffect(() => {
-    const id = setInterval(() => {
-      const current = useSession.getState().sala;
-      if (!current) return;
-      if (current.phase !== "voting" && current.phase !== "revealable") {
-        return;
-      }
-      if (current.timer <= 0) return;
-      // Sem nenhum voto a rodada fica parada nos 60s.
-      if (!hasAnyVotes(current.players, current.votes)) return;
-      useSession
-        .getState()
-        .updateSala({ ...current, timer: current.timer - 1 });
-    }, 1000);
-    return () => clearInterval(id);
-  }, []);
 
   // Ticker do cooldown de projéteis (issue #157): força re-render a cada
   // 500ms só enquanto há recarga ativa, para a contagem regressiva e a
@@ -546,7 +515,6 @@ export function ArenaPage(): React.ReactElement {
   );
   const voted = connectedVoters.filter((p) => p.hasVoted).length;
   const solo = connected.length <= 1;
-  const critical = isTimerCritical(sala.phase, sala.timer);
   const showInvite = !inviteHidden || !solo;
   const self = players.find((p) => p.id === playerId) ?? null;
   const isSpectator = self?.role === "spectator";
@@ -578,16 +546,10 @@ export function ArenaPage(): React.ReactElement {
     resultsAriaLabel,
   } = useConsensusStats(revealedVotes);
 
-  // Timer e Reveal (issue 06): qualquer Player revela após pelo menos um
+  // Reveal (issue 06): qualquer Player revela após pelo menos um
   // voto; sala "pronta para revelar" quando todos votaram sem revelar de
-  // imediato; auto-reveal no zero chega via room_state (phase revealed).
+  // imediato.
   const totalVoted = players.filter((p) => p.hasVoted).length;
-  // Timer parado nos 60s até o primeiro voto: sinaliza pausa via
-  // aria-label/title para não parecer contagem travada.
-  const timerPaused =
-    (sala.phase === "voting" || sala.phase === "revealable") &&
-    sala.timer > 0 &&
-    totalVoted === 0;
   const canReveal =
     totalVoted > 0 && (sala.phase === "voting" || sala.phase === "revealable");
   const isReadyToReveal = sala.phase === "revealable";
@@ -755,24 +717,6 @@ export function ArenaPage(): React.ReactElement {
               </>
             )}
           </span>
-          <span
-            className={
-              critical
-                ? "arena-clock arena-clock--critical text-destructive-foreground"
-                : "arena-clock"
-            }
-            data-testid="timer-line"
-            aria-live={critical ? "assertive" : "off"}
-            aria-label={
-              timerPaused
-                ? `${sala.timer} segundos, pausado até o primeiro voto`
-                : `${sala.timer} segundos`
-            }
-            title={timerPaused ? "Pausado até o primeiro voto" : undefined}
-          >
-            <TimerIcon aria-hidden="true" />
-            {sala.timer}s
-          </span>
           <Button variant="ghost" onClick={handleLeave}>
             <LogOutIcon aria-hidden="true" />
             Sair da sala
@@ -823,9 +767,7 @@ export function ArenaPage(): React.ReactElement {
                   {isRevealed
                     ? "Votos revelados. Discutam as diferenças."
                     : isReadyToReveal
-                      ? sala.timer > 0
-                        ? "Todos votaram · no zero, revela sozinho."
-                        : "Todos votaram."
+                      ? "Todos votaram."
                       : canReveal
                         ? "Com votos na mesa, qualquer player pode revelar."
                         : "Aguardando o primeiro voto para liberar o reveal."}
@@ -855,7 +797,7 @@ export function ArenaPage(): React.ReactElement {
                         <kbd className="rounded border px-1 font-mono">R</kbd>{" "}
                         revela
                         {canReveal
-                          ? " · encerra a contagem e vai à discussão."
+                          ? " · vai à discussão."
                           : " · disponível após o primeiro voto."}
                       </span>
                     </div>

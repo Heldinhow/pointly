@@ -1,10 +1,11 @@
 /**
- * Hub tests — T01 verify (per-room tick aggregation).
+ * Hub tests — lifecycle das salas (sem timer: reveal só manual).
  *
  * Cobre:
- *  - tickAllTimers() retorna array vazio quando sem salas
- *  - tickAllTimers() agrega per-room com TickResult correto
- *  - tickAllTimers() não confunde salas (independência)
+ *  - createSala registra sala e roteia por playerId
+ *  - addPlayer em sala existente
+ *  - removePlayer remove sala vazia do Map
+ *  - salas independentes (sem cross-talk)
  */
 import { beforeEach, describe, expect, test } from "bun:test";
 import { Hub } from "./hub";
@@ -40,82 +41,50 @@ beforeEach(() => {
 });
 
 // ---------------------------------------------------------------------------
-// Hub — tickAllTimers
+// Hub — lifecycle
 // ---------------------------------------------------------------------------
 
-describe("Hub — tickAllTimers", () => {
-	test("retorna array vazio quando não há salas", () => {
-		expect(hub.tickAllTimers()).toEqual([]);
+describe("Hub — lifecycle", () => {
+	test("createSala registra sala e roteia por playerId", () => {
+		const { sala, playerId } = hub.createSala(makePlayer("p1", "Ana", "host"));
+		expect(hub.getSala(sala.code)).toBe(sala);
+		expect(hub.getSalaForPlayer(playerId)).toBe(sala);
 	});
 
-	test("retorna 'idle' para sala em phase=idle (sem voto)", () => {
-		hub.createSala(makePlayer("p1", "Ana", "host"));
-		const results = hub.tickAllTimers();
-		expect(results).toHaveLength(1);
-		expect(results[0]?.tick).toBe("idle");
-	});
-
-	test("retorna 'ticking' para sala em voting", () => {
+	test("addPlayer entra em sala existente", () => {
 		const { sala } = hub.createSala(makePlayer("p1", "Ana", "host"));
 		const p2 = makePlayer("p2", "Bob", "player");
-		hub.addPlayer(sala.code, p2);
-		sala.castVote("p1", "5");
-		expect(sala.phase).toBe("voting");
-
-		const results = hub.tickAllTimers();
-		expect(results).toHaveLength(1);
-		expect(results[0]?.tick).toBe("ticking");
+		const { playerId } = hub.addPlayer(sala.code, p2);
+		expect(hub.getSalaForPlayer(playerId)).toBe(sala);
+		expect(sala.playerCount).toBe(2);
 	});
 
-	test("retorna 'fired' quando auto-reveal dispara", () => {
-		const { sala } = hub.createSala(makePlayer("p1", "Ana", "host"));
-		const p2 = makePlayer("p2", "Bob", "player");
-		hub.addPlayer(sala.code, p2);
-		sala.castVote("p1", "5");
-		sala.timer = 1;
-
-		const results = hub.tickAllTimers();
-		expect(results).toHaveLength(1);
-		expect(results[0]?.tick).toBe("fired");
-		expect(sala.phase).toBe("revealed");
+	test("removePlayer esvazia e remove sala do Map", () => {
+		const { sala, playerId } = hub.createSala(makePlayer("p1", "Ana", "host"));
+		const { code } = hub.removePlayer(playerId);
+		expect(code).toBe(sala.code);
+		expect(hub.getSala(sala.code)).toBeNull();
 	});
 
-	test("agrega per-room sem conflating (independência entre salas)", () => {
+	test("salas independentes sem cross-talk", () => {
 		const { sala: sala1 } = hub.createSala(makePlayer("p1", "Ana", "host"));
 		const { sala: sala2 } = hub.createSala(makePlayer("p3", "Carlos", "host"));
 
-		// sala1: idle → 'idle'
-		// sala2: 2 players, p3 vota → voting → 'ticking'
 		hub.addPlayer(sala2.code, makePlayer("p4", "Diana", "player"));
 		sala2.castVote("p3", "8");
 		expect(sala2.phase).toBe("voting");
 
-		const results = hub.tickAllTimers();
-		expect(results).toHaveLength(2);
-
-		const r1 = results.find((r) => r.code === sala1.code);
-		const r2 = results.find((r) => r.code === sala2.code);
-		expect(r1?.tick).toBe("idle");
-		expect(r2?.tick).toBe("ticking");
+		expect(sala1.phase).toBe("idle");
+		expect(sala1.playerCount).toBe(1);
+		expect(sala2.playerCount).toBe(2);
 	});
 
-	test("agrega 'fired' e 'ticking' em tick único", () => {
-		const { sala: sala1 } = hub.createSala(makePlayer("p1", "Ana", "host"));
-		const { sala: sala2 } = hub.createSala(makePlayer("p3", "Carlos", "host"));
-
-		// sala1: voting, pronta para fire
-		hub.addPlayer(sala1.code, makePlayer("p2", "Bob", "player"));
-		sala1.castVote("p1", "5");
-		sala1.timer = 1;
-
-		// sala2: voting, não vai fire
-		hub.addPlayer(sala2.code, makePlayer("p4", "Diana", "player"));
-		sala2.castVote("p3", "8");
-
-		const results = hub.tickAllTimers();
-		const r1 = results.find((r) => r.code === sala1.code);
-		const r2 = results.find((r) => r.code === sala2.code);
-		expect(r1?.tick).toBe("fired");
-		expect(r2?.tick).toBe("ticking");
+	test("voto parcial não revela sozinho (reveal só manual)", () => {
+		const { sala } = hub.createSala(makePlayer("p1", "Ana", "host"));
+		hub.addPlayer(sala.code, makePlayer("p2", "Bob", "player"));
+		sala.castVote("p1", "5");
+		expect(sala.phase).toBe("voting");
+		sala.reveal("p1");
+		expect(sala.phase).toBe("revealed");
 	});
 });

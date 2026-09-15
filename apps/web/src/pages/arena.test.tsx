@@ -124,7 +124,6 @@ function sala(overrides: Partial<SalaState> = {}): SalaState {
 		players: [host],
 		phase: "idle",
 		round: 1,
-		timer: 60,
 		votes: {},
 		createdAt: 1,
 		...overrides,
@@ -242,7 +241,7 @@ describe("ArenaPage (ticket 04)", () => {
 		const carol = player({ id: "p_carol", nick: "Carol", hasVoted: true }, 1);
 		await act(async () => {
 			socket.emitRoomState(
-				sala({ players: [host, carol], phase: "voting", timer: 55 }),
+				sala({ players: [host, carol], phase: "voting" }),
 			);
 		});
 
@@ -301,7 +300,7 @@ describe("ArenaPage (ticket 04)", () => {
 		expect(screen.getByLabelText("Link de convite")).toBeTruthy();
 	});
 
-	test("entrada tardia com rodada em andamento mostra fase, votos e timer", () => {
+	test("entrada tardia com rodada em andamento mostra fase e votos", () => {
 		const socket = new FakeSocket();
 		const host = player(
 			{ id: "p_host", nick: "Ana", role: "host", hasVoted: true },
@@ -313,7 +312,6 @@ describe("ArenaPage (ticket 04)", () => {
 				players: [host, late],
 				phase: "voting",
 				round: 3,
-				timer: 42,
 			}),
 			playerId: late.id,
 			socket,
@@ -324,7 +322,6 @@ describe("ArenaPage (ticket 04)", () => {
 		expect(screen.getByTestId("round-label").textContent).toMatch(
 			/Rodada 3 · Votando/,
 		);
-		expect(screen.getByTestId("timer-line").textContent).toMatch(/42s/);
 		expect(screen.getByTestId("presence-line").textContent).toMatch(
 			/2 na sala · 1 votou/,
 		);
@@ -459,7 +456,7 @@ describe("ArenaPage (ticket 05 — Votar)", () => {
 	});
 });
 
-describe("ArenaPage (ticket 06 — Timer e Reveal)", () => {
+describe("ArenaPage (ticket 06 — Reveal)", () => {
 	test("sem nenhum voto o reveal fica indisponível (botão e R)", () => {
 		const socket = new FakeSocket();
 		seed({ sala: sala(), playerId: "p_host", socket });
@@ -482,7 +479,7 @@ describe("ArenaPage (ticket 06 — Timer e Reveal)", () => {
 			0,
 		);
 		seed({
-			sala: sala({ players: [host], phase: "voting", timer: 55 }),
+			sala: sala({ players: [host], phase: "voting" }),
 			playerId: host.id,
 			socket,
 		});
@@ -506,7 +503,7 @@ describe("ArenaPage (ticket 06 — Timer e Reveal)", () => {
 			0,
 		);
 		seed({
-			sala: sala({ players: [host], phase: "voting", timer: 50 }),
+			sala: sala({ players: [host], phase: "voting" }),
 			playerId: host.id,
 			socket,
 		});
@@ -542,7 +539,6 @@ describe("ArenaPage (ticket 06 — Timer e Reveal)", () => {
 			sala: sala({
 				players: [host, beto],
 				phase: "revealable",
-				timer: 44,
 			}),
 			playerId: host.id,
 			socket,
@@ -553,31 +549,29 @@ describe("ArenaPage (ticket 06 — Timer e Reveal)", () => {
 			/Pronta para revelar/,
 		);
 		expect(screen.getByTestId("reveal-hint").textContent).toMatch(
-			/Todos votaram.*no zero, revela sozinho/,
+			/Todos votaram/,
 		);
 		// Sem auto-reveal: continua pré-reveal com botão habilitado.
 		expect(screen.getByTestId("reveal-button")).toBeTruthy();
 		const button = screen.getByTestId("reveal-button") as HTMLButtonElement;
 		expect(button.disabled).toBe(false);
-		expect(screen.getByTestId("timer-line").textContent).toMatch(/44s/);
 
 		await act(async () => {
 			socket.emitRoomState(
 				sala({
 					players: [host, beto],
 					phase: "revealable",
-					timer: 43,
 				}),
 			);
 		});
-		// Novo room_state reconcilia o timer sem revelar sozinho.
+		// Novo room_state mantém o pré-reveal sem revelar sozinho.
 		await waitFor(() =>
-			expect(screen.getByTestId("timer-line").textContent).toMatch(/43s/),
+			expect(screen.getByTestId("reveal-button")).toBeTruthy(),
 		);
 		expect(screen.getByTestId("reveal-button")).toBeTruthy();
 	});
 
-	test("zerar o timer revela sozinho via room_state", async () => {
+	test("reveal manual chega via room_state", async () => {
 		const socket = new FakeSocket();
 		const host = player(
 			{ id: "p_host", nick: "Ana", role: "host", hasVoted: true, value: "5" },
@@ -585,7 +579,7 @@ describe("ArenaPage (ticket 06 — Timer e Reveal)", () => {
 		);
 		const beto = player({ id: "p_beto", nick: "Beto" }, 1);
 		seed({
-			sala: sala({ players: [host, beto], phase: "voting", timer: 1 }),
+			sala: sala({ players: [host, beto], phase: "voting" }),
 			playerId: host.id,
 			socket,
 		});
@@ -601,7 +595,6 @@ describe("ArenaPage (ticket 06 — Timer e Reveal)", () => {
 						{ ...beto, hasVoted: false, value: null },
 					],
 					phase: "revealed",
-					timer: 0,
 				}),
 			);
 		});
@@ -615,20 +608,17 @@ describe("ArenaPage (ticket 06 — Timer e Reveal)", () => {
 			/Discutam as diferenças/,
 		);
 		expect(screen.queryByTestId("reveal-button")).toBeNull();
-		expect(screen.getByTestId("timer-line").textContent).toMatch(/0s/);
 	});
 
-	test("timer parado nos 60s sem votos e em contagem após o primeiro voto", async () => {
+	test("sem votos a sala aguarda o primeiro voto sem contagem", async () => {
 		const socket = new FakeSocket();
 		seed({ sala: sala(), playerId: "p_host", socket });
 		renderArena();
 
-		expect(screen.getByTestId("timer-line").textContent).toMatch(/60s/);
-		// 1,2s parado sem votos: continua 60s.
-		await act(async () => {
-			await new Promise((resolve) => setTimeout(resolve, 1200));
-		});
-		expect(screen.getByTestId("timer-line").textContent).toMatch(/60s/);
+		expect(screen.queryByTestId("timer-line")).toBeNull();
+		expect(screen.getByTestId("presence-line").textContent).toMatch(
+			/1 na sala · 0 votaram/,
+		);
 
 		const host = player(
 			{ id: "p_host", nick: "Ana", role: "host", hasVoted: true, value: "5" },
@@ -636,35 +626,16 @@ describe("ArenaPage (ticket 06 — Timer e Reveal)", () => {
 		);
 		await act(async () => {
 			socket.emitRoomState(
-				sala({ players: [host], phase: "voting", timer: 60 }),
+				sala({ players: [host], phase: "voting" }),
 			);
 		});
-		// Após o primeiro voto a contagem local decrementa no mesmo valor
-		// nos dois navegadores (mesmo baseline do room_state).
-		await act(async () => {
-			await new Promise((resolve) => setTimeout(resolve, 1200));
-		});
-		const text = screen.getByTestId("timer-line").textContent ?? "";
-		expect(/59s|58s/.test(text)).toBe(true);
-	});
-
-	test("estado crítico na reta final usa estilo destrutivo e live assertivo", () => {
-		const socket = new FakeSocket();
-		const host = player(
-			{ id: "p_host", nick: "Ana", role: "host", hasVoted: true, value: "5" },
-			0,
+		// Após o primeiro voto o reveal libera, sem contagem regressiva.
+		await waitFor(() =>
+			expect(
+				(screen.getByTestId("reveal-button") as HTMLButtonElement).disabled,
+			).toBe(false),
 		);
-		seed({
-			sala: sala({ players: [host], phase: "voting", timer: 30 }),
-			playerId: host.id,
-			socket,
-		});
-		renderArena();
-
-		const line = screen.getByTestId("timer-line");
-		expect(line.textContent).toMatch(/30s/);
-		expect(line.getAttribute("aria-live")).toBe("assertive");
-		expect(line.className).toMatch(/text-destructive/);
+		expect(screen.queryByTestId("timer-line")).toBeNull();
 	});
 
 	test("erro de reveal mostra alerta próprio sem quebrar a mesa", async () => {
@@ -674,7 +645,7 @@ describe("ArenaPage (ticket 06 — Timer e Reveal)", () => {
 			0,
 		);
 		seed({
-			sala: sala({ players: [host], phase: "voting", timer: 55 }),
+			sala: sala({ players: [host], phase: "voting" }),
 			playerId: host.id,
 			socket,
 		});
@@ -711,7 +682,6 @@ describe("ArenaPage (ticket 07 — Resultados)", () => {
 		return sala({
 			players,
 			phase: "revealed",
-			timer: 0,
 			votes: votesMap,
 			...extra,
 		});
@@ -799,7 +769,7 @@ describe("ArenaPage (ticket 07 — Resultados)", () => {
 		const socket = new FakeSocket();
 		const host = player({ id: "p_host", nick: "Ana", role: "host" }, 0);
 		seed({
-			sala: sala({ players: [host], phase: "revealed", timer: 0, votes: {} }),
+			sala: sala({ players: [host], phase: "revealed", votes: {} }),
 			playerId: host.id,
 			socket,
 		});
@@ -819,7 +789,7 @@ describe("ArenaPage (ticket 07 — Resultados)", () => {
 			0,
 		);
 		seed({
-			sala: sala({ players: [host], phase: "voting", timer: 55 }),
+			sala: sala({ players: [host], phase: "voting" }),
 			playerId: host.id,
 			socket,
 		});
@@ -842,7 +812,6 @@ describe("ArenaPage (ticket 07 — Resultados)", () => {
 			sala: sala({
 				players: [ana, beto],
 				phase: "revealed",
-				timer: 0,
 				votes: { p_host: "5", p_beto: "8" },
 			}),
 			playerId: ana.id,
@@ -866,7 +835,6 @@ describe("ArenaPage (ticket 07 — Resultados)", () => {
 						{ ...beto, value: "5" },
 					],
 					phase: "revealed",
-					timer: 0,
 					votes: { p_host: "5", p_beto: "5" },
 				}),
 			);
@@ -890,7 +858,6 @@ describe("ArenaPage (ticket 07 — Resultados)", () => {
 			sala: sala({
 				players: [ana],
 				phase: "revealed",
-				timer: 0,
 				votes: { p_host: "5" },
 			}),
 			playerId: ana.id,
@@ -926,7 +893,6 @@ describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 				players: [host, beto],
 				phase: "revealed",
 				round: 1,
-				timer: 0,
 				votes: { p_host: "5", p_beto: "8" },
 			}),
 			playerId: host.id,
@@ -943,7 +909,7 @@ describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 			0,
 		);
 		seed({
-			sala: sala({ players: [host], phase: "voting", timer: 55 }),
+			sala: sala({ players: [host], phase: "voting" }),
 			playerId: host.id,
 			socket,
 		});
@@ -1050,7 +1016,7 @@ describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 		expect(socket.sentNewRounds).toBe(1);
 	});
 
-	test("após a troca: número incrementado, votos zerados, timer em 60s, mesmos players", async () => {
+	test("após a troca: número incrementado, votos zerados, mesmos players", async () => {
 		const { socket, host, beto } = revealedTwoPlayer();
 		const inviteBefore = (
 			screen.getByLabelText("Link de convite") as HTMLInputElement
@@ -1068,7 +1034,6 @@ describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 					players: [resetHost, resetBeto],
 					phase: "voting",
 					round: 2,
-					timer: 60,
 					votes: {},
 				}),
 			);
@@ -1079,7 +1044,6 @@ describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 				/Rodada 2/,
 			),
 		);
-		expect(screen.getByTestId("timer-line").textContent).toMatch(/60s/);
 		expect(screen.getByTestId("presence-line").textContent).toMatch(
 			/2 na sala · 0 votaram/,
 		);
@@ -1210,7 +1174,6 @@ describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {
 					],
 					phase: "voting",
 					round: 2,
-					timer: 55,
 					votes: {},
 				}),
 			},
@@ -1338,7 +1301,6 @@ describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {
 				hostId: ana.id,
 				phase: "voting",
 				round: 2,
-				timer: 50,
 			}),
 			playerId: beto.id,
 			socket,
@@ -1358,7 +1320,6 @@ describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {
 					hostId: promotedBeto.id,
 					phase: "voting",
 					round: 2,
-					timer: 49,
 				}),
 			);
 		});
@@ -1416,7 +1377,7 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		const host = player({ id: "p_host", nick: "Ana", role: "host" }, 0);
 		const beto = player({ id: "p_beto", nick: "Beto" }, 1);
 		seed({
-			sala: sala({ players: [host, beto], phase: "voting", timer: 50 }),
+			sala: sala({ players: [host, beto], phase: "voting" }),
 			playerId: host.id,
 			socket,
 		});
@@ -1674,7 +1635,7 @@ describe("ArenaPage (espectador)", () => {
 			-1,
 		);
 		seed({
-			sala: sala({ players: [ana, olho], phase: "voting", timer: 55 }),
+			sala: sala({ players: [ana, olho], phase: "voting" }),
 			playerId: olho.id,
 			socket,
 			nick: "Olho",
@@ -1710,7 +1671,7 @@ describe("ArenaPage (espectador)", () => {
 			-1,
 		);
 		seed({
-			sala: sala({ players: [ana, olho], phase: "voting", timer: 55 }),
+			sala: sala({ players: [ana, olho], phase: "voting" }),
 			playerId: olho.id,
 			socket,
 			nick: "Olho",
@@ -1788,7 +1749,7 @@ describe("ArenaPage (espectador)", () => {
 			-1,
 		);
 		seed({
-			sala: sala({ players: [ana, olho], phase: "voting", timer: 55 }),
+			sala: sala({ players: [ana, olho], phase: "voting" }),
 			playerId: olho.id,
 			socket,
 			nick: "Olho",
@@ -1815,7 +1776,7 @@ describe("ArenaPage (espectador)", () => {
 			-1,
 		);
 		seed({
-			sala: sala({ players: [ana, olho], phase: "voting", timer: 55 }),
+			sala: sala({ players: [ana, olho], phase: "voting" }),
 			playerId: olho.id,
 			socket,
 			nick: "Olho",
@@ -1836,7 +1797,7 @@ describe("ArenaPage (espectador)", () => {
 			-1,
 		);
 		seed({
-			sala: sala({ players: [ana, olho], phase: "voting", timer: 55 }),
+			sala: sala({ players: [ana, olho], phase: "voting" }),
 			playerId: olho.id,
 			socket,
 			nick: "Olho",

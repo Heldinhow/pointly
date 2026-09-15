@@ -25,7 +25,7 @@ export type HelloOutcome =
 	| {
 			ok: true;
 			playerId: string;
-			sala: SalaState & { critical: boolean };
+			sala: SalaState;
 			role: "host" | "player" | "spectator";
 			reconnected: boolean;
 	  }
