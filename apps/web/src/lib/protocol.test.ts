@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
 	buildThrowProjectileMessage,
+	buildUpdateAvatarMessage,
 	isProjectileOutcome,
 	isProjectileType,
 	parseServerEvent,
@@ -33,6 +34,20 @@ describe("protocol — projéteis (issue #157)", () => {
 		expect(buildThrowProjectileMessage("p_beto", "tomato")).toEqual({
 			type: "throw_projectile",
 			payload: { targetPlayerId: "p_beto", projectileType: "tomato" },
+		});
+	});
+
+	test("buildUpdateAvatarMessage monta set com o dataURL", () => {
+		expect(buildUpdateAvatarMessage("data:image/jpeg;base64,AAA")).toEqual({
+			type: "update_avatar",
+			payload: { avatar: "data:image/jpeg;base64,AAA" },
+		});
+	});
+
+	test("buildUpdateAvatarMessage monta clear com null", () => {
+		expect(buildUpdateAvatarMessage(null)).toEqual({
+			type: "update_avatar",
+			payload: { avatar: null },
 		});
 	});
 

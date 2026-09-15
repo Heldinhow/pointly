@@ -217,11 +217,13 @@ T7 → T8 → T9
 
 **Done when**:
 
-- [ ] TablePlayer e HelloPayload incluem avatar opcional
-- [ ] connect envia avatar no hello quando presente
-- [ ] updateAvatar envia evento tipado e trata erro sem crash
-- [ ] Gate check passes: `bun --filter pointly-web test`
-- [ ] Test count: ≥4 tests pass (hello com/sem avatar, update set/clear)
+- [x] TablePlayer e HelloPayload incluem avatar opcional
+- [x] connect envia avatar no hello quando presente
+- [x] updateAvatar envia evento tipado e trata erro sem crash
+- [x] Gate check passes: `bun --filter pointly-web test`
+- [x] Test count: ≥4 tests pass (hello com/sem avatar, update set/clear)
+
+**Status**: ✅ Complete (T6)
 
 **Tests**: unit
 **Gate**: quick

@@ -52,6 +52,8 @@ export interface Player {
 	value: Vote | string | null;
 	status: PlayerStatus;
 	joinedAt: number;
+	/** Avatar dataURL (teto ~40KB). Ausente ou null = iniciais. */
+	avatar?: string | null;
 }
 
 export interface SalaState {
@@ -70,6 +72,8 @@ export interface HelloPayload {
 	nick: string;
 	code?: string;
 	spectate?: boolean;
+	/** Avatar dataURL do dispositivo. Ausente = iniciais. */
+	avatar?: string;
 }
 
 export interface WelcomePayload {
@@ -124,6 +128,24 @@ export function buildLeaveRoomMessage(): {
 	payload: Record<string, never>;
 } {
 	return { type: "leave_room", payload: {} };
+}
+
+/**
+ * Troca de avatar mid-sala (AV-06): string válida define/substitui,
+ * null remove (volta a iniciais). Espelho do `UpdateAvatarPayloadSchema`
+ * do contrato compartilhado.
+ */
+export interface UpdateAvatarPayload {
+	avatar: string | null;
+}
+
+export function buildUpdateAvatarMessage(
+	avatar: string | null,
+): {
+	type: "update_avatar";
+	payload: UpdateAvatarPayload;
+} {
+	return { type: "update_avatar", payload: { avatar } };
 }
 
 /**
@@ -184,6 +206,7 @@ export type ClientToServerEvent =
 	| { type: "reveal_votes"; payload: Record<string, never> }
 	| { type: "start_new_round"; payload: Record<string, never> }
 	| { type: "leave_room"; payload: Record<string, never> }
+	| { type: "update_avatar"; payload: UpdateAvatarPayload }
 	| { type: "throw_projectile"; payload: ThrowProjectilePayload }
 	| { type: "ping"; payload: Record<string, never> };
 

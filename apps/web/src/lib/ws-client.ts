@@ -5,6 +5,7 @@ import {
 	buildRevealVotesMessage,
 	buildStartNewRoundMessage,
 	buildThrowProjectileMessage,
+	buildUpdateAvatarMessage,
 	isDeckValue,
 	isProjectileType,
 	parseServerEvent,
@@ -135,6 +136,17 @@ export class PointlySocket {
 	 */
 	sendLeaveRoom(): boolean {
 		return this.send(buildLeaveRoomMessage());
+	}
+
+	/**
+	 * Envia `update_avatar { avatar }` (AV-06). String válida
+	 * define/substitui; null remove (volta a iniciais). Retorna false sem
+	 * conexão pronta ou avatar fora de forma — nunca lança, o chamador
+	 * mantém o estado local. O servidor responde com `room_state`.
+	 */
+	updateAvatar(avatar: string | null): boolean {
+		if (avatar !== null && typeof avatar !== "string") return false;
+		return this.send(buildUpdateAvatarMessage(avatar));
 	}
 
 	/**

@@ -15,6 +15,12 @@ let seenNewRounds: Array<{ type?: string; payload?: Record<string, string> }> =
 	[];
 let seenLeaves: Array<{ type?: string; payload?: Record<string, string> }> =
 	[];
+let seenHellos: Array<{ type?: string; payload?: Record<string, string> }> =
+	[];
+let seenAvatars: Array<{
+	type?: string;
+	payload?: { avatar?: string | null };
+}> = [];
 let seenProjectiles: Array<{
 	type?: string;
 	payload?: { targetPlayerId?: string; projectileType?: string };
@@ -81,10 +87,16 @@ beforeAll(() => {
 					seenNewRounds.push(json);
 					return;
 				}
-			if (json.type === "leave_room") {
-				seenLeaves.push(json);
-				return;
-			}
+				if (json.type === "leave_room") {
+					seenLeaves.push(json);
+					return;
+				}
+				if (json.type === "update_avatar") {
+					seenAvatars.push(
+						json as { type?: string; payload?: { avatar?: string | null } },
+					);
+					return;
+				}
 			if (json.type === "throw_projectile") {
 				seenProjectiles.push(json);
 				// Ecoa o broadcast da Sala com desfecho do servidor.
@@ -102,6 +114,7 @@ beforeAll(() => {
 				return;
 			}
 				if (json.type !== "hello") return;
+				seenHellos.push(json);
 				const payload = json.payload ?? {};
 				if (payload.code === "ZZZZ") {
 					ws.send(
@@ -331,6 +344,63 @@ describe("PointlySocket", () => {
 			expect(seenLeaves).toHaveLength(1);
 			expect(seenLeaves[0]?.type).toBe("leave_room");
 			expect(seenLeaves[0]?.payload).toEqual({});
+		} finally {
+			socket.close({ silent: true });
+		}
+	});
+	test("hello inclui avatar quando presente", async () => {
+		seenHellos = [];
+		const socket = new PointlySocket();
+		const avatar = "data:image/jpeg;base64,AAA";
+		try {
+			await socket.connect(WS_URL, {
+				uuid: "00000000-0000-4000-8000-000000000001",
+				nick: "Ana",
+				avatar,
+			});
+			await new Promise((resolve) => setTimeout(resolve, 50));
+			expect(seenHellos).toHaveLength(1);
+			expect(seenHellos[0]?.payload?.avatar).toBe(avatar);
+		} finally {
+			socket.close({ silent: true });
+		}
+	});
+	test("hello omite avatar quando ausente", async () => {
+		seenHellos = [];
+		const socket = new PointlySocket();
+		try {
+			await socket.connect(WS_URL, {
+				uuid: "00000000-0000-4000-8000-000000000001",
+				nick: "Ana",
+			});
+			await new Promise((resolve) => setTimeout(resolve, 50));
+			expect(seenHellos).toHaveLength(1);
+			expect("avatar" in (seenHellos[0]?.payload ?? {})).toBe(false);
+		} finally {
+			socket.close({ silent: true });
+		}
+	});
+	test("updateAvatar envia set e clear após ready", async () => {
+		seenAvatars = [];
+		const socket = new PointlySocket();
+		expect(socket.updateAvatar("data:image/jpeg;base64,AAA")).toBe(false);
+		try {
+			await socket.connect(WS_URL, {
+				uuid: "00000000-0000-4000-8000-000000000001",
+				nick: "Ana",
+			});
+			expect(socket.updateAvatar("data:image/jpeg;base64,AAA")).toBe(true);
+			expect(socket.updateAvatar(null)).toBe(true);
+			expect(
+				socket.updateAvatar(42 as unknown as string | null),
+			).toBe(false);
+			await new Promise((resolve) => setTimeout(resolve, 150));
+			expect(seenAvatars).toHaveLength(2);
+			expect(seenAvatars[0]?.type).toBe("update_avatar");
+			expect(seenAvatars[0]?.payload).toEqual({
+				avatar: "data:image/jpeg;base64,AAA",
+			});
+			expect(seenAvatars[1]?.payload).toEqual({ avatar: null });
 		} finally {
 			socket.close({ silent: true });
 		}
