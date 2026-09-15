@@ -244,11 +244,13 @@ T7 → T8 → T9
 
 **Done when**:
 
-- [ ] Selecionar arquivo válido mostra preview circular imediato
-- [ ] Formato inválido/grande mostra erro inline sem quebrar
-- [ ] Remover limpa e volta a iniciais; microcopy "Visível para todos na sala" presente
-- [ ] Gate check passes: `bun --filter pointly-web test`
-- [ ] Test count: ≥5 tests pass (preview, erro formato, erro tamanho, remover, microcopy)
+- [x] Selecionar arquivo válido mostra preview circular imediato
+- [x] Formato inválido/grande mostra erro inline sem quebrar
+- [x] Remover limpa e volta a iniciais; microcopy "Visível para todos na sala" presente
+- [x] Gate check passes: `bun --filter pointly-web test`
+- [x] Test count: ≥5 tests pass (preview, erro formato, erro tamanho, remover, microcopy)
+
+**Status**: ✅ Complete (T7)
 
 **Tests**: unit
 **Gate**: quick
