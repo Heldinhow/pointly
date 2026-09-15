@@ -1,5 +1,11 @@
-import { Link, Route, Routes, useLocation } from "react-router-dom";
-import { Brand, ShellHeader, ShellMain, SkipLink } from "@/components/shell";
+import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
+import {
+  Brand,
+  ShellHeader,
+  ShellMain,
+  SkipLink,
+  useHeaderScrolled,
+} from "@/components/shell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useTheme } from "@/lib/theme";
 import { ArenaPage } from "@/pages/arena";
@@ -11,11 +17,12 @@ export default function App(): React.ReactElement {
   const { theme, toggle } = useTheme();
   const { pathname } = useLocation();
   const inArena = pathname.startsWith("/s/");
+  const scrolled = useHeaderScrolled();
 
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
       <SkipLink />
-      <ShellHeader>
+      <ShellHeader data-scrolled={scrolled ? "true" : "false"}>
         {inArena ? (
           <Brand />
         ) : (
@@ -26,8 +33,10 @@ export default function App(): React.ReactElement {
         <div className="site-nav">
           {!inArena && (
             <nav aria-label="Navegação principal">
-              <Link to="/">Início</Link>
-              <Link to="/join?mode=join">Entrar com código</Link>
+              <NavLink to="/" end>
+                Início
+              </NavLink>
+              <NavLink to="/join?mode=join">Entrar com código</NavLink>
             </nav>
           )}
           <ThemeToggle theme={theme} onToggle={toggle} />

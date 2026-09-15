@@ -1,4 +1,5 @@
 import type * as React from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 /** Auditoria #158: atalho de teclado para pular direto ao conteúdo. */
@@ -69,4 +70,31 @@ export function Brand({
       Pointly
     </span>
   );
+}
+
+/**
+ * Estado "scrolled" do header (padrão Navbar Origin do Coss, adaptado):
+ * liga o blur funcional quando a página rola além do limiar.
+ * Listener passivo + rAF para não derrubar o scroll a 60fps.
+ */
+export function useHeaderScrolled(threshold = 8): boolean {
+  const [scrolled, setScrolled] = useState<boolean>(
+    () => typeof window !== "undefined" && window.scrollY > threshold,
+  );
+  useEffect(() => {
+    let frame = 0;
+    const update = (): void => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        setScrolled(window.scrollY > threshold);
+      });
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", update);
+    };
+  }, [threshold]);
+  return scrolled;
 }

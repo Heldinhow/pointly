@@ -14,25 +14,16 @@
   max-width: 480px;
   padding: 0;
 }
-.join-card-kicker {
-  margin: 0 0 18px;
-  color: var(--primary);
-  font-family: "Geist Mono", monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  line-height: 1.4;
-  text-transform: uppercase;
-}
 .join-intro h1 {
   max-width: 460px;
   margin: 0;
   color: var(--foreground);
   font-family: Geist, sans-serif;
-  font-size: clamp(44px, 6vw, 76px);
+  font-size: clamp(38px, 4.4vw, 58px);
   font-weight: 650;
-  letter-spacing: -0.065em;
-  line-height: 0.96;
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+  text-wrap: balance;
 }
 .join-intro-copy {
   max-width: 380px;
@@ -41,53 +32,51 @@
   font-size: 17px;
   line-height: 1.6;
 }
-.join-intro-image {
-  display: block;
-  width: min(100%, 390px);
-  aspect-ratio: 1.95;
-  margin-top: 34px;
-  border-radius: 18px;
-  object-fit: cover;
-  object-position: center;
-  opacity: 0.92;
+.join-ritual {
+  list-style: none;
+  margin: 30px 0 0;
+  padding: 0;
+  max-width: 380px;
+  border-top: 1px solid var(--border);
 }
-.join-steps {
-  max-width: 390px;
-  margin-top: 38px;
-  border-top: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
-}
-.join-step {
+.join-ritual li {
   display: flex;
-  gap: 20px;
-  padding: 16px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+  gap: 14px;
+  align-items: baseline;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
 }
-.join-step-number {
-  color: var(--muted-foreground);
+.join-ritual-index {
   font-family: "Geist Mono", monospace;
   font-size: 11px;
-  line-height: 1.55;
-}
-.join-step strong,
-.join-step span:last-child {
-  display: block;
-}
-.join-step strong {
-  color: var(--foreground);
-  font-size: 14px;
-}
-.join-step div span:last-child {
-  margin-top: 4px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+.join-ritual-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.join-ritual-text strong {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+.join-ritual-text span {
   font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted-foreground);
 }
 .join-card,
 .not-found-card {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 24px;
+  border-radius: 18px;
   background: var(--card);
-  box-shadow: 0 24px 70px color-mix(in srgb, var(--foreground) 10%, transparent);
+  box-shadow: 0 20px 60px rgb(28 57 45 / 8%);
 }
 .join-card-header,
 .join-card-panel,
@@ -99,22 +88,22 @@
 .join-card-header {
   padding-top: clamp(28px, 4vw, 44px);
 }
-.join-card-header .join-card-kicker {
-  margin-bottom: 14px;
-}
 .join-card-header [data-slot="card-title"] {
   color: var(--card-foreground);
   font-family: Geist, sans-serif;
   font-size: clamp(28px, 3vw, 36px);
+  font-weight: 600;
   letter-spacing: -0.035em;
+  line-height: 1.1;
+  text-wrap: balance;
 }
 .join-card-header [data-slot="card-description"] {
-  margin-top: 9px;
+  margin-top: 8px;
   color: var(--muted-foreground);
 }
 .join-card-panel {
-  padding-top: 30px;
-  padding-bottom: 30px;
+  padding-top: 32px;
+  padding-bottom: 32px;
 }
 .join-form {
   display: flex;
@@ -131,14 +120,28 @@
 }
 .join-mode-button {
   min-height: 44px;
-  border: 0;
+  border-color: transparent;
   border-radius: 9px;
   font-size: 13px;
+  transition:
+    background-color 180ms ease-out,
+    border-color 180ms ease-out,
+    box-shadow 180ms ease-out;
+}
+.join-form [data-slot="field-description"] {
+  font-size: 13px;
+  line-height: 1.55;
 }
 .join-input {
   min-height: 50px;
-  border-radius: 11px;
+  align-items: center;
+  border-radius: 10px;
   font-size: 16px;
+}
+.join-input [data-slot="input"] {
+  min-height: 48px;
+  font-size: 16px;
+  line-height: 1.5;
 }
 .join-otp {
   margin-top: 2px;
@@ -146,7 +149,7 @@
 .join-otp input {
   min-width: 0;
   min-height: 50px;
-  border-radius: 11px;
+  border-radius: 10px;
   font-family: "Geist Mono", monospace;
   font-size: 20px;
 }
@@ -157,8 +160,21 @@
 .join-submit {
   width: 100%;
   min-height: 52px;
-  border-radius: 11px;
   font-size: 15px;
+  transition:
+    background-color 180ms ease-out,
+    border-color 180ms ease-out,
+    box-shadow 180ms ease-out,
+    transform 180ms ease-out;
+}
+.join-mode-button:focus-visible,
+.join-submit:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.join-mode-button:active,
+.join-submit:active {
+  transform: scale(0.98);
 }
 .not-found-page {
   grid-template-columns: minmax(0, 1fr);
@@ -203,9 +219,8 @@
     margin-top: 20px;
     font-size: 15px;
   }
-  .join-intro-image,
-  .join-steps {
-    display: none;
+  .join-ritual {
+    margin-top: 24px;
   }
 }
 @media (max-width: 390px) {

@@ -187,13 +187,35 @@ export function JoinPage(): React.ReactElement {
           Abra uma sala para começar uma rodada ou use o código de um convite.
           Sem cadastro, sem espera.
         </p>
-        <img
-          className="join-intro-image"
-          src="/images/planning-cards.webp"
-          alt="Cartas de planejamento sobre uma mesa"
-          width={1536}
-          height={1024}
-        />
+        <ol className="join-ritual" aria-label="Como funciona">
+          <li>
+            <span className="join-ritual-index" aria-hidden="true">
+              01
+            </span>
+            <div className="join-ritual-text">
+              <strong>Crie a sala</strong>
+              <span>Escolha um apelido, sem conta.</span>
+            </div>
+          </li>
+          <li>
+            <span className="join-ritual-index" aria-hidden="true">
+              02
+            </span>
+            <div className="join-ritual-text">
+              <strong>Compartilhe o código</strong>
+              <span>Convide onde o time já conversa.</span>
+            </div>
+          </li>
+          <li>
+            <span className="join-ritual-index" aria-hidden="true">
+              03
+            </span>
+            <div className="join-ritual-text">
+              <strong>Estimem juntos</strong>
+              <span>Revelem e conversem sobre as diferenças.</span>
+            </div>
+          </li>
+        </ol>
       </section>
 
       <Card className="join-card">
@@ -242,9 +264,15 @@ export function JoinPage(): React.ReactElement {
                 className="join-input"
                 id="nick"
                 name="nick"
+                size="lg"
                 value={nick}
                 maxLength={20}
                 autoComplete="nickname"
+                autoCapitalize="words"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="go"
+                disabled={busy}
                 placeholder="Como o time te chama?"
                 aria-invalid={nickError ? true : undefined}
                 aria-describedby={nickError ? "nick-error" : "nick-hint"}

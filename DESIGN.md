@@ -240,5 +240,5 @@ Linguagem de cantos contidos e táteis; radius base `--radius: 0.75rem` (`sm 8px
 - Don't nomes genéricos ("John Doe", "Acme", "Nexus") — demo usa `Você/Bia/Caio/Dani`, história `Checkout mobile`.
 - Don't números fake redondos (`99.99%`, `50%`) — usar mediana/média/intervalo reais do consenso.
 - Don't clichê AI ("Elevate", "Seamless", "Unleash", "Next-Gen", "Revolutionize" — nem traduzidos).
-- Don't `shadcn/ui` default sem customizar (radii/cores/sombras deste sistema); Don't spinner circular em conteúdo; Don't Unsplash quebrado (hero usa `/images/planning-cards.webp` local).
+- Don't `shadcn/ui` default sem customizar (radii/cores/sombras deste sistema); Don't spinner circular em conteúdo; Don't foto stock na intro do join (usa lista ritual 01/02/03 em texto, sem asset fotográfico).
 - Don't quebrar a11y: todo estado async tem `aria-live`, atalhos têm `aria-keyshortcuts` + `<kbd>`, foco sempre visível em `var(--ring)`.

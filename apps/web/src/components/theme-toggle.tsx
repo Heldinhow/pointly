@@ -18,11 +18,17 @@ export function ThemeToggle({
 			aria-label={dark ? "Mudar para tema claro" : "Mudar para tema escuro"}
 			title={dark ? "Tema claro" : "Tema escuro"}
 		>
-			{dark ? (
-				<SunIcon aria-hidden="true" />
-			) : (
-				<MoonIcon aria-hidden="true" />
-			)}
+			<span
+				key={dark ? "sun" : "moon"}
+				className="theme-toggle__icon"
+				aria-hidden="true"
+			>
+				{dark ? (
+					<SunIcon aria-hidden="true" />
+				) : (
+					<MoonIcon aria-hidden="true" />
+				)}
+			</span>
 		</Button>
 	);
 }

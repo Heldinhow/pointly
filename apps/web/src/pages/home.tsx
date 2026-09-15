@@ -52,7 +52,7 @@ export function HomePage(): React.ReactElement {
       id: "bia",
       nick: "Bia",
       seatIndex: 1,
-      hasVoted: revealed,
+      hasVoted: true,
       value: revealed ? "5" : null,
       status: "connected" as const,
     },
@@ -60,7 +60,7 @@ export function HomePage(): React.ReactElement {
       id: "caio",
       nick: "Caio",
       seatIndex: 2,
-      hasVoted: revealed,
+      hasVoted: true,
       value: revealed ? "8" : null,
       status: "connected" as const,
     },
@@ -68,7 +68,7 @@ export function HomePage(): React.ReactElement {
       id: "dani",
       nick: "Dani",
       seatIndex: 3,
-      hasVoted: revealed,
+      hasVoted: true,
       value: revealed ? "5" : null,
       status: "connected" as const,
     },
@@ -144,7 +144,6 @@ export function HomePage(): React.ReactElement {
               <PokerTable
                 seats={seats}
                 playerId="you"
-                hostId="you"
                 revealed={revealed}
                 compact
               >
@@ -154,7 +153,11 @@ export function HomePage(): React.ReactElement {
                   </span>
                   <strong>Checkout mobile</strong>
                   <small>
-                    {revealed ? "Votos revelados" : "Escolha sua carta"}
+                    {revealed
+                      ? "Votos revelados"
+                      : myVote === null
+                        ? "3 de 4 votaram · falta você"
+                        : "Todos votaram · hora de revelar"}
                   </small>
                 </div>
               </PokerTable>

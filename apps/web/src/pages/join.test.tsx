@@ -115,6 +115,18 @@ function jsonFetch(status: number, body: unknown): typeof fetch {
 }
 
 describe("JoinPage", () => {
+	test("mostra o ritual em 3 passos sem imagem de cartas", () => {
+		installMocks(jsonFetch(200, {}));
+		renderJoin();
+		expect(document.querySelector(".join-intro img")).toBeNull();
+		const ritual = screen.getByRole("list", { name: "Como funciona" });
+		const steps = ritual.querySelectorAll(":scope > li");
+		expect(steps).toHaveLength(3);
+		expect(ritual.textContent).toMatch("Crie a sala");
+		expect(ritual.textContent).toMatch("Compartilhe o código");
+		expect(ritual.textContent).toMatch("Estimem juntos");
+	});
+
 	test("bloqueia envio com apelido inválido sem chamar rede", () => {
 		let fetchCalls = 0;
 		installMocks((async () => {

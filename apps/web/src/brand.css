@@ -1,5 +1,10 @@
 /* Tokens de cor vivem em index.css (:root/.dark = SSOT). Este arquivo mantém
    só layout/estrutura da marca para não duplicar :root. */
+:root {
+  /* Curvas de easing do sistema (saída exponencial, sem bounce/elastic). */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+}
 body {
   margin: 0;
   font-family: var(--font-sans);
@@ -26,6 +31,19 @@ summary:focus-visible {
 .site-header {
   flex-shrink: 0;
   border-bottom: 1px solid var(--border);
+  /* Navbar Origin do Coss, adaptado: header fixo com blur funcional no scroll. */
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background-color: var(--background);
+  transition:
+    background-color 200ms var(--ease-out-quart),
+    border-color 200ms var(--ease-out-quart);
+}
+.site-header[data-scrolled="true"] {
+  background-color: color-mix(in srgb, var(--background) 86%, transparent);
+  -webkit-backdrop-filter: blur(12px) saturate(1.25);
+  backdrop-filter: blur(12px) saturate(1.25);
 }
 .site-nav {
   display: flex;
@@ -39,11 +57,49 @@ summary:focus-visible {
   font-weight: 500;
   color: var(--muted-foreground);
 }
+/* Underline deslizante (só transform): hover, foco e rota ativa. */
+.site-nav nav a {
+  position: relative;
+  padding-block: 6px;
+  transition: color 150ms var(--ease-out-quart);
+}
+.site-nav nav a::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background-color: var(--primary);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 200ms var(--ease-out-quint);
+}
+.site-nav nav a:hover::after,
+.site-nav nav a:focus-visible::after,
+.site-nav nav a[aria-current="page"]::after {
+  transform: scaleX(1);
+}
 .site-nav a:hover {
   color: var(--foreground);
 }
 .site-nav nav a[aria-current="page"] {
   color: var(--foreground);
+}
+/* Troca do ícone sol/lua: rotação + fade (só transform/opacity, 200ms). */
+.theme-toggle__icon {
+  display: inline-flex;
+  animation: theme-toggle-in 200ms var(--ease-out-quint);
+}
+@keyframes theme-toggle-in {
+  from {
+    opacity: 0;
+    transform: rotate(-60deg) scale(0.75);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
 }
 .site-main {
   padding-top: 32px;
