@@ -302,6 +302,23 @@ button.arena-spectator-target:focus-visible {
 .arena-spectator-anchor {
   display: inline-block;
 }
+/* Miniatura do espectador: foto cover ou iniciais, mesmo contrato da mesa. */
+.arena-spectator-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 4px;
+  border-radius: 50%;
+  vertical-align: -5px;
+  background: var(--secondary);
+  color: var(--foreground);
+  font-size: 9px;
+  font-weight: 650;
+}
+img.arena-spectator-avatar {
+  object-fit: cover;
+}
 .arena-results,
 .arena-next-round {
   padding-block: 18px;

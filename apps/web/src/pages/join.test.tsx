@@ -114,6 +114,18 @@ function jsonFetch(status: number, body: unknown): typeof fetch {
 		new Response(JSON.stringify(body), { status })) as unknown as typeof fetch;
 }
 
+function mockAvatarPipeline(): void {
+	const ctor = (window as unknown as Record<string, unknown>)
+		.HTMLCanvasElement as unknown as { prototype: Record<string, unknown> };
+	ctor.prototype.getContext = () => ({ drawImage: () => {} });
+	ctor.prototype.toDataURL = () => "data:image/jpeg;base64,MOCK128";
+	(globalThis as Record<string, unknown>).createImageBitmap = async () => ({
+		width: 200,
+		height: 100,
+		close: () => {},
+	});
+}
+
 describe("JoinPage", () => {
 	test("mostra o ritual em 3 passos sem imagem de cartas", () => {
 		installMocks(jsonFetch(200, {}));
@@ -253,5 +265,71 @@ describe("JoinPage", () => {
 		installMocks(jsonFetch(200, {}));
 		renderJoin("/join");
 		expect(screen.getByLabelText(/Entrar como espectador/)).toBeTruthy();
+	});
+
+	test("join com avatar envia no hello e persiste no dispositivo", async () => {
+		mockAvatarPipeline();
+		installMocks(jsonFetch(200, {}));
+		renderJoin("/join");
+		fireEvent.change(screen.getByLabelText("Apelido"), {
+			target: { value: "Ana" },
+		});
+		const input = screen.getByLabelText("Escolher foto") as HTMLInputElement;
+		fireEvent.change(input, {
+			target: {
+				files: [new File([new Uint8Array([1, 2, 3])], "foto.png", { type: "image/png" })],
+			},
+		});
+		await waitFor(() =>
+			expect(
+				(window.localStorage.getItem("pointly-avatar") ?? "").startsWith(
+					"data:image/jpeg;base64,",
+				),
+			).toBe(true),
+		);
+		fireEvent.click(submitButton("Criar sala"));
+		await waitFor(() => expect(MockSocket.instances).toHaveLength(1));
+		const socket = MockSocket.instances[0]!;
+		await act(async () => {
+			socket.open();
+			socket.receive(welcomeMessage("AB12"));
+		});
+		expect(await screen.findByText("ARENA")).toBeTruthy();
+		const hello = JSON.parse(socket.sent[0] as string) as {
+			type: string;
+			payload: { nick: string; avatar?: string };
+		};
+		expect(hello.type).toBe("hello");
+		expect(hello.payload.avatar?.startsWith("data:image/jpeg;base64,")).toBe(
+			true,
+		);
+	});
+
+	test("erro de arquivo não bloqueia o join", async () => {
+		installMocks(jsonFetch(200, {}));
+		renderJoin("/join");
+		fireEvent.change(screen.getByLabelText("Apelido"), {
+			target: { value: "Ana" },
+		});
+		const input = screen.getByLabelText("Escolher foto") as HTMLInputElement;
+		fireEvent.change(input, {
+			target: {
+				files: [new File([new Uint8Array([1])], "a.gif", { type: "image/gif" })],
+			},
+		});
+		expect(await screen.findByText(/png, jpeg ou webp/i)).toBeTruthy();
+		fireEvent.click(submitButton("Criar sala"));
+		await waitFor(() => expect(MockSocket.instances).toHaveLength(1));
+		const socket = MockSocket.instances[0]!;
+		await act(async () => {
+			socket.open();
+			socket.receive(welcomeMessage("AB12"));
+		});
+		expect(await screen.findByText("ARENA")).toBeTruthy();
+		const hello = JSON.parse(socket.sent[0] as string) as {
+			type: string;
+			payload: Record<string, string>;
+		};
+		expect("avatar" in hello.payload).toBe(false);
 	});
 });

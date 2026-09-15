@@ -19,7 +19,9 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { OTPField, OTPFieldInput } from "@/components/ui/otp-field";
+import { AvatarPicker } from "@/components/avatar-picker";
 import { checkSala, resolveWsUrl } from "@/lib/api";
+import { clearAvatar, loadAvatar, saveAvatar } from "@/lib/avatar";
 import { JoinError, friendlyJoinMessage } from "@/lib/errors";
 import { firstIssueMessage } from "@/lib/forms";
 import {
@@ -52,6 +54,7 @@ export function JoinPage(): React.ReactElement {
     normalizeCode(searchParams.get("code") ?? ""),
   );
   const [spectate, setSpectate] = useState(false);
+  const [avatar, setAvatar] = useState<string | null>(() => loadAvatar());
   const [nickError, setNickError] = useState<string | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -88,6 +91,13 @@ export function JoinPage(): React.ReactElement {
   function handleCodeChange(value: string): void {
     setCode(normalizeCode(value));
     if (codeError) setCodeError(null);
+  }
+
+  /** Persiste na hora para o reload mostrar a foto no picker (AV-02). */
+  function handleAvatarChange(next: string | null): void {
+    setAvatar(next);
+    if (next) saveAvatar(next);
+    else clearAvatar();
   }
 
   function switchMode(next: Mode): void {
@@ -156,6 +166,7 @@ export function JoinPage(): React.ReactElement {
         nick: nickResult.data,
         ...(codeValue ? { code: codeValue } : {}),
         ...(spectate ? { spectate: true as const } : {}),
+        ...(avatar ? { avatar } : {}),
       });
       setConnected({
         nick: nickResult.data,
@@ -290,6 +301,8 @@ export function JoinPage(): React.ReactElement {
                 </FieldError>
               ) : null}
             </Field>
+
+            <AvatarPicker value={avatar} onChange={handleAvatarChange} />
 
             <label className="join-spectate" htmlFor="spectate">
               <input

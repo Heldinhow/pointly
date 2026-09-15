@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/card";
 import { Deck } from "@/components/deck";
 import { Input } from "@/components/ui/input";
+import { AvatarPicker } from "@/components/avatar-picker";
 import { PokerTable } from "@/components/poker-table";
 import { ProjectileFlight, type ProjectileFlightEvent } from "@/components/projectile-flight";
 import { ProjectileMenu } from "@/components/projectile-menu";
@@ -41,6 +42,7 @@ import type { ProjectileType } from "@/lib/protocol";
 import { useSession } from "@/store/session";
 import { JoinError, friendlyJoinMessage } from "@/lib/errors";
 import { SOCKET_ERROR_COPY } from "@/lib/forms";
+import { clearAvatar, loadAvatar, saveAvatar } from "@/lib/avatar";
 import { clearSession, loadSession } from "@/lib/identity";
 import { safeClear } from "@/lib/storage";
 import { copyText } from "@/lib/clipboard";
@@ -141,6 +143,33 @@ function sendProjectileThroughSession(
   return sendThroughSession("sendThrowProjectile", targetPlayerId, projectileType);
 }
 
+/**
+ * Miniatura do espectador na lista de presentes (AV-08): foto quando há
+ * avatar válido, iniciais como fallback (mesmo contrato da mesa).
+ */
+function SpectatorAvatar({ player }: { player: Player }): React.ReactElement {
+  const [broken, setBroken] = useState(false);
+  if (player.avatar && !broken) {
+    return (
+      <img
+        src={player.avatar}
+        alt=""
+        aria-hidden="true"
+        className="arena-spectator-avatar"
+        onError={() => setBroken(true)}
+      />
+    );
+  }
+  return (
+    <span
+      className="arena-spectator-avatar arena-spectator-initials"
+      aria-hidden="true"
+    >
+      {player.nick.slice(0, 2).toUpperCase()}
+    </span>
+  );
+}
+
 export function ArenaPage(): React.ReactElement {
   const { code = "" } = useParams();
   const navigate = useNavigate();
@@ -160,6 +189,7 @@ export function ArenaPage(): React.ReactElement {
   const [newRoundError, setNewRoundError] = useState<string | null>(null);
   // Projéteis em qualquer fase: cooldown de 2s e voos confirmados pelo servidor.
   const [projectileError, setProjectileError] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   const [projectileCooldownUntil, setProjectileCooldownUntil] = useState(0);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const projectileKeyRef = useRef(0);
@@ -385,6 +415,7 @@ export function ArenaPage(): React.ReactElement {
     let liveSocket: PointlySocket | null = null;
     setRejoining(true);
     setRejoinError(null);
+    const storedAvatar = loadAvatar();
     void (async () => {
       const { uuid } = useSession.getState();
       const socket = new PointlySocket({
@@ -398,6 +429,7 @@ export function ArenaPage(): React.ReactElement {
           uuid,
           nick: persisted.nick,
           code: persisted.code,
+          ...(storedAvatar ? { avatar: storedAvatar } : {}),
         });
         if (cancelled) {
           socket.close({ silent: true });
@@ -618,6 +650,28 @@ export function ArenaPage(): React.ReactElement {
   // Alvos = demais participantes conectados, incluindo espectadores.
   const projectileCooldownLeftMs = Math.max(0, projectileCooldownUntil - nowMs);
   const projectileCooldownSecs = Math.ceil(projectileCooldownLeftMs / 1000);
+
+  /**
+   * Troca ou remove o avatar sem sair da sala (AV-06/AV-07): envia
+   * `update_avatar` e persiste no dispositivo. O novo valor chega via
+   * `room_state`, então o anterior segue visível até o broadcast.
+   * Falha de envio vira erro inline, sem reload e sem crash.
+   */
+  function handleAvatarChange(next: string | null): void {
+    let sent = false;
+    try {
+      sent = socket?.updateAvatar(next) ?? false;
+    } catch {
+      sent = false;
+    }
+    if (!sent) {
+      setAvatarError("Não foi possível trocar a foto. Tente de novo.");
+      return;
+    }
+    setAvatarError(null);
+    if (next) saveAvatar(next);
+    else clearAvatar();
+  }
 
   function handleThrowProjectile(targetId: string, projectileType: ProjectileType): void {
     const remaining = projectileCooldownUntil - Date.now();
@@ -879,6 +933,19 @@ export function ArenaPage(): React.ReactElement {
               </>
             ) : null}
           </div>
+          <AvatarPicker
+            value={self?.avatar ?? null}
+            onChange={handleAvatarChange}
+            compact
+          />
+          {avatarError ? (
+            <Alert variant="error">
+              <AlertTitle>Não foi possível trocar a foto</AlertTitle>
+              <AlertDescription data-testid="avatar-error">
+                {avatarError}
+              </AlertDescription>
+            </Alert>
+          ) : null}
           {connectedSpectators.length > 0 ? (
             <div
               className="arena-spectators"
@@ -894,9 +961,9 @@ export function ArenaPage(): React.ReactElement {
                         {index > 0 ? ", " : ""}
                         {p.id !== playerId && !connectionLost ? (
                           <ProjectileMenu target={p} cooldownSecs={projectileCooldownSecs} onThrow={handleThrowProjectile} className="arena-spectator-target" align="left" side="bottom">
-                            <span className="arena-spectator-anchor" data-projectile-player={p.id}>{p.nick}</span>
+                            <span className="arena-spectator-anchor" data-projectile-player={p.id}><SpectatorAvatar player={p} />{p.nick}</span>
                           </ProjectileMenu>
-                        ) : <span className="arena-spectator-anchor" data-projectile-player={p.id}>{p.nick}</span>}
+                        ) : <span className="arena-spectator-anchor" data-projectile-player={p.id}><SpectatorAvatar player={p} />{p.nick}</span>}
                       </span>
                     ))}
                 </strong>

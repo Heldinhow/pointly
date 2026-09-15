@@ -74,6 +74,13 @@ class FakeSocket {
 		return true;
 	}
 
+	sentAvatars: Array<string | null> = [];
+
+	updateAvatar(avatar: string | null): boolean {
+		this.sentAvatars.push(avatar);
+		return true;
+	}
+
 	emitRoomState(sala: SalaState): void {
 		this.handlers.onRoomState?.(sala);
 	}
@@ -171,6 +178,18 @@ function stubClipboard(): string[] {
 		},
 	});
 	return written;
+}
+
+function mockAvatarPipeline(): void {
+	const ctor = (window as unknown as Record<string, unknown>)
+		.HTMLCanvasElement as unknown as { prototype: Record<string, unknown> };
+	ctor.prototype.getContext = () => ({ drawImage: () => {} });
+	ctor.prototype.toDataURL = () => "data:image/jpeg;base64,MOCK128";
+	(globalThis as Record<string, unknown>).createImageBitmap = async () => ({
+		width: 200,
+		height: 100,
+		close: () => {},
+	});
 }
 
 afterEach(() => {
@@ -1701,5 +1720,105 @@ describe("ArenaPage (espectador)", () => {
 		// Botão desabilitado não dispara; força via handler gear? Apenas checa estado.
 		expect(socket.sentVotes).toEqual([]);
 		expect(screen.getByTestId("deck")).toBeTruthy();
+	});
+
+	test("arena troca avatar via update_avatar sem reload", async () => {
+		mockAvatarPipeline();
+		const socket = new FakeSocket();
+		const host = player({ id: "p_host", nick: "Ana", role: "host" }, 0);
+		const me = player({ id: "p_beto", nick: "Beto" }, 1);
+		seed({ sala: sala({ players: [host, me] }), playerId: me.id, socket });
+		renderArena();
+
+		const input = screen.getByLabelText("Escolher foto") as HTMLInputElement;
+		fireEvent.change(input, {
+			target: {
+				files: [new File([new Uint8Array([1, 2, 3])], "foto.png", { type: "image/png" })],
+			},
+		});
+		await waitFor(() => expect(socket.sentAvatars).toHaveLength(1));
+		expect(
+			socket.sentAvatars[0]?.startsWith("data:image/jpeg;base64,"),
+		).toBe(true);
+		// Sem reload: mesma sala, mesmo socket, avatar persistido no dispositivo.
+		expect(screen.getByTestId("sala-code").textContent).toMatch(/AB12/);
+		expect(
+			(window.localStorage.getItem("pointly-avatar") ?? "").startsWith(
+				"data:image/jpeg;base64,",
+			),
+		).toBe(true);
+	});
+
+	test("remover avatar envia null e broadcast volta a iniciais", async () => {
+		const socket = new FakeSocket();
+		const host = player({ id: "p_host", nick: "Ana", role: "host" }, 0);
+		const me = player(
+			{ id: "p_beto", nick: "Beto", avatar: "data:image/jpeg;base64,AAA" },
+			1,
+		);
+		seed({ sala: sala({ players: [host, me] }), playerId: me.id, socket });
+		renderArena();
+
+		expect(
+			screen.getByAltText("Prévia do avatar") as HTMLImageElement,
+		).toBeTruthy();
+		fireEvent.click(screen.getByRole("button", { name: "Remover" }));
+		expect(socket.sentAvatars).toEqual([null]);
+		expect(window.localStorage.getItem("pointly-avatar")).toBeNull();
+		await act(async () => {
+			socket.emitRoomState(
+				sala({ players: [host, player({ id: "p_beto", nick: "Beto" }, 1)] }),
+			);
+		});
+		expect(screen.queryByAltText("Prévia do avatar")).toBeNull();
+		expect(screen.getByTestId("seat-1").textContent).toMatch(/BE/);
+	});
+
+	test("espectador com avatar aparece com foto na lista", () => {
+		const socket = new FakeSocket();
+		const ana = player({ id: "p_ana", nick: "Ana", role: "host" }, 0);
+		const olho = player(
+			{
+				id: "p_olho",
+				nick: "Olho",
+				role: "spectator",
+				seatIndex: -1,
+				avatar: "data:image/jpeg;base64,AAA",
+			},
+			-1,
+		);
+		seed({
+			sala: sala({ players: [ana, olho], phase: "voting", timer: 55 }),
+			playerId: olho.id,
+			socket,
+			nick: "Olho",
+		});
+		renderArena();
+
+		const line = screen.getByTestId("spectators-line");
+		const img = line.querySelector("img.arena-spectator-avatar");
+		expect(img?.getAttribute("src")).toBe("data:image/jpeg;base64,AAA");
+		expect(line.textContent).toMatch(/Olho/);
+	});
+
+	test("espectador sem avatar mostra iniciais na lista", () => {
+		const socket = new FakeSocket();
+		const ana = player({ id: "p_ana", nick: "Ana", role: "host" }, 0);
+		const olho = player(
+			{ id: "p_olho", nick: "Olho", role: "spectator", seatIndex: -1 },
+			-1,
+		);
+		seed({
+			sala: sala({ players: [ana, olho], phase: "voting", timer: 55 }),
+			playerId: olho.id,
+			socket,
+			nick: "Olho",
+		});
+		renderArena();
+
+		const line = screen.getByTestId("spectators-line");
+		expect(line.querySelector("img.arena-spectator-avatar")).toBeNull();
+		expect(line.textContent).toMatch(/OL/);
+		expect(line.textContent).toMatch(/Olho/);
 	});
 });

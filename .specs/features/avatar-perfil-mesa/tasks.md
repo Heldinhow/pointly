@@ -298,11 +298,13 @@ T7 → T8 → T9
 
 **Done when**:
 
-- [ ] Join com avatar envia no hello e persiste; erro de arquivo não bloqueia join
-- [ ] Arena troca via update_avatar sem reload; remover volta a iniciais nos clients
-- [ ] Espectador com avatar aparece na lista; sem avatar mostra iniciais
-- [ ] Gate check passes: `bun --filter pointly-web test`
-- [ ] Test count: ≥5 tests pass (join hello, arena update, remover, espectador com/sem)
+- [x] Join com avatar envia no hello e persiste; erro de arquivo não bloqueia join
+- [x] Arena troca via update_avatar sem reload; remover volta a iniciais nos clients
+- [x] Espectador com avatar aparece na lista; sem avatar mostra iniciais
+- [x] Gate check passes: `bun --filter pointly-web test`
+- [x] Test count: ≥5 tests pass (join hello, arena update, remover, espectador com/sem)
+
+**Status**: ✅ Complete (T9)
 
 **Tests**: unit
 **Gate**: quick
