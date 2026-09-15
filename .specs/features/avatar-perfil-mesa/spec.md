@@ -79,7 +79,7 @@ Every ambiguity is resolved or recorded here - nothing is left silently unclear.
 1. WHEN o Player troca o avatar na arena THEN the system SHALL enviar update_avatar e fazer broadcast room_state com o novo avatar para toda a sala
 2. WHEN o Player remove o avatar THEN the system SHALL enviar avatar null, limpar o localStorage e voltar a exibir iniciais em toda a sala
 3. IF a imagem falhar ao carregar na mesa THEN the system SHALL exibir as iniciais do Apelido automaticamente
-4. WHILE o avatar está sendo processado THEN the system SHALL manter o avatar anterior visível sem travar o picker
+4. WHILE o avatar está sendo processado THEN the system SHALL manter o preview anterior visível e desabilitar os controles (input e botões) até concluir, sem congelar a página
 
 **Independent Test**: Com dois clients na mesma sala, trocar a foto em um e ver atualizar no outro sem reload; remover e ver voltar às iniciais nos dois.
 

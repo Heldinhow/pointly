@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { AvatarPicker } from "./avatar-picker";
 import { AVATAR_MAX_BYTES } from "../lib/avatar";
 
@@ -61,6 +61,49 @@ describe("AvatarPicker (AV-05)", () => {
 		chooseFile(pngFile());
 		await waitFor(() => expect(seen).toHaveLength(1));
 		expect(seen[0]?.startsWith("data:image/jpeg;base64,")).toBe(true);
+	});
+
+	test("durante o processamento mantém preview anterior e desabilita controles", async () => {
+		let resolveBitmap:
+			| ((bitmap: { width: number; height: number; close: () => void }) => void)
+			| null = null;
+		const ctor = (window as unknown as Record<string, unknown>)
+			.HTMLCanvasElement as unknown as { prototype: Record<string, unknown> };
+		ctor.prototype.getContext = () => ({ drawImage: () => {} });
+		ctor.prototype.toDataURL = () => `${AVATAR}MOCK`;
+		(globalThis as Record<string, unknown>).createImageBitmap = () =>
+			new Promise<{ width: number; height: number; close: () => void }>(
+				(resolve) => {
+					resolveBitmap = resolve;
+				},
+			);
+		const seen: Array<string | null> = [];
+		render(
+			<AvatarPicker
+				value={AVATAR}
+				onChange={(value) => {
+					seen.push(value);
+				}}
+			/>,
+		);
+		chooseFile(pngFile());
+		await waitFor(() =>
+			expect(
+				(screen.getByRole("button", { name: "Trocar foto" }) as HTMLButtonElement)
+					.disabled,
+			).toBe(true),
+		);
+		expect(
+			(screen.getByAltText("Prévia do avatar") as HTMLImageElement).getAttribute(
+				"src",
+			),
+		).toBe(AVATAR);
+		expect(seen).toHaveLength(0);
+		await act(async () => {
+			resolveBitmap?.({ width: 200, height: 100, close: () => {} });
+		});
+		await waitFor(() => expect(seen).toHaveLength(1));
+		mockCanvasPipeline();
 	});
 
 	test("formato inválido mostra erro inline sem chamar onChange", async () => {
