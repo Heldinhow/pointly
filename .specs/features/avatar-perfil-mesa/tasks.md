@@ -163,11 +163,13 @@ T7 → T8 → T9
 
 **Done when**:
 
-- [ ] update_avatar válido atualiza Player e broadcast room_state com novo avatar
-- [ ] avatar null limpa e volta a iniciais no snapshot
-- [ ] sem playerId retorna invalid_phase sem broadcast
-- [ ] Gate check passes: `bun --filter server test`
-- [ ] Test count: ≥4 tests pass (set, clear, sem auth, teto)
+- [x] update_avatar válido atualiza Player e broadcast room_state com novo avatar
+- [x] avatar null limpa e volta a iniciais no snapshot
+- [x] sem playerId retorna invalid_phase sem broadcast
+- [x] Gate check passes: `bun --filter server test`
+- [x] Test count: ≥4 tests pass (set, clear, sem auth, teto)
+
+**Status**: ✅ Complete (T4)
 
 **Tests**: unit
 **Gate**: quick

@@ -17,6 +17,7 @@ import {
 	type ServerToClientEvent,
 	type SalaState,
 	type ThrowProjectilePayload,
+	type UpdateAvatarPayload,
 	type Vote,
 } from "@planning-poker/shared";
 import type { Hub } from "./hub";
@@ -26,6 +27,7 @@ import { handleHello } from "./handlers/hello";
 import { handleRevealVotes } from "./handlers/reveal-votes";
 import { handleStartNewRound } from "./handlers/start-new-round";
 import { handleThrowProjectile } from "./handlers/throw-projectile";
+import { handleUpdateAvatar } from "./handlers/update-avatar";
 import { Logger } from "./ws-logger";
 import { RateLimiter } from "./ws-rate-limit";
 
@@ -254,6 +256,8 @@ export class WSService {
 				return this.handlePingEvent(ws);
 			case "throw_projectile":
 				return this.handleThrowProjectileEvent(ws, event.payload);
+			case "update_avatar":
+				return this.handleUpdateAvatarEvent(ws, event.payload);
 		}
 	}
 
@@ -415,6 +419,23 @@ export class WSService {
 				outcome: outcome.outcome,
 			},
 		});
+	}
+
+	private handleUpdateAvatarEvent(
+		ws: BunWS,
+		payload: UpdateAvatarPayload,
+	): void {
+		const playerId = this.requireWsPlayer(ws);
+		if (!playerId) return;
+		const outcome = handleUpdateAvatar(this.hub, playerId, payload);
+		if (!outcome.ok) {
+			this.sendError(ws, outcome.code, outcome.message);
+			return;
+		}
+		// Campo ignorado (teto/formato): ok sem mudança, sem broadcast.
+		if (!outcome.changed) return;
+		const code = ws.data.code!;
+		this.broadcastRoomState(code);
 	}
 
 	// -----------------------------------------------------------------------

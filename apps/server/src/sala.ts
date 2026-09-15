@@ -250,6 +250,28 @@ export class Sala {
 	}
 
 	/**
+	 * Define ou remove o avatar do player (avatar-perfil-mesa AV-06).
+	 * `null` remove o campo (volta a iniciais). Lança `SalaError`
+	 * (`invalid_phase`) se o player não está na sala.
+	 */
+	setAvatar(playerId: string, avatar: string | null): void {
+		const player = this.players.get(playerId);
+		if (!player) {
+			throw new SalaError(
+				"invalid_phase",
+				`Player ${playerId} não está na sala.`,
+			);
+		}
+		if (avatar === null) {
+			const { avatar: _dropped, ...rest } = player;
+			void _dropped;
+			this.players.set(playerId, rest);
+			return;
+		}
+		this.players.set(playerId, { ...player, avatar });
+	}
+
+	/**
 	 * Job de limpeza de grace period. Chamado externamente (hub / T18)
 	 * a cada 10s. Remove players disconnected há mais de DISCONNECT_GRACE_MS.
 	 *
