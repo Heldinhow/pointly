@@ -18,6 +18,14 @@ globalThis.MouseEvent = win.MouseEvent as typeof MouseEvent;
 globalThis.KeyboardEvent = win.KeyboardEvent as typeof KeyboardEvent;
 globalThis.getComputedStyle = win.getComputedStyle as typeof getComputedStyle;
 
+// jsdom não implementa top layer. O nwsapi entra em recursão em :modal
+// (consultado pelo Floating UI); nenhum elemento está nesse estado aqui.
+const matches = Element.prototype.matches;
+Element.prototype.matches = function (selector: string): boolean {
+	if (selector === ":modal" || selector === ":fullscreen") return false;
+	return matches.call(this, selector);
+};
+
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
 if (typeof globalThis.requestAnimationFrame !== "function") {

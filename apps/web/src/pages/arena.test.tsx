@@ -1416,6 +1416,35 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		]);
 	});
 
+	test("menu aberto por clique permanece ao sair do alvo e permite arremessar", async () => {
+		const { socket, beto } = revealedSalaWithPair();
+		renderArena();
+		await openProjectileMenu();
+
+		fireEvent.mouseLeave(screen.getByRole("button", { name: "Arremessar em Beto" }), {
+			relatedTarget: document.body,
+		});
+		expect(screen.getByRole("menu")).toBeTruthy();
+		fireEvent.click(screen.getByRole("menuitem", { name: "Tomate em Beto" }));
+		expect(socket.sentProjectiles).toEqual([
+			{ targetPlayerId: beto.id, projectileType: "tomato" },
+		]);
+		await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+	});
+
+	test("Escape fecha o menu de projéteis e devolve o foco ao alvo", async () => {
+		const { socket } = revealedSalaWithPair();
+		renderArena();
+		const trigger = screen.getByRole("button", { name: "Arremessar em Beto" });
+		act(() => trigger.focus());
+		await openProjectileMenu();
+
+		fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+		await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+		await waitFor(() => expect(document.activeElement).toBe(trigger));
+		expect(socket.sentProjectiles).toEqual([]);
+	});
+
 	test("segundo envio no cooldown fica desabilitado com contagem no menu", async () => {
 		const { socket } = revealedSalaWithPair();
 		renderArena();
@@ -1430,7 +1459,7 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		// sem trafegar e sem quebrar a sala.
 		fireEvent.click(screen.getByTestId("projectile-rock"));
 		expect(socket.sentProjectiles).toHaveLength(1);
-		expect((screen.getByTestId("projectile-rock") as HTMLButtonElement).disabled).toBe(true);
+		expect(screen.getByTestId("projectile-rock").getAttribute("aria-disabled")).toBe("true");
 		expect(screen.getByTestId("projectile-cooldown").textContent).toMatch(
 			/Recarregando/i,
 		);
@@ -1448,8 +1477,8 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		fireEvent.click(screen.getByTestId("projectile-paper_ball"));
 		await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
 		await openProjectileMenu("Caio");
-		expect((screen.getByTestId("projectile-brick") as HTMLButtonElement).disabled).toBe(true);
-		await waitFor(() => expect((screen.getByTestId("projectile-brick") as HTMLButtonElement).disabled).toBe(false), { timeout: 2600 });
+		expect(screen.getByTestId("projectile-brick").getAttribute("aria-disabled")).toBe("true");
+		await waitFor(() => expect(screen.getByTestId("projectile-brick").getAttribute("aria-disabled")).not.toBe("true"), { timeout: 2600 });
 		fireEvent.click(screen.getByTestId("projectile-brick"));
 		expect(socket.sentProjectiles).toEqual([
 			{ targetPlayerId: beto.id, projectileType: "paper_ball" },
@@ -1467,7 +1496,7 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		expect(screen.queryByTestId("projectile-flight")).toBeNull();
 		await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
 		await openProjectileMenu();
-		expect((screen.getByTestId("projectile-tomato") as HTMLButtonElement).disabled).toBe(false);
+		expect(screen.getByTestId("projectile-tomato").getAttribute("aria-disabled")).not.toBe("true");
 	});
 
 	test("sala vê só o voo, sem lista de arremessos", async () => {
