@@ -13,6 +13,7 @@ import { Logger, MemorySink } from "../ws-logger";
 
 const UUID_P1 = "00000000-0000-4000-8000-000000000001";
 const UUID_P2 = "00000000-0000-4000-8000-000000000002";
+const UUID_P3 = "00000000-0000-4000-8000-000000000003";
 const JPEG = "data:image/jpeg;base64,/9j/4AAQ";
 const PNG = "data:image/png;base64,iVBORw0KGgo=";
 
@@ -86,6 +87,33 @@ describe("handleUpdateAvatar", () => {
 		});
 		expect(outcome.ok).toBe(true);
 		if (outcome.ok) expect(outcome.changed).toBe(false);
+	});
+
+	test("mesmo apelido não mistura avatar entre players (edge E2)", () => {
+		const first = handleHello(hub, { uuid: UUID_P1, nick: "Beto" });
+		expect(first.ok).toBe(true);
+		if (!first.ok) throw new Error("setup falhou");
+		const second = handleHello(hub, {
+			uuid: UUID_P3,
+			nick: "Beto",
+			code: first.sala.code,
+		});
+		expect(second.ok).toBe(true);
+		if (!second.ok) throw new Error("setup falhou");
+		expect(second.playerId).not.toBe(first.playerId);
+
+		expect(handleUpdateAvatar(hub, first.playerId, { avatar: JPEG }).ok).toBe(
+			true,
+		);
+		const code = hub.activeCodes()[0]!;
+		expect(hub.getSala(code)!.getPlayer(second.playerId)!.avatar).toBeUndefined();
+		const state = hub.getSala(code)!.toState();
+		expect(
+			state.players.find((p) => p.id === first.playerId)?.avatar,
+		).toBe(JPEG);
+		expect(
+			state.players.find((p) => p.id === second.playerId)?.avatar ?? null,
+		).toBeNull();
 	});
 });
 
