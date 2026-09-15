@@ -1,5 +1,6 @@
 import { CheckIcon, CrownIcon, UserRoundIcon } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { ProjectileType } from "@/lib/protocol";
 import { ProjectileMenu } from "./projectile-menu";
@@ -12,6 +13,8 @@ export interface TablePlayer {
   hasVoted: boolean;
   value?: string | null;
   status: "connected" | "disconnected";
+  /** Avatar dataURL. Ausente, null ou com erro de load = iniciais. */
+  avatar?: string | null;
 }
 
 interface PokerTableProps {
@@ -46,6 +49,38 @@ const DEMO_SEATS = [
   [27, 91],
 ];
 
+/**
+ * Círculo do assento (AV-04): img cover quando há avatar válido, iniciais
+ * como fallback (sem avatar, null ou erro de load). Mesma classe
+ * `.poker-avatar` e mesma âncora de projéteis.
+ */
+function SeatAvatar({
+  player,
+  isHost,
+  anchor,
+}: {
+  player: TablePlayer;
+  isHost: boolean;
+  anchor: string | undefined;
+}): React.ReactElement {
+  const [broken, setBroken] = useState(false);
+  return (
+    <span className="poker-avatar" data-projectile-player={anchor}>
+      {player.avatar && !broken ? (
+        <img
+          src={player.avatar}
+          alt={player.nick}
+          className="poker-avatar-img"
+          onError={() => setBroken(true)}
+        />
+      ) : (
+        player.nick.slice(0, 2).toUpperCase()
+      )}
+      {isHost && <CrownIcon className="poker-crown" aria-label="Host" />}
+    </span>
+  );
+}
+
 export function PokerTable({
   seats,
   playerId,
@@ -79,10 +114,11 @@ export function PokerTable({
             !!player && !disconnected && revealed && player.value != null;
           const identity = player && (
             <>
-              <span className="poker-avatar" data-projectile-player={compact ? undefined : player.id}>
-                {player.nick.slice(0, 2).toUpperCase()}
-                {isHost && <CrownIcon className="poker-crown" aria-label="Host" />}
-              </span>
+              <SeatAvatar
+                player={player}
+                isHost={isHost}
+                anchor={compact ? undefined : player.id}
+              />
               <span className="poker-name">{player.nick}</span>
             </>
           );

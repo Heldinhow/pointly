@@ -271,11 +271,13 @@ T7 → T8 → T9
 
 **Done when**:
 
-- [ ] Com avatar renderiza img object-fit cover 44px no lugar das iniciais
-- [ ] Sem avatar ou com erro de load exibe iniciais
-- [ ] Layout/âncora de projéteis inalterados
-- [ ] Gate check passes: `bun --filter pointly-web test`
-- [ ] Test count: ≥4 tests pass (com avatar, sem avatar, onError, âncora)
+- [x] Com avatar renderiza img object-fit cover 44px no lugar das iniciais
+- [x] Sem avatar ou com erro de load exibe iniciais
+- [x] Layout/âncora de projéteis inalterados
+- [x] Gate check passes: `bun --filter pointly-web test`
+- [x] Test count: ≥4 tests pass (com avatar, sem avatar, onError, âncora)
+
+**Status**: ✅ Complete (T8)
 
 **Tests**: unit
 **Gate**: quick

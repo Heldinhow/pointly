@@ -70,6 +70,14 @@
   font-size: 13px;
   font-weight: 650;
 }
+/* Foto no mesmo círculo 44px: cover preenche sem deformar; o raio vai no
+   img (overflow no pai cortaria a coroa do host, filha do círculo). */
+.poker-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
 .poker-seat-identity,
 button.poker-seat-target {
   display: flex;
