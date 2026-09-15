@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 2,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "surviving_mutant::mock de canvas que retorna dataurl fixa sem capturar args esconde regressao de dims qualidade capture canvas width height args do todataurl e do drawimage e asserte os valores da spec",
+      "text": "Mock de canvas que retorna dataURL fixa sem capturar args esconde regressao de dims/qualidade: capture canvas.width/height, args do toDataURL e do drawImage e asserte os valores da spec.",
+      "signal": "surviving_mutant",
+      "scope": "apps/web/src/lib",
+      "status": "candidate",
+      "features": [
+        "avatar-perfil-mesa"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "apps/web/src/lib/avatar.test.ts:26 (apps/web/src/lib)"
+      ],
+      "created": "2026-09-15T20:05:05Z",
+      "last_seen": "2026-09-15T20:05:05Z"
+    }
+  ]
+}

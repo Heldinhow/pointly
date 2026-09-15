@@ -114,20 +114,20 @@ Every ambiguity is resolved or recorded here - nothing is left silently unclear.
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| AV-01 | P1: join + normalização 128px | Design | Pending |
-| AV-02 | P1: persist localStorage + hello | Design | Pending |
-| AV-03 | P1: protocolo avatar teto 40KB | Design | Pending |
-| AV-04 | P1: render mesa img + fallback | Design | Pending |
-| AV-05 | P1: picker join + erro inline | Design | Pending |
-| AV-06 | P2: update_avatar + broadcast | Design | Pending |
-| AV-07 | P2: remover + onError iniciais | Design | Pending |
-| AV-08 | P3: espectador lista + microcopy | Design | Pending |
+| AV-01 | P1: join + normalização 128px | T5, T7 | Verified |
+| AV-02 | P1: persist localStorage + hello | T3, T5, T6 | Verified |
+| AV-03 | P1: protocolo avatar teto 40KB | T1, T2 | Verified |
+| AV-04 | P1: render mesa img + fallback | T8 | Verified |
+| AV-05 | P1: picker join + erro inline | T7, T9 | Verified |
+| AV-06 | P2: update_avatar + broadcast | T4, T6, T9 | Verified |
+| AV-07 | P2: remover + onError iniciais | T4, T8, T9 | Verified |
+| AV-08 | P3: espectador lista + microcopy | T7, T9 | Verified |
 
 **ID format:** `[CATEGORY]-[NUMBER]` (e.g., `AUTH-01`, `CART-03`, `NOTIF-02`)
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 8 total, 0 mapped to tasks, 8 unmapped ⚠️
+**Coverage:** 8 total, 9 mapped to tasks, 0 unmapped
 
 ---
 
