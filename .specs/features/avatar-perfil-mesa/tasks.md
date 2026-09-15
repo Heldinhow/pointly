@@ -83,10 +83,12 @@ T7 → T8 → T9
 
 **Done when**:
 
-- [ ] AvatarSchema exportado com regex dataURL + max ~40000
-- [ ] PlayerSchema aceita avatar opcional/nullable e rejeita acima do teto
-- [ ] Gate check passes: `bun --filter @planning-poker/shared test`
-- [ ] Test count: ≥6 tests pass (válido jpeg/png/webp, inválido gif/svg, teto, ausente, null)
+- [x] AvatarSchema exportado com regex dataURL + max ~40000
+- [x] PlayerSchema aceita avatar opcional/nullable e rejeita acima do teto
+- [x] Gate check passes: `bun --filter @planning-poker/shared test`
+- [x] Test count: ≥6 tests pass (válido jpeg/png/webp, inválido gif/svg, teto, ausente, null)
+
+**Status**: ✅ Complete (T1)
 
 **Tests**: unit
 **Gate**: quick

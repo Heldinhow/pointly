@@ -49,6 +49,21 @@ export const RoleSchema = z.enum(["host", "player", "spectator"]);
  */
 export const PlayerStatusSchema = z.enum(["connected", "disconnected"]);
 
+/**
+ * Avatar do player: dataURL normalizada (128x128 JPEG q0.8 via canvas).
+ * Entrada png/jpeg/webp; teto ~40KB evita estouro do room_state x24.
+ * Ausente ou null = iniciais do Apelido (fallback).
+ *
+ * @see .specs/features/avatar-perfil-mesa/spec.md (AV-03)
+ */
+export const AvatarSchema = z
+	.string()
+	.regex(
+		/^data:image\/(jpeg|png|webp);base64,/,
+		"avatar: dataURL jpeg/png/webp",
+	)
+	.max(40000, "avatar: máximo ~40KB");
+
 // ---------------------------------------------------------------------------
 // Deck + Vote
 // ---------------------------------------------------------------------------
@@ -117,6 +132,8 @@ export const PlayerSchema = z.object({
 	value: VoteSchema.nullable(),
 	/** conexão WS momentânea. disconnected > 60s = remoção (T12a). */
 	status: PlayerStatusSchema,
+	/** avatar opcional (dataURL teto ~40KB). Ausente/null = iniciais. */
+	avatar: AvatarSchema.optional().nullable(),
 	/** epoch ms. Usado por promoteOldestPlayer (T12a) e ordenação. */
 	joinedAt: z.number().int().positive(),
 });
