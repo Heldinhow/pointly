@@ -1801,6 +1801,33 @@ describe("ArenaPage (espectador)", () => {
 		expect(line.textContent).toMatch(/Olho/);
 	});
 
+	test("erro de load no avatar do espectador volta para as iniciais", () => {
+		const socket = new FakeSocket();
+		const ana = player({ id: "p_ana", nick: "Ana", role: "host" }, 0);
+		const olho = player(
+			{
+				id: "p_olho",
+				nick: "Olho",
+				role: "spectator",
+				seatIndex: -1,
+				avatar: "data:image/jpeg;base64,AAA",
+			},
+			-1,
+		);
+		seed({
+			sala: sala({ players: [ana, olho], phase: "voting", timer: 55 }),
+			playerId: olho.id,
+			socket,
+			nick: "Olho",
+		});
+		renderArena();
+
+		const line = screen.getByTestId("spectators-line");
+		fireEvent.error(line.querySelector("img.arena-spectator-avatar")!);
+		expect(line.querySelector("img.arena-spectator-avatar")).toBeNull();
+		expect(line.textContent).toMatch(/OL/);
+	});
+
 	test("espectador sem avatar mostra iniciais na lista", () => {
 		const socket = new FakeSocket();
 		const ana = player({ id: "p_ana", nick: "Ana", role: "host" }, 0);
