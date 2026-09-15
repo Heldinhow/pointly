@@ -40,8 +40,9 @@ export const NickSchema = z
 
 /**
  * Papel dentro da sala. v2 democratico: host é só criador (ADR 0002 grilling).
+ * spectator assiste e reage, mas não vota nem ocupa assento (seatIndex -1).
  */
-export const RoleSchema = z.enum(["host", "player"]);
+export const RoleSchema = z.enum(["host", "player", "spectator"]);
 
 /**
  * Conexão WS momentânea — sala "limpa" players disconnected > 60s (T12a).
@@ -107,8 +108,9 @@ export const PlayerSchema = z.object({
 	/** apelido visível */
 	nick: NickSchema,
 	role: RoleSchema,
-	/** posição fixa na mesa (0..11). Atribuída no hello handler (T13). */
-	seatIndex: z.number().int().min(0).max(11),
+	/** posição fixa na mesa (0..11). Atribuída no hello handler (T13).
+	 * Espectador usa -1: assiste sem ocupar assento nem contar no quórum. */
+	seatIndex: z.number().int().min(-1).max(11),
 	/** voto já registrado nesta rodada. Limpo em start_new_round (T16). */
 	hasVoted: z.boolean(),
 	/** voto escolhido. `null` quando `hasVoted: false` ou un-voted. */
@@ -138,7 +140,7 @@ export const SalaStateSchema = z.object({
 	code: RoomCodeSchema,
 	/** ID do player host (criador). Pode ser null brevemente durante cleanup (T18). */
 	hostId: z.string().nullable(),
-	players: z.array(PlayerSchema).max(12),
+	players: z.array(PlayerSchema).max(24),
 	phase: PhaseSchema,
 	/** contador da rodada (1-based). Incrementa em start_new_round (T16). */
 	round: z.number().int().min(0),

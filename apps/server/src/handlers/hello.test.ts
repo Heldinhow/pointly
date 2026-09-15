@@ -257,3 +257,72 @@ describe("handleHello — reconnect (T13a, F-037/F-038)", () => {
 		}
 	});
 });
+
+describe("handleHello — espectador", () => {
+	test("join com spectate atribui role spectator e seat -1", () => {
+		const create = handleHello(hub, hello(UUID_P1, "Ana"));
+		expect(create.ok).toBe(true);
+		const code = hub.activeCodes()[0]!;
+		const join = handleHello(hub, {
+			uuid: UUID_P2,
+			nick: "Beto",
+			code,
+			spectate: true,
+		});
+		expect(join.ok).toBe(true);
+		if (join.ok) {
+			expect(join.role).toBe("spectator");
+			const spec = join.sala.players.find((p) => p.nick === "Beto");
+			expect(spec?.seatIndex).toBe(-1);
+		}
+	});
+
+	test("espectador não consome assento nem entra no limite de 12", () => {
+		const create = handleHello(hub, hello(UUID_P1, "Ana"));
+		expect(create.ok).toBe(true);
+		const code = hub.activeCodes()[0]!;
+		for (let i = 2; i <= SALA_SEAT_COUNT; i++) {
+			const uuid = `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`;
+			const r = handleHello(hub, hello(uuid, `P${i}`, code));
+			expect(r.ok).toBe(true);
+		}
+		const spec = handleHello(hub, {
+			uuid: "00000000-0000-4000-8000-999999999999",
+			nick: "Olho",
+			code,
+			spectate: true,
+		});
+		expect(spec.ok).toBe(true);
+	});
+
+	test("spectate sem code cria a sala como espectador sem host", () => {
+		const result = handleHello(hub, {
+			uuid: UUID_P1,
+			nick: "Ana",
+			spectate: true,
+		});
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(result.role).toBe("spectator");
+			expect(result.sala.hostId).toBeNull();
+			expect(result.sala.players).toHaveLength(1);
+		}
+	});
+
+	test("primeiro votante assume o host em sala criada por espectador", () => {
+		const spec = handleHello(hub, {
+			uuid: UUID_P1,
+			nick: "Olho",
+			spectate: true,
+		});
+		expect(spec.ok).toBe(true);
+		if (!spec.ok) return;
+		const code = hub.activeCodes()[0]!;
+		const join = handleHello(hub, hello(UUID_P2, "Beto", code));
+		expect(join.ok).toBe(true);
+		if (join.ok) {
+			expect(join.role).toBe("host");
+			expect(join.sala.hostId).toBe(join.playerId);
+		}
+	});
+});

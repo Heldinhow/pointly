@@ -146,6 +146,45 @@
 .join-otp {
   margin-top: 2px;
 }
+.join-spectate {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  cursor: pointer;
+}
+.join-spectate input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--primary);
+}
+.join-spectate-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.join-spectate-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.join-spectate-title svg {
+  width: 16px;
+  height: 16px;
+  color: var(--muted-foreground);
+}
+.join-spectate-hint {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
 .join-otp input {
   min-width: 0;
   min-height: 50px;

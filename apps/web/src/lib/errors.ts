@@ -17,6 +17,7 @@ const FRIENDLY_MESSAGES: Record<string, string> = {
 	sala_cheia: "Sala cheia. Peça outro código ao time.",
 	invalid_nick: "Apelido inválido. Use de 2 a 20 caracteres.",
 	invalid_code: "Código inválido. Use 4 letras ou números.",
+	role_denied: "Espectadores não votam. Para votar, saia e entre como jogador.",
 	rate_limited: "Muitas tentativas. Aguarde um segundo e tente de novo.",
 	connection_failed:
 		"Sem conexão com o servidor. Confira sua internet e tente de novo.",

@@ -25,7 +25,7 @@ export type HelloOutcome =
 			ok: true;
 			playerId: string;
 			sala: SalaState & { critical: boolean };
-			role: "host" | "player";
+			role: "host" | "player" | "spectator";
 			reconnected: boolean;
 	  }
 	| {
@@ -82,14 +82,17 @@ export function handleHello(hub: Hub, payload: HelloPayload): HelloOutcome {
 		// UUID em outra sala + code presente → treat as fresh join attempt
 	}
 
-	// 3. Constrói Player (id gerado agora; sala pode atribuir outro seatIndex)
+	// 3. Constrói Player (id gerado agora; sala pode atribuir outro seatIndex).
+	// spectate vale tanto no join quanto na criação (criar como espectador
+	// abre a sala sem host até o primeiro votante entrar e assumir).
+	const wantSpectate = payload.spectate === true;
 	const playerId = makePlayerId();
 	const candidate: Player = {
 		id: playerId,
 		uuid,
 		nick,
-		role: payload.code ? "player" : "host", // host só se criando (sem code)
-		seatIndex: 0, // sala preenche (first free)
+		role: wantSpectate ? "spectator" : payload.code ? "player" : "host",
+		seatIndex: wantSpectate ? -1 : 0, // sala preenche (first free) para votantes
 		hasVoted: false,
 		value: null,
 		status: "connected",
@@ -98,15 +101,14 @@ export function handleHello(hub: Hub, payload: HelloPayload): HelloOutcome {
 
 	try {
 		if (!payload.code) {
-			// 4a. Criar sala (host)
-			const { sala: newSala } = hub.createSala({
-				...candidate,
-				role: "host",
-			});
+			// 4a. Criar sala (host ou espectador sem host)
+			const { sala: newSala } = hub.createSala(candidate);
+			const created = newSala.getPlayer(playerId);
+			const finalRole = created?.role ?? candidate.role;
 			return {
 				ok: true,
 				playerId,
-				role: "host",
+				role: finalRole,
 				sala: newSala.toState(),
 				reconnected: false,
 			};
@@ -114,10 +116,12 @@ export function handleHello(hub: Hub, payload: HelloPayload): HelloOutcome {
 
 		// 4b. Join com código
 		const { sala } = hub.addPlayer(payload.code, candidate);
+		const seated = sala.getPlayer(playerId);
+		const finalRole = seated?.role ?? candidate.role;
 		return {
 			ok: true,
 			playerId,
-			role: "player",
+			role: finalRole,
 			sala: sala.toState(),
 			reconnected: false,
 		};

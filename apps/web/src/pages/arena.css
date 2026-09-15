@@ -178,6 +178,25 @@
 .arena-self strong {
   color: var(--foreground);
 }
+.arena-spectators {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+  padding-block: 2px;
+}
+.arena-spectators svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.arena-spectators strong {
+  color: var(--foreground);
+  font-weight: 600;
+}
 .arena-sidebar > [data-slot="card"] {
   box-shadow: none;
   gap: 0;

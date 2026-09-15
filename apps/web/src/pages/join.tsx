@@ -1,4 +1,4 @@
-import { CircleAlertIcon } from "lucide-react";
+import { CircleAlertIcon, EyeIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -51,6 +51,7 @@ export function JoinPage(): React.ReactElement {
   const [code, setCode] = useState(() =>
     normalizeCode(searchParams.get("code") ?? ""),
   );
+  const [spectate, setSpectate] = useState(false);
   const [nickError, setNickError] = useState<string | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -154,6 +155,7 @@ export function JoinPage(): React.ReactElement {
         uuid,
         nick: nickResult.data,
         ...(codeValue ? { code: codeValue } : {}),
+        ...(spectate ? { spectate: true as const } : {}),
       });
       setConnected({
         nick: nickResult.data,
@@ -162,6 +164,7 @@ export function JoinPage(): React.ReactElement {
         role: welcome.role,
         sala: welcome.sala,
         socket,
+        spectate: welcome.role === "spectator",
       });
       navigatedRef.current = true;
       navigate(`/s/${welcome.sala.code}`);
@@ -287,6 +290,26 @@ export function JoinPage(): React.ReactElement {
                 </FieldError>
               ) : null}
             </Field>
+
+            <label className="join-spectate" htmlFor="spectate">
+              <input
+                id="spectate"
+                name="spectate"
+                type="checkbox"
+                checked={spectate}
+                disabled={busy}
+                onChange={(event) => setSpectate(event.target.checked)}
+              />
+              <span className="join-spectate-text">
+                <span className="join-spectate-title">
+                  <EyeIcon aria-hidden="true" />
+                  Entrar como espectador
+                </span>
+                <span className="join-spectate-hint">
+                  Assiste e reage, mas não vota nem ocupa assento.
+                </span>
+              </span>
+            </label>
 
             {mode === "join" ? (
               <Field invalid={codeError !== null}>

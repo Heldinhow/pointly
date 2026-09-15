@@ -123,13 +123,18 @@ describe("PlayerSchema", () => {
 		expect(PlayerSchema.parse(voted)).toEqual(voted);
 	});
 
-	test("rejeita seatIndex fora de 0..11", () => {
+	test("rejeita seatIndex fora de -1..11", () => {
 		expect(
 			PlayerSchema.safeParse({ ...validPlayer, seatIndex: 12 }).success,
 		).toBe(false);
 		expect(
-			PlayerSchema.safeParse({ ...validPlayer, seatIndex: -1 }).success,
+			PlayerSchema.safeParse({ ...validPlayer, seatIndex: -2 }).success,
 		).toBe(false);
+	});
+
+	test("aceita seatIndex -1 para espectador", () => {
+		const spec = { ...validPlayer, role: "spectator" as const, seatIndex: -1 };
+		expect(PlayerSchema.safeParse(spec).success).toBe(true);
 	});
 
 	test("rejeita status desconhecido", () => {

@@ -68,16 +68,17 @@ export function saveNickDraft(nick: string): void {
 export interface PersistedSession {
 	code: string;
 	nick: string;
+	spectate?: boolean;
 }
 
-export function saveSession(code: string, nick: string): void {
+export function saveSession(code: string, nick: string, spectate = false): void {
 	const normalized = normalizeCode(code);
 	if (!isValidCode(normalized)) return;
 	const trimmed = nick.trim();
 	if (trimmed.length < 2) return;
 	writeStored(
 		SESSION_KEY,
-		JSON.stringify({ code: normalized, nick: trimmed }),
+		JSON.stringify({ code: normalized, nick: trimmed, ...(spectate ? { spectate: true } : {}) }),
 	);
 }
 
@@ -94,7 +95,11 @@ export function loadSession(): PersistedSession | null {
 		) {
 			return null;
 		}
-		return { code: normalizeCode(parsed.code), nick: parsed.nick.trim() };
+		return {
+			code: normalizeCode(parsed.code),
+			nick: parsed.nick.trim(),
+			...(parsed.spectate === true ? { spectate: true as const } : {}),
+		};
 	} catch {
 		return null;
 	}

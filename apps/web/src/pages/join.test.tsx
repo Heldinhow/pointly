@@ -216,4 +216,42 @@ describe("JoinPage", () => {
 			(screen.getByLabelText("Apelido") as HTMLInputElement).value,
 		).toBe("Dev");
 	});
+
+	test("modo join mostra entrar como espectador e envia spectate no hello", async () => {
+		installMocks((async () =>
+			new Response(
+				JSON.stringify({ exists: true, playerCount: 1, phase: "idle" }),
+				{ status: 200 },
+			)) as unknown as typeof fetch);
+		renderJoin("/join?mode=join");
+		const toggle = screen.getByLabelText(/Entrar como espectador/) as HTMLInputElement;
+		expect(toggle.checked).toBe(false);
+		fireEvent.click(toggle);
+		expect(toggle.checked).toBe(true);
+		fireEvent.change(screen.getByLabelText("Apelido"), {
+			target: { value: "Olho" },
+		});
+		const slots = document.querySelectorAll('input[inputmode="text"]');
+		for (const [i, ch] of ["A", "B", "1", "2"].entries()) {
+			fireEvent.change(slots[i]!, { target: { value: ch } });
+		}
+		fireEvent.click(submitButton("Entrar na sala"));
+		await waitFor(() => expect(MockSocket.instances).toHaveLength(1));
+		const socket = MockSocket.instances[0]!;
+		await act(async () => {
+			socket.open();
+			socket.receive(welcomeMessage("AB12"));
+		});
+		const hello = JSON.parse(socket.sent[0] as string) as {
+			type: string;
+			payload: { nick: string; code: string; spectate?: boolean };
+		};
+		expect(hello.payload.spectate).toBe(true);
+	});
+
+	test("modo create mostra entrar como espectador", () => {
+		installMocks(jsonFetch(200, {}));
+		renderJoin("/join");
+		expect(screen.getByLabelText(/Entrar como espectador/)).toBeTruthy();
+	});
 });

@@ -126,6 +126,22 @@ describe("handleCastVote — rejeições", () => {
 		expect(result.ok).toBe(false);
 		if (!result.ok) expect(result.code).toBe("invalid_vote");
 	});
+
+	test("rejeita voto de espectador com role_denied", () => {
+		const create = handleHello(hub, { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" });
+		if (!create.ok) throw new Error("expected create ok");
+		const code = hub.activeCodes()[0]!;
+		const spec = handleHello(hub, {
+			uuid: "00000000-0000-4000-8000-000000000002",
+			nick: "Olho",
+			code,
+			spectate: true,
+		});
+		if (!spec.ok) throw new Error("expected spectator ok");
+		const result = handleCastVote(hub, spec.playerId, { value: "5" });
+		expect(result.ok).toBe(false);
+		if (!result.ok) expect(result.code).toBe("role_denied");
+	});
 });
 
 // ---------------------------------------------------------------------------

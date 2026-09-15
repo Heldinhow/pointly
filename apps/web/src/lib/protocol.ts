@@ -6,7 +6,7 @@
  * schemas do servidor — a suíte de testes do servidor é a especificação.
  */
 
-export type Role = "host" | "player";
+export type Role = "host" | "player" | "spectator";
 export type Phase = "idle" | "voting" | "revealable" | "revealed";
 export type PlayerStatus = "connected" | "disconnected";
 
@@ -69,6 +69,7 @@ export interface HelloPayload {
 	uuid: string;
 	nick: string;
 	code?: string;
+	spectate?: boolean;
 }
 
 export interface WelcomePayload {
@@ -232,7 +233,9 @@ export function parseServerEvent(raw: string): ServerToClientEvent | null {
 			const payload = record.payload as Record<string, unknown>;
 			if (
 				typeof payload.playerId !== "string" ||
-				(payload.role !== "host" && payload.role !== "player")
+				(payload.role !== "host" &&
+					payload.role !== "player" &&
+					payload.role !== "spectator")
 			) {
 				return null;
 			}

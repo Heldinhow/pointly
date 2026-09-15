@@ -5,6 +5,7 @@ import { DECK_VALUES, voteLabel, type Vote } from "@/lib/deck";
 export interface DeckProps {
 	currentVote: Vote | string | null;
 	onSelect: (value: Vote) => void;
+	disabled?: boolean;
 }
 
 const DECK_GROUPS: Array<{ label: string; values: Vote[] }> = [
@@ -13,12 +14,13 @@ const DECK_GROUPS: Array<{ label: string; values: Vote[] }> = [
 	{ label: "Pausa", values: ["☕"] },
 ];
 
-export function Deck({ currentVote, onSelect }: DeckProps): React.ReactElement {
+export function Deck({ currentVote, onSelect, disabled = false }: DeckProps): React.ReactElement {
 	return (
 		<div
 			data-testid="deck"
 			role="group"
 			aria-label="Cartas de estimativa"
+			aria-disabled={disabled ? true : undefined}
 			className="flex flex-col gap-3"
 		>
 			<div className="flex flex-wrap items-end justify-center gap-x-4 gap-y-3">
@@ -39,6 +41,8 @@ export function Deck({ currentVote, onSelect }: DeckProps): React.ReactElement {
 									data-testid={`deck-card-${value}`}
 									aria-pressed={selected ? "true" : "false"}
 									aria-label={voteLabel(value)}
+									aria-disabled={disabled ? true : undefined}
+									disabled={disabled}
 									title={isPause ? "Pausa — fora da média" : `Votar ${value}`}
 									onClick={() => onSelect(value)}
 								className={cn(

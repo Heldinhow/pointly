@@ -34,6 +34,7 @@ interface SessionState {
 		role: Role;
 		sala: SalaState;
 		socket: PointlySocket;
+		spectate?: boolean;
 	}) => void;
 	updateSala: (sala: SalaState) => void;
 	disconnect: () => void;
@@ -55,7 +56,7 @@ export const useSession = create<SessionState>()((set) => ({
 
 	setConnected: (input) => {
 		saveNickDraft(input.nick);
-		saveSession(input.code, input.nick);
+		saveSession(input.code, input.nick, input.spectate === true || input.role === "spectator");
 		set({
 			nick: input.nick,
 			code: input.code,

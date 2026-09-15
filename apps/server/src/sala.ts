@@ -45,6 +45,7 @@ export class SalaError extends Error {
 		| "sala_nao_encontrada"
 		| "invalid_phase"
 		| "invalid_vote"
+		| "role_denied"
 		| "invalid_nick";
 	constructor(code: SalaError["code"], message: string) {
 		super(message);
@@ -60,6 +61,8 @@ export class SalaError extends Error {
 const SEAT_COUNT = 12;
 const TIMER_SECONDS = 60;
 const DISCONNECT_GRACE_MS = 60_000;
+/** Espectadores extras além dos 12 assentos (não votam, seatIndex -1). */
+const SPECTATOR_CAP = 12;
 
 export type RevealOutcome = VotesRevealedEvent;
 
@@ -109,13 +112,18 @@ export class Sala {
 	private consensusDirty: boolean = false;
 
 	constructor(code: string, firstPlayer: Player, now: number = Date.now()) {
-		if (firstPlayer.role !== "host") {
-			throw new Error("first player must have role: 'host'");
+		if (firstPlayer.role !== "host" && firstPlayer.role !== "spectator") {
+			throw new Error("first player must have role: 'host' or 'spectator'");
 		}
 		this.code = code;
 		this.createdAt = now;
-		this.hostId = firstPlayer.id;
-		this.players.set(firstPlayer.id, firstPlayer);
+		if (firstPlayer.role === "spectator") {
+			this.hostId = null;
+			this.players.set(firstPlayer.id, { ...firstPlayer, seatIndex: -1 });
+		} else {
+			this.hostId = firstPlayer.id;
+			this.players.set(firstPlayer.id, firstPlayer);
+		}
 	}
 
 	// -----------------------------------------------------------------------
@@ -124,19 +132,44 @@ export class Sala {
 
 	/**
 	 * Adiciona player à sala. Lança `SalaError` se sala cheia (sala_cheia).
-	 * Atribui `seatIndex` no primeiro assento livre (F-027).
+	 * Votantes (host/player) ocupam assento 0..11, limite 12.
+	 * Espectadores usam seatIndex -1, não ocupam assento nem contam no
+	 * limite de 12 — limite duro total 24 para evitar broadcast gigante.
 	 */
 	addPlayer(player: Player): Player {
-		if (this.players.size >= SEAT_COUNT) {
+		if (player.role === "spectator") {
+			if (this.players.size >= SEAT_COUNT + SPECTATOR_CAP) {
+				throw new SalaError(
+					"sala_cheia",
+					`Sala ${this.code} cheia para espectadores.`,
+				);
+			}
+			const watching: Player = { ...player, seatIndex: -1 };
+			this.players.set(watching.id, watching);
+			return watching;
+		}
+		let seatedCount = 0;
+		for (const p of this.players.values()) {
+			if (p.seatIndex >= 0) seatedCount += 1;
+		}
+		if (seatedCount >= SEAT_COUNT) {
 			throw new SalaError(
 				"sala_cheia",
 				`Sala ${this.code} tem ${SEAT_COUNT}/${SEAT_COUNT} jogadores.`,
 			);
 		}
 		const seatIndex = this.firstFreeSeat();
-		const seated: Player = { ...player, seatIndex };
-		this.players.set(seated.id, seated);
-		return seated;
+		const base: Player = { ...player, seatIndex };
+		// Sala criada por espectador fica sem host até o primeiro votante
+		// entrar — esse votante assume o host automaticamente.
+		if (this.hostId == null) {
+			const hosted: Player = { ...base, role: "host" };
+			this.players.set(hosted.id, hosted);
+			this.hostId = hosted.id;
+			return hosted;
+		}
+		this.players.set(base.id, base);
+		return base;
 	}
 
 	/**
@@ -153,11 +186,13 @@ export class Sala {
 		this.disconnectedAt.delete(playerId);
 
 		// Host saiu e ainda há outros → promove mais antigo
-		const promoted =
-			this.players.size > 0 && this.hostId === playerId
-				? this.promoteOldestPlayer()
-				: null;
-		const promotedId = promoted?.id ?? null;
+		// (espectador nunca vira host; se só restarem espectadores, hostId zera).
+		let promoted: string | null = null;
+		if (this.players.size > 0 && this.hostId === playerId) {
+			promoted = this.promoteOldestPlayer()?.id ?? null;
+			if (promoted == null) this.hostId = null;
+		}
+		const promotedId = promoted;
 
 		// Sala ficou vazia: limpa hostId e reseta estado
 		if (this.players.size === 0) {
@@ -233,11 +268,12 @@ export class Sala {
 	}
 
 	/**
-	 * Promove o player com menor `joinedAt` a host. Null se sala vazia.
-	 * Idempotente: se já existe um host válido, retorna esse host sem mexer.
+	 * Promove o votante com menor `joinedAt` a host. Null se sala vazia
+	 * ou só com espectadores. Idempotente: se já existe um host válido,
+	 * retorna esse host sem mexer.
 	 *
 	 * F-048 (grilling 2026-07-04): host é "criador", não "governante".
-	 * Reveal/new_round continuam democráticos.
+	 * Reveal/new_round continuam democráticos. Espectador nunca vira host.
 	 */
 	promoteOldestPlayer(): Player | null {
 		if (this.players.size === 0) return null;
@@ -247,6 +283,7 @@ export class Sala {
 		}
 		let oldest: Player | null = null;
 		for (const p of this.players.values()) {
+			if (p.role === "spectator") continue;
 			if (!oldest || p.joinedAt < oldest.joinedAt) oldest = p;
 		}
 		if (!oldest) return null;
@@ -288,6 +325,16 @@ export class Sala {
 	 *   validação.
 	 */
 	castVote(playerId: string, value: Vote | null): { changed: boolean } {
+		const player = this.players.get(playerId);
+		if (!player) {
+			throw new SalaError(
+				"invalid_vote",
+				`Player ${playerId} não está na sala.`,
+			);
+		}
+		if (player.role === "spectator") {
+			throw new SalaError("role_denied", "Espectadores não votam.");
+		}
 		if (value === null) {
 			throw new SalaError("invalid_vote", "Un-vote (value=null) é proibido.");
 		}
@@ -303,14 +350,6 @@ export class Sala {
 			throw new SalaError(
 				"invalid_phase",
 				`invalid_phase: cast_vote requer phase=idle|voting|revealable; atual=${this.phase}`,
-			);
-		}
-
-		const player = this.players.get(playerId);
-		if (!player) {
-			throw new SalaError(
-				"invalid_vote",
-				`Player ${playerId} não está na sala.`,
 			);
 		}
 
@@ -490,14 +529,15 @@ export class Sala {
 	// -----------------------------------------------------------------------
 
 	/**
-	 * Verdade se todos os players conectados votaram. Usado na transição
-	 * voting → revealable. Players disconnected (grace period) não contam.
+	 * Verdade se todos os votantes conectados votaram. Usado na transição
+	 * voting → revealable. Disconnected e spectators não contam.
 	 */
 	private allConnectedVoted(): boolean {
 		let connectedCount = 0;
 		let connectedVoted = 0;
 		for (const p of this.players.values()) {
 			if (p.status !== "connected") continue;
+			if (p.role === "spectator") continue;
 			connectedCount += 1;
 			if (p.hasVoted) connectedVoted += 1;
 		}
@@ -606,6 +646,8 @@ export function computeFirstFreeSeat(players: readonly Player[]): number {
  * Constante exportada para hubs/UI: 12 assentos é o limite duro.
  */
 export const SALA_SEAT_COUNT = SEAT_COUNT;
+/** Espectadores extras além dos 12 assentos. */
+export const SALA_SPECTATOR_CAP = SPECTATOR_CAP;
 /** Constante: timer inicial / máximo em segundos. */
 export const SALA_TIMER_SECONDS = TIMER_SECONDS;
 /** Constante: grace period pra remover player disconnected. */

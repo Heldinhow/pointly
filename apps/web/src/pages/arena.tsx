@@ -534,17 +534,26 @@ export function ArenaPage(): React.ReactElement {
 
   const players = sala.players;
   const connected = players.filter((p) => p.status === "connected");
-  const voted = connected.filter((p) => p.hasVoted).length;
+  const voters = players.filter((p) => p.role !== "spectator");
+  const spectators = players.filter((p) => p.role === "spectator");
+  const connectedVoters = voters.filter((p) => p.status === "connected");
+  const connectedSpectators = spectators.filter(
+    (p) => p.status === "connected",
+  );
+  const voted = connectedVoters.filter((p) => p.hasVoted).length;
   const solo = connected.length <= 1;
   const critical = isTimerCritical(sala.phase, sala.timer);
   const showInvite = !inviteHidden || !solo;
   const self = players.find((p) => p.id === playerId) ?? null;
+  const isSpectator = self?.role === "spectator";
   const host = players.find((p) => p.id === sala.hostId) ?? null;
   // Papel derivado do snapshot ao vivo (promoção de host chega via
   // room_state) · nunca do `role` guardado no welcome.
   const isSelfHost = playerId !== null && sala.hostId === playerId;
 
-  const bySeat = new Map(players.map((p) => [p.seatIndex, p] as const));
+  const bySeat = new Map(
+    voters.filter((p) => p.seatIndex >= 0).map((p) => [p.seatIndex, p] as const),
+  );
   const seats: Array<Player | null> = Array.from(
     { length: SEAT_COUNT },
     (_, index) => bySeat.get(index) ?? null,
@@ -612,6 +621,12 @@ export function ArenaPage(): React.ReactElement {
   }
 
   function handleCardSelect(value: Vote): void {
+    if (isSpectator) {
+      setVoteError(
+        "Espectadores não votam. Para votar, saia e entre como jogador.",
+      );
+      return;
+    }
     // Mesma carta em duplo clique é no-op: mantém o voto sem
     // removê-lo e sem broadcast (espelha EVR-14 do servidor).
     if (currentVote === value) return;
@@ -713,8 +728,20 @@ export function ArenaPage(): React.ReactElement {
         <div className="arena-live-status">
           <span data-testid="presence-line" aria-live="polite">
             <UsersIcon aria-hidden="true" />
-            {connected.length} na sala · {voted}{" "}
-            {voted === 1 ? "votou" : "votaram"}
+            {connectedSpectators.length > 0 ? (
+              <>
+                {connectedVoters.length}{" "}
+                {connectedVoters.length === 1 ? "jogando" : "jogando"} ·{" "}
+                {connectedSpectators.length}{" "}
+                {connectedSpectators.length === 1 ? "assistindo" : "assistindo"}{" "}
+                · {voted} {voted === 1 ? "votou" : "votaram"}
+              </>
+            ) : (
+              <>
+                {connected.length} na sala · {voted}{" "}
+                {voted === 1 ? "votou" : "votaram"}
+              </>
+            )}
           </span>
           <span
             className={
@@ -750,7 +777,7 @@ export function ArenaPage(): React.ReactElement {
         >
           <div className="arena-table-caption">
             <span>Mesa de planning poker</span>
-            <span>{connected.length} de 12 lugares</span>
+            <span>{connectedVoters.length} de 12 lugares</span>
           </div>
           <PokerTable
             seats={seats}
@@ -822,18 +849,26 @@ export function ArenaPage(): React.ReactElement {
           </PokerTable>
           <Card className="arena-deck">
             <CardHeader>
-              <CardTitle className="text-base">Sua estimativa</CardTitle>
+              <CardTitle className="text-base">
+                {isSpectator ? "Você está assistindo" : "Sua estimativa"}
+              </CardTitle>
               <CardDescription data-testid="deck-selection" aria-live="polite">
-                {!isRevealed && currentVote === null
-                  ? "Escolha uma carta para votar. Dá para trocar até o reveal."
-                  : voteSelectionText(currentVote, {
-                      revealed: isRevealed,
-                      adjustable: true,
-                    })}
+                {isSpectator
+                  ? "Espectadores acompanham e reagem, mas não votam. Para votar, saia e entre como jogador."
+                  : !isRevealed && currentVote === null
+                    ? "Escolha uma carta para votar. Dá para trocar até o reveal."
+                    : voteSelectionText(currentVote, {
+                        revealed: isRevealed,
+                        adjustable: true,
+                      })}
               </CardDescription>
             </CardHeader>
             <CardPanel className="flex flex-col gap-3">
-              <Deck currentVote={currentVote} onSelect={handleCardSelect} />
+              <Deck
+                currentVote={currentVote}
+                onSelect={handleCardSelect}
+                disabled={isSpectator}
+              />
               {voteError ? (
                 <Alert variant="error">
                   <AlertTitle>Não foi possível votar</AlertTitle>
@@ -855,7 +890,8 @@ export function ArenaPage(): React.ReactElement {
         <aside className="arena-sidebar" aria-label="Informações da sala">
           <div className="arena-self" data-testid="self-line">
             Você é <strong>{self?.nick ?? nick}</strong>
-            {isSelfHost ? " · Host da sala" : ""}
+            {isSpectator ? " · Assistindo" : ""}
+            {!isSpectator && isSelfHost ? " · Host da sala" : ""}
             {host && host.id !== playerId ? (
               <>
                 {" "}
@@ -863,6 +899,21 @@ export function ArenaPage(): React.ReactElement {
               </>
             ) : null}
           </div>
+          {connectedSpectators.length > 0 ? (
+            <div
+              className="arena-spectators"
+              data-testid="spectators-line"
+              aria-live="polite"
+            >
+              <EyeIcon aria-hidden="true" />
+              <span>
+                Assistindo ({connectedSpectators.length}):{" "}
+                <strong>
+                  {connectedSpectators.map((p) => p.nick).join(", ")}
+                </strong>
+              </span>
+            </div>
+          ) : null}
           {showInvite ? (
             <Card className="arena-invite">
               <CardHeader>
@@ -1095,15 +1146,17 @@ export function ArenaPage(): React.ReactElement {
           {!isRevealed && (
             <div className="arena-waiting">
               <EyeOffIcon aria-hidden="true" />
-              <h2>Cada opinião conta.</h2>
+              <h2>{isSpectator ? "Acompanhe a votação." : "Cada opinião conta."}</h2>
               <p>
-                As cartas ficam escondidas até a revelação. Escolha sem
-                influência do time.
+                {isSpectator
+                  ? "As cartas ficam escondidas até a revelação. Você assiste sem votar."
+                  : "As cartas ficam escondidas até a revelação. Escolha sem influência do time."}
               </p>
               {solo && (
                 <p data-testid="solo-hint">
-                  Você está sozinho. Copie o convite para chamar o time. Dá para
-                  votar sozinho para testar o fluxo.
+                  {isSpectator
+                    ? "Você está sozinho. Copie o convite para chamar o time."
+                    : "Você está sozinho. Copie o convite para chamar o time. Dá para votar sozinho para testar o fluxo."}
                 </p>
               )}
             </div>

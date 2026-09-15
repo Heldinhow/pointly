@@ -20,7 +20,7 @@ import type { Player } from "@planning-poker/shared";
 function makePlayer(
 	id: string,
 	nick: string,
-	role: "host" | "player" = "player",
+	role: "host" | "player" | "spectator" = "player",
 	joinedAt?: number,
 	seatIndex: number | null = null,
 ): Player {
@@ -148,6 +148,24 @@ describe("Sala — castVote", () => {
 		expect(sala.phase).toBe("voting");
 		sala.castVote("p2", "5");
 		expect(sala.phase).toBe("revealable");
+	});
+
+	test("espectador não conta para o quórum do revealable", () => {
+		sala.addPlayer(makePlayer("p2", "Bob", "player", 1_001));
+		sala.addPlayer({ ...makePlayer("p3", "Olho", "spectator", 1_002), seatIndex: -1 });
+		sala.castVote("p1", "5");
+		sala.castVote("p2", "5");
+		expect(sala.phase).toBe("revealable");
+	});
+
+	test("voto de espectador é rejeitado com role_denied", () => {
+		sala.addPlayer({ ...makePlayer("p3", "Olho", "spectator", 1_002), seatIndex: -1 });
+		expect(() => sala.castVote("p3", "5")).toThrow(SalaError);
+		try {
+			sala.castVote("p3", "5");
+		} catch (e) {
+			expect((e as SalaError).code).toBe("role_denied");
+		}
 	});
 });
 

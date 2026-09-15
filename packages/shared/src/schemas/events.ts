@@ -27,6 +27,8 @@ export const HelloPayloadSchema = z.object({
 	uuid: UuidSchema,
 	nick: NickSchema,
 	code: RoomCodeSchema.optional(),
+	/** entrar como espectador: assiste sem votar nem ocupar assento. Só com code. */
+	spectate: z.boolean().optional(),
 });
 export type HelloPayload = z.infer<typeof HelloPayloadSchema>;
 
@@ -142,7 +144,7 @@ export const PlayerJoinedEventSchema = z.object({
 		z.object({
 			id: z.string().min(1),
 			nick: NickSchema,
-			seatIndex: z.number().int().min(0).max(11),
+			seatIndex: z.number().int().min(-1).max(11),
 			role: RoleSchema,
 		}),
 	),
@@ -231,7 +233,7 @@ export const ErrorCodeSchema = z.enum([
 	"sala_cheia",
 	"invalid_phase",
 	"invalid_vote",
-	"role_denied", // reservado (não exercitado em v2 democratico, mas parseável)
+	"role_denied", // espectador tentou votar
 	"rate_limited", // T17a
 	"internal_error",
 ]);

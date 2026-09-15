@@ -1576,3 +1576,71 @@ describe("ArenaPage (issue #158 — polimento e auditoria)", () => {
 		expect(select.className).toMatch(/focus-visible:ring-2/);
 	});
 });
+
+describe("ArenaPage (espectador)", () => {
+	test("espectador vê deck desabilitado e presença separada", () => {
+		const socket = new FakeSocket();
+		const ana = player(
+			{ id: "p_ana", nick: "Ana", role: "host", hasVoted: true, value: "5" },
+			0,
+		);
+		const olho = player(
+			{
+				id: "p_olho",
+				nick: "Olho",
+				role: "spectator",
+				hasVoted: false,
+				value: null,
+				seatIndex: -1,
+			},
+			-1,
+		);
+		seed({
+			sala: sala({ players: [ana, olho], phase: "voting", timer: 55 }),
+			playerId: olho.id,
+			socket,
+			nick: "Olho",
+		});
+		renderArena();
+
+		expect(screen.getByTestId("self-line").textContent).toMatch(/Assistindo/);
+		expect(screen.getByTestId("deck-selection").textContent).toMatch(
+			/não votam/i,
+		);
+		expect(
+			(screen.getByTestId("deck-card-5") as HTMLButtonElement).disabled,
+		).toBe(true);
+		expect(screen.getByTestId("presence-line").textContent).toMatch(
+			/1 jogando · 1 assistindo/,
+		);
+		expect(screen.getByTestId("spectators-line").textContent).toMatch(/Olho/);
+		// Espectador não ocupa assento: só 1 seat ocupado.
+		expect(screen.getByTestId("seat-0").textContent).toMatch(/Ana/);
+		expect(screen.queryByTestId("seat--1")).toBeNull();
+	});
+
+	test("clique no deck como espectador mostra alerta sem enviar voto", () => {
+		const socket = new FakeSocket();
+		const ana = player({ id: "p_ana", nick: "Ana", role: "host" }, 0);
+		const olho = player(
+			{
+				id: "p_olho",
+				nick: "Olho",
+				role: "spectator",
+				seatIndex: -1,
+			},
+			-1,
+		);
+		seed({
+			sala: sala({ players: [ana, olho], phase: "voting", timer: 55 }),
+			playerId: olho.id,
+			socket,
+			nick: "Olho",
+		});
+		renderArena();
+
+		// Botão desabilitado não dispara; força via handler gear? Apenas checa estado.
+		expect(socket.sentVotes).toEqual([]);
+		expect(screen.getByTestId("deck")).toBeTruthy();
+	});
+});

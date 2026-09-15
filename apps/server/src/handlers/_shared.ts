@@ -15,6 +15,7 @@ export type HandlerErrorCode =
 	| "sala_cheia"
 	| "sala_nao_encontrada"
 	| "invalid_nick"
+	| "role_denied"
 	| "internal_error";
 
 export interface HandlerError {
