@@ -190,11 +190,13 @@ T7 → T8 → T9
 
 **Done when**:
 
-- [ ] png/jpeg/webp normaliza para dataURL jpeg 128px
-- [ ] formato inválido e >5MB rejeitam com erro tipado sem throw cru
-- [ ] save/load/clear usam chave pointly-avatar com fallback em memória
-- [ ] Gate check passes: `bun --filter pointly-web test`
-- [ ] Test count: ≥6 tests pass (3 formatos, inválido, tamanho, storage roundtrip)
+- [x] png/jpeg/webp normaliza para dataURL jpeg 128px
+- [x] formato inválido e >5MB rejeitam com erro tipado sem throw cru
+- [x] save/load/clear usam chave pointly-avatar com fallback em memória
+- [x] Gate check passes: `bun --filter pointly-web test`
+- [x] Test count: ≥6 tests pass (3 formatos, inválido, tamanho, storage roundtrip)
+
+**Status**: ✅ Complete (T5)
 
 **Tests**: unit
 **Gate**: quick
