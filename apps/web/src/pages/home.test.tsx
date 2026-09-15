@@ -36,6 +36,14 @@ describe("HomePage (ticket 10 — Inicial com demonstração)", () => {
 		).toBeTruthy();
 	});
 
+	test("hero é só copy, sem visual nem rodada de exemplo", () => {
+		renderHome();
+
+		expect(screen.getByTestId("home-hero")).toBeTruthy();
+		expect(screen.queryByTestId("hero-round")).toBeNull();
+		expect(screen.queryByTestId("home-hero-visual")).toBeNull();
+	});
+
 	test("estado inicial: deck presente, reveal bloqueado, sem stats", () => {
 		renderHome();
 
@@ -99,6 +107,7 @@ describe("HomePage (ticket 10 — Inicial com demonstração)", () => {
 			);
 			expect(screen.getByTestId("stats-pip-5").textContent).toBe("3×5");
 			expect(screen.getByTestId("stats-pip-8").textContent).toBe("1×8");
+			expect(screen.getByTestId("demo-create").closest("a")?.getAttribute("href")).toBe("/join");
 		} finally {
 			globalThis.WebSocket = RealWebSocket;
 		}

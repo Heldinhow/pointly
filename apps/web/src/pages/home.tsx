@@ -119,15 +119,6 @@ export function HomePage(): React.ReactElement {
               Experimente uma rodada
             </a>
           </div>
-          <div className="pt-home__hero-visual">
-            <img
-              src="/images/planning-cards.webp"
-              alt="Cartas de planning poker sobre uma mesa de feltro verde"
-              width={1536}
-              height={1024}
-              fetchPriority="high"
-            />
-          </div>
         </section>
         <section
           className="pt-home__demo-wrap"
@@ -139,13 +130,13 @@ export function HomePage(): React.ReactElement {
           <div className="pt-home__section-intro">
             <div>
               <h2 id="demo-title">
-                Você escolhe.{" "}
+                Sua vez de votar.{" "}
                 <span className="pt-home__demo-title-end">A sala revela.</span>
               </h2>
             </div>
             <p>
-              Veja a dinâmica antes de criar sua primeira sala. Os votos abaixo
-              são simulados para você sentir o fluxo.
+              Escolha sua carta. Bia, Caio e Dani já votaram — o reveal
+              mostra como a conversa começa.
             </p>
           </div>
           <Card className="pt-home__demo-card">
@@ -192,7 +183,7 @@ export function HomePage(): React.ReactElement {
                   </Button>
                   <span data-testid="demo-reveal-hint" aria-live="polite">
                     {myVote === null
-                      ? "Escolha sua estimativa para liberar o reveal."
+                      ? "Escolha sua estimativa para liberar o reveal. Votos de exemplo para sentir o fluxo."
                       : "Com sua carta na mesa, revele os votos simulados."}
                   </span>
                 </div>
@@ -281,14 +272,24 @@ export function HomePage(): React.ReactElement {
                       intervalo.
                     </p>
                   )}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    data-testid="demo-retry"
-                    onClick={handleRetry}
-                  >
-                    <RotateCcwIcon aria-hidden="true" /> Tentar de novo
-                  </Button>
+                  <div className="pt-home__results-actions">
+                    <Button
+                      type="button"
+                      data-testid="demo-create"
+                      render={<Link to="/join" />}
+                    >
+                      Criar sala com meu time{" "}
+                      <ArrowRightIcon aria-hidden="true" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      data-testid="demo-retry"
+                      onClick={handleRetry}
+                    >
+                      <RotateCcwIcon aria-hidden="true" /> Tentar de novo
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardPanel>
