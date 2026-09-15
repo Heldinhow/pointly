@@ -1,6 +1,8 @@
 import { CheckIcon, CrownIcon, UserRoundIcon } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import type { ProjectileType } from "@/lib/protocol";
+import { ProjectileMenu } from "./projectile-menu";
 import "./poker-table.css";
 
 export interface TablePlayer {
@@ -18,6 +20,8 @@ interface PokerTableProps {
   hostId?: string | null;
   revealed: boolean;
   compact?: boolean;
+  onThrowProjectile?: (targetId: string, type: ProjectileType) => void;
+  projectileCooldownSecs?: number;
   children?: ReactNode;
 }
 
@@ -48,6 +52,8 @@ export function PokerTable({
   hostId,
   revealed,
   compact = false,
+  onThrowProjectile,
+  projectileCooldownSecs = 0,
   children,
 }: PokerTableProps): React.ReactElement {
   return (
@@ -71,6 +77,15 @@ export function PokerTable({
           const disconnected = player?.status === "disconnected";
           const hideStatus =
             !!player && !disconnected && revealed && player.value != null;
+          const identity = player && (
+            <>
+              <span className="poker-avatar" data-projectile-player={compact ? undefined : player.id}>
+                {player.nick.slice(0, 2).toUpperCase()}
+                {isHost && <CrownIcon className="poker-crown" aria-label="Host" />}
+              </span>
+              <span className="poker-name">{player.nick}</span>
+            </>
+          );
           return (
             <li
               key={player?.seatIndex ?? index}
@@ -93,24 +108,18 @@ export function PokerTable({
             >
               {player ? (
                 <>
-                  <div className="poker-avatar">
-                    {player.nick.slice(0, 2).toUpperCase()}
-                    {isHost && (
-                      <CrownIcon className="poker-crown" aria-label="Host" />
-                    )}
-                  </div>
-                  <div className="poker-name" title={player.nick}>
-                    {player.nick}
-                  </div>
-                  {isSelf && (
-                    <span
-                      className="poker-you"
-                      data-testid={
-                        compact ? undefined : `seat-${player.seatIndex}-you`
-                      }
+                  {onThrowProjectile && !compact && !isSelf && !disconnected ? (
+                    <ProjectileMenu
+                      target={player}
+                      cooldownSecs={projectileCooldownSecs}
+                      onThrow={onThrowProjectile}
+                      className="poker-seat-target"
+                      align={x < 35 ? "left" : x > 65 ? "right" : "center"}
                     >
-                      você
-                    </span>
+                      {identity}
+                    </ProjectileMenu>
+                  ) : (
+                    <div className="poker-seat-identity" title={player.nick}>{identity}</div>
                   )}
                   {hideStatus ? null : (
                     <span className="poker-status">

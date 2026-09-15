@@ -16,4 +16,4 @@ export function rollProjectileOutcome(
 }
 
 /** Cooldown entre arremessos do mesmo sender (ms). */
-export const PROJECTILE_COOLDOWN_MS = 5000;
+export const PROJECTILE_COOLDOWN_MS = 2000;

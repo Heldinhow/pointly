@@ -20,6 +20,7 @@
 
 import {
 	DECK_VALUES,
+	PROJECTILE_COOLDOWN_MS,
 	type ConsensusStats,
 	type Player,
 	type Phase,
@@ -96,7 +97,7 @@ export class Sala {
 
 	/**
 	 * Server-internal: timestamp (epoch ms) do último arremesso de cada player.
-	 * NÃO vai no wire format. Usado para validar o cooldown de 5 segundos.
+	 * NÃO vai no wire format. Usado para validar o cooldown entre arremessos.
 	 */
 	private readonly lastThrownAt: Map<string, number> = new Map();
 
@@ -184,6 +185,7 @@ export class Sala {
 		if (!existed) return { promoted: null };
 		this.votes.delete(playerId);
 		this.disconnectedAt.delete(playerId);
+		this.lastThrownAt.delete(playerId);
 
 		// Host saiu e ainda há outros → promove mais antigo
 		// (espectador nunca vira host; se só restarem espectadores, hostId zera).
@@ -429,11 +431,11 @@ export class Sala {
 
 	/**
 	 * Valida e registra o arremesso de um projétil de um player.
-	 * Valida o cooldown de 5 segundos.
+	 * Disponível em qualquer fase; cooldown de 2 segundos por participante.
 	 */
 	throwProjectile(senderId: string, now: number = Date.now()): void {
-		const last = this.lastThrownAt.get(senderId) ?? 0;
-		if (now - last < 5000) {
+		const last = this.lastThrownAt.get(senderId);
+		if (last !== undefined && now - last < PROJECTILE_COOLDOWN_MS) {
 			throw new SalaError(
 				"invalid_phase",
 				"Aguarde o cooldown para arremessar novamente.",

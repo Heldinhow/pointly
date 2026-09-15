@@ -33,13 +33,17 @@ export function handleThrowProjectile(
 	if (!(salaOrError instanceof Sala)) return salaOrError;
 	const sala = salaOrError;
 
+	const sender = sala.getPlayer(playerId);
 	const target = sala.getPlayer(payload.targetPlayerId);
-	if (!target) {
+	if (!sender || sender.status !== "connected" || !target || target.status !== "connected") {
 		return {
 			ok: false,
 			code: "invalid_phase",
-			message: `Alvo ${payload.targetPlayerId} não encontrado na sala.`,
+			message: "Arremesso indisponível: os participantes precisam estar conectados à mesma sala.",
 		};
+	}
+	if (target.id === playerId) {
+		return { ok: false, code: "invalid_phase", message: "Não é possível arremessar em si mesmo." };
 	}
 
 	try {

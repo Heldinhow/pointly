@@ -155,6 +155,11 @@ function renderArena(route = "/s/AB12"): void {
 	);
 }
 
+async function openProjectileMenu(nick = "Beto"): Promise<void> {
+	fireEvent.click(screen.getByRole("button", { name: `Arremessar em ${nick}` }));
+	await screen.findByRole("menu");
+}
+
 function stubClipboard(): string[] {
 	const written: string[] = [];
 	Object.defineProperty(window.navigator, "clipboard", {
@@ -200,7 +205,9 @@ describe("ArenaPage (ticket 04)", () => {
 		expect(screen.getAllByText("Assento vazio")).toHaveLength(10);
 		expect(screen.getByTestId("seat-0")).toBeTruthy();
 		expect(screen.getByTestId("seat-1")).toBeTruthy();
-		expect(screen.getByTestId("seat-1-you")).toBeTruthy();
+		expect(screen.getByTestId("seat-1").className).toMatch(
+			/poker-seat--self/,
+		);
 	});
 
 	test("segundo navegador aparece ao vivo com assento e votos corretos", async () => {
@@ -1385,7 +1392,7 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		return { socket, ana, beto };
 	}
 
-	test("durante a votação o envio fica indisponível com explicação", () => {
+	test("durante a votação permite arremessar no participante sem revelar ou alterar votos", async () => {
 		const socket = new FakeSocket();
 		const host = player({ id: "p_host", nick: "Ana", role: "host" }, 0);
 		const beto = player({ id: "p_beto", nick: "Beto" }, 1);
@@ -1396,37 +1403,32 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		});
 		renderArena();
 
-		expect(screen.getByTestId("projectile-hint").textContent).toMatch(
-			/depois de revelar as cartas/i,
-		);
-		expect(screen.getByTestId("projectile-unavailable").textContent).toMatch(
-			/indisponível durante a votação/i,
-		);
-		// Nenhum botão de interação acessível antes do reveal.
-		expect(screen.queryByTestId("projectile-tomato")).toBeNull();
-		expect(screen.queryByTestId("projectile-feed")).toBeNull();
+		expect(screen.queryByTestId("projectile-target")).toBeNull();
+		expect(screen.queryByTestId("projectile-paper_plane")).toBeNull();
+		await openProjectileMenu();
+		fireEvent.click(screen.getByTestId("projectile-paper_plane"));
+		expect(socket.sentProjectiles).toEqual([{ targetPlayerId: beto.id, projectileType: "paper_plane" }]);
+		expect(socket.sentVotes).toEqual([]);
+		expect(socket.sentReveals).toBe(0);
+		expect(screen.queryByTestId("projectile-flight")).toBeNull();
 	});
 
-	test("pós-reveal lista as 7 interações com alvo e envia ao clicar", () => {
+	test("pós-reveal lista os 5 projéteis com alvo e envia ao clicar", async () => {
 		const { socket, beto } = revealedSalaWithPair();
 		renderArena();
+		await openProjectileMenu();
 
 		expect(screen.queryByTestId("projectile-unavailable")).toBeNull();
 		for (const type of [
 			"paper_ball",
+			"paper_plane",
+			"rock",
+			"brick",
 			"tomato",
-			"coffee",
-			"rubber_duck",
-			"star",
-			"heart",
-			"claps",
 		]) {
 			expect(screen.getByTestId(`projectile-${type}`)).toBeTruthy();
 		}
-		const target = screen.getByTestId(
-			"projectile-target",
-		) as HTMLSelectElement;
-		expect(target.value).toBe(beto.id);
+		expect(screen.getByRole("menu").textContent).toContain(`Arremessar em ${beto.nick}`);
 
 		fireEvent.click(screen.getByTestId("projectile-tomato"));
 		expect(socket.sentProjectiles).toEqual([
@@ -1434,20 +1436,21 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		]);
 	});
 
-	test("segundo envio no cooldown é recusado com feedback e sem quebrar", () => {
+	test("segundo envio no cooldown fica desabilitado com contagem no menu", async () => {
 		const { socket } = revealedSalaWithPair();
 		renderArena();
+		await openProjectileMenu();
 
 		fireEvent.click(screen.getByTestId("projectile-tomato"));
 		expect(socket.sentProjectiles).toHaveLength(1);
+		await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+		await openProjectileMenu();
 
-		// Segundo envio imediato (<5s): bloqueado client-side com feedback,
+		// Segundo envio imediato (<2s): bloqueado client-side com feedback,
 		// sem trafegar e sem quebrar a sala.
-		fireEvent.click(screen.getByTestId("projectile-heart"));
+		fireEvent.click(screen.getByTestId("projectile-rock"));
 		expect(socket.sentProjectiles).toHaveLength(1);
-		expect(screen.getByTestId("projectile-error").textContent).toMatch(
-			/Recarregando/i,
-		);
+		expect((screen.getByTestId("projectile-rock") as HTMLButtonElement).disabled).toBe(true);
 		expect(screen.getByTestId("projectile-cooldown").textContent).toMatch(
 			/Recarregando/i,
 		);
@@ -1456,11 +1459,40 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		expect(screen.getByTestId("new-round-button")).toBeTruthy();
 	});
 
-	test("sala vê a interação com origem e destino claros", async () => {
+	test("libera novo envio após 2s, compartilhado entre projéteis e alvos", async () => {
+		const { socket, ana, beto } = revealedSalaWithPair();
+		const caio = player({ id: "p_caio", nick: "Caio" }, 2);
+		useSession.setState({ sala: sala({ players: [ana, beto, caio], phase: "revealed" }) });
+		renderArena();
+		await openProjectileMenu();
+		fireEvent.click(screen.getByTestId("projectile-paper_ball"));
+		await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+		await openProjectileMenu("Caio");
+		expect((screen.getByTestId("projectile-brick") as HTMLButtonElement).disabled).toBe(true);
+		await waitFor(() => expect((screen.getByTestId("projectile-brick") as HTMLButtonElement).disabled).toBe(false), { timeout: 2600 });
+		fireEvent.click(screen.getByTestId("projectile-brick"));
+		expect(socket.sentProjectiles).toEqual([
+			{ targetPlayerId: beto.id, projectileType: "paper_ball" },
+			{ targetPlayerId: caio.id, projectileType: "brick" },
+		]);
+	});
+
+	test("falha de envio mostra erro sem inventar voo ou bloquear nova tentativa", async () => {
+		const { socket } = revealedSalaWithPair();
+		socket.sendThrowProjectile = () => false;
+		renderArena();
+		await openProjectileMenu();
+		fireEvent.click(screen.getByTestId("projectile-tomato"));
+		expect(screen.getByTestId("projectile-error")).toBeTruthy();
+		expect(screen.queryByTestId("projectile-flight")).toBeNull();
+		await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+		await openProjectileMenu();
+		expect((screen.getByTestId("projectile-tomato") as HTMLButtonElement).disabled).toBe(false);
+	});
+
+	test("sala vê só o voo, sem lista de arremessos", async () => {
 		const { socket, ana, beto } = revealedSalaWithPair();
 		renderArena();
-
-		expect(screen.queryByTestId("projectile-feed")).toBeNull();
 
 		await act(async () => {
 			socket.emitProjectile({
@@ -1471,15 +1503,37 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 			});
 		});
 
-		const feed = await screen.findByTestId("projectile-feed");
-		expect(feed).toBeTruthy();
-		const item = screen.getByTestId("projectile-feed-item");
-		expect(item.getAttribute("data-sender")).toBe(ana.id);
-		expect(item.getAttribute("data-target")).toBe(beto.id);
-		expect(item.getAttribute("data-outcome")).toBe("hit");
-		expect(item.textContent).toMatch(/Ana/);
-		expect(item.textContent).toMatch(/Beto/);
-		expect(item.textContent).toMatch(/Tomate/);
+		const flight = await screen.findByTestId("projectile-flight");
+		expect(flight.getAttribute("data-sender")).toBe(ana.id);
+		expect(flight.getAttribute("data-target")).toBe(beto.id);
+		expect(flight.getAttribute("data-outcome")).toBe("hit");
+		expect(screen.queryByTestId("projectile-feed")).toBeNull();
+		expect(screen.queryByTestId("projectile-feed-item")).toBeNull();
+	});
+
+	test("voos simultâneos aparecem e são removidos ao terminar", async () => {
+		const { socket, ana, beto } = revealedSalaWithPair();
+		renderArena();
+		act(() => {
+			for (let index = 0; index < 7; index++) socket.emitProjectile({
+				senderPlayerId: ana.id, targetPlayerId: beto.id, projectileType: "paper_ball", outcome: "deflect",
+			});
+		});
+		expect(screen.getAllByTestId("projectile-flight")).toHaveLength(7);
+		await waitFor(() => expect(screen.queryByTestId("projectile-flight")).toBeNull(), { timeout: 2000 });
+	});
+
+	test("movimento reduzido não cria voo", () => {
+		const matchMedia = window.matchMedia;
+		window.matchMedia = (query) => ({ ...matchMedia(query), matches: query.includes("prefers-reduced-motion") });
+		try {
+			const { socket, ana, beto } = revealedSalaWithPair();
+			renderArena();
+			act(() => socket.emitProjectile({ senderPlayerId: ana.id, targetPlayerId: beto.id, projectileType: "brick", outcome: "dodge" }));
+			expect(screen.queryByTestId("projectile-flight")).toBeNull();
+		} finally {
+			window.matchMedia = matchMedia;
+		}
 	});
 
 	test("erro de cooldown do servidor vira feedback sem quebrar", async () => {
@@ -1545,7 +1599,7 @@ describe("ArenaPage (issue #158 — polimento e auditoria)", () => {
 		).toBe("n");
 	});
 
-	test("seletor de alvo tem rótulo visível e foco alcançável por teclado", () => {
+	test("menu no participante tem nome acessível e não existe no próprio usuário", async () => {
 		const socket = new FakeSocket();
 		const ana = player(
 			{ id: "p_ana", nick: "Ana", role: "host", hasVoted: true, value: "5" },
@@ -1567,13 +1621,18 @@ describe("ArenaPage (issue #158 — polimento e auditoria)", () => {
 		});
 		renderArena();
 
-		const select = screen.getByTestId("projectile-target") as HTMLSelectElement;
-		expect(select.tagName).toBe("SELECT");
-		// Rótulo "Alvo" associado via htmlFor/id.
-		expect(select.getAttribute("id")).toBe("projectile-target");
-		expect(select.hasAttribute("tabindex")).toBe(false);
-		// Foco visível: anel de foco explícito (guarda de regressão da auditoria).
-		expect(select.className).toMatch(/focus-visible:ring-2/);
+		expect(screen.queryByRole("button", { name: "Arremessar em Ana" })).toBeNull();
+		const trigger = screen.getByRole("button", { name: "Arremessar em Beto" });
+		expect(trigger.getAttribute("aria-haspopup")).toBe("menu");
+		expect(trigger.getAttribute("aria-expanded")).toBe("false");
+		await openProjectileMenu();
+		expect(screen.getAllByRole("menuitem")).toHaveLength(5);
+		// Typeahead do menu não pode disparar atalhos de rodada.
+		fireEvent.keyDown(screen.getByRole("menu"), { key: "n" });
+		expect(screen.getByTestId("new-round-button").getAttribute("data-confirming")).toBe("false");
+		act(() => socket.emitRoomState(sala({ players: [ana, { ...beto, status: "disconnected" }], phase: "revealed" })));
+		expect(screen.queryByRole("button", { name: "Arremessar em Beto" })).toBeNull();
+		expect(screen.queryByRole("menu")).toBeNull();
 	});
 });
 

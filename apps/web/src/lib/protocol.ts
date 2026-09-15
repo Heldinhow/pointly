@@ -127,18 +127,16 @@ export function buildLeaveRoomMessage(): {
 }
 
 /**
- * Projéteis pós-reveal (issue #157 — 7 interações com cooldown).
+ * Projéteis disponíveis em qualquer fase, com cooldown por participante.
  * Espelho do `ProjectileTypeSchema` do contrato compartilhado:
- * bola de papel, tomate, café, pato, estrela, coração, aplausos.
+ * bola de papel, aviãozinho de papel, pedra, tijolo e tomate.
  */
 export const PROJECTILE_TYPES = [
 	"paper_ball",
+	"paper_plane",
+	"rock",
+	"brick",
 	"tomato",
-	"coffee",
-	"rubber_duck",
-	"star",
-	"heart",
-	"claps",
 ] as const;
 export type ProjectileType = (typeof PROJECTILE_TYPES)[number];
 

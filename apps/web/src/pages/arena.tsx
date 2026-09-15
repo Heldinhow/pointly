@@ -8,7 +8,7 @@ import {
   TimerIcon,
   UsersIcon,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,8 @@ import {
 import { Deck } from "@/components/deck";
 import { Input } from "@/components/ui/input";
 import { PokerTable } from "@/components/poker-table";
+import { ProjectileFlight, type ProjectileFlightEvent } from "@/components/projectile-flight";
+import { ProjectileMenu } from "@/components/projectile-menu";
 import "./arena.css";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -35,10 +37,7 @@ import {
   voteSelectionText,
 } from "@/lib/stats";
 import type { Phase, Player, Vote } from "@/lib/protocol";
-import {
-  type ProjectileThrownPayload,
-  type ProjectileType,
-} from "@/lib/protocol";
+import type { ProjectileType } from "@/lib/protocol";
 import { useSession } from "@/store/session";
 import { JoinError, friendlyJoinMessage } from "@/lib/errors";
 import { SOCKET_ERROR_COPY } from "@/lib/forms";
@@ -47,10 +46,7 @@ import { safeClear } from "@/lib/storage";
 import { copyText } from "@/lib/clipboard";
 import { resolveWsUrl } from "@/lib/api";
 import {
-  PROJECTILE_CATALOG,
   PROJECTILE_COOLDOWN_MS,
-  PROJECTILE_FEED_LIMIT,
-  projectileFeedText,
 } from "@/lib/projectiles";
 import { PointlySocket } from "@/lib/ws-client";
 
@@ -64,27 +60,8 @@ export const SEAT_COUNT = 12;
  */
 export const NEW_ROUND_CONFIRM_TIMEOUT_MS = 5000;
 
-// Re-exports de compat (SSOT em `@/lib/projectiles`).
-export {
-  PROJECTILE_CATALOG,
-  PROJECTILE_COOLDOWN_MS,
-  PROJECTILE_FEED_LIMIT,
-  projectileFeedText,
-};
-
-export interface ProjectileFeedItem extends ProjectileThrownPayload {
-  key: number;
-  senderNick: string;
-  targetNick: string;
-}
-
-function resolveNick(
-  players: readonly Player[],
-  playerId: string,
-  fallback: string,
-): string {
-  return players.find((p) => p.id === playerId)?.nick ?? fallback;
-}
+// Re-export de compat (SSOT em `@/lib/projectiles`).
+export { PROJECTILE_COOLDOWN_MS };
 
 const PHASE_LABEL: Record<Phase, string> = {
   idle: "Aguardando votos",
@@ -111,6 +88,7 @@ function isTypingTarget(event: KeyboardEvent): boolean {
       })
     | null;
   if (!target) return false;
+  if (target.closest?.('[role="menu"]')) return true;
   // Tag check funciona no browser e no jsdom (sem depender de globals
   // como HTMLInputElement, ausentes no preload de testes).
   const tag = (target.tagName ?? "").toUpperCase();
@@ -155,7 +133,7 @@ function sendNewRoundThroughSession(): boolean {
   return sendThroughSession("sendStartNewRound");
 }
 
-/** Envia `throw_projectile` pelo socket da sessão (pós-reveal, issue #157). */
+/** Envia `throw_projectile` pelo socket da sessão em qualquer fase. */
 function sendProjectileThroughSession(
   targetPlayerId: string,
   projectileType: ProjectileType,
@@ -180,17 +158,16 @@ export function ArenaPage(): React.ReactElement {
   const [revealError, setRevealError] = useState<string | null>(null);
   const [confirmingNewRound, setConfirmingNewRound] = useState(false);
   const [newRoundError, setNewRoundError] = useState<string | null>(null);
-  // Issue #157 · Projéteis pós-reveal: alvo selecionado, erro de envio,
-  // cooldown client-side (espelho dos 5s do servidor) e feed de
-  // interações com origem/destino claros (broadcast para a Sala).
-  const [projectileTarget, setProjectileTarget] = useState<string | null>(null);
+  // Projéteis em qualquer fase: cooldown de 2s e voos confirmados pelo servidor.
   const [projectileError, setProjectileError] = useState<string | null>(null);
   const [projectileCooldownUntil, setProjectileCooldownUntil] = useState(0);
-  const [projectileFeed, setProjectileFeed] = useState<ProjectileFeedItem[]>(
-    [],
-  );
   const [nowMs, setNowMs] = useState(() => Date.now());
   const projectileKeyRef = useRef(0);
+  const arenaRef = useRef<HTMLDivElement>(null);
+  const [projectileFlights, setProjectileFlights] = useState<ProjectileFlightEvent[]>([]);
+  const removeProjectileFlight = useCallback((key: number) => {
+    setProjectileFlights((flights) => flights.filter((flight) => flight.key !== key));
+  }, []);
   // Ticket 09: F5 reconecta com o mesmo UUID a partir da sessão
   // persistida (sem duplicar o Player · o servidor reidrata voto,
   // assento e fase). `rejoinError` mantém a Arena legível com retry
@@ -237,21 +214,16 @@ export function ArenaPage(): React.ReactElement {
         setConnectionLost(true);
       },
       onProjectileThrown: (event) => {
-        // Broadcast da Sala (issue #157): origem e destino claros
-        // para todos · remetente, alvo e quem só assiste veem o
-        // mesmo feed com o desfecho sorteado pelo servidor.
-        const current = useSession.getState().sala;
-        const players = current?.players ?? [];
+        // Só o voo visual importa — sem lista/feed de arremessos.
         projectileKeyRef.current += 1;
-        const item: ProjectileFeedItem = {
-          ...event,
-          key: projectileKeyRef.current,
-          senderNick: resolveNick(players, event.senderPlayerId, "Alguém"),
-          targetNick: resolveNick(players, event.targetPlayerId, "alguém"),
-        };
-        setProjectileFeed((prev) =>
-          [...prev, item].slice(-PROJECTILE_FEED_LIMIT),
-        );
+        const key = projectileKeyRef.current;
+        const receivedAt = Date.now();
+        setProjectileFlights((prev) => [...prev, { ...event, key, receivedAt }].slice(-32));
+        if (event.senderPlayerId === useSession.getState().playerId) {
+          setProjectileError(null);
+          setProjectileCooldownUntil(receivedAt + PROJECTILE_COOLDOWN_MS);
+          setNowMs(receivedAt);
+        }
       },
       onError: (_code, message) => {
         const text = message || "Não foi possível completar a ação.";
@@ -578,6 +550,12 @@ export function ArenaPage(): React.ReactElement {
   // voto; sala "pronta para revelar" quando todos votaram sem revelar de
   // imediato; auto-reveal no zero chega via room_state (phase revealed).
   const totalVoted = players.filter((p) => p.hasVoted).length;
+  // Timer parado nos 60s até o primeiro voto: sinaliza pausa via
+  // aria-label/title para não parecer contagem travada.
+  const timerPaused =
+    (sala.phase === "voting" || sala.phase === "revealable") &&
+    sala.timer > 0 &&
+    totalVoted === 0;
   const canReveal =
     totalVoted > 0 && (sala.phase === "voting" || sala.phase === "revealable");
   const isReadyToReveal = sala.phase === "revealable";
@@ -637,26 +615,11 @@ export function ArenaPage(): React.ReactElement {
     }
   }
 
-  // Projéteis (issue #157): interações pós-reveal com cooldown de 5s.
-  // Alvos = demais players conectados (nunca a si mesmo). Durante a
-  // votação o envio fica indisponível com explicação; o segundo envio
-  // dentro do cooldown é recusado com feedback e sem quebrar a sala.
-  const availableTargets = players.filter(
-    (p) => p.id !== playerId && p.status === "connected",
-  );
-  const effectiveTargetId =
-    projectileTarget && availableTargets.some((p) => p.id === projectileTarget)
-      ? projectileTarget
-      : (availableTargets[0]?.id ?? null);
-  const effectiveTargetNick = effectiveTargetId
-    ? resolveNick(players, effectiveTargetId, "alvo")
-    : "alvo";
+  // Alvos = demais participantes conectados, incluindo espectadores.
   const projectileCooldownLeftMs = Math.max(0, projectileCooldownUntil - nowMs);
-  const isProjectileCooling = projectileCooldownLeftMs > 0;
   const projectileCooldownSecs = Math.ceil(projectileCooldownLeftMs / 1000);
 
-  function handleThrowProjectile(projectileType: ProjectileType): void {
-    if (!isRevealed) return;
+  function handleThrowProjectile(targetId: string, projectileType: ProjectileType): void {
     const remaining = projectileCooldownUntil - Date.now();
     if (remaining > 0) {
       // Segundo envio dentro do cooldown: recusa com feedback,
@@ -666,13 +629,8 @@ export function ArenaPage(): React.ReactElement {
       );
       return;
     }
-    const targetId = effectiveTargetId;
-    if (!targetId) {
-      setProjectileError("Escolha outro player como alvo para interagir.");
-      return;
-    }
-    if (targetId === playerId) {
-      setProjectileError("Não é possível arremessar em si mesmo.");
+    if (connectionLost || targetId === playerId || !players.some((p) => p.id === targetId && p.status === "connected")) {
+      setProjectileError("Arremesso indisponível: escolha outro participante conectado.");
       return;
     }
     setProjectileError(null);
@@ -751,6 +709,12 @@ export function ArenaPage(): React.ReactElement {
             }
             data-testid="timer-line"
             aria-live={critical ? "assertive" : "off"}
+            aria-label={
+              timerPaused
+                ? `${sala.timer} segundos, pausado até o primeiro voto`
+                : `${sala.timer} segundos`
+            }
+            title={timerPaused ? "Pausado até o primeiro voto" : undefined}
           >
             <TimerIcon aria-hidden="true" />
             {sala.timer}s
@@ -770,7 +734,12 @@ export function ArenaPage(): React.ReactElement {
           </AlertDescription>
         </Alert>
       )}
-      <div className="arena-workspace">
+      <div className="arena-workspace" ref={arenaRef}>
+        <div className="projectile-layer" aria-hidden="true">
+          {projectileFlights.map((event) => (
+            <ProjectileFlight key={event.key} event={event} arenaRef={arenaRef} onDone={removeProjectileFlight} />
+          ))}
+        </div>
         <section
           className="arena-play-area"
           aria-label="Mesa de planning poker"
@@ -784,6 +753,8 @@ export function ArenaPage(): React.ReactElement {
             playerId={playerId}
             hostId={sala.hostId}
             revealed={isRevealed}
+            onThrowProjectile={connectionLost ? undefined : handleThrowProjectile}
+            projectileCooldownSecs={projectileCooldownSecs}
           >
             <Card className="arena-reveal">
               <CardHeader>
@@ -847,6 +818,15 @@ export function ArenaPage(): React.ReactElement {
               ) : null}
             </Card>
           </PokerTable>
+          <p className="arena-projectile-hint" data-testid="projectile-hint">
+            Passe o mouse ou toque em alguém para arremessar · intervalo de 2 segundos.
+          </p>
+          {projectileError ? (
+            <Alert variant="error">
+              <AlertTitle>Não foi possível interagir</AlertTitle>
+              <AlertDescription data-testid="projectile-error">{projectileError}</AlertDescription>
+            </Alert>
+          ) : null}
           <Card className="arena-deck">
             <CardHeader>
               <CardTitle className="text-base">
@@ -909,7 +889,16 @@ export function ArenaPage(): React.ReactElement {
               <span>
                 Assistindo ({connectedSpectators.length}):{" "}
                 <strong>
-                  {connectedSpectators.map((p) => p.nick).join(", ")}
+                    {connectedSpectators.map((p, index) => (
+                      <span key={p.id}>
+                        {index > 0 ? ", " : ""}
+                        {p.id !== playerId && !connectionLost ? (
+                          <ProjectileMenu target={p} cooldownSecs={projectileCooldownSecs} onThrow={handleThrowProjectile} className="arena-spectator-target" align="left" side="bottom">
+                            <span className="arena-spectator-anchor" data-projectile-player={p.id}>{p.nick}</span>
+                          </ProjectileMenu>
+                        ) : <span className="arena-spectator-anchor" data-projectile-player={p.id}>{p.nick}</span>}
+                      </span>
+                    ))}
                 </strong>
               </span>
             </div>
@@ -1161,127 +1150,6 @@ export function ArenaPage(): React.ReactElement {
               )}
             </div>
           )}
-          <Card className="arena-reactions">
-            <CardHeader>
-              <CardTitle className="text-base">Interações</CardTitle>
-              <CardDescription data-testid="projectile-hint" aria-live="polite">
-                {isRevealed
-                  ? "Escolha alguém do time e envie uma reação."
-                  : "Envie uma reação ao time depois de revelar as cartas."}
-              </CardDescription>
-            </CardHeader>
-            <CardPanel className="flex flex-col gap-3">
-              {!isRevealed ? (
-                <p
-                  className="text-sm text-muted-foreground"
-                  data-testid="projectile-unavailable"
-                >
-                  Envio indisponível durante a votação. Aguarde o reveal para
-                  interagir com a Sala.
-                </p>
-              ) : availableTargets.length === 0 ? (
-                <p
-                  className="text-sm text-muted-foreground"
-                  data-testid="projectile-no-targets"
-                >
-                  Sem alvos por enquanto · chame o time para a Sala para
-                  interagir.
-                </p>
-              ) : (
-                <>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <label
-                      htmlFor="projectile-target"
-                      className="text-sm text-muted-foreground"
-                    >
-                      Alvo
-                    </label>
-                    <select
-                      id="projectile-target"
-                      data-testid="projectile-target"
-                      value={effectiveTargetId ?? ""}
-                      onChange={(event) => {
-                        setProjectileTarget(event.target.value || null);
-                        setProjectileError(null);
-                      }}
-                      className="h-8 rounded-md border border-input bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background"
-                    >
-                      {availableTargets.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.nick}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div
-                    role="group"
-                    aria-label={`Interações para ${effectiveTargetNick}`}
-                    className="flex flex-wrap gap-2"
-                  >
-                    {PROJECTILE_CATALOG.map(({ type, label, emoji }) => (
-                      <Button
-                        key={type}
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        data-testid={`projectile-${type}`}
-                        disabled={!isRevealed}
-                        onClick={() => handleThrowProjectile(type)}
-                        aria-label={`${label} em ${effectiveTargetNick}`}
-                        title={
-                          isProjectileCooling
-                            ? `Recarregando · aguarde ${projectileCooldownSecs}s`
-                            : `${label} em ${effectiveTargetNick}`
-                        }
-                      >
-                        <span aria-hidden="true">{emoji}</span>
-                        {label}
-                      </Button>
-                    ))}
-                  </div>
-                  {isProjectileCooling ? (
-                    <p
-                      className="text-xs text-muted-foreground"
-                      data-testid="projectile-cooldown"
-                      aria-live="polite"
-                    >
-                      Recarregando · aguarde {projectileCooldownSecs}s para
-                      arremessar de novo.
-                    </p>
-                  ) : null}
-                </>
-              )}
-              {projectileError ? (
-                <Alert variant="error">
-                  <AlertTitle>Não foi possível interagir</AlertTitle>
-                  <AlertDescription data-testid="projectile-error">
-                    {projectileError}
-                  </AlertDescription>
-                </Alert>
-              ) : null}
-              {projectileFeed.length > 0 ? (
-                <ul
-                  aria-live="polite"
-                  aria-label="Interações recentes da Sala"
-                  data-testid="projectile-feed"
-                  className="flex flex-col gap-1.5"
-                >
-                  {projectileFeed.map((item) => (
-                    <li
-                      key={item.key}
-                      data-testid="projectile-feed-item"
-                      data-sender={item.senderPlayerId}
-                      data-target={item.targetPlayerId}
-                      data-outcome={item.outcome}
-                      className="rounded-lg border bg-card px-3 py-2 text-sm"
-                    >
-                      {projectileFeedText(item)}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </CardPanel>
-          </Card>
         </aside>
       </div>
     </div>

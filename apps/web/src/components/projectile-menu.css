@@ -1,0 +1,95 @@
+.projectile-menu-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.projectile-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  z-index: 6;
+  width: 232px;
+  max-width: min(232px, calc(100vw - 24px));
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--popover);
+  box-shadow: 0 12px 32px -12px rgb(20 40 30 / 35%);
+}
+
+.projectile-menu[data-align="left"] {
+  left: 0;
+}
+
+.projectile-menu[data-align="center"] {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.projectile-menu[data-align="right"] {
+  right: 0;
+}
+
+.projectile-menu[data-side="bottom"] {
+  top: calc(100% + 6px);
+  bottom: auto;
+}
+
+.projectile-menu-heading {
+  padding: 8px 10px 2px;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.projectile-menu-status {
+  padding: 0 10px 8px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.projectile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.projectile-menu-item:hover,
+.projectile-menu-item:focus-visible {
+  background: var(--accent);
+  outline: none;
+}
+
+.projectile-menu-item:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.projectile-menu-item:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.projectile-menu-item .projectile-icon {
+  width: 24px;
+  height: 24px;
+  font-size: 22px;
+}
+
+.projectile-menu-item .projectile-icon svg {
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+}

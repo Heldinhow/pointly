@@ -226,7 +226,7 @@ Linguagem de cantos contidos e táteis; radius base `--radius: 0.75rem` (`sm 8px
 - **Loaders:** esqueleto shimmer nas dimensões do layout. `Spinner` só para `Carregando sala / Reconectando` — nunca spinner circular em lista de votos.
 - **Empty/Waiting:** ícone + título + guia (`arena-waiting`: borda block, ícone 22px primary, p 12px/1.7). Nunca só "No data". Solo (`1 na sala`) mostra hint de convite.
 - **Stats pill:** `output[aria-live]` com mediana grande mono + média/intervalo + pips `N×V`. `Unânime` = badge `success/12%`. `Só pausa/ausência` = mensagem explícita, sem média/mediana.
-- **Projectiles (pós-reveal):** botões `outline/sm` com emoji+label (EXCEÇÃO à regra no-emoji — feature, issue #157). Cooldown 5s com contagem regressiva, feed `border/bg-card 11px`, limite de feed. Indisponível durante votação, com explicação.
+- **Projéteis (qualquer fase):** bola de papel e aviãozinho de papel com SVG próprio; pedra, tijolo e tomate com emoji (exceção da feature). Painel próprio junto ao avatar/nome do alvo (sem coss Menu — o Menu travava o bun test no jsdom): hover no desktop, toque alterna, Enter abre; cinco opções com ícone, nome e área de toque de 44px, setas navegam, Esc fecha e devolve o foco. Sem seletor de alvo separado, sem menu em si mesmo, assentos vazios ou desconectados. Espectadores podem arremessar e ser alvo pelo nome. Cooldown compartilhado de 2s por participante, com opções desabilitadas e contagem no menu. Voo em arco entre posições reais de avatares/nomes de espectadores, com impacto, esquiva ou rebatida determinados pelo servidor. Overlay sem interação acima dos assentos, animações só de `transform/opacity`; movimento reduzido não cria voo. Sem lista/feed de arremessos — só o voo some sozinho.
 
 ## Do's and Don'ts
 

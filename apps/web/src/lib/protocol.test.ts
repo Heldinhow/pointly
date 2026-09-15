@@ -7,19 +7,18 @@ import {
 } from "./protocol";
 
 describe("protocol — projéteis (issue #157)", () => {
-	test("isProjectileType aceita os 7 tipos e rejeita desconhecidos", () => {
+	test("isProjectileType aceita os 5 tipos e rejeita desconhecidos e removidos", () => {
 		for (const type of [
 			"paper_ball",
+			"paper_plane",
+			"rock",
+			"brick",
 			"tomato",
-			"coffee",
-			"rubber_duck",
-			"star",
-			"heart",
-			"claps",
 		] as const) {
 			expect(isProjectileType(type)).toBe(true);
 		}
 		expect(isProjectileType("fireball")).toBe(false);
+		expect(isProjectileType("coffee")).toBe(false);
 		expect(isProjectileType(null)).toBe(false);
 	});
 

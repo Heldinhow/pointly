@@ -69,6 +69,7 @@
   border-color: var(--destructive);
 }
 .arena-workspace {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 288px;
   gap: 32px;
@@ -126,8 +127,16 @@
   height: 40px;
   padding-inline: 20px;
 }
+.arena-reveal [data-slot="button"]:disabled {
+  opacity: 1;
+  background: transparent;
+  color: #c3dbce;
+  border: 1px dashed #ffffff40;
+  box-shadow: none;
+}
 .arena-reveal [data-slot="card-panel"] > div > span {
-  display: none;
+  font-size: 11px;
+  color: #c3dbce;
 }
 .arena-deck {
   border: 1px solid var(--border);
@@ -154,7 +163,7 @@
   justify-content: space-between;
   gap: 8px;
   margin-top: 17px;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted-foreground);
 }
 .arena-table-note kbd {
@@ -226,6 +235,7 @@
   width: 100%;
   min-width: 0;
   font-size: 11px;
+  font-family: var(--font-mono);
 }
 .arena-invite [data-slot="card-panel"] > div:first-child button {
   flex: 1;
@@ -266,23 +276,31 @@
 .arena-waiting p + p {
   margin-top: 12px;
 }
-.arena-reactions {
-  padding-top: 5px;
+.arena-projectile-hint {
+  margin: 8px 0 12px;
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 12px;
 }
-.arena-reactions [data-testid="projectile-unavailable"] {
-  display: none;
+button.arena-spectator-target {
+  padding: 0 4px;
+  min-height: 44px;
+  height: auto;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 4px;
+  cursor: pointer;
 }
-.arena-reactions select {
-  width: 100%;
+button.arena-spectator-target:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
-.arena-reactions [role="group"] {
-  gap: 5px;
-}
-.arena-reactions [role="group"] button {
-  font-size: 11px;
-}
-.arena-reactions [data-testid="projectile-feed-item"] {
-  font-size: 11px;
+.arena-spectator-anchor {
+  display: inline-block;
 }
 .arena-results,
 .arena-next-round {
@@ -299,7 +317,8 @@
   font-size: 12px;
 }
 .arena-next-round [data-slot="card-panel"] > div > span {
-  display: none;
+  font-size: 11px;
+  color: var(--muted-foreground);
 }
 .arena-next-round button {
   width: 100%;

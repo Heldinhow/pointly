@@ -64,12 +64,10 @@ export type PingPayload = z.infer<typeof PingPayloadSchema>;
 
 export const ProjectileTypeSchema = z.enum([
 	"paper_ball",
+	"paper_plane",
+	"rock",
+	"brick",
 	"tomato",
-	"coffee",
-	"rubber_duck",
-	"star",
-	"heart",
-	"claps",
 ]);
 export type ProjectileType = z.infer<typeof ProjectileTypeSchema>;
 
