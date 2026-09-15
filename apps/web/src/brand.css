@@ -158,8 +158,59 @@ summary:focus-visible {
 [data-testid="deck-hint"] {
   margin-top: 9px;
 }
+
+/* Marca Pointly: pinwheel em swirl + wordmark em cascata (estilo Factory).
+   Só transform/opacity. `prefers-reduced-motion` colapsa via index.css (rede global). */
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.brand-mark {
+  display: inline-flex;
+  color: var(--primary);
+  transition: transform 250ms var(--ease-out-quint);
+}
+a:hover .brand-mark {
+  transform: scale(1.12) rotate(10deg);
+}
+.brand-mark__pop {
+  animation: brand-pop 0.6s var(--ease-out-quint) both;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes brand-pop {
+  from {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.6);
+  }
+}
+.brand-mark__spin {
+  animation: brand-spin 12s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+a:hover .brand-mark__spin {
+  animation-duration: 2.2s;
+}
+@keyframes brand-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.brand-word__letter {
+  display: inline-block;
+  animation: brand-rise 0.55s var(--ease-out-quint) both;
+  animation-delay: calc(150ms + var(--i) * 55ms);
+}
+@keyframes brand-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.55em);
+  }
+}
 @media (max-width: 700px) {
-  .site-main {
+.site-main {
     padding-top: 24px;
   }
   .site-nav {

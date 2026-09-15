@@ -1,5 +1,6 @@
 import type * as React from "react";
 import { useEffect, useState } from "react";
+import { BrandMark, BrandWordmark } from "@/components/brand-mark";
 import { cn } from "@/lib/utils";
 
 /** Auditoria #158: atalho de teclado para pular direto ao conteúdo. */
@@ -62,12 +63,13 @@ export function Brand({
     <span
       data-slot="brand"
       className={cn(
-        "font-heading text-2xl font-bold tracking-tighter",
+        "brand-lockup font-heading text-2xl font-bold tracking-tighter",
         className,
       )}
       {...props}
     >
-      Pointly
+      <BrandMark size={26} className="brand-mark" />
+      <BrandWordmark />
     </span>
   );
 }
