@@ -136,11 +136,13 @@ T7 → T8 → T9
 
 **Done when**:
 
-- [ ] hello com avatar válido persiste no Player e aparece no toState
-- [ ] hello com avatar acima do teto aceita o join com avatar ignorado (iniciais)
-- [ ] reconnect reidrata avatar junto com assento/voto
-- [ ] Gate check passes: `bun --filter server test`
-- [ ] Test count: ≥4 tests pass (persist, teto ignorado, reconnect, sem avatar)
+- [x] hello com avatar válido persiste no Player e aparece no toState
+- [x] hello com avatar acima do teto aceita o join com avatar ignorado (iniciais)
+- [x] reconnect reidrata avatar junto com assento/voto
+- [x] Gate check passes: `bun --filter server test`
+- [x] Test count: ≥4 tests pass (persist, teto ignorado, reconnect, sem avatar)
+
+**Status**: ✅ Complete (T3)
 
 **Tests**: unit
 **Gate**: quick

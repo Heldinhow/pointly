@@ -9,6 +9,7 @@
  */
 
 import {
+	AvatarSchema,
 	NickSchema,
 	type HelloPayload,
 	type Player,
@@ -60,6 +61,11 @@ export function handleHello(hub: Hub, payload: HelloPayload): HelloOutcome {
 	const nick = parsed.data;
 	const { uuid } = payload;
 
+	// 2a. Avatar: válido persiste no candidate; inválido/acima do teto
+	//     ignora SÓ o campo (join segue com iniciais — AV-03/edge).
+	const parsedAvatar = AvatarSchema.safeParse(payload.avatar);
+	const avatar = parsedAvatar.success ? parsedAvatar.data : undefined;
+
 	// 2. Reconnect: UUID conhecido → reidrata
 	//    - Sem code: sempre tenta reconnect (cenário app refresh)
 	//    - Com code: tenta reconnect SÓ se UUID bate esta sala
@@ -96,6 +102,7 @@ export function handleHello(hub: Hub, payload: HelloPayload): HelloOutcome {
 		hasVoted: false,
 		value: null,
 		status: "connected",
+		...(avatar !== undefined ? { avatar } : {}),
 		joinedAt: Date.now(),
 	};
 

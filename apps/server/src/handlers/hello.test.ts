@@ -24,6 +24,8 @@ function hello(uuid: string, nick: string, code?: string): HelloPayload {
 	};
 }
 
+const JPEG_AVATAR = "data:image/jpeg;base64,/9j/4AAQ";
+
 const UUID_P1 = "00000000-0000-4000-8000-000000000001";
 const UUID_P2 = "00000000-0000-4000-8000-000000000002";
 
@@ -324,5 +326,80 @@ describe("handleHello — espectador", () => {
 			expect(join.role).toBe("host");
 			expect(join.sala.hostId).toBe(join.playerId);
 		}
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Avatar na mesa (T3, AV-02/AV-03)
+// ---------------------------------------------------------------------------
+
+describe("handleHello — avatar", () => {
+	test("hello com avatar válido persiste no Player e aparece no toState", () => {
+		const result = handleHello(hub, {
+			uuid: UUID_P1,
+			nick: "Ana",
+			avatar: JPEG_AVATAR,
+		});
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		const player = result.sala.players.find((p) => p.id === result.playerId);
+		expect(player?.avatar).toBe(JPEG_AVATAR);
+	});
+
+	test("hello com avatar acima do teto aceita o join com avatar ignorado", () => {
+		const oversized = `data:image/jpeg;base64,${"A".repeat(40000)}`;
+		const result = handleHello(hub, {
+			uuid: UUID_P1,
+			nick: "Ana",
+			avatar: oversized,
+		});
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		const player = result.sala.players.find((p) => p.id === result.playerId);
+		expect(player?.avatar).toBeUndefined();
+	});
+
+	test("hello com avatar de formato inválido aceita o join com avatar ignorado", () => {
+		const result = handleHello(hub, {
+			uuid: UUID_P1,
+			nick: "Ana",
+			avatar: "data:image/gif;base64,R0lGODlh",
+		});
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		const player = result.sala.players.find((p) => p.id === result.playerId);
+		expect(player?.avatar).toBeUndefined();
+	});
+
+	test("hello sem avatar entra com avatar ausente (iniciais)", () => {
+		const result = handleHello(hub, hello(UUID_P1, "Ana"));
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		const player = result.sala.players.find((p) => p.id === result.playerId);
+		expect(player?.avatar).toBeUndefined();
+	});
+
+	test("reconnect reidrata avatar junto com assento e voto", () => {
+		const first = handleHello(hub, {
+			uuid: UUID_P1,
+			nick: "Ana",
+			avatar: JPEG_AVATAR,
+		});
+		expect(first.ok).toBe(true);
+		if (!first.ok) return;
+		const sala = hub.getSala(hub.activeCodes()[0]!)!;
+		const anaId = sala.hostId!;
+		sala.castVote(anaId, "5");
+		const seatBefore = sala.getPlayer(anaId)!.seatIndex;
+
+		hub.markDisconnected(anaId);
+		const reconnect = handleHello(hub, hello(UUID_P1, "Ana"));
+		expect(reconnect.ok).toBe(true);
+		if (!reconnect.ok) return;
+		expect(reconnect.reconnected).toBe(true);
+		const ana = reconnect.sala.players.find((p) => p.id === anaId);
+		expect(ana?.avatar).toBe(JPEG_AVATAR);
+		expect(ana?.seatIndex).toBe(seatBefore);
+		expect(ana?.value).toBe("5");
 	});
 });
