@@ -23,15 +23,42 @@ function canvasProto(): Record<string, unknown> {
 	return ctor.prototype;
 }
 
-function mockCanvasPipeline(): void {
+/** Captura do pipeline de canvas para ancorar dims/qualidade/crop (P1-AC1). */
+interface CanvasCapture {
+	width: number | null;
+	height: number | null;
+	toDataURLArgs: unknown[];
+	drawImageArgs: unknown[];
+}
+
+function mockCanvasPipeline(captured?: CanvasCapture): CanvasCapture {
+	const cap: CanvasCapture = captured ?? {
+		width: null,
+		height: null,
+		toDataURLArgs: [],
+		drawImageArgs: [],
+	};
 	const proto = canvasProto();
-	proto.getContext = () => ({ drawImage: () => {} });
-	proto.toDataURL = () => `${JPEG_PREFIX}MOCK128`;
+	proto.getContext = () => ({
+		drawImage: (...args: unknown[]) => {
+			cap.drawImageArgs = args;
+		},
+	});
+	proto.toDataURL = function (
+		this: { width: number; height: number },
+		...args: unknown[]
+	) {
+		cap.width = this.width;
+		cap.height = this.height;
+		cap.toDataURLArgs = args;
+		return `${JPEG_PREFIX}MOCK128`;
+	};
 	(globalThis as Record<string, unknown>).createImageBitmap = async () => ({
 		width: 200,
 		height: 100,
 		close: () => {},
 	});
+	return cap;
 }
 
 afterEach(() => {
@@ -56,6 +83,22 @@ describe("normalizeAvatar", () => {
 		mockCanvasPipeline();
 		const out = await normalizeAvatar(fileOf("image/webp", 2048, "a.webp"));
 		expect(out.startsWith(JPEG_PREFIX)).toBe(true);
+	});
+
+	test("ancora 128x128 jpeg q0.8 e crop central (P1-AC1)", async () => {
+		const cap = mockCanvasPipeline();
+		const out = await normalizeAvatar(fileOf("image/png", 1024, "a.png"));
+		expect(out.startsWith(JPEG_PREFIX)).toBe(true);
+		expect(cap.width).toBe(128);
+		expect(cap.height).toBe(128);
+		expect(cap.toDataURLArgs).toEqual(["image/jpeg", 0.8]);
+		// Bitmap 200x100 → lado 100, sx 50, sy 0; destino 0,0 128x128.
+		const [, sx, sy, sideW, sideH, dx, dy, dw, dh] = cap.drawImageArgs;
+		expect(sx).toBe(50);
+		expect(sy).toBe(0);
+		expect(sideW).toBe(100);
+		expect(sideH).toBe(100);
+		expect([dx, dy, dw, dh]).toEqual([0, 0, 128, 128]);
 	});
 
 	test("formato inválido rejeita com erro tipado sem throw cru", async () => {
