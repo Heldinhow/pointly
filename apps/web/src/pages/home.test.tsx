@@ -36,12 +36,14 @@ describe("HomePage (ticket 10 — Inicial com demonstração)", () => {
 		).toBeTruthy();
 	});
 
-	test("hero é só copy, sem visual nem rodada de exemplo", () => {
+	test("hero tem copy + visual estático, sem rodada interativa duplicada", () => {
 		renderHome();
 
 		expect(screen.getByTestId("home-hero")).toBeTruthy();
 		expect(screen.queryByTestId("hero-round")).toBeNull();
-		expect(screen.queryByTestId("home-hero-visual")).toBeNull();
+		const visual = screen.getByTestId("home-hero-visual");
+		expect(visual.getAttribute("aria-hidden")).toBe("true");
+		expect(visual.querySelector("button")).toBeNull();
 	});
 
 	test("estado inicial: deck presente, reveal bloqueado, sem stats", () => {

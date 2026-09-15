@@ -4,7 +4,8 @@ import {
   EyeIcon,
   RotateCcwIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardPanel } from "@/components/ui/card";
@@ -28,6 +29,42 @@ const SIMULATED_TEAM: ReadonlyArray<{ nick: string; vote: Vote }> = [
 export function HomePage(): React.ReactElement {
   const [myVote, setMyVote] = useState<Vote | null>(null);
   const [revealed, setRevealed] = useState(false);
+  const visualRef = useRef<HTMLDivElement | null>(null);
+  // Mesa viva: tilt 3D sutil só com transform, só em pointer fino e sem
+  // reduced-motion. Sem JS a mesa continua estática e visível.
+  useEffect(() => {
+    const el = visualRef.current;
+    if (!el || typeof window === "undefined" || !("matchMedia" in window))
+      return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const fine = window.matchMedia("(pointer: fine)");
+    if (reduce.matches || !fine.matches) return;
+    const stage = el.querySelector<HTMLElement>("[data-tilt-stage]");
+    if (!stage) return;
+    let frame = 0;
+    const onMove = (e: PointerEvent): void => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const r = el.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width - 0.5;
+        const py = (e.clientY - r.top) / r.height - 0.5;
+        stage.style.transform = `rotateX(${(-py * 6).toFixed(2)}deg) rotateY(${(px * 8).toFixed(2)}deg)`;
+      });
+    };
+    const onLeave = (): void => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        stage.style.transform = "";
+      });
+    };
+    el.addEventListener("pointermove", onMove, { passive: true });
+    el.addEventListener("pointerleave", onLeave, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerleave", onLeave);
+    };
+  }, []);
   const revealedVotes: Array<Vote | string> =
     myVote === null ? [] : [myVote, ...SIMULATED_TEAM.map((mate) => mate.vote)];
   const {
@@ -118,6 +155,83 @@ export function HomePage(): React.ReactElement {
             <a href="#demo" className="pt-home__demo-link">
               Experimente uma rodada
             </a>
+          </div>
+          <div
+            className="pt-home__hero-visual"
+            data-testid="home-hero-visual"
+            aria-hidden="true"
+            ref={visualRef}
+          >
+            <div className="pt-home__table-stage" data-tilt-stage>
+              <div className="pt-home__felt">
+                <span className="pt-home__felt-kicker">
+                  História em votação
+                </span>
+                <strong className="pt-home__felt-story">
+                  Checkout mobile
+                </strong>
+                <div className="pt-home__fan">
+                  <span
+                    className="pt-home__mini-card"
+                    style={{ "--i": 0 } as CSSProperties}
+                  >
+                    5
+                  </span>
+                  <span
+                    className="pt-home__mini-card pt-home__mini-card--top"
+                    style={{ "--i": 1 } as CSSProperties}
+                  >
+                    8
+                  </span>
+                  <span
+                    className="pt-home__mini-card pt-home__mini-card--back"
+                    style={{ "--i": 2 } as CSSProperties}
+                  >
+                    <span className="pt-home__mini-card-pattern" />
+                  </span>
+                </div>
+                <span className="pt-home__felt-status">
+                  <span className="pt-home__dots">
+                    <i className="is-in" />
+                    <i className="is-in" />
+                    <i className="is-in" />
+                    <i className="is-you" />
+                  </span>
+                  3 de 4 votaram · falta você
+                </span>
+              </div>
+              <span
+                className="pt-home__seat pt-home__seat--bia"
+                style={{ "--i": 0 } as CSSProperties}
+              >
+                <i>BI</i>
+                <b>Bia</b>
+                <em className="pt-home__seat-card" />
+              </span>
+              <span
+                className="pt-home__seat pt-home__seat--caio"
+                style={{ "--i": 1 } as CSSProperties}
+              >
+                <i>CA</i>
+                <b>Caio</b>
+                <em className="pt-home__seat-card" />
+              </span>
+              <span
+                className="pt-home__seat pt-home__seat--dani"
+                style={{ "--i": 2 } as CSSProperties}
+              >
+                <i>DA</i>
+                <b>Dani</b>
+                <em className="pt-home__seat-card" />
+              </span>
+              <span
+                className="pt-home__seat pt-home__seat--you"
+                style={{ "--i": 3 } as CSSProperties}
+              >
+                <i>VO</i>
+                <b>Você</b>
+              </span>
+            </div>
           </div>
         </section>
         <section
