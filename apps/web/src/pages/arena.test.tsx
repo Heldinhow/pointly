@@ -1450,7 +1450,7 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		expect(screen.queryByTestId("projectile-flight")).toBeNull();
 	});
 
-	test("pós-reveal lista os 5 projéteis com alvo e envia ao clicar", async () => {
+	test("pós-reveal lista os 6 projéteis com alvo e envia ao clicar", async () => {
 		const { socket, beto } = revealedSalaWithPair();
 		renderArena();
 		await openProjectileMenu();
@@ -1462,6 +1462,7 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 			"rock",
 			"brick",
 			"tomato",
+			"chair",
 		]) {
 			expect(screen.getByTestId(`projectile-${type}`)).toBeTruthy();
 		}
@@ -1512,7 +1513,7 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
 		await openProjectileMenu();
 
-		// Segundo envio imediato (<2s): bloqueado client-side com feedback,
+		// Segundo envio imediato (<1s): bloqueado client-side com feedback,
 		// sem trafegar e sem quebrar a sala.
 		fireEvent.click(screen.getByTestId("projectile-rock"));
 		expect(socket.sentProjectiles).toHaveLength(1);
@@ -1525,7 +1526,7 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		expect(screen.getByTestId("new-round-button")).toBeTruthy();
 	});
 
-	test("libera novo envio após 2s, compartilhado entre projéteis e alvos", async () => {
+	test("libera novo envio após 1s, compartilhado entre projéteis e alvos", async () => {
 		const { socket, ana, beto } = revealedSalaWithPair();
 		const caio = player({ id: "p_caio", nick: "Caio" }, 2);
 		useSession.setState({ sala: sala({ players: [ana, beto, caio], phase: "revealed" }) });
@@ -1535,7 +1536,7 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
 		await openProjectileMenu("Caio");
 		expect(screen.getByTestId("projectile-brick").getAttribute("aria-disabled")).toBe("true");
-		await waitFor(() => expect(screen.getByTestId("projectile-brick").getAttribute("aria-disabled")).not.toBe("true"), { timeout: 2600 });
+		await waitFor(() => expect(screen.getByTestId("projectile-brick").getAttribute("aria-disabled")).not.toBe("true"), { timeout: 1600 });
 		fireEvent.click(screen.getByTestId("projectile-brick"));
 		expect(socket.sentProjectiles).toEqual([
 			{ targetPlayerId: beto.id, projectileType: "paper_ball" },
@@ -1556,7 +1557,7 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		expect(screen.getByTestId("projectile-tomato").getAttribute("aria-disabled")).not.toBe("true");
 	});
 
-	test("sala vê só o voo, sem lista de arremessos", async () => {
+	test("sala vê só o voo anônimo, sem origem e sem lista de arremessos", async () => {
 		const { socket, ana, beto } = revealedSalaWithPair();
 		renderArena();
 
@@ -1570,11 +1571,32 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		});
 
 		const flight = await screen.findByTestId("projectile-flight");
-		expect(flight.getAttribute("data-sender")).toBe(ana.id);
+		expect(flight.getAttribute("data-sender")).toBeNull();
 		expect(flight.getAttribute("data-target")).toBe(beto.id);
 		expect(flight.getAttribute("data-outcome")).toBe("hit");
+		expect(flight.getAttribute("data-projectile")).toBe("tomato");
 		expect(screen.queryByTestId("projectile-feed")).toBeNull();
 		expect(screen.queryByTestId("projectile-feed-item")).toBeNull();
+	});
+
+	test("cadeirada parte do centro da mesa com impacto épico no alvo", async () => {
+		const { socket, ana, beto } = revealedSalaWithPair();
+		renderArena();
+
+		await act(async () => {
+			socket.emitProjectile({
+				senderPlayerId: ana.id,
+				targetPlayerId: beto.id,
+				projectileType: "chair",
+				outcome: "hit",
+			});
+		});
+
+		const flight = await screen.findByTestId("projectile-flight");
+		expect(flight.getAttribute("data-sender")).toBeNull();
+		expect(flight.getAttribute("data-projectile")).toBe("chair");
+		expect(flight.className).toContain("projectile-flight--chair");
+		expect(await screen.findByTestId("projectile-impact")).toBeTruthy();
 	});
 
 	test("voos simultâneos aparecem e são removidos ao terminar", async () => {
@@ -1692,7 +1714,7 @@ describe("ArenaPage (issue #158 — polimento e auditoria)", () => {
 		expect(trigger.getAttribute("aria-haspopup")).toBe("menu");
 		expect(trigger.getAttribute("aria-expanded")).toBe("false");
 		await openProjectileMenu();
-		expect(screen.getAllByRole("menuitem")).toHaveLength(5);
+		expect(screen.getAllByRole("menuitem")).toHaveLength(6);
 		// Typeahead do menu não pode disparar atalhos de rodada.
 		fireEvent.keyDown(screen.getByRole("menu"), { key: "n" });
 		expect(screen.getByTestId("new-round-button").getAttribute("data-confirming")).toBe("false");

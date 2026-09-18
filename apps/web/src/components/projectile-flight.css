@@ -18,6 +18,11 @@
   overflow: clip;
   pointer-events: none;
 }
+.projectile-layer:has(.projectile-flight--chair) {
+  /* Espaço para erguer a cadeira acima dos assentos superiores, sem overflow lateral. */
+  overflow: visible;
+  clip-path: inset(-120px 0 0);
+}
 .projectile-flight {
   position: absolute;
   left: 0;
@@ -32,6 +37,159 @@
   font-size: 34px;
   filter: drop-shadow(0 3px 2px rgb(20 40 30 / 25%));
 }
+.projectile-flight--chair {
+  width: 80px;
+  height: 88px;
+  /* Pegada no encosto; o efeito ajusta o pivô quando o desenho é espelhado. */
+  transform-origin: 30px 10px;
+}
+.projectile-flight--chair .projectile-icon {
+  width: 80px;
+  height: 88px;
+  filter: drop-shadow(0 3px 2px rgb(10 20 20 / 30%));
+}
+.projectile-flight--chair .projectile-icon,
+.projectile-grip {
+  transform: scaleX(var(--chair-facing, 1));
+}
+.projectile-grip {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Explosão de partículas no ponto de contato (cor por tipo). */
+.projectile-impact {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+.projectile-ring {
+  position: absolute;
+  left: -22px;
+  top: -22px;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  border: 3px solid var(--projectile-burst, #fca5a5);
+  animation: projectile-ring calc(var(--impact-duration) * 0.45) ease-out both;
+  animation-delay: var(--contact-delay, 800ms);
+}
+.projectile-particle {
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--projectile-burst, #fca5a5);
+  animation: projectile-particle var(--impact-duration) cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--contact-delay, 800ms);
+}
+.projectile-impact--tomato { --projectile-burst: #ef4444; }
+.projectile-impact--rock,
+.projectile-impact--brick { --projectile-burst: #a8a29e; }
+.projectile-impact--paper_ball { --projectile-burst: #f3f5eb; }
+.projectile-impact--paper_plane { --projectile-burst: #93c5fd; }
+.projectile-impact--chair { --projectile-burst: #d8c49a; }
+.projectile-impact--chair .projectile-ring {
+  left: -11px;
+  top: -11px;
+  width: 22px;
+  height: 22px;
+  border-width: 1px;
+}
+.projectile-impact--chair .projectile-particle {
+  width: 3px;
+  height: 3px;
+}
+.projectile-impact--rock .projectile-particle,
+.projectile-impact--brick .projectile-particle {
+  width: 6px;
+  height: 5px;
+  border-radius: 1px;
+}
+.projectile-impact--brick { --projectile-burst: #c78765; }
+.projectile-impact--paper_ball .projectile-particle,
+.projectile-impact--paper_plane .projectile-particle {
+  width: 4px;
+  height: 6px;
+  border-radius: 1px;
+}
+.projectile-impact--paper_ball .projectile-ring,
+.projectile-impact--paper_plane .projectile-ring {
+  width: 28px;
+  height: 28px;
+  left: -14px;
+  top: -14px;
+  border-width: 1px;
+}
+.projectile-impact--chair::before,
+.projectile-impact--tomato::before {
+  content: "";
+  position: absolute;
+  inset: -28px;
+  background: var(--projectile-burst);
+  animation: projectile-flash 220ms ease-out both;
+  animation-delay: var(--contact-delay);
+}
+.projectile-impact--chair::before {
+  inset: -10px;
+  background: #eee0af;
+  animation-duration: 140ms;
+  clip-path: polygon(50% 0, 59% 30%, 85% 10%, 73% 39%, 100% 50%, 72% 61%, 88% 88%, 58% 73%, 50% 100%, 39% 72%, 10% 90%, 27% 59%, 0 50%, 29% 40%, 12% 12%, 41% 28%);
+}
+.projectile-impact--tomato::before {
+  inset: -21px;
+  border-radius: 40% 60% 35% 65% / 60% 35% 65% 40%;
+  animation-name: projectile-splat;
+  animation-duration: var(--impact-duration);
+}
+
+/* Estrelas do smash da cadeirada. */
+.projectile-star {
+  position: absolute;
+  color: #fbbf24;
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgb(20 40 30 / 40%);
+  animation: projectile-star var(--impact-duration) ease-out both;
+  animation-delay: var(--contact-delay, 1200ms);
+}
+.projectile-star--1 { left: -30px; top: calc(-46px + var(--star-offset, 0px)); }
+.projectile-star--2 { left: 14px; top: calc(-52px + var(--star-offset, 0px)); animation-delay: calc(var(--contact-delay) + var(--star-stagger)); }
+.projectile-star--3 { left: -8px; top: calc(-62px + var(--star-offset, 0px)); font-size: 10px; animation-delay: calc(var(--contact-delay) + var(--star-stagger) * 2); }
+
+@keyframes projectile-ring {
+  from { transform: scale(0.2); opacity: 1; }
+  to { transform: scale(1.5); opacity: 0; }
+}
+@keyframes projectile-particle {
+  from { transform: translate(0, 0) rotate(0) scale(1); opacity: 1; }
+  to { transform: translate(var(--dx), var(--dy)) rotate(var(--spin)) scale(0.3); opacity: 0; }
+}
+@keyframes projectile-flash {
+  0% { transform: scale(0.45); opacity: 0.95; }
+  30% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0; }
+}
+@keyframes projectile-splat {
+  0% { transform: scale(0.3); opacity: 0.9; }
+  18% { transform: scale(1.2, 0.85); opacity: 0.85; }
+  70% { transform: translateY(3px) scale(1.15, 0.9); opacity: 0.6; }
+  100% { transform: translateY(9px) scale(1.1, 0.95); opacity: 0; }
+}
+@keyframes projectile-star {
+  0% { transform: scale(0) rotate(-30deg); opacity: 0; }
+  30% { transform: scale(1.3) rotate(10deg); opacity: 1; }
+  100% { transform: scale(0.9) translateY(-10px); opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .projectile-layer {
     display: none;

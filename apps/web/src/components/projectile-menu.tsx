@@ -39,17 +39,18 @@ export function ProjectileMenu({ target, cooldownSecs, onThrow, className, child
 					<p className="projectile-menu-status" data-testid="projectile-cooldown">
 						{cooldownSecs > 0 ? `Recarregando · ${cooldownSecs}s` : "Escolha um projétil"}
 					</p>
-					{PROJECTILE_CATALOG.map(({ type, label }) => (
+					{PROJECTILE_CATALOG.map(({ type, label, epic }) => (
 						<MenuItem
 							key={type}
 							data-testid={`projectile-${type}`}
 							aria-label={`${label} em ${target.nick}`}
 							disabled={cooldownSecs > 0}
 							onClick={() => onThrow(target.id, type)}
-							className="projectile-menu-item"
+							className={epic ? "projectile-menu-item projectile-menu-item--epic" : "projectile-menu-item"}
 						>
 							<ProjectileIcon type={type} />
-							{label}
+							<span className="projectile-menu-label">{label}</span>
+							{epic ? <span className="projectile-menu-epic">épica</span> : null}
 						</MenuItem>
 					))}
 				</MenuPopup>

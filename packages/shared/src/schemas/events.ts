@@ -82,6 +82,7 @@ export const ProjectileTypeSchema = z.enum([
 	"rock",
 	"brick",
 	"tomato",
+	"chair",
 ]);
 export type ProjectileType = z.infer<typeof ProjectileTypeSchema>;
 

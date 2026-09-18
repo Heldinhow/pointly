@@ -149,7 +149,7 @@ export function buildUpdateAvatarMessage(
 /**
  * Projéteis disponíveis em qualquer fase, com cooldown por participante.
  * Espelho do `ProjectileTypeSchema` do contrato compartilhado:
- * bola de papel, aviãozinho de papel, pedra, tijolo e tomate.
+ * bola de papel, aviãozinho de papel, pedra, tijolo, tomate e cadeirada.
  */
 export const PROJECTILE_TYPES = [
 	"paper_ball",
@@ -157,6 +157,7 @@ export const PROJECTILE_TYPES = [
 	"rock",
 	"brick",
 	"tomato",
+	"chair",
 ] as const;
 export type ProjectileType = (typeof PROJECTILE_TYPES)[number];
 

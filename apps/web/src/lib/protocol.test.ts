@@ -8,13 +8,14 @@ import {
 } from "./protocol";
 
 describe("protocol — projéteis (issue #157)", () => {
-	test("isProjectileType aceita os 5 tipos e rejeita desconhecidos e removidos", () => {
+	test("isProjectileType aceita os 6 tipos e rejeita desconhecidos e removidos", () => {
 		for (const type of [
 			"paper_ball",
 			"paper_plane",
 			"rock",
 			"brick",
 			"tomato",
+			"chair",
 		] as const) {
 			expect(isProjectileType(type)).toBe(true);
 		}

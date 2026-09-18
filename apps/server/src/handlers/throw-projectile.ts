@@ -47,9 +47,13 @@ export function handleThrowProjectile(
 	}
 
 	try {
-		sala.throwProjectile(playerId, now);
+		sala.throwProjectile(playerId, now, payload.projectileType);
 
-		return { ok: true, outcome: rollProjectileOutcome() };
+		// Cadeirada épica sempre acerta — dispensa o sorteio.
+		const outcome: ProjectileOutcome = payload.projectileType === "chair"
+			? "hit"
+			: rollProjectileOutcome();
+		return { ok: true, outcome };
 	} catch (e) {
 		return mapDomainError(e);
 	}

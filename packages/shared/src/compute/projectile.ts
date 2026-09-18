@@ -16,4 +16,12 @@ export function rollProjectileOutcome(
 }
 
 /** Cooldown entre arremessos do mesmo sender (ms). */
-export const PROJECTILE_COOLDOWN_MS = 2000;
+export const PROJECTILE_COOLDOWN_MS = 1000;
+
+/** Cooldown da cadeirada — item épico, recarrega mais devagar (ms). */
+export const PROJECTILE_CHAIR_COOLDOWN_MS = 8000;
+
+/** Cadeirada épica sempre acerta — dispensa o sorteio de desfecho. */
+export function isEpicProjectile(type: string): boolean {
+	return type === "chair";
+}

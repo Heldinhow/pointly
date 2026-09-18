@@ -47,6 +47,7 @@ import { safeClear } from "@/lib/storage";
 import { copyText } from "@/lib/clipboard";
 import { resolveWsUrl } from "@/lib/api";
 import {
+  PROJECTILE_CHAIR_COOLDOWN_MS,
   PROJECTILE_COOLDOWN_MS,
 } from "@/lib/projectiles";
 import { PointlySocket } from "@/lib/ws-client";
@@ -62,7 +63,12 @@ export const SEAT_COUNT = 12;
 export const NEW_ROUND_CONFIRM_TIMEOUT_MS = 5000;
 
 // Re-export de compat (SSOT em `@/lib/projectiles`).
-export { PROJECTILE_COOLDOWN_MS };
+export { PROJECTILE_CHAIR_COOLDOWN_MS, PROJECTILE_COOLDOWN_MS };
+
+/** Cadeirada épica recarrega mais devagar que os projéteis comuns. */
+function cooldownFor(type: ProjectileType): number {
+  return type === "chair" ? PROJECTILE_CHAIR_COOLDOWN_MS : PROJECTILE_COOLDOWN_MS;
+}
 
 const PHASE_LABEL: Record<Phase, string> = {
   idle: "Aguardando votos",
@@ -181,7 +187,7 @@ export function ArenaPage(): React.ReactElement {
   const [revealError, setRevealError] = useState<string | null>(null);
   const [confirmingNewRound, setConfirmingNewRound] = useState(false);
   const [newRoundError, setNewRoundError] = useState<string | null>(null);
-  // Projéteis em qualquer fase: cooldown de 2s e voos confirmados pelo servidor.
+  // Projéteis em qualquer fase: cooldown de 1s e voos confirmados pelo servidor.
   const [projectileError, setProjectileError] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [projectileCooldownUntil, setProjectileCooldownUntil] = useState(0);
@@ -260,7 +266,7 @@ export function ArenaPage(): React.ReactElement {
         setProjectileFlights((prev) => [...prev, { ...event, key, receivedAt }].slice(-32));
         if (event.senderPlayerId === useSession.getState().playerId) {
           setProjectileError(null);
-          setProjectileCooldownUntil(receivedAt + PROJECTILE_COOLDOWN_MS);
+          setProjectileCooldownUntil(receivedAt + cooldownFor(event.projectileType));
           setNowMs(receivedAt);
         }
       },
@@ -701,7 +707,7 @@ export function ArenaPage(): React.ReactElement {
       setProjectileError(SOCKET_ERROR_COPY.interact);
       return;
     }
-    setProjectileCooldownUntil(Date.now() + PROJECTILE_COOLDOWN_MS);
+    setProjectileCooldownUntil(Date.now() + cooldownFor(projectileType));
     setNowMs(Date.now());
   }
 
@@ -904,7 +910,7 @@ export function ArenaPage(): React.ReactElement {
             </Card>
           </PokerTable>
           <p className="arena-projectile-hint" data-testid="projectile-hint">
-            Passe o mouse ou toque em alguém para arremessar · intervalo de 2 segundos.
+            Passe o mouse ou toque em alguém para arremessar · 1s de intervalo (cadeirada: 8s).
           </p>
           {projectileError ? (
             <Alert variant="error">

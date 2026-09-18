@@ -18,6 +18,7 @@
 
 import {
 	DECK_VALUES,
+	PROJECTILE_CHAIR_COOLDOWN_MS,
 	PROJECTILE_COOLDOWN_MS,
 	type ConsensusStats,
 	type Player,
@@ -92,6 +93,7 @@ export class Sala {
 	 * NÃO vai no wire format. Usado para validar o cooldown entre arremessos.
 	 */
 	private readonly lastThrownAt: Map<string, number> = new Map();
+	private readonly lastThrownType: Map<string, string> = new Map();
 
 	/**
 	 * EVR-04/EVR-05: tracking primitive pra edições pós-reveal.
@@ -178,6 +180,7 @@ export class Sala {
 		this.votes.delete(playerId);
 		this.disconnectedAt.delete(playerId);
 		this.lastThrownAt.delete(playerId);
+		this.lastThrownType.delete(playerId);
 
 		// Host saiu e ainda há outros → promove mais antigo
 		// (espectador nunca vira host; se só restarem espectadores, hostId zera).
@@ -433,17 +436,23 @@ export class Sala {
 
 	/**
 	 * Valida e registra o arremesso de um projétil de um player.
-	 * Disponível em qualquer fase; cooldown de 2 segundos por participante.
+	 * Disponível em qualquer fase; cooldown de 1 segundo por participante
+	 * (8 segundos para a cadeirada épica).
 	 */
-	throwProjectile(senderId: string, now: number = Date.now()): void {
+	throwProjectile(senderId: string, now: number = Date.now(), projectileType = "paper_ball"): void {
+		const current = projectileType === "chair" ? PROJECTILE_CHAIR_COOLDOWN_MS : PROJECTILE_COOLDOWN_MS;
+		const lastType = this.lastThrownType.get(senderId);
+		const lastCooldown = lastType === "chair" ? PROJECTILE_CHAIR_COOLDOWN_MS : PROJECTILE_COOLDOWN_MS;
+		const cooldown = Math.max(current, lastCooldown);
 		const last = this.lastThrownAt.get(senderId);
-		if (last !== undefined && now - last < PROJECTILE_COOLDOWN_MS) {
+		if (last !== undefined && now - last < cooldown) {
 			throw new SalaError(
 				"invalid_phase",
 				"Aguarde o cooldown para arremessar novamente.",
 			);
 		}
 		this.lastThrownAt.set(senderId, now);
+		this.lastThrownType.set(senderId, projectileType);
 	}
 
 	/**

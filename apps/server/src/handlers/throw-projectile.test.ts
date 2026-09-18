@@ -39,7 +39,7 @@ describe("handleThrowProjectile", () => {
 		}
 	});
 
-	test("cooldown é compartilhado entre tipos e libera exatamente em 2s", () => {
+	test("cooldown é compartilhado entre tipos e libera exatamente em 1s", () => {
 		const player1 = addPlayer("00000000-0000-4000-8000-000000000001", "Ana");
 		const player2 = handleHello(hub, {
 			uuid: "00000000-0000-4000-8000-000000000002",
@@ -58,26 +58,26 @@ describe("handleThrowProjectile", () => {
 		const r1 = handleThrowProjectile(hub, player1.id, payload, t0);
 		expect(r1.ok).toBe(true);
 
-		// Mesmo trocando de projétil, 1999ms ainda é cooldown.
-		const r2 = handleThrowProjectile(hub, player1.id, { ...payload, projectileType: "brick" }, t0 + 1999);
+		// Mesmo trocando de projétil, 999ms ainda é cooldown.
+		const r2 = handleThrowProjectile(hub, player1.id, { ...payload, projectileType: "brick" }, t0 + 999);
 		expect(r2.ok).toBe(false);
 		if (!r2.ok) {
 			expect(r2.code).toBe("invalid_phase");
 			expect(r2.message).toContain("cooldown");
 		}
 
-		const r3 = handleThrowProjectile(hub, player1.id, payload, t0 + 2000);
+		const r3 = handleThrowProjectile(hub, player1.id, payload, t0 + 1000);
 		expect(r3.ok).toBe(true);
 	});
 
-	test("os cinco tipos funcionam em qualquer fase, incluindo espectadores", () => {
+	test("os seis tipos funcionam em qualquer fase, incluindo espectadores", () => {
 		const host = addPlayer("00000000-0000-4000-8000-000000000001", "Ana");
 		const spectator = handleHello(hub, {
 			uuid: "00000000-0000-4000-8000-000000000002", nick: "Beto", code: host.code, spectate: true,
 		});
 		if (!spectator.ok) throw new Error("expected spectator ok");
 		const sala = hub.getSala(host.code)!;
-		expect(ProjectileTypeSchema.options).toEqual(["paper_ball", "paper_plane", "rock", "brick", "tomato"]);
+		expect(ProjectileTypeSchema.options).toEqual(["paper_ball", "paper_plane", "rock", "brick", "tomato", "chair"]);
 		let now = 0;
 		for (const phase of ["idle", "voting", "revealable", "revealed"] as const) {
 			sala.phase = phase;
@@ -86,7 +86,7 @@ describe("handleThrowProjectile", () => {
 				expect(handleThrowProjectile(hub, spectator.playerId, { targetPlayerId: host.id, projectileType }, now).ok).toBe(true);
 				expect(sala.phase).toBe(phase);
 				expect(sala.votes.size).toBe(0);
-				now += 2000;
+				now += 8000;
 			}
 		}
 	});
@@ -104,6 +104,32 @@ describe("handleThrowProjectile", () => {
 		expect(throwAt(guest.playerId).ok).toBe(false);
 		sala.markConnected("00000000-0000-4000-8000-000000000002");
 		expect(throwAt(guest.playerId).ok).toBe(true);
+	});
+
+	test("cadeirada épica sempre acerta e tem cooldown longo", () => {
+		const player1 = addPlayer("00000000-0000-4000-8000-000000000001", "Ana");
+		const player2 = handleHello(hub, {
+			uuid: "00000000-0000-4000-8000-000000000002",
+			nick: "Beto",
+			code: player1.code,
+		});
+		if (!player2.ok) throw new Error("expected player2 ok");
+
+		for (let i = 0; i < 20; i += 1) {
+			const result = handleThrowProjectile(hub, player1.id, {
+				targetPlayerId: player2.playerId,
+				projectileType: "chair",
+			}, i * 8000);
+			expect(result.ok).toBe(true);
+			if (result.ok) expect(result.outcome).toBe("hit");
+		}
+
+		// 2s depois da cadeirada ainda é cooldown (só libera em 8s).
+		const blocked = handleThrowProjectile(hub, player1.id, {
+			targetPlayerId: player2.playerId,
+			projectileType: "tomato",
+		}, 20 * 8000 - 6000);
+		expect(blocked.ok).toBe(false);
 	});
 
 	test("arremesso para jogador não existente na sala", () => {

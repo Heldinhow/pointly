@@ -178,7 +178,7 @@ export class PointlySocket {
 
 	/**
 	 * Envia `throw_projectile { targetPlayerId, projectileType }` (issue #157).
-	 * Em qualquer fase: o servidor valida o cooldown de 2s por sender,
+	 * Em qualquer fase: o servidor valida o cooldown de 1s por sender,
 	 * sorteia o desfecho (hit/dodge/deflect) e faz broadcast
 	 * `projectile_thrown` para a Sala. Retorna false sem conexão pronta,
 	 * alvo vazio ou tipo inválido — o chamador mantém o estado local e
