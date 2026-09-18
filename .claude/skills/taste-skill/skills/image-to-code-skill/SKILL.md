@@ -52,21 +52,11 @@ The output must feel:
 - realistic on a small laptop viewport
 
 IMPORTANT:
-For visual website tasks, you must first generate the design image(s) yourself.
-Then you must deeply analyze the generated image(s).
-Only after that should you implement the frontend.
-
-Do not skip image generation when image generation is available.
-Do not begin with freeform coding first.
-The generated image(s) are the primary visual source of truth.
-
-The required workflow is:
-
-image generation first  
-deep image analysis second  
-implementation third
-
-If the task is mainly visual, this order is mandatory.
+This skill is opt-in and NEVER overrides an existing codebase + design system (e.g. Pointly: `DESIGN.md` + COSS).
+When explicitly invoked for a visual website task without existing code to follow, prefer generating design
+image(s) first, analyzing them, then implementing. When the repo already has the UI source of truth, the
+code + `DESIGN.md` are primary — do not generate images instead of reading them, and do not skip
+implementation for mockups unless the user asked for mockups.
 
 ---
 

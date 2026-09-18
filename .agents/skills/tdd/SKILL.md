@@ -1,14 +1,20 @@
 ---
 name: tdd-red-green-refactor
 description: >
-  Enforces a disciplined Red-Green-Refactor (TDD) workflow in TypeScript/Node.js. 
-  Use this whenever creating new features, fixing bugs, or migrating logic to ensure 
-  high-quality, verifiable implementations.
+  Red-Green-Refactor (TDD) for new behavior, complex logic, or regressions in
+  TypeScript/Node.js. Opt-in technique — not the default for every change.
+  For routine fixes use the proportional default: smallest sufficient proof
+  (focused check + nearest affected gate, reuse still-current results).
 ---
 
 # Red-Green-Refactor (TDD) Skill: TypeScript Edition
 
-This skill implements a structural framework for AI-assisted programming to ensure every line of code is verifiable, typed, and purposeful.
+Use for new behavior, complex logic, or regression proof — not as a universal ritual.
+Default for routine changes is proportional verification (`verify-and-stop`): smallest
+sufficient proof, focused check before wider gates, stop when acceptance passes.
+
+When TDD applies, it implements a structural framework for AI-assisted programming
+to ensure every line of code is verifiable, typed, and purposeful.
 
 ## The Three-Phase Cycle
 

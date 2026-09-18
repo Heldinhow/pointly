@@ -5,6 +5,11 @@ description: Upgrades existing websites and apps to premium quality. Audits curr
 
 # Redesign Skill
 
+> Opt-in only. Default UI flow for this repo is Impeccable + COSS per `AGENTS.md`, scoped to `DESIGN.md`.
+> Only apply this skill on explicit request. When applied here: do NOT swap libraries (Lucide stays),
+> do NOT add overlap/depth that breaks `DESIGN.md` (no content overlap), do NOT push AIDA/GSAP/cinematic
+> sections — this product is a planning-poker room, not a marketing site.
+
 ## How This Works
 
 When applied to an existing project, follow this sequence:

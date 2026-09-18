@@ -61,7 +61,7 @@ O resultado físico/visual de um Arremesso determinado pelo servidor (ex: acerto
 _Avoid_: resultado, fim
 
 **Cooldown**:
-O intervalo obrigatório de 5 segundos que um Player precisa aguardar entre Arremessos.
+O intervalo obrigatório entre Arremessos do mesmo Player. SSOT no código: `PROJECTILE_COOLDOWN_MS` (1s) e `PROJECTILE_CHAIR_COOLDOWN_MS` (8s, cadeirada épica) em `packages/shared/src/compute/projectile.ts`.
 _Avoid_: tempo de recarga, espera, delay
 
 **Avatar**:

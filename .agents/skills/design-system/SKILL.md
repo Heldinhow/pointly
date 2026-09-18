@@ -12,6 +12,10 @@ metadata:
 
 Token architecture, component specifications, systematic design, slide generation.
 
+> Opt-in. In this repo the visual SSOT is `DESIGN.md` + `apps/web/src/index.css` with COSS components.
+> The slide/presentation subsystem (CSVs, Chart.js, Pexels/Unsplash fetchers) is out of scope for Pointly —
+> do not pull it into product tasks unless explicitly requested.
+
 ## When to Use
 
 - Design token creation

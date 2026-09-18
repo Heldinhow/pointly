@@ -1614,29 +1614,19 @@ export function setDetectorForTesting(impl) {
 }
 
 // ────────────────────────────────────────────────────────────────────────
-// Nudge/steer messages for the no-silent-fires policy.
+// Nudge/steer messages. Default is silent unless there is new information.
 //
-// The hook is designed to be a conversational presence: every fire that
-// actually scans a file emits a developer-role message into the model's
-// next turn. Three states map to three templates:
+// The hook emits a developer-role message only when it carries something new:
+//   1. **Fresh findings**  → `renderTemplate` (existing, imperative). Always.
+//   2. **Suppression**     → `suppressionNotice` (hook is backing off). Always.
+//   3. **Pending findings** → `renderPendingAck`. Only with
+//                              `IMPECCABLE_HOOK_VERBOSE=1` (opt-in re-nudge).
+//   4. **Truly clean**      → `renderCleanAck`. Only with
+//                              `IMPECCABLE_HOOK_VERBOSE=1`.
 //
-//   1. **Fresh findings**  → `renderTemplate` (existing, imperative).
-//   2. **Pending findings** → `renderPendingAck` (re-nudge for issues the
-//                              model was already told about in this
-//                              session but hasn't fixed yet).
-//   3. **Truly clean**      → `renderCleanAck` (short positive nudge that
-//                              keeps the design discipline in context).
-//
-// All three are short (≤ ~40 tokens each) so the cumulative cost stays
-// bounded across a long active editing session. Users who explicitly want
-// silence-on-clean can set `IMPECCABLE_HOOK_QUIET=1` — runHook checks that
-// env before emitting #2 or #3.
-//
-// Why not stay silent on dedup-clean? Earlier versions did. The model
-// quickly forgets the prior reminder once tool output scrolls past it, so
-// re-nudging on the same file with a short "still pending" line keeps the
-// pressure on. The wording deliberately points back to "earlier this
-// session" so the model knows it's a re-mind, not a new finding.
+// Rationale: pending/clean nudges on every edit cost context without new
+// information. Fresh findings and the suppression notice are the signals
+// that change model behavior; the rest is noise by default.
 // ────────────────────────────────────────────────────────────────────────
 
 const STEER_LINE =
@@ -1980,7 +1970,16 @@ export async function runHook({
 			});
 		}
 
-		if (pendingWinner && shouldEmitAckForFile(pendingWinner.filePath, config)) {
+		// Default-silent acks: fresh findings already emitted above. Pending/clean
+		// nudges are opt-in via IMPECCABLE_HOOK_VERBOSE=1 — they cost context on
+		// every edit without new information.
+		const verboseAcks = truthy(env.IMPECCABLE_HOOK_VERBOSE);
+
+		if (
+			pendingWinner &&
+			verboseAcks &&
+			shouldEmitAckForFile(pendingWinner.filePath, config)
+		) {
 			const text = appendDesignSystemNote(
 				renderPendingAck(pendingWinner.filePath, pendingWinner.known, {
 					cwd: projectCwd,
@@ -2025,7 +2024,21 @@ export async function runHook({
 			};
 		}
 
-		if (cleanWinner && shouldEmitAckForFile(cleanWinner.filePath, config)) {
+		if (!verboseAcks && (pendingWinner || cleanWinner)) {
+			// Silent by default: no new findings, so no new context. The
+			// suppression notice above still fires (it carries new information).
+			return result({
+				emitted: false,
+				quiet: true,
+				durationMs: Date.now() - started,
+			});
+		}
+
+		if (
+			cleanWinner &&
+			verboseAcks &&
+			shouldEmitAckForFile(cleanWinner.filePath, config)
+		) {
 			const text = appendDesignSystemNote(
 				renderCleanAck(cleanWinner.filePath, { cwd: projectCwd }),
 				scanOptions,

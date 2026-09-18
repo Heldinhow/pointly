@@ -1,4 +1,7 @@
-# Codex: Astra orchestrator + Luna subagents
+# Codex: root direto + subagentes Luna/Astra sob demanda (sem skill orquestradora)
+#
+# Delegação é opt-in por benefício concreto ou pedido explícito.
+# Ver agentes disponíveis em .codex/agents/.
 #
 # Main knobs to change:
 #   model / model_reasoning_effort
