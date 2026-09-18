@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import {
   Brand,
@@ -18,6 +19,14 @@ export default function App(): React.ReactElement {
   const { pathname } = useLocation();
   const inArena = pathname.startsWith("/s/");
   const scrolled = useHeaderScrolled();
+  const previousPath = useRef(pathname);
+
+  useEffect(() => {
+    if (previousPath.current === pathname) return;
+    previousPath.current = pathname;
+    window.scrollTo({ top: 0, behavior: "instant" });
+    document.getElementById("conteudo")?.focus({ preventScroll: true });
+  }, [pathname]);
 
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
@@ -42,7 +51,7 @@ export default function App(): React.ReactElement {
           <ThemeToggle theme={theme} onToggle={toggle} />
         </div>
       </ShellHeader>
-      <ShellMain id="conteudo">
+      <ShellMain id="conteudo" tabIndex={-1}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/join" element={<JoinPage />} />

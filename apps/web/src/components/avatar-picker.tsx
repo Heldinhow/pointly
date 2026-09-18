@@ -78,7 +78,7 @@ export function AvatarPicker({
             ref={inputRef}
             type="file"
             accept="image/png,image/jpeg,image/webp"
-            className="sr-only"
+            hidden
             aria-label="Escolher foto"
             disabled={busy}
             onChange={(event) => {
@@ -90,7 +90,7 @@ export function AvatarPicker({
             type="button"
             variant="outline"
             size="sm"
-            disabled={busy}
+            loading={busy}
             onClick={() => inputRef.current?.click()}
           >
             <ImagePlusIcon aria-hidden="true" />
@@ -110,7 +110,9 @@ export function AvatarPicker({
           ) : null}
         </div>
       </div>
-      <FieldDescription>Visível para todos na sala</FieldDescription>
+      <FieldDescription aria-live="polite">
+        {busy ? "Preparando sua foto…" : "Visível para todos na sala"}
+      </FieldDescription>
       {error ? <FieldError match={true}>{error}</FieldError> : null}
     </Field>
   );

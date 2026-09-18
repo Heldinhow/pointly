@@ -94,11 +94,11 @@ describe("Sala — markDisconnected/markConnected", () => {
 });
 
 // ---------------------------------------------------------------------------
-// tickGracePeriod (F-050 — remove após 60s disconnected)
+// tickGracePeriod (F-050 — remove após o grace period disconnected)
 // ---------------------------------------------------------------------------
 
 describe("Sala — tickGracePeriod", () => {
-	test("remove player disconnected há mais de 60s", () => {
+	test("remove player disconnected após o grace period", () => {
 		const p2 = makePlayer("p2", "Bob");
 		sala.addPlayer(p2);
 		// disconnect 100 segundos atrás

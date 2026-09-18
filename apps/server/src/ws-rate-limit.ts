@@ -4,7 +4,7 @@
  * Limite simples: max N conexões por segundo por IP, em janela rolling de 1s.
  * Usa `Map<ip, number[]>` em memória; thread-safe o suficiente para Bun single-process.
  *
- * @see spec edge cases "Heartbeat timeout (60s sem ping) | Server desconecta player"
+ * @see spec edge cases "Heartbeat timeout (90s sem pong) | Server desconecta player"
  *       rate limit é anti-spam DoS superficial; v1 não usa Redis.
  */
 

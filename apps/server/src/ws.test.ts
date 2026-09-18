@@ -28,6 +28,8 @@ class MockBunWS implements BunWS {
 	closeReason: string | null = null;
 	private subs = new Set<string>();
 
+	pings = 0;
+
 	constructor(ip = "127.0.0.1") {
 		this.remoteAddress = ip;
 		this.data = {
@@ -35,6 +37,7 @@ class MockBunWS implements BunWS {
 			code: null,
 			ip,
 			lastPongAt: Date.now(),
+			lastPingAt: Date.now(),
 		};
 	}
 
@@ -42,6 +45,10 @@ class MockBunWS implements BunWS {
 		this.messages.push(
 			typeof message === "string" ? message : new TextDecoder().decode(message),
 		);
+	}
+
+	ping(): void {
+		this.pings += 1;
 	}
 
 	close(code?: number, reason?: string): void {
@@ -226,13 +233,26 @@ describe("WSService — onMessage (hello + cast_vote + reveal + new_round)", () 
 		}
 	});
 
-	test("ping responde pong", () => {
+	test("ping app-level responde pong (compat)", () => {
 		service.onOpen(ws);
 		const before = Date.now();
 		service.onMessage(ws, JSON.stringify({ type: "ping", payload: {} }));
 		const pongs = ws.eventsOfType("pong");
 		expect(pongs).toHaveLength(1);
 		expect(ws.data.lastPongAt).toBeGreaterThanOrEqual(before);
+	});
+
+	test("onPong de protocolo renova o liveness", () => {
+		service.onOpen(ws);
+		ws.data.lastPongAt = Date.now() - 80_000;
+		service.onPong(ws);
+		expect(Date.now() - ws.data.lastPongAt).toBeLessThan(1000);
+	});
+
+	test("onPong ignora conexão desconhecida", () => {
+		const ghost = new MockBunWS("9.9.9.9");
+		expect(() => service.onPong(ghost)).not.toThrow();
+		expect(ghost.data.lastPongAt).toBeLessThanOrEqual(Date.now());
 	});
 
 	test("reveal e nova rodada enviam o estado atualizado também a quem acionou", () => {
@@ -365,12 +385,39 @@ describe("WSService — wire format validation", () => {
 // ---------------------------------------------------------------------------
 
 describe("WSService — tick heartbeat + grace period", () => {
-	test("fecha conexão com heartbeat expirado", () => {
+	test("tolera 60s sem pong (aba oculta) e fecha após 90s (morte real)", () => {
 		service.onOpen(ws);
-		ws.data.lastPongAt = Date.now() - 20_000;
+		ws.data.lastPongAt = Date.now() - 60_000;
+		service.tick(Date.now());
+		expect(ws.closed).toBe(false);
+
+		ws.data.lastPongAt = Date.now() - 95_000;
 		service.tick(Date.now());
 		expect(ws.closed).toBe(true);
 		expect(ws.closeCode).toBe(1011);
+	});
+
+	test("tick pinga conexão com hello após 25s, mas não antes nem pré-hello", () => {
+		service.onOpen(ws);
+		service.onMessage(
+			ws,
+			JSON.stringify({
+				type: "hello",
+				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+			}),
+		);
+		const t = Date.now();
+		service.tick(t);
+		expect(ws.pings).toBe(0);
+
+		service.tick(t + 26_000);
+		expect(ws.pings).toBe(1);
+
+		// Pré-hello nunca recebe ping de protocolo.
+		const fresh = new MockBunWS("127.0.0.3");
+		service.onOpen(fresh);
+		service.tick(t + 60_000);
+		expect(fresh.pings).toBe(0);
 	});
 
 	test("tick sozinho não broadcasta room_state (só eventos disparam)", () => {

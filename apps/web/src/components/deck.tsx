@@ -48,7 +48,7 @@ export function Deck({ currentVote, onSelect, disabled = false }: DeckProps): Re
 								className={cn(
 									"flex h-16 w-12 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-xl border font-mono text-xl",
 									"motion-safe:transition-transform motion-safe:duration-150",
-									"motion-safe:hover:-translate-y-1 motion-safe:active:translate-y-0",
+									"motion-safe:enabled:hover:-translate-y-1 motion-safe:enabled:active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50",
 									"focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none",
 									selected
 										? "border-primary bg-primary font-semibold text-primary-foreground shadow-xs motion-safe:-translate-y-1"

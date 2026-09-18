@@ -7,7 +7,7 @@
  *  - Coordena os handlers (hello/cast_vote/reveal/...) — cada um chama Hub,
  *    Hub aplica a mutação na Sala e devolve outcome para o broadcast
  *  - Fornece `findPlayerForConnection()` para T13a reconnect
- *  - Owns o periodic cleanup do grace period (60s)
+ *  - Owns o periodic cleanup do grace period (6min)
  *
  * O Hub é o único lugar que tem autorização pra chamar mutações em Sala.
  * Handlers T13-T16 são wrappers finos que validam input e delegam ao Hub.
@@ -201,7 +201,7 @@ export class Hub {
 
 	/**
 	 * Marca player como disconnected (websocket closed, mas grace period).
-	 * NÃO remove ainda — T18 cleanup remove após 60s.
+	 * NÃO remove ainda — T18 cleanup remove após o grace period (6min).
 	 */
 	markDisconnected(playerId: string, now: number = Date.now()): void {
 		const sala = this.getSalaForPlayer(playerId);
@@ -214,7 +214,7 @@ export class Hub {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Roda a cada 10s. Remove players disconnected há mais de 60s.
+	 * Roda a cada 10s. Remove players disconnected após o grace period.
 	 * Se sala fica vazia como resultado, T18 logic remove do Map.
 	 *
 	 * @returns lista de (code, playerId) removidos (para broadcast ou log)

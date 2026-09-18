@@ -4,7 +4,7 @@
  * Coordena:
  *  - Remoção de sala quando último player sai (Map.delete)
  *  - Promoção de host quando host sai com outros (T12a já faz)
- *  - Grace period de 60s pra jogadores disconnected (Hub.tickGracePeriod)
+ *  - Grace period de 6min pra jogadores disconnected (Hub.tickGracePeriod)
  *  - Graceful shutdown em SIGTERM — broadcast sala_ended (server_restart)
  *
  * Roda como job periódico a cada 10s (setInterval).

@@ -24,18 +24,30 @@ export interface PointlySocketEvents {
 	onProjectileThrown?: (event: ProjectileThrownPayload) => void;
 	onClose?: () => void;
 	onError?: (code: string, message: string) => void;
+	onReconnecting?: (attempt: number, nextInMs: number) => void;
+	onReconnected?: (welcome: WelcomePayload) => void;
+	onReconnectFailed?: () => void;
 }
 
 interface PointlySocketOptions {
 	helloTimeoutMs?: number;
-	pingIntervalMs?: number;
-	pongTimeoutMs?: number;
+	/** Janela total de retry após queda real pós-ready. Default 5min. */
+	reconnectWindowMs?: number;
+	/** Delay base do backoff exponencial. Default 1s. */
+	reconnectBaseDelayMs?: number;
+	/** Teto do delay entre tentativas. Default 10s. */
+	reconnectMaxDelayMs?: number;
+	/** Desliga o auto-reconnect (ex: testes). Default true. */
+	autoReconnect?: boolean;
 }
 
 /**
- * Cliente WebSocket mínimo do ticket 03: conecta, envia hello, resolve com o
- * welcome (ou rejeita com o erro do servidor) e mantém heartbeat ping/pong.
- * Fechamento pós-ready (incluindo pong expirado) notifica `onClose`.
+ * Cliente WebSocket mínimo do ticket 03: conecta, envia hello e resolve com
+ * o welcome (ou rejeita com o erro do servidor).
+ *
+ * Liveness é responsabilidade do SERVIDOR (ping de protocolo a cada 25s —
+ * o browser responde `pong` sozinho, sem JS, logo aba oculta não derruba).
+ * O cliente nunca envia ping nem se auto-derruba por timeout local.
  *
  * Ticket 04: handlers podem ser atualizados pós-connect via `setHandlers`,
  * para a Arena assinar `room_state` no socket criado pela entrada (handoff
@@ -44,6 +56,10 @@ interface PointlySocketOptions {
  * Ticket 09: `sendLeaveRoom` para saída voluntária (remove o Player e
  * broadcast para os demais); F5/recarregamento NÃO envia leave — a Arena
  * reconecta com o mesmo UUID e o servidor reidrata sem duplicar.
+ *
+ * Rede de segurança: queda REAL pós-ready (rede, sleep, discard) agenda
+ * retry com backoff exponencial por 5min (mesmo `hello`/UUID — o servidor
+ * reidrata voto, assento e fase dentro do grace period).
  */
 export class PointlySocket {
 	private socket: WebSocket | null = null;
@@ -52,13 +68,17 @@ export class PointlySocket {
 	private resolveHello: ((welcome: WelcomePayload) => void) | null = null;
 	private rejectHello: ((error: JoinError) => void) | null = null;
 	private helloTimer: ReturnType<typeof setTimeout> | null = null;
-	private pingTimer: ReturnType<typeof setInterval> | null = null;
-	private staleTimer: ReturnType<typeof setInterval> | null = null;
-	private lastPongAt = 0;
 	private events: PointlySocketEvents;
 	private readonly helloTimeoutMs: number;
-	private readonly pingIntervalMs: number;
-	private readonly pongTimeoutMs: number;
+	private readonly reconnectWindowMs: number;
+	private readonly reconnectBaseDelayMs: number;
+	private readonly reconnectMaxDelayMs: number;
+	private autoReconnect: boolean;
+	private lastUrl: string | null = null;
+	private lastHello: HelloPayload | null = null;
+	private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+	private reconnectAttempt = 0;
+	private reconnectStartedAt = 0;
 
 	constructor(
 		events: PointlySocketEvents = {},
@@ -66,8 +86,15 @@ export class PointlySocket {
 	) {
 		this.events = { ...events };
 		this.helloTimeoutMs = options.helloTimeoutMs ?? 10_000;
-		this.pingIntervalMs = options.pingIntervalMs ?? 5_000;
-		this.pongTimeoutMs = options.pongTimeoutMs ?? 10_000;
+		this.reconnectWindowMs = options.reconnectWindowMs ?? 5 * 60_000;
+		this.reconnectBaseDelayMs = options.reconnectBaseDelayMs ?? 1_000;
+		this.reconnectMaxDelayMs = options.reconnectMaxDelayMs ?? 10_000;
+		this.autoReconnect = options.autoReconnect ?? true;
+	}
+
+	setAutoReconnect(enabled: boolean): void {
+		this.autoReconnect = enabled;
+		if (!enabled) this.clearReconnect();
 	}
 
 	getStatus(): SocketStatus {
@@ -170,8 +197,29 @@ export class PointlySocket {
 		);
 	}
 
+	/**
+	 * Tenta reconectar agora (botão "Tentar agora", `online`, `pageshow`).
+	 * Sem credenciais guardadas ou já `ready`/`connecting` é no-op.
+	 */
+	retryNow(): void {
+		if (this.status === "ready" || this.status === "connecting") return;
+		if (!this.lastUrl || !this.lastHello) return;
+		if (this.reconnectTimer) {
+			clearTimeout(this.reconnectTimer);
+			this.reconnectTimer = null;
+		}
+		void this.attemptReconnect();
+	}
+
 	connect(url: string, hello: HelloPayload): Promise<WelcomePayload> {
-		this.close({ silent: true });
+		this.clearReconnect();
+		this.lastUrl = url;
+		this.lastHello = { ...hello };
+		return this.connectRaw(url, hello);
+	}
+
+	private connectRaw(url: string, hello: HelloPayload): Promise<WelcomePayload> {
+		this.close({ silent: true, keepReconnect: true });
 		this.status = "connecting";
 		this.helloSettled = false;
 
@@ -219,14 +267,15 @@ export class PointlySocket {
 					this.resolveHello = null;
 					this.rejectHello = null;
 				} else if (wasReady) {
-					this.events.onClose?.();
+					this.scheduleReconnect();
 				}
 			};
 		});
 	}
 
-	close(options: { silent?: boolean } = {}): void {
+	close(options: { silent?: boolean; keepReconnect?: boolean } = {}): void {
 		const socket = this.socket;
+		if (!options.keepReconnect) this.clearReconnect();
 		this.clearTimers();
 		this.socket = null;
 		if (this.status === "connecting" && !this.helloSettled) {
@@ -273,7 +322,6 @@ export class PointlySocket {
 				if (this.helloTimer) clearTimeout(this.helloTimer);
 				this.helloTimer = null;
 				this.status = "ready";
-				this.startHeartbeat();
 				const resolve = this.resolveHello;
 				this.resolveHello = null;
 				this.rejectHello = null;
@@ -301,34 +349,105 @@ export class PointlySocket {
 				return;
 			}
 			case "pong": {
-				this.lastPongAt = Date.now();
+				// Legado do ping app-level (o cliente novo não envia ping;
+				// o heartbeat é o frame de protocolo do servidor). Ignora.
 				return;
 			}
 		}
 	}
 
-	private startHeartbeat(): void {
-		this.lastPongAt = Date.now();
-		this.pingTimer = setInterval(() => {
-			try {
-				this.socket?.send(JSON.stringify({ type: "ping", payload: {} }));
-			} catch {
-				// Falha de envio — o onclose/stale cobre em seguida.
+	/**
+	 * Queda REAL pós-ready (rede, sleep, discard — o `onclose` do socket):
+	 * retry com backoff por 5min antes de notificar `onClose`. Sem
+	 * credenciais ou com retry desligado, notifica `onClose` direto.
+	 */
+	private scheduleReconnect(): void {
+		if (!this.autoReconnect || !this.lastUrl || !this.lastHello) {
+			this.events.onClose?.();
+			return;
+		}
+		const now = Date.now();
+		if (this.reconnectStartedAt === 0) this.reconnectStartedAt = now;
+		const nextAttempt = this.reconnectAttempt + 1;
+		const delay = this.reconnectDelayFor(nextAttempt);
+		if (now + delay - this.reconnectStartedAt > this.reconnectWindowMs) {
+			this.failReconnect();
+			return;
+		}
+		this.reconnectAttempt = nextAttempt;
+		this.events.onReconnecting?.(nextAttempt, delay);
+		if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+		this.reconnectTimer = setTimeout(() => {
+			this.reconnectTimer = null;
+			void this.attemptReconnect();
+		}, delay);
+	}
+
+	private async attemptReconnect(): Promise<void> {
+		if (this.status === "ready" || this.status === "connecting") return;
+		const url = this.lastUrl;
+		const hello = this.lastHello;
+		if (!url || !hello) {
+			this.failReconnect();
+			return;
+		}
+		if (
+			this.reconnectStartedAt !== 0 &&
+			Date.now() - this.reconnectStartedAt > this.reconnectWindowMs
+		) {
+			this.failReconnect();
+			return;
+		}
+		try {
+			const welcome = await this.connectRaw(url, hello);
+			const wasReconnect = this.reconnectStartedAt !== 0;
+			this.clearReconnect();
+			if (wasReconnect) this.events.onReconnected?.(welcome);
+		} catch (error) {
+			if (!this.isRetryable(error)) {
+				this.failReconnect();
+				return;
 			}
-		}, this.pingIntervalMs);
-		this.staleTimer = setInterval(() => {
-			if (Date.now() - this.lastPongAt > this.pongTimeoutMs) {
-				this.close();
+			// Falha de rede/timeout: agenda a próxima dentro da janela.
+			// connectRaw já deixou status=closed; sem credenciais perdidas.
+			if (!this.lastUrl || !this.lastHello) {
+				this.failReconnect();
+				return;
 			}
-		}, this.pongTimeoutMs);
+			this.scheduleReconnect();
+		}
+	}
+
+	private failReconnect(): void {
+		this.clearReconnect();
+		this.events.onReconnectFailed?.();
+		this.events.onClose?.();
+	}
+
+	private reconnectDelayFor(attempt: number): number {
+		const grown = this.reconnectBaseDelayMs * 2 ** Math.max(0, attempt - 1);
+		const capped = Math.min(grown, this.reconnectMaxDelayMs);
+		// Jitter ±20% para não sincronizar abas.
+		const jitter = capped * 0.2 * (Math.random() * 2 - 1);
+		return Math.max(0, Math.round(capped + jitter));
+	}
+
+	private isRetryable(error: unknown): boolean {
+		if (error instanceof JoinError) {
+			return error.code === "connection_failed" || error.code === "hello_timeout";
+		}
+		return false;
+	}
+
+	private clearReconnect(): void {
+		if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+		this.reconnectTimer = null;
+		this.reconnectAttempt = 0;
+		this.reconnectStartedAt = 0;
 	}
 
 	private clearTimers(): void {
 		if (this.helloTimer) clearTimeout(this.helloTimer);
-		if (this.pingTimer) clearInterval(this.pingTimer);
-		if (this.staleTimer) clearInterval(this.staleTimer);
 		this.helloTimer = null;
-		this.pingTimer = null;
-		this.staleTimer = null;
 	}
 }

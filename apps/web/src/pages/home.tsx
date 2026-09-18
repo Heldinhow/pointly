@@ -244,12 +244,12 @@ export function HomePage(): React.ReactElement {
           <div className="pt-home__section-intro">
             <div>
               <h2 id="demo-title">
-                Sua vez de votar.{" "}
+                <span className="pt-home__demo-title-end">Sua vez de votar.</span>{" "}
                 <span className="pt-home__demo-title-end">A sala revela.</span>
               </h2>
             </div>
             <p>
-              Escolha sua carta. Bia, Caio e Dani já votaram — o reveal
+              Escolha sua carta. Bia, Caio e Dani já votaram — a revelação
               mostra como a conversa começa.
             </p>
           </div>
@@ -300,7 +300,7 @@ export function HomePage(): React.ReactElement {
                   </Button>
                   <span data-testid="demo-reveal-hint" aria-live="polite">
                     {myVote === null
-                      ? "Escolha sua estimativa para liberar o reveal. Votos de exemplo para sentir o fluxo."
+                      ? "Escolha sua estimativa para revelar. Os votos do time são simulados."
                       : "Com sua carta na mesa, revele os votos simulados."}
                   </span>
                 </div>

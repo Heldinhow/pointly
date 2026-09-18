@@ -2,7 +2,10 @@
  * WebSocket handler — Phase 3 / T17
  *
  * Bun.serve() com upgrade em /ws. Dispatch de eventos por `event.type`
- * para os handlers T13/T14/T15/T16. Heartbeat ping/pong com timeout 15s.
+ * para os handlers T13/T14/T15/T16. Heartbeat de protocolo: o SERVIDOR
+ * pinga (`ws.ping()`) a cada 25s e o browser responde `pong` sozinho na
+ * stack de rede — sem JS na aba, logo imune a throttle de aba oculta.
+ * Timeout 90s pega só morte real; o cliente retenta por 5min.
  *
  * Wire format (C↔S) validado por Zod schemas em @planning-poker/shared.
  *
@@ -44,6 +47,7 @@ export type WSContext = {
 	code: string | null;
 	ip: string;
 	lastPongAt: number;
+	lastPingAt: number;
 };
 
 /**
@@ -53,13 +57,17 @@ export type WSContext = {
 export type BunWS = {
 	send(message: string | ArrayBuffer | Uint8Array): void;
 	close(code?: number, reason?: string): void;
+	ping(data?: string | ArrayBuffer | Uint8Array): void;
 	data: WSContext;
 	remoteAddress: string;
 	subscribe(topic: string): void;
 	unsubscribe(topic: string): void;
 };
 
-const HEARTBEAT_TIMEOUT_MS = 15_000;
+/** Ping de protocolo a cada 25s (mantém vivo + atravessa NAT/proxy idle). */
+const HEARTBEAT_PING_INTERVAL_MS = 25_000;
+/** Sem `pong` por 90s = morte real (browser responde sozinho, sem JS). */
+const HEARTBEAT_TIMEOUT_MS = 90_000;
 
 /**
  * Service entry — processa uma mensagem recebida do cliente.
@@ -101,14 +109,25 @@ export class WSService {
 			return;
 		}
 		this.logger.ratelimit(ip, false);
+		const now = Date.now();
 		ws.data = {
 			playerId: null,
 			code: null,
 			ip,
-			lastPongAt: Date.now(),
+			lastPongAt: now,
+			lastPingAt: now,
 		};
 		this.connections.add(ws);
 		this.logger.connect(ip);
+	}
+
+	/**
+	 * `pong` de protocolo (resposta ao `ws.ping()` do tick). O browser
+	 * responde sozinho, sem JS — por isso aba oculta não derruba.
+	 */
+	onPong(ws: BunWS): void {
+		if (!this.connections.has(ws)) return;
+		ws.data.lastPongAt = Date.now();
 	}
 
 	/**
@@ -144,7 +163,7 @@ export class WSService {
 
 	/**
 	 * Conexão fechada. Se player estava em sala, marca disconnected
-	 * (grace period 60s antes de remover).
+	 * (grace period de 6min antes de remover).
 	 */
 	onClose(ws: BunWS, code: number, reason: string): void {
 		const ctx = ws.data;
@@ -162,10 +181,12 @@ export class WSService {
 	}
 
 	/**
-	 * Heartbeat tick. Roda periodicamente. Verifica timeout e limpa grace period.
+	 * Heartbeat tick. Roda a cada 1s no servidor. Pinga cada conexão com
+	 * `hello` feito a cada 25s (frame de protocolo — o browser responde
+	 * sem JS) e fecha quem não responde `pong` há 90s (morte real).
 	 */
 	tick(now: number = Date.now()): void {
-		// 1. Heartbeat timeout per-connection
+		// 1. Ping de protocolo + timeout per-connection
 		for (const ws of this.connections) {
 			if (now - ws.data.lastPongAt > HEARTBEAT_TIMEOUT_MS) {
 				this.logger.error(
@@ -175,6 +196,20 @@ export class WSService {
 					ws.data.code ?? undefined,
 				);
 				ws.close(1011, "heartbeat_timeout");
+				continue;
+			}
+			// Só pinga após o hello (playerId setado) — pré-hello o
+			// helloTimeout do handshake já cobre conexão pendurada.
+			if (
+				ws.data.playerId &&
+				now - ws.data.lastPingAt > HEARTBEAT_PING_INTERVAL_MS
+			) {
+				ws.data.lastPingAt = now;
+				try {
+					ws.ping();
+				} catch {
+					// Socket já morto — o timeout fecha em seguida.
+				}
 			}
 		}
 		// 2. Grace period cleanup (T18)
@@ -358,6 +393,10 @@ export class WSService {
 		}
 	}
 
+	/**
+	 * `ping` app-level (compat — o cliente novo não envia mais; o
+	 * heartbeat é o frame de protocolo via `tick` + `onPong`).
+	 */
 	private handlePingEvent(ws: BunWS): void {
 		ws.data.lastPongAt = Date.now();
 		this.sendEvent(ws, { type: "pong", payload: {} });

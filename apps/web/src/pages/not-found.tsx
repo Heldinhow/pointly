@@ -14,7 +14,7 @@ export function NotFoundPage(): React.ReactElement {
     <div className="not-found-page">
       <Card className="not-found-card">
         <CardHeader className="not-found-header">
-          <p className="join-card-kicker">Erro 404</p>
+          <p className="not-found-code">Erro 404</p>
           <CardTitle render={<h1 />}>Página não encontrada</CardTitle>
           <CardDescription>Este endereço não existe por aqui.</CardDescription>
         </CardHeader>

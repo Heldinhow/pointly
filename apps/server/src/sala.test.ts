@@ -330,7 +330,7 @@ describe("Constantes exportadas", () => {
 		expect(SALA_SEAT_COUNT).toBe(12);
 	});
 
-	test("SALA_DISCONNECT_GRACE_MS = 60_000", () => {
-		expect(SALA_DISCONNECT_GRACE_MS).toBe(60_000);
+	test("SALA_DISCONNECT_GRACE_MS = 360_000 (cobre backoff 5min)", () => {
+		expect(SALA_DISCONNECT_GRACE_MS).toBe(360_000);
 	});
 });

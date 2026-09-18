@@ -126,6 +126,20 @@ function mockAvatarPipeline(): void {
 }
 
 describe("JoinPage", () => {
+	test("mantém os dados e o modo bloqueados enquanto a sala é criada", () => {
+		installMocks(jsonFetch(200, {}));
+		renderJoin();
+		fireEvent.change(screen.getByLabelText("Apelido"), {
+			target: { value: "Ana" },
+		});
+		fireEvent.click(submitButton("Criar sala"));
+		expect(MockSocket.instances).toHaveLength(1);
+		for (const control of document.querySelectorAll("#join-form input, #join-form button")) {
+			expect(control.matches(":disabled")).toBe(true);
+		}
+		expect(screen.getByText("Criando sala…")).toBeTruthy();
+		expect(submitButton("Criar sala").getAttribute("aria-busy")).toBe("true");
+	});
 	test("mostra o ritual em 3 passos sem imagem de cartas", () => {
 		installMocks(jsonFetch(200, {}));
 		renderJoin();

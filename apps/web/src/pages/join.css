@@ -5,10 +5,10 @@
   min-height: calc(100dvh - 180px);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(360px, 0.86fr);
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 0.86fr);
   align-items: center;
   gap: clamp(32px, 7vw, 96px);
-  padding: 32px clamp(20px, 4vw, 48px);
+  padding: 32px 0;
 }
 .join-intro {
   max-width: 480px;
@@ -19,10 +19,10 @@
   margin: 0;
   color: var(--foreground);
   font-family: Geist, sans-serif;
-  font-size: clamp(38px, 4.4vw, 58px);
+  font-size: 2.5rem;
   font-weight: 650;
   letter-spacing: -0.04em;
-  line-height: 1.02;
+  line-height: 1.15;
   text-wrap: balance;
 }
 .join-intro-copy {
@@ -66,12 +66,13 @@
   color: var(--foreground);
 }
 .join-ritual-text span {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.55;
   color: var(--muted-foreground);
 }
 .join-card,
 .not-found-card {
+  min-width: 0;
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 18px;
@@ -91,7 +92,7 @@
 .join-card-header [data-slot="card-title"] {
   color: var(--card-foreground);
   font-family: Geist, sans-serif;
-  font-size: clamp(28px, 3vw, 36px);
+  font-size: 1.75rem;
   font-weight: 600;
   letter-spacing: -0.035em;
   line-height: 1.1;
@@ -102,13 +103,20 @@
   color: var(--muted-foreground);
 }
 .join-card-panel {
-  padding-top: 32px;
-  padding-bottom: 32px;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
-.join-form {
+.join-form,
+.join-fields {
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+.join-fields {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 .join-mode-switch {
   display: grid;
@@ -122,14 +130,28 @@
   min-height: 44px;
   border-color: transparent;
   border-radius: 9px;
-  font-size: 13px;
+  font-size: 14px;
   transition:
     background-color 180ms ease-out,
     border-color 180ms ease-out,
     box-shadow 180ms ease-out;
 }
+.join-mode-button[aria-pressed="true"] {
+  background: var(--card);
+  color: var(--foreground);
+  border-color: var(--border);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+.join-mode-button[aria-pressed="false"] {
+  background: transparent;
+  color: var(--muted-foreground);
+  box-shadow: none;
+}
+.join-mode-button:hover {
+  color: var(--foreground);
+}
 .join-form [data-slot="field-description"] {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.55;
 }
 .join-input {
@@ -150,10 +172,7 @@
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--card);
+  padding-block: 4px;
   cursor: pointer;
 }
 .join-spectate input {
@@ -161,6 +180,11 @@
   height: 18px;
   margin-top: 2px;
   accent-color: var(--primary);
+  flex-shrink: 0;
+}
+.join-spectate input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
 }
 .join-spectate-text {
   display: flex;
@@ -181,12 +205,12 @@
   color: var(--muted-foreground);
 }
 .join-spectate-hint {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.55;
   color: var(--muted-foreground);
 }
 .join-otp input {
-  min-width: 0;
+  width: 50px;
   min-height: 50px;
   border-radius: 10px;
   font-family: "Geist Mono", monospace;
@@ -229,9 +253,10 @@
 .not-found-header [data-slot="card-title"] {
   color: var(--card-foreground);
   font-family: Geist, sans-serif;
-  font-size: clamp(32px, 5vw, 52px);
+  font-size: 2rem;
   font-weight: 650;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
 }
 .not-found-header [data-slot="card-description"] {
   margin-top: 12px;
@@ -241,25 +266,31 @@
   padding-top: 26px;
   padding-bottom: 42px;
 }
-@media (max-width: 760px) {
+.not-found-code {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+@media (max-width: 1000px) {
   .join-page {
     grid-template-columns: 1fr;
-    gap: 28px;
+    max-width: 560px;
+    gap: 24px;
     padding: 12px 0 24px;
   }
   .join-intro {
     max-width: none;
   }
   .join-intro h1 {
-    font-size: clamp(32px, 8.7vw, 48px);
+    font-size: 2rem;
     line-height: 1.08;
   }
   .join-intro-copy {
-    margin-top: 20px;
+    margin-top: 12px;
     font-size: 15px;
   }
   .join-ritual {
-    margin-top: 24px;
+    display: none;
   }
 }
 @media (max-width: 390px) {
@@ -276,6 +307,6 @@
   }
   .join-mode-button {
     padding-inline: 8px;
-    font-size: 12px;
+    font-size: 14px;
   }
 }

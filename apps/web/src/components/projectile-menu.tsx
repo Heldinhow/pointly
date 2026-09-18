@@ -15,6 +15,11 @@ export function ProjectileMenu({ target, cooldownSecs, onThrow, className, child
 }): React.ReactElement {
 	return (
 		<div className="projectile-menu-wrap">
+			{cooldownSecs > 0 ? (
+			<span className="sr-only" role="status">
+				Recarregando · {cooldownSecs}s
+			</span>
+		) : null}
 			<Menu modal={false}>
 				<MenuTrigger
 					className={className}
@@ -31,7 +36,7 @@ export function ProjectileMenu({ target, cooldownSecs, onThrow, className, child
 					className="projectile-menu"
 				>
 					<p className="projectile-menu-heading">Arremessar em {target.nick}</p>
-					<p className="projectile-menu-status" aria-live="polite" data-testid="projectile-cooldown">
+					<p className="projectile-menu-status" data-testid="projectile-cooldown">
 						{cooldownSecs > 0 ? `Recarregando · ${cooldownSecs}s` : "Escolha um projétil"}
 					</p>
 					{PROJECTILE_CATALOG.map(({ type, label }) => (

@@ -53,14 +53,16 @@ summary:focus-visible {
 .site-nav nav {
   display: flex;
   gap: 26px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--muted-foreground);
 }
 /* Underline deslizante (só transform): hover, foco e rota ativa. */
 .site-nav nav a {
   position: relative;
-  padding-block: 6px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   transition: color 150ms var(--ease-out-quart);
 }
 .site-nav nav a::after {
@@ -103,6 +105,7 @@ summary:focus-visible {
 }
 .site-main {
   padding-top: 32px;
+  min-width: 0;
 }
 .site-footer {
   width: 100%;
@@ -113,7 +116,7 @@ summary:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted-foreground);
 }
 [data-testid="deck"] {
@@ -128,7 +131,7 @@ summary:focus-visible {
 }
 [data-testid="deck"] button {
   position: relative;
-  width: clamp(36px, 4.8vw, 58px);
+  width: clamp(44px, 4.8vw, 58px);
   height: 80px;
   border-radius: 9px;
   font-size: 24px;
@@ -157,6 +160,8 @@ summary:focus-visible {
 }
 [data-testid="deck-hint"] {
   margin-top: 9px;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 /* Marca Pointly: pinwheel em swirl + wordmark em cascata (estilo Factory).
@@ -165,6 +170,7 @@ summary:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 9px;
+  white-space: nowrap;
 }
 .brand-mark {
   display: inline-flex;
@@ -175,23 +181,21 @@ a:hover .brand-mark {
   transform: scale(1.12) rotate(10deg);
 }
 .brand-mark__pop {
-  animation: brand-pop 0.6s var(--ease-out-quint) both;
+  animation: brand-pop 0.6s var(--ease-out-quint);
   transform-box: fill-box;
   transform-origin: center;
 }
 @keyframes brand-pop {
   from {
-    opacity: 0;
     transform: rotate(-90deg) scale(0.6);
   }
 }
 .brand-mark__spin {
-  animation: brand-spin 12s linear infinite;
   transform-box: fill-box;
   transform-origin: center;
 }
 a:hover .brand-mark__spin {
-  animation-duration: 2.2s;
+  animation: brand-spin 600ms var(--ease-out-quint);
 }
 @keyframes brand-spin {
   to {
@@ -200,13 +204,11 @@ a:hover .brand-mark__spin {
 }
 .brand-word__letter {
   display: inline-block;
-  animation: brand-rise 0.55s var(--ease-out-quint) both;
-  animation-delay: calc(150ms + var(--i) * 55ms);
 }
-@keyframes brand-rise {
-  from {
-    opacity: 0;
-    transform: translateY(0.55em);
+@media (pointer: coarse), (max-width: 700px) {
+  [data-slot="button"] {
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 @media (max-width: 700px) {
@@ -229,13 +231,23 @@ a:hover .brand-mark__spin {
     gap: 5px;
   }
   [data-testid="deck"] > div {
-    gap: 6px;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(44px, 1fr));
+    gap: 12px 6px;
+    width: min(100%, 340px);
+    margin-inline: auto;
+    align-items: stretch;
   }
   [data-testid="deck"] [role="group"] {
-    gap: 4px;
+    display: contents;
+  }
+  [data-testid="deck"] [role="group"]:last-child button {
+    grid-column: 5;
+    grid-row: 1 / 3;
+    height: 100%;
   }
   [data-testid="deck"] button {
-    width: clamp(27px, 7.8vw, 45px);
+    width: 100%;
     height: 61px;
     font-size: 20px;
     border-radius: 7px;
@@ -252,5 +264,13 @@ a:hover .brand-mark__spin {
   [data-testid="deck"] button::after {
     bottom: 5px;
     right: 5px;
+  }
+}
+@media (max-width: 380px) {
+  .site-nav {
+    gap: 8px;
+  }
+  .site-nav nav {
+    font-size: 13px;
   }
 }

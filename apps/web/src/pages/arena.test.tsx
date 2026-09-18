@@ -19,6 +19,9 @@ class FakeSocket {
 		onRoomState?: RoomHandler;
 		onClose?: () => void;
 		onError?: (code: string, message: string) => void;
+		onReconnecting?: (attempt: number, nextInMs: number) => void;
+		onReconnected?: (welcome: unknown) => void;
+		onReconnectFailed?: () => void;
 		onProjectileThrown?: (event: {
 			senderPlayerId: string;
 			targetPlayerId: string;
@@ -37,6 +40,9 @@ class FakeSocket {
 		onRoomState?: RoomHandler;
 		onClose?: () => void;
 		onError?: (code: string, message: string) => void;
+		onReconnecting?: (attempt: number, nextInMs: number) => void;
+		onReconnected?: (welcome: unknown) => void;
+		onReconnectFailed?: () => void;
 		onProjectileThrown?: (event: {
 			senderPlayerId: string;
 			targetPlayerId: string;
@@ -1341,6 +1347,57 @@ describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {
 		expect(button.disabled).toBe(false);
 		fireEvent.click(button);
 		expect(socket.sentReveals).toBe(1);
+	});
+});
+
+describe("ArenaPage (reconnect em aba inativa)", () => {
+	function withRetryCounter(socket: FakeSocket): { retries: () => number } {
+		let count = 0;
+		(socket as unknown as Record<string, unknown>).retryNow = () => {
+			count += 1;
+		};
+		return { retries: () => count };
+	}
+
+	test("queda mostra Reconectando com Tentar agora; volta limpa o alerta", async () => {
+		const socket = new FakeSocket();
+		const counter = withRetryCounter(socket);
+		seed({ sala: sala(), playerId: "p_host", socket });
+		renderArena();
+
+		expect(screen.queryByTestId("reconnecting-hint")).toBeNull();
+
+		await act(async () => {
+			socket.handlers.onReconnecting?.(2, 4000);
+		});
+		expect(screen.getByTestId("reconnecting-hint").textContent).toMatch(
+			/Tentativa 2/,
+		);
+
+		fireEvent.click(screen.getByTestId("reconnect-now"));
+		expect(counter.retries()).toBe(1);
+
+		await act(async () => {
+			socket.handlers.onReconnected?.({});
+		});
+		expect(screen.queryByTestId("reconnecting-hint")).toBeNull();
+		expect(screen.queryByText("Conexão perdida")).toBeNull();
+	});
+
+	test("falha após a janela mostra Conexão perdida com Tentar de novo", async () => {
+		const socket = new FakeSocket();
+		const counter = withRetryCounter(socket);
+		seed({ sala: sala(), playerId: "p_host", socket });
+		renderArena();
+
+		await act(async () => {
+			socket.handlers.onReconnectFailed?.();
+			socket.handlers.onClose?.();
+		});
+		expect(screen.getByText("Conexão perdida")).toBeTruthy();
+
+		fireEvent.click(screen.getByTestId("reconnect-retry"));
+		expect(counter.retries()).toBe(1);
 	});
 });
 

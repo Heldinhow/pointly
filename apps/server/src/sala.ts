@@ -57,7 +57,11 @@ export class SalaError extends Error {
 // ---------------------------------------------------------------------------
 
 const SEAT_COUNT = 12;
-const DISCONNECT_GRACE_MS = 60_000;
+/**
+ * Grace period pós-queda: 6min (cobre o backoff de 5min do cliente com
+ * folga — o `hello` com o mesmo UUID reidrata voto, assento e fase).
+ */
+const DISCONNECT_GRACE_MS = 360_000;
 /** Espectadores extras além dos 12 assentos (não votam, seatIndex -1). */
 const SPECTATOR_CAP = 12;
 
@@ -79,7 +83,7 @@ export class Sala {
 	/**
 	 * Server-internal: timestamp (epoch ms) de quando cada player
 	 * disconnectou pela última vez. NÃO vai no wire format (SalaState).
-	 * Usado por `tickGracePeriod()` para remover player após 60s.
+	 * Usado por `tickGracePeriod()` para remover player após o grace period.
 	 */
 	private readonly disconnectedAt: Map<string, number> = new Map();
 

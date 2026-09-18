@@ -175,6 +175,8 @@ export function ArenaPage(): React.ReactElement {
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const [connectionLost, setConnectionLost] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
+  const [reconnectAttempt, setReconnectAttempt] = useState(0);
   const [voteError, setVoteError] = useState<string | null>(null);
   const [revealError, setRevealError] = useState<string | null>(null);
   const [confirmingNewRound, setConfirmingNewRound] = useState(false);
@@ -233,6 +235,21 @@ export function ArenaPage(): React.ReactElement {
         }
       },
       onClose: () => {
+        setReconnecting(false);
+        setConnectionLost(true);
+      },
+      onReconnecting: (attempt) => {
+        setConnectionLost(false);
+        setReconnecting(true);
+        setReconnectAttempt(attempt);
+      },
+      onReconnected: () => {
+        setReconnecting(false);
+        setReconnectAttempt(0);
+        setConnectionLost(false);
+      },
+      onReconnectFailed: () => {
+        setReconnecting(false);
         setConnectionLost(true);
       },
       onProjectileThrown: (event) => {
@@ -275,6 +292,35 @@ export function ArenaPage(): React.ReactElement {
         }
       },
     });
+  }, [socket]);
+
+  // Liveness é do servidor (ping de protocolo — aba oculta não derruba).
+  // Este poke cobre só morte REAL percebida ao voltar: se o socket está
+  // `closed` (rede, sleep, página descartada pelo SO no mobile), retenta
+  // na hora em vez de esperar o próximo tick do backoff de 5min.
+  useEffect(() => {
+    if (!socket) return;
+    const live: NonNullable<typeof socket> = socket;
+    function poke(): void {
+      try {
+        if (typeof document !== "undefined" && document.hidden) return;
+        if (typeof live.getStatus !== "function") return;
+        if (live.getStatus() !== "closed") return;
+        if (typeof live.retryNow === "function") live.retryNow();
+      } catch {
+        // Poke é best-effort — o backoff cobre em seguida.
+      }
+    }
+    document.addEventListener("visibilitychange", poke);
+    window.addEventListener("focus", poke);
+    window.addEventListener("pageshow", poke);
+    window.addEventListener("online", poke);
+    return () => {
+      document.removeEventListener("visibilitychange", poke);
+      window.removeEventListener("focus", poke);
+      window.removeEventListener("pageshow", poke);
+      window.removeEventListener("online", poke);
+    };
   }, [socket]);
 
   // Ticker do cooldown de projéteis (issue #157): força re-render a cada
@@ -458,7 +504,7 @@ export function ArenaPage(): React.ReactElement {
   if (!hasSession || !sala) {
     if (rejoinError) {
       return (
-        <Card>
+        <Card className="arena-connection">
           <CardHeader>
             <CardTitle className="text-base">
               Não foi possível reconectar
@@ -492,8 +538,8 @@ export function ArenaPage(): React.ReactElement {
       );
     }
     return (
-      <Card>
-        <CardPanel className="flex items-center gap-3">
+      <Card className="arena-connection">
+        <CardPanel className="flex items-center gap-3" role="status">
           <Spinner
             aria-label={rejoining ? "Reconectando" : "Carregando sala"}
           />
@@ -645,7 +691,7 @@ export function ArenaPage(): React.ReactElement {
       );
       return;
     }
-    if (connectionLost || targetId === playerId || !players.some((p) => p.id === targetId && p.status === "connected")) {
+    if (connectionLost || reconnecting || targetId === playerId || !players.some((p) => p.id === targetId && p.status === "connected")) {
       setProjectileError("Arremesso indisponível: escolha outro participante conectado.");
       return;
     }
@@ -693,7 +739,7 @@ export function ArenaPage(): React.ReactElement {
             <UsersIcon />
           </span>
           <div>
-            <h1 data-testid="sala-code">Sala {sala.code}</h1>
+            <h1 data-testid="sala-code">Sala <span>{sala.code}</span></h1>
             <p data-testid="round-label">
               Rodada {sala.round} · {phaseLabel(sala.phase)}
             </p>
@@ -723,12 +769,55 @@ export function ArenaPage(): React.ReactElement {
           </Button>
         </div>
       </header>
+      {reconnecting && !connectionLost && (
+        <Alert variant="warning">
+          <AlertTitle>Reconectando…</AlertTitle>
+          <AlertDescription className="flex flex-wrap items-center gap-2">
+            <span data-testid="reconnecting-hint">
+              Tentativa {reconnectAttempt} de reconexão — o placar pode estar
+              desatualizado.
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              data-testid="reconnect-now"
+              onClick={() => {
+                try {
+                  socket?.retryNow();
+                } catch {
+                  // Best-effort — o backoff cobre em seguida.
+                }
+              }}
+            >
+              Tentar agora
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
       {connectionLost && (
         <Alert variant="warning">
           <AlertTitle>Conexão perdida</AlertTitle>
-          <AlertDescription>
-            O placar pode estar desatualizado. Recarregue a página para
-            reconectar.
+          <AlertDescription className="flex flex-wrap items-center gap-2">
+            <span>
+              O placar pode estar desatualizado. Tente se conectar de novo.
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              data-testid="reconnect-retry"
+              onClick={() => {
+                setConnectionLost(false);
+                try {
+                  socket?.retryNow();
+                } catch {
+                  // Best-effort — recarregar segue disponível.
+                }
+              }}
+            >
+              Tentar de novo
+            </Button>
           </AlertDescription>
         </Alert>
       )}
@@ -751,7 +840,7 @@ export function ArenaPage(): React.ReactElement {
             playerId={playerId}
             hostId={sala.hostId}
             revealed={isRevealed}
-            onThrowProjectile={connectionLost ? undefined : handleThrowProjectile}
+            onThrowProjectile={connectionLost || reconnecting ? undefined : handleThrowProjectile}
             projectileCooldownSecs={projectileCooldownSecs}
           >
             <Card className="arena-reveal">
@@ -769,8 +858,8 @@ export function ArenaPage(): React.ReactElement {
                     : isReadyToReveal
                       ? "Todos votaram."
                       : canReveal
-                        ? "Com votos na mesa, qualquer player pode revelar."
-                        : "Aguardando o primeiro voto para liberar o reveal."}
+                        ? "Já temos votos. Qualquer pessoa pode revelar."
+                        : "Aguardando o primeiro voto. Escolha uma carta para começar."}
                 </CardDescription>
               </CardHeader>
               {!isRevealed || revealError ? (
@@ -832,7 +921,7 @@ export function ArenaPage(): React.ReactElement {
                 {isSpectator
                   ? "Espectadores acompanham e reagem, mas não votam. Para votar, saia e entre como jogador."
                   : !isRevealed && currentVote === null
-                    ? "Escolha uma carta para votar. Dá para trocar até o reveal."
+                    ? "Escolha uma carta para votar. Você pode ajustar depois."
                     : voteSelectionText(currentVote, {
                         revealed: isRevealed,
                         adjustable: true,
@@ -901,7 +990,7 @@ export function ArenaPage(): React.ReactElement {
                     {connectedSpectators.map((p, index) => (
                       <span key={p.id}>
                         {index > 0 ? ", " : ""}
-                        {p.id !== playerId && !connectionLost ? (
+                        {p.id !== playerId && !connectionLost && !reconnecting ? (
                           <ProjectileMenu target={p} cooldownSecs={projectileCooldownSecs} onThrow={handleThrowProjectile} className="arena-spectator-target" align="left" side="bottom">
                             <span className="arena-spectator-anchor" data-projectile-player={p.id}><SpectatorAvatar player={p} />{p.nick}</span>
                           </ProjectileMenu>
@@ -930,6 +1019,7 @@ export function ArenaPage(): React.ReactElement {
                   />
                   <Button
                     type="button"
+                    variant="outline"
                     onClick={() => {
                       void handleCopy();
                     }}
@@ -1097,8 +1187,8 @@ export function ArenaPage(): React.ReactElement {
                   aria-live="polite"
                 >
                   {confirmingNewRound
-                    ? "Tem certeza? Ative de novo para confirmar · expira em alguns segundos."
-                    : "Prontos para a próxima estimativa? Clique duas vezes para começar."}
+                    ? "Ative de novo para confirmar e limpar os votos. A confirmação expira em 5 segundos."
+                    : "Prontos para a próxima estimativa? Os votos serão limpos após sua confirmação."}
                 </CardDescription>
               </CardHeader>
               <CardPanel className="flex flex-col gap-3">
@@ -1107,7 +1197,7 @@ export function ArenaPage(): React.ReactElement {
                     type="button"
                     data-testid="new-round-button"
                     data-confirming={confirmingNewRound ? "true" : "false"}
-                    variant={confirmingNewRound ? "destructive" : "outline"}
+                    variant={confirmingNewRound ? "destructive-outline" : "default"}
                     onClick={handleNewRoundRequest}
                     aria-keyshortcuts="n"
                     aria-label={

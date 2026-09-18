@@ -9,6 +9,24 @@ afterEach(() => {
 });
 
 describe("App (issue #158 — polimento e auditoria)", () => {
+  test("uma nova tela começa no topo e recebe o foco no conteúdo", () => {
+    const originalScrollTo = window.scrollTo;
+    const calls: ScrollToOptions[] = [];
+    window.scrollTo = ((options: ScrollToOptions) => calls.push(options)) as typeof window.scrollTo;
+    try {
+      render(
+        <MemoryRouter initialEntries={["/"]}>
+          <App />
+        </MemoryRouter>,
+      );
+      fireEvent.click(screen.getByTestId("home-cta-create"));
+      expect(calls).toEqual([{ top: 0, behavior: "instant" }]);
+      expect(document.activeElement).toBe(screen.getByRole("main"));
+      expect(screen.getByLabelText("Apelido")).toBeTruthy();
+    } finally {
+      window.scrollTo = originalScrollTo;
+    }
+  });
   test("navegação para entrar com código atualiza o formulário já aberto", () => {
     render(
       <MemoryRouter initialEntries={["/join"]}>

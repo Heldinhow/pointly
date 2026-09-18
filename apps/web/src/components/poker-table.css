@@ -172,7 +172,7 @@ button.poker-seat-target[aria-expanded="true"] .poker-avatar {
   border-color: var(--primary);
 }
 .poker-seat--empty {
-  opacity: 0.78;
+  opacity: 1;
 }
 .poker-seat--empty .poker-avatar {
   width: 35px;
@@ -188,7 +188,7 @@ button.poker-seat-target[aria-expanded="true"] .poker-avatar {
 }
 .poker-empty-label {
   color: var(--muted-foreground);
-  font-size: 10px;
+  font-size: 12px;
   margin-top: 6px;
 }
 .poker-seat--offline {
@@ -292,12 +292,12 @@ button.poker-seat-target[aria-expanded="true"] .poker-avatar {
   }
   .poker-name {
     max-width: 65px;
-    font-size: 11px;
+    font-size: 12px;
   }
   .poker-avatar {
-    width: 36px;
-    height: 36px;
-    font-size: 11px;
+    width: 44px;
+    height: 44px;
+    font-size: 12px;
   }
   .poker-played-card {
     right: -7px;
@@ -306,7 +306,7 @@ button.poker-seat-target[aria-expanded="true"] .poker-avatar {
     height: 32px;
   }
   .poker-status {
-    font-size: 10px;
+    font-size: 12px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

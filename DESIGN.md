@@ -66,7 +66,7 @@ typography:
     lineHeight: 1.6
   body-sm:
     fontFamily: Geist
-    fontSize: 13px
+    fontSize: 14px
     fontWeight: 400
     lineHeight: 1.55
   label-caps:
@@ -175,8 +175,8 @@ Paleta enraizada em neutros de alto contraste com **um único acento verde por t
 
 Duas famílias, papéis rígidos. `Inter` BANIDO (já conforme via `@fontsource/geist`).
 
-- **Headlines (`headline-display` / `headline-sm` / `headline-md`):** Geist Semi-Bold, track-tight (`-0.04em` a `-0.065em`), leading comprimido (`1.08`). Home H1 `clamp(38px, 4.4vw, 58px)` → mobile `clamp(30px, 6.8vw, 48px)` em 2 linhas com `<em>` em Pine Signal na segunda. Home H2 `clamp(30px, 3.3vw, 42px)`. Arena H1 `20px / -0.04em / 650` (`18px` no mobile).
-- **Body (`body-lg` / `body-md` / `body-sm`):** Geist 400, leading relaxado (`1.55–1.7`), cor Moss/Faded Sage. Lede hero `17px`, max `430px`. Sidebar/cards `12–13px`. Corpo nunca < `14px` (`12px` só em metadata densa da arena).
+- **Headlines (`headline-display` / `headline-sm` / `headline-md`):** Geist Semi-Bold, tracking no mínimo `-0.04em`, com `text-wrap: balance`. Home H1 `clamp(38px, 4.4vw, 58px)` → mobile `clamp(30px, 6.8vw, 48px)`, leading `1.08`, `<em>` em Pine Signal na segunda frase. Home H2 `clamp(30px, 3.3vw, 42px) / 1.15`. Entrada H1 `40px`, `32px` em uma coluna; título do formulário `28px`; erro 404 `32px`. Arena H1 `20px / -0.04em / 650` (`18px` no mobile), código mono tabular.
+- **Body (`body-lg` / `body-md` / `body-sm`):** Geist 400, leading relaxado (`1.55–1.7`), cor Moss/Faded Sage. Lede hero `17px`, max `430px`. Descrições, sidebar, feedback e rodapé `14px`. Corpo nunca < `14px` (`12px` só em metadata densa da arena).
 - **Labels e dados (`label-caps` / `stats`):** Geist Mono com `tnum`. Stats `38–40px/600 tabular-nums`, kickers `10–11px uppercase tracking 0.09–0.1em`, pips de distribuição `11px`, kbd. **Todo número de votação/resultado é mono tabular.**
 - Serifadas genéricas (`Times`, `Georgia`, `Garamond`, `Palatino`) banidas — se serif um dia for preciso, só modernas distintivas (`Fraunces`, `Instrument Serif`); serif sempre banida na arena/dashboard.
 
@@ -186,10 +186,11 @@ Modelo **Fixed-Max-Width Grid** no desktop, **Fluid** de 1 coluna no mobile. Gri
 
 - **Containment:** shell global `max-width: 1304px` (`.site-header/.site-main/.site-footer`). Home inner `1240px`. Padding `32px` desktop / `20px` mobile. Fechamento da home: “Agora, reúna seu time.”, sequência ordenada `Crie a sala → Compartilhe o código → Estimem juntos` e CTA `Criar sala`. Steps = `repeat(3, 1fr)` com divisórias `border-right`, sem altura mínima; no mobile, linhas com número à esquerda e conteúdo à direita. Demo e fechamento usam `40px` de espaço superior no desktop / `32px` no mobile.
 - **Arena:** `grid 1fr / 288px`, gap `32px`. Sidebar com `border-left + padding-left 26px`. ≤1050px: 1 coluna, sidebar vira `2-col grid` com `border-top`. ≤700px: sidebar 1 coluna.
-- **Hero (home, split assimétrico, nunca centrado):** grid `1.16fr / 1fr`, gap `48px`, padding `32px 0 40px`, `border-bottom`. Copy `max 680px`. Ações: 1 CTA primário (`Criar sala →`, `size=xl`) + 1 text-link sublinhado (`Entrar com código`); abaixo, link discreto `Experimente uma rodada` para `#demo`, com foco no destino. Visual: imagem `aspect 1.6`, radius `18px`, `object-fit cover / 65% center` em zona própria — nunca texto sobre imagem. Mobile: 1 coluna, gap `24px`, padding `16px 0 32px`, visual `aspect 1.8` abaixo do copy, actions empilham <380px. Título da demo em uma linha quando couber; “A sala revela.” quebra como unidade.
+- **Hero (home, split assimétrico, nunca centrado):** grid `1.16fr / 1fr`, gap `48px`, padding `32px 0 40px`, `border-bottom`. Copy `max 680px`. Ações: 1 CTA primário (`Criar sala →`, `size=xl`) + 1 text-link sublinhado (`Entrar com código`), ambos com altura mínima `44px`; abaixo, link discreto `Experimente uma rodada` para `#demo`. Visual: mesa de feltro ilustrada em CSS, cartas e quatro assentos, palco `aspect 1.35 / min-height 430px`; costura acompanha a oval. ≤1000px: uma coluna, visual `max-width 560px`; ≤760px: feltro `min-height 300px` em fluxo, actions empilham <380px. As duas frases do título da demo quebram como unidades.
+- **Entrada:** até `1000px`, uma coluna de no máximo `560px`; introdução curta seguida do formulário, sem repetir os três passos da home. Desktop mantém o ritual ao lado. Modo selecionado usa superfície neutra; o envio é a ação primária. Código vem após apelido, antes das opções de foto/espectador; slots `50px`. Durante envio, fieldset desabilitado e status anunciado. Ao mudar de rota, scroll volta ao topo e foco vai ao conteúdo principal.
 - **Full-height:** `min-h-dvh` no wrapper. Nunca `h-screen` / `height:100vh` (jump do Safari iOS).
 - **Camadas:** sem overlap de conteúdo. `z-index` só para navbar/modal/overlay. Feltro `z:0`, assentos `z:1` — exceção técnica documentada, não padrão.
-- **Responsivo (verificar SEMPRE em `375px / 390px / 768px / 1024px / 1440px`):** multi-coluna → 1 coluna <768px (arena <1050px), `width:100%`, `gap:1.5rem`. Sem scroll horizontal — overflow = falha crítica. Touch: alvos ≥ `44px`, símbolo da sala `44px`, botões mobile full-width onde couber (new-round já é 100%). Arena mobile: esconde símbolo da sala, presença resumida, sair vira ícone, `table-note` centraliza e esconde slogan, deck `padding-inline 6px`. Header/nav colapsa (esconde "Início" <700px), footer empilha `column/align-start/gap 5px`.
+- **Responsivo (verificar SEMPRE em `375px / 390px / 768px / 1024px / 1440px`):** uma coluna na entrada/home ≤1000px, arena ≤1050px. Sem scroll horizontal — overflow = falha crítica. Touch: alvos ≥ `44px`, botões mobile full-width onde couber. Arena mobile: esconde símbolo da sala, sair vira ícone, dicas de atalhos ficam no desktop, deck `padding-inline 16px`. Header/nav colapsa (esconde "Início" <700px), footer empilha `column/align-start/gap 5px`.
 
 ## Elevation & Depth
 
@@ -204,7 +205,7 @@ Hierarquia por **camadas tonais e bordas**, sombra só quando comunica elevaçã
 - **Micro-loops:** pulse no dot de presença/timer crítico, shimmer em skeleton, float sutil em ícones da home. Timer crítico (`≤30s`) com `aria-live=assertive` + borda destructive.
 - **Orquestra:** Assentos/votos/feed montam em cascata (`delay: index*100ms`), nunca instantâneo.
 - **Hardware:** animar SÓ `transform` e `opacity`; nunca `top/left/width/height`. Grain só em pseudo fixo `pointer-events-none`. Isolar loops em leaf components, 60fps mínimo.
-- **Acessibilidade:** `@media (prefers-reduced-motion: reduce)` colapsa tudo para `0.01ms` (global em `index.css` + `card-reveal: none` em `poker-table.css`); preferir variantes `motion-safe:`.
+- **Acessibilidade:** `@media (prefers-reduced-motion: reduce)` colapsa duração para `0.01ms` e atraso para `0ms` (global em `index.css` + `card-reveal: none` em `poker-table.css`); preferir variantes `motion-safe:`. Wordmark sempre visível, sem entrada por letras; símbolo gira apenas em hover, sem loop permanente.
 - **Confirmações:** nova rodada exige duplo `N`/clique em janela de 5s — primeiro toque arma, segundo confirma, timeout desarma sem tráfego.
 
 ## Shapes
@@ -212,12 +213,12 @@ Hierarquia por **camadas tonais e bordas**, sombra só quando comunica elevaçã
 Linguagem de cantos contidos e táteis; radius base `--radius: 0.75rem` (`sm 8px / md 10px / lg 12px / xl 18px / full 999px`).
 
 - Hero visual `18px`. Avatar `50%`, pills `999px`, clock `8px`.
-- Deck: radius `9px` (desktop `clamp(36px, 4.8vw, 58px) × 80px`, `font 24px`; mobile `clamp(27px, 7.8vw, 45px) × 61px`, `20px/7px`).
+- Deck: radius `9px` (desktop `clamp(44px, 4.8vw, 58px) × 80px`, `font 24px`). Mobile: quatro estimativas por linha, duas linhas, pausa em coluna própria à direita ocupando ambas; cinco colunas ≥`44px`, gap `12px / 6px`, cartas `61px` de altura, fonte `20px`, radius `7px`. Desabilitado perde opacidade e movimento de hover.
 - PokerTable: oval fixa `365px` (compact `330px`), feltro `inset 64px 45px`, rail `10px`, radius `180px`, inner highlight + dashed interno. Assentos `84px`, avatar `44px`, played-card `27×38px rotate(12deg)`. Mobile (<700px, não-compact): coluna `520px`, assentos em 2 colunas laterais `65px`.
 
 ## Components
 
-- **Buttons:** flat, sem outer glow. Primary = acento (`button-primary`/`button-primary-hover`); Secondary = ghost/outline. Active tátil `translateY(-1px)` ou `scale(0.98)`; hover = shift de background, nunca glow. Tamanhos: reveal `40px`, invite `37px`, new-round `38px/100% width`. Atalhos sempre em `<kbd>` (R revela, N nova rodada).
+- **Buttons:** flat, sem outer glow. Primary = acento (`button-primary`/`button-primary-hover`); Secondary = ghost/outline. Active tátil `translateY(-1px)` ou `scale(0.98)`; hover = shift de background, nunca glow. Desktop: reveal `40px`, invite `37px`, new-round `38px/100% width`; touch/mobile mínimo `44px`. Convite outline; nova rodada primária, confirmação destructive-outline. Loading preserva nome acessível, usa `aria-busy` e spinner decorativo. Atalhos sempre em `<kbd>` (R revela, N nova rodada).
 - **Cards/Containers (`card`):** elevação só quando comunica hierarquia (ver Elevation).
 - **Deck (assinatura):** nunca spinner no lugar do deck.
 - **PokerTable:** self = primary fill + ring 2px (ver Shapes).

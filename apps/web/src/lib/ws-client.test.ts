@@ -245,19 +245,16 @@ describe("PointlySocket", () => {
 			socket.close({ silent: true });
 		}
 	});
-	test("heartbeat ping/pong mantém a conexão viva", async () => {
+	test("cliente não envia ping app-level (liveness é do servidor)", async () => {
 		seenPings = 0;
-		const socket = new PointlySocket(
-			{},
-			{ pingIntervalMs: 50, pongTimeoutMs: 500 },
-		);
+		const socket = new PointlySocket();
 		try {
 			await socket.connect(WS_URL, {
 				uuid: "00000000-0000-4000-8000-000000000001",
 				nick: "Ana",
 			});
 			await new Promise((resolve) => setTimeout(resolve, 250));
-			expect(seenPings).toBeGreaterThan(0);
+			expect(seenPings).toBe(0);
 			expect(socket.getStatus()).toBe("ready");
 		} finally {
 			socket.close({ silent: true });
@@ -475,6 +472,229 @@ describe("PointlySocket", () => {
 		} finally {
 			socket.close({ silent: true });
 			silent.stop(true);
+		}
+	});
+});
+
+describe("PointlySocket — auto-reconnect (morte real)", () => {
+	type ServerHandle = {
+		close(code?: number, reason?: string): void;
+		send(data: string): void;
+	};
+
+	function killableServer(
+		port: number,
+		onHello: (ws: ServerHandle, count: number) => void,
+	): {
+		server: ReturnType<typeof Bun.serve>;
+		hellos: () => number;
+		killAll: () => void;
+	} {
+		let hellos = 0;
+		const live = new Set<ServerHandle>();
+		const server = Bun.serve({
+			port,
+			fetch(request, wsServer) {
+				if (wsServer.upgrade(request)) return;
+				return new Response("not found", { status: 404 });
+			},
+			websocket: {
+				open(ws) {
+					live.add(ws as unknown as ServerHandle);
+				},
+				message(ws, raw: string | Buffer) {
+					const text =
+						typeof raw === "string" ? raw : raw.toString("utf-8");
+					let json: { type?: string };
+					try {
+						json = JSON.parse(text) as typeof json;
+					} catch {
+						return;
+					}
+					if (json.type !== "hello") return;
+					hellos += 1;
+					onHello(ws as unknown as ServerHandle, hellos);
+				},
+				close(ws) {
+					live.delete(ws as unknown as ServerHandle);
+				},
+			},
+		});
+		return {
+			server,
+			hellos: () => hellos,
+			killAll: () => {
+				for (const ws of live) {
+					try {
+						ws.close(1011, "test_kill");
+					} catch {
+						// Já fechado — nada a fazer.
+					}
+				}
+			},
+		};
+	}
+
+	function welcomeData(code = "AB12"): string {
+		return JSON.stringify({
+			type: "welcome",
+			payload: {
+				playerId: "p_test000001",
+				role: "player",
+				sala: salaFor(code, "p_test000001"),
+			},
+		});
+	}
+
+	/** Poll com deadline — evita sleep fixo em ciclos de retry com timers. */
+	async function waitFor(
+		condition: () => boolean,
+		timeoutMs = 3000,
+	): Promise<void> {
+		const start = Date.now();
+		for (;;) {
+			if (condition()) return;
+			if (Date.now() - start > timeoutMs) {
+				throw new Error("waitFor: timeout aguardando condição");
+			}
+			await new Promise((resolve) => setTimeout(resolve, 25));
+		}
+	}
+
+	test("queda real agenda retry com o mesmo hello e avisa onReconnected", async () => {
+		const { server, hellos, killAll } = killableServer(PORT + 2, (ws) => {
+			ws.send(welcomeData());
+		});
+		const reconnecting: Array<{ attempt: number; nextInMs: number }> = [];
+		const reconnected: unknown[] = [];
+		const closed: string[] = [];
+		const socket = new PointlySocket(
+			{
+				onReconnecting: (attempt, nextInMs) => {
+					reconnecting.push({ attempt, nextInMs });
+				},
+				onReconnected: (welcome) => {
+					reconnected.push(welcome);
+				},
+				onClose: () => {
+					closed.push("close");
+				},
+			},
+			{
+				reconnectBaseDelayMs: 20,
+				reconnectMaxDelayMs: 50,
+				reconnectWindowMs: 5_000,
+			},
+		);
+		try {
+			await socket.connect(`ws://127.0.0.1:${PORT + 2}/ws`, {
+				uuid: "00000000-0000-4000-8000-000000000001",
+				nick: "Ana",
+				code: "AB12",
+			});
+			expect(socket.getStatus()).toBe("ready");
+			// Morte real: servidor derruba a conexão (aba oculta NUNCA
+			// causa isso — o ping de protocolo mantém viva).
+			killAll();
+			await waitFor(() => reconnected.length > 0);
+			expect(reconnecting.length).toBeGreaterThan(0);
+			expect(reconnecting[0]?.attempt).toBe(1);
+			expect(hellos()).toBeGreaterThanOrEqual(2);
+			expect(socket.getStatus()).toBe("ready");
+			// Retry com sucesso: onClose não disparou.
+			expect(closed).toEqual([]);
+		} finally {
+			socket.close({ silent: true });
+			server.stop(true);
+		}
+	});
+
+	test("sala sumida no retry falha rápido sem retentar", async () => {
+		const { server, hellos, killAll } = killableServer(
+			PORT + 3,
+			(ws, count) => {
+				if (count === 1) {
+					ws.send(welcomeData());
+					return;
+				}
+				ws.send(
+					JSON.stringify({
+						type: "error",
+						payload: {
+							code: "sala_nao_encontrada",
+							message: "Sala AB12 não existe.",
+						},
+					}),
+				);
+			},
+		);
+		const reconnected: unknown[] = [];
+		let failed = 0;
+		let closed = 0;
+		const socket = new PointlySocket(
+			{
+				onReconnected: (welcome) => {
+					reconnected.push(welcome);
+				},
+				onReconnectFailed: () => {
+					failed += 1;
+				},
+				onClose: () => {
+					closed += 1;
+				},
+			},
+			{
+				reconnectBaseDelayMs: 20,
+				reconnectMaxDelayMs: 50,
+				reconnectWindowMs: 5_000,
+			},
+		);
+		try {
+			await socket.connect(`ws://127.0.0.1:${PORT + 3}/ws`, {
+				uuid: "00000000-0000-4000-8000-000000000001",
+				nick: "Ana",
+				code: "AB12",
+			});
+			killAll();
+			await waitFor(() => failed === 1);
+			expect(hellos()).toBe(2);
+			expect(reconnected).toEqual([]);
+			expect(closed).toBe(1);
+		} finally {
+			socket.close({ silent: true });
+			server.stop(true);
+		}
+	});
+
+	test("retryNow antecipa a tentativa sem esperar o backoff", async () => {
+		const { server, hellos, killAll } = killableServer(PORT + 4, (ws) => {
+			ws.send(welcomeData());
+		});
+		const socket = new PointlySocket(
+			{},
+			{
+				reconnectBaseDelayMs: 5_000,
+				reconnectMaxDelayMs: 5_000,
+				reconnectWindowMs: 30_000,
+			},
+		);
+		try {
+			await socket.connect(`ws://127.0.0.1:${PORT + 4}/ws`, {
+				uuid: "00000000-0000-4000-8000-000000000001",
+				nick: "Ana",
+				code: "AB12",
+			});
+			killAll();
+			// Queda percebida; backoff de 5s não dispararia sozinho.
+			await waitFor(() => socket.getStatus() === "closed");
+			expect(hellos()).toBe(1);
+			socket.retryNow();
+			// O retry antecipado reenvia o hello antes do backoff de 5s.
+			await waitFor(() => hellos() === 2);
+			await waitFor(() => socket.getStatus() === "ready");
+		} finally {
+			socket.close({ silent: true });
+			server.stop(true);
 		}
 	});
 });

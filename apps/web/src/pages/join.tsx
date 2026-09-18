@@ -234,7 +234,7 @@ export function JoinPage(): React.ReactElement {
 
       <Card className="join-card">
         <CardHeader className="join-card-header">
-          <CardTitle>Criar ou entrar</CardTitle>
+          <CardTitle>{mode === "create" ? "Prepare sua sala" : "Entre na sala"}</CardTitle>
           <CardDescription>
             Sem cadastro, só um apelido para a mesa.
           </CardDescription>
@@ -243,125 +243,131 @@ export function JoinPage(): React.ReactElement {
           <form
             id="join-form"
             className="join-form"
+            aria-busy={busy}
             onSubmit={(event) => {
               void handleSubmit(event);
             }}
           >
-            <div
-              className="join-mode-switch"
-              role="group"
-              aria-label="Criar sala ou entrar com código"
-            >
-              <Button
-                className="join-mode-button"
-                type="button"
-                variant={mode === "create" ? "default" : "outline"}
-                aria-pressed={mode === "create"}
-                onClick={() => switchMode("create")}
+            <fieldset className="join-fields" disabled={busy}>
+              <div
+                className="join-mode-switch"
+                role="group"
+                aria-label="Criar sala ou entrar com código"
               >
-                Criar sala
-              </Button>
-              <Button
-                className="join-mode-button"
-                type="button"
-                variant={mode === "join" ? "default" : "outline"}
-                aria-pressed={mode === "join"}
-                onClick={() => switchMode("join")}
-              >
-                Entrar com código
-              </Button>
-            </div>
-
-            <Field invalid={nickError !== null}>
-              <FieldLabel htmlFor="nick">Apelido</FieldLabel>
-              <Input
-                className="join-input"
-                id="nick"
-                name="nick"
-                size="lg"
-                value={nick}
-                maxLength={20}
-                autoComplete="nickname"
-                autoCapitalize="words"
-                autoCorrect="off"
-                spellCheck={false}
-                enterKeyHint="go"
-                disabled={busy}
-                placeholder="Como o time te chama?"
-                aria-invalid={nickError ? true : undefined}
-                aria-describedby={nickError ? "nick-error" : "nick-hint"}
-                onChange={(event) => handleNickChange(event.target.value)}
-              />
-              <FieldDescription id="nick-hint">
-                2 a 20 caracteres, sem espaços duplos.
-              </FieldDescription>
-              {nickError ? (
-                <FieldError id="nick-error" match={true}>
-                  {nickError}
-                </FieldError>
-              ) : null}
-            </Field>
-
-            <AvatarPicker value={avatar} onChange={handleAvatarChange} />
-
-            <label className="join-spectate" htmlFor="spectate">
-              <input
-                id="spectate"
-                name="spectate"
-                type="checkbox"
-                checked={spectate}
-                disabled={busy}
-                onChange={(event) => setSpectate(event.target.checked)}
-              />
-              <span className="join-spectate-text">
-                <span className="join-spectate-title">
-                  <EyeIcon aria-hidden="true" />
-                  Entrar como espectador
-                </span>
-                <span className="join-spectate-hint">
-                  Assiste e reage, mas não vota nem ocupa assento.
-                </span>
-              </span>
-            </label>
-
-            {mode === "join" ? (
-              <Field invalid={codeError !== null}>
-                <FieldLabel htmlFor="code">Código da sala</FieldLabel>
-                <OTPField
-                  className="join-otp"
-                  id="code"
-                  name="code"
-                  length={4}
-                  validationType="alphanumeric"
-                  normalizeValue={(value) => value.toUpperCase()}
-                  value={code}
-                  onValueChange={handleCodeChange}
-                  autoComplete="one-time-code"
-                  aria-invalid={codeError ? true : undefined}
-                  aria-describedby={codeError ? "code-error" : "code-hint"}
+                <Button
+                  className="join-mode-button"
+                  type="button"
+                  variant={mode === "create" ? "outline" : "ghost"}
+                  aria-pressed={mode === "create"}
+                  onClick={() => switchMode("create")}
                 >
-                  {[0, 1, 2, 3].map((index) => (
-                    <OTPFieldInput key={index} />
-                  ))}
-                </OTPField>
-                <FieldDescription id="code-hint">
-                  4 letras ou números. Cole o código do convite.
+                  Criar sala
+                </Button>
+                <Button
+                  className="join-mode-button"
+                  type="button"
+                  variant={mode === "join" ? "outline" : "ghost"}
+                  aria-pressed={mode === "join"}
+                  onClick={() => switchMode("join")}
+                >
+                  Entrar com código
+                </Button>
+              </div>
+
+              <Field invalid={nickError !== null}>
+                <FieldLabel htmlFor="nick">Apelido</FieldLabel>
+                <Input
+                  className="join-input"
+                  id="nick"
+                  name="nick"
+                  size="lg"
+                  value={nick}
+                  maxLength={20}
+                  autoComplete="nickname"
+                  autoCapitalize="words"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  enterKeyHint={mode === "join" ? "next" : "go"}
+                  disabled={busy}
+                  placeholder="Como o time te chama?"
+                  aria-invalid={nickError ? true : undefined}
+                  aria-describedby={nickError ? "nick-error" : "nick-hint"}
+                  onChange={(event) => handleNickChange(event.target.value)}
+                />
+                <FieldDescription id="nick-hint">
+                  2 a 20 caracteres, sem espaços duplos.
                 </FieldDescription>
-                {codeError ? (
-                  <FieldError id="code-error" match={true}>
-                    {codeError}
+                {nickError ? (
+                  <FieldError id="nick-error" match={true}>
+                    {nickError}
                   </FieldError>
                 ) : null}
               </Field>
-            ) : null}
 
-            {formError ? (
-              <Alert variant="error">
-                <CircleAlertIcon aria-hidden="true" />
-                <AlertTitle>Não foi possível entrar</AlertTitle>
-                <AlertDescription>{formError}</AlertDescription>
-              </Alert>
-            ) : null}
+              {mode === "join" ? (
+                <Field invalid={codeError !== null}>
+                  <FieldLabel htmlFor="code">Código da sala</FieldLabel>
+                  <OTPField
+                    className="join-otp"
+                    id="code"
+                    name="code"
+                    length={4}
+                    validationType="alphanumeric"
+                    normalizeValue={(value) => value.toUpperCase()}
+                    value={code}
+                    onValueChange={handleCodeChange}
+                    autoComplete="one-time-code"
+                    aria-invalid={codeError ? true : undefined}
+                    aria-describedby={codeError ? "code-error" : "code-hint"}
+                  >
+                    {[0, 1, 2, 3].map((index) => (
+                      <OTPFieldInput
+                        key={index}
+                        aria-label={index === 0 ? undefined : `Caractere ${index + 1} de 4`}
+                      />
+                    ))}
+                  </OTPField>
+                  <FieldDescription id="code-hint">
+                    4 letras ou números. Cole o código do convite.
+                  </FieldDescription>
+                  {codeError ? (
+                    <FieldError id="code-error" match={true}>
+                      {codeError}
+                    </FieldError>
+                  ) : null}
+                </Field>
+              ) : null}
+
+              <AvatarPicker value={avatar} onChange={handleAvatarChange} />
+
+              <label className="join-spectate" htmlFor="spectate">
+                <input
+                  id="spectate"
+                  name="spectate"
+                  type="checkbox"
+                  checked={spectate}
+                  disabled={busy}
+                  onChange={(event) => setSpectate(event.target.checked)}
+                />
+                <span className="join-spectate-text">
+                  <span className="join-spectate-title">
+                    <EyeIcon aria-hidden="true" />
+                    Entrar como espectador
+                  </span>
+                  <span className="join-spectate-hint">
+                    Assiste e reage, mas não vota nem ocupa assento.
+                  </span>
+                </span>
+              </label>
+
+              {formError ? (
+                <Alert variant="error">
+                  <CircleAlertIcon aria-hidden="true" />
+                  <AlertTitle>Não foi possível entrar</AlertTitle>
+                  <AlertDescription>{formError}</AlertDescription>
+                </Alert>
+              ) : null}
+            </fieldset>
           </form>
         </CardPanel>
         <CardFooter className="join-card-footer">
@@ -373,6 +379,9 @@ export function JoinPage(): React.ReactElement {
           >
             {mode === "create" ? "Criar sala" : "Entrar na sala"}
           </Button>
+          <span role="status" className="sr-only">
+            {busy ? (mode === "create" ? "Criando sala…" : "Entrando na sala…") : ""}
+          </span>
         </CardFooter>
       </Card>
     </div>

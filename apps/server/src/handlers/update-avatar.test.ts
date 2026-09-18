@@ -128,6 +128,7 @@ class MockBunWS implements BunWS {
 		code: null,
 		ip: "127.0.0.1",
 		lastPongAt: Date.now(),
+		lastPingAt: Date.now(),
 	};
 	messages: string[] = [];
 	send(message: string | ArrayBuffer | Uint8Array): void {
@@ -135,6 +136,7 @@ class MockBunWS implements BunWS {
 			typeof message === "string" ? message : new TextDecoder().decode(message),
 		);
 	}
+	ping(): void {}
 	close(): void {}
 	subscribe(): void {}
 	unsubscribe(): void {}

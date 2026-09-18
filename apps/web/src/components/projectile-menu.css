@@ -22,7 +22,7 @@
 .projectile-menu-heading {
   padding: 8px 10px 2px;
   color: var(--foreground);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   overflow-wrap: anywhere;
 }
@@ -30,7 +30,7 @@
 .projectile-menu-status {
   padding: 0 10px 8px;
   color: var(--muted-foreground);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .projectile-menu-item {

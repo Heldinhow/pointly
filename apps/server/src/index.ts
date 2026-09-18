@@ -166,6 +166,9 @@ if (import.meta.main) {
 			open(ws) {
 				wsService.onOpen(ws as unknown as import("./ws").BunWS);
 			},
+			pong(ws) {
+				wsService.onPong(ws as unknown as import("./ws").BunWS);
+			},
 			message(ws, message) {
 				const text =
 					typeof message === "string"

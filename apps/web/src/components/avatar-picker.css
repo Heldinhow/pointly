@@ -30,6 +30,10 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+.avatar-picker [data-slot="field-description"] {
+  font-size: 14px;
+  line-height: 1.5;
+}
 .avatar-picker--compact .avatar-picker-row {
   gap: 8px;
 }
