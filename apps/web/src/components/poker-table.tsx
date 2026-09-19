@@ -4,6 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { ProjectileType } from "@/lib/protocol";
 import { ProjectileMenu } from "./projectile-menu";
+import { UnanimousCelebration } from "./unanimous-celebration";
 import "./poker-table.css";
 
 export interface TablePlayer {
@@ -23,6 +24,8 @@ interface PokerTableProps {
   hostId?: string | null;
   revealed: boolean;
   compact?: boolean;
+  /** > 0 dispara a celebração de Unânime (14.3); cada incremento replaya. */
+  celebrateKey?: number;
   onThrowProjectile?: (targetId: string, type: ProjectileType) => void;
   projectileCooldownSecs?: number;
   children?: ReactNode;
@@ -87,6 +90,7 @@ export function PokerTable({
   hostId,
   revealed,
   compact = false,
+  celebrateKey = 0,
   onThrowProjectile,
   projectileCooldownSecs = 0,
   children,
@@ -97,6 +101,7 @@ export function PokerTable({
       data-revealed={revealed}
     >
       <div className="poker-felt">
+        {celebrateKey > 0 && <UnanimousCelebration key={celebrateKey} />}
         <div className="poker-center">{children}</div>
       </div>
       <ul

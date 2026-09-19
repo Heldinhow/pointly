@@ -27,6 +27,7 @@ import { ProjectileMenu } from "@/components/projectile-menu";
 import "./arena.css";
 import { Spinner } from "@/components/ui/spinner";
 import {
+  consensusSignal,
   formatMean,
   formatMedian,
   formatRange,
@@ -507,6 +508,26 @@ export function ArenaPage(): React.ReactElement {
     return `${window.location.origin}/join?code=${sala.code}`;
   }, [sala]);
 
+  // Celebração de Unânime (14.3): dispara só na transição ao vivo para
+  // `revealed` com sinal unânime (14.1). O sinal é estado; a celebração é o
+  // evento do reveal — edição pós-reveal, reload e join não re-disparam.
+  const [unanimousCelebrationKey, setUnanimousCelebrationKey] = useState(0);
+  const previousPhaseRef = useRef<Phase | null>(sala?.phase ?? null);
+  useEffect(() => {
+    const phase = sala?.phase ?? null;
+    const previous = previousPhaseRef.current;
+    previousPhaseRef.current = phase;
+    const cameFromVoting =
+      previous === "idle" || previous === "voting" || previous === "revealable";
+    if (
+      cameFromVoting &&
+      phase === "revealed" &&
+      consensusSignal(Object.values(sala?.votes ?? {})) === "unanimous"
+    ) {
+      setUnanimousCelebrationKey((key) => key + 1);
+    }
+  }, [sala]);
+
   if (!hasSession || !sala) {
     if (rejoinError) {
       return (
@@ -846,6 +867,7 @@ export function ArenaPage(): React.ReactElement {
             playerId={playerId}
             hostId={sala.hostId}
             revealed={isRevealed}
+            celebrateKey={unanimousCelebrationKey}
             onThrowProjectile={connectionLost || reconnecting ? undefined : handleThrowProjectile}
             projectileCooldownSecs={projectileCooldownSecs}
           >

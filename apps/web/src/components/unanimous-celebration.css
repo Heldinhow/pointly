@@ -1,0 +1,58 @@
+/* Celebração de Unânime (14.3): anel claro no contorno do feltro + confete
+   CSS-only. Anima só `transform`/`opacity`; nada de glow/neon. */
+.unanimous-celebration {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.unanimous-celebration::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border: 2px solid #a9d6adb3;
+  border-radius: inherit;
+  animation: unanimous-ring 0.9s ease-out both;
+}
+.unanimous-confetti {
+  position: absolute;
+  left: 50%;
+  top: 54%;
+  width: 7px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--piece-color);
+  opacity: 0;
+  animation: unanimous-confetti 0.95s cubic-bezier(0.17, 0.67, 0.35, 1)
+    var(--piece-delay, 0ms) both;
+}
+@keyframes unanimous-ring {
+  from {
+    transform: scale(0.985);
+    opacity: 0.85;
+  }
+  to {
+    transform: scale(1.055);
+    opacity: 0;
+  }
+}
+@keyframes unanimous-confetti {
+  0% {
+    transform: translate(0, 0) scale(0.5) rotate(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(1) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .unanimous-celebration::before,
+  .unanimous-confetti {
+    animation: none;
+    opacity: 0;
+  }
+}

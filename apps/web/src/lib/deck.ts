@@ -61,17 +61,44 @@ export function computeConsensus(
 }
 
 /**
- * Unanimidade sobre os votos numéricos (pausa ignorada). `false` sem
- * nenhum voto numérico.
+ * Sinal de consenso de uma rodada revelada (14.1) — espelho de
+ * `consensusSignal` em `packages/shared/src/compute/consensus.ts` (SSOT).
+ *
+ *  - `unanimous`: ≥2 votos numéricos, todos iguais
+ *  - `divergent`: ≥2 votos numéricos, com pelo menos dois valores distintos
+ *  - `none`: menos de 2 votos numéricos (voto único, só ☕, vazio)
  */
-export function isUnanimous(votes: ReadonlyArray<Vote | string>): boolean {
+export type ConsensusSignal = "unanimous" | "divergent" | "none";
+
+export function consensusSignal(
+	votes: ReadonlyArray<Vote | string>,
+): ConsensusSignal {
 	const nums: number[] = [];
 	for (const vote of votes) {
 		const n = voteToNumber(vote);
 		if (n !== null) nums.push(n);
 	}
-	if (nums.length === 0) return false;
-	return nums.every((n) => n === nums[0]);
+	if (nums.length < 2) return "none";
+	return nums.every((n) => n === nums[0]) ? "unanimous" : "divergent";
+}
+
+/**
+ * Predicado derivado do sinal canônico — `true` só em `unanimous`.
+ * Pausa ignorada; voto único NÃO é unanimidade.
+ */
+export function isUnanimous(votes: ReadonlyArray<Vote | string>): boolean {
+	return consensusSignal(votes) === "unanimous";
+}
+
+/**
+ * Magnitude da divergência: `range[1] - range[0]` (espelho do shared).
+ * `null` sem votos numéricos; `0` quando todos iguais (inclusive voto único).
+ */
+export function divergenceMagnitude(
+	votes: ReadonlyArray<Vote | string>,
+): number | null {
+	const { range } = computeConsensus(votes);
+	return range === null ? null : range[1] - range[0];
 }
 
 export interface VoteGroup {

@@ -173,7 +173,8 @@ describe("Sala — reveal", () => {
 		expect(outcome.median).toBe(5);
 		expect(outcome.mean).toBe(5);
 		expect(outcome.range).toEqual([5, 5]);
-		expect(outcome.unanimous).toBe(true);
+		// Voto único não é unanimidade (gate ≥2 numéricos do sinal).
+		expect(outcome.unanimous).toBe(false);
 	});
 
 	test("qualquer player pode revelar (sem role check — ADR-0002)", () => {

@@ -44,6 +44,14 @@ _Avoid_: mostrar, expor, abrir
 Valor do meio do conjunto de votos numéricos da rodada. Jogadores com voto igual à mediana recebem destaque gold (mustard).
 _Avoid_: média, average, mean
 
+**Unânime**:
+Rodada revelada em que todos os votos numéricos são iguais — pausa (☕) fica de fora — com pelo menos dois votantes numéricos. Voto único não é unanimidade.
+_Avoid_: consenso, acordo total, todos de acordo
+
+**Divergente**:
+Rodada revelada com pelo menos dois votos numéricos e ao menos dois valores distintos. A magnitude da divergência é a distância entre o menor e o maior voto numérico; rodadas com menos de dois votos numéricos não têm sinal.
+_Avoid_: discordância, desacordo, conflito
+
 **Deck**:
 Conjunto fixo de 9 cartas usadas para votar: `0, ½, 1, 2, 3, 5, 8, 13, ☕`. Sequência Fibonacci + pausa explícita.
 _Avoid_: baralho, cards, conjunto

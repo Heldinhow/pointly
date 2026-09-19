@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test";
 import {
 	DECK_VALUES,
 	computeConsensus,
+	consensusSignal,
+	divergenceMagnitude,
 	formatMean,
 	formatMedian,
 	formatRange,
@@ -77,10 +79,11 @@ describe("consenso (ticket 07 — Resultados)", () => {
 		});
 	});
 
-	test("unanimidade ignora pausa e exige ao menos um numérico", () => {
+	test("unanimidade exige ≥2 numéricos iguais (pausa ignorada)", () => {
 		expect(isUnanimous(["5", "5", "5"])).toBe(true);
 		expect(isUnanimous(["5", "5", "☕"])).toBe(true);
 		expect(isUnanimous(["5", "8"])).toBe(false);
+		expect(isUnanimous(["5", "☕"])).toBe(false);
 		expect(isUnanimous(["☕"])).toBe(false);
 		expect(isUnanimous([])).toBe(false);
 	});
@@ -101,5 +104,28 @@ describe("consenso (ticket 07 — Resultados)", () => {
 		expect(formatMean(6.5)).toBe("6.5");
 		expect(formatRange(null)).toBe("—");
 		expect(formatRange([5, 8])).toBe("5–8");
+	});
+});
+
+describe("sinais de consenso (14.1 — espelho do shared)", () => {
+	test("consensusSignal: unânime / divergente / sem sinal", () => {
+		expect(consensusSignal(["5", "5", "☕"])).toBe("unanimous");
+		expect(consensusSignal(["½", "½"])).toBe("unanimous");
+		expect(consensusSignal(["5", "8"])).toBe("divergent");
+		expect(consensusSignal(["0", "½"])).toBe("divergent");
+		expect(consensusSignal(["5", "☕"])).toBe("none");
+		expect(consensusSignal(["5"])).toBe("none");
+		expect(consensusSignal(["☕", "☕"])).toBe("none");
+		expect(consensusSignal([])).toBe("none");
+	});
+
+	test("divergenceMagnitude: delta max−min (null sem numéricos)", () => {
+		expect(divergenceMagnitude(["5", "8"])).toBe(3);
+		expect(divergenceMagnitude(["0", "13"])).toBe(13);
+		expect(divergenceMagnitude(["½", "1"])).toBe(0.5);
+		expect(divergenceMagnitude(["5", "5", "☕"])).toBe(0);
+		expect(divergenceMagnitude(["5"])).toBe(0);
+		expect(divergenceMagnitude(["☕"])).toBeNull();
+		expect(divergenceMagnitude([])).toBeNull();
 	});
 });

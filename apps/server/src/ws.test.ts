@@ -228,7 +228,8 @@ describe("WSService — onMessage (hello + cast_vote + reveal + new_round)", () 
 		const reveals = ws.eventsOfType("votes_revealed");
 		expect(reveals.length).toBeGreaterThanOrEqual(1);
 		if (reveals[0]) {
-			expect(reveals[0].payload.unanimous).toBe(true);
+			// Ana é a única votante — voto único não é unanimidade.
+			expect(reveals[0].payload.unanimous).toBe(false);
 			expect(reveals[0].payload.median).toBe(5);
 		}
 	});

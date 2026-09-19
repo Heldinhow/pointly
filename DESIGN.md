@@ -202,6 +202,7 @@ Hierarquia por **camadas tonais e bordas**, sombra só quando comunica elevaçã
 ### Motion — intent de código (Stitch exporta estático)
 
 - **Física:** springs `stiffness:100, damping:20`, sem linear easing. Reveal de carta: `card-reveal 0.35s ease-out (rotateY 90°→0 + rotate 12°)`; voto no assento: `card-flip 0.35s ease-out (rotateY 180°→0 + rotate 12°)`. Ambas terminam no tilt fixo `12°` da carta no assento.
+- **Celebração de Unânime (14.3):** anel claro no contorno do feltro (`unanimous-ring 0.9s ease-out`) + 14 peças de confete determinísticas (`unanimous-confetti 0.95s cubic-bezier(0.17,0.67,0.35,1)`), só `transform/opacity`, sem glow; dispara uma vez na transição ao vivo para `revealed` unânime (edição pós-reveal atualiza o badge sem replayar); `reduced-motion` desliga.
 - **Micro-loops:** pulse no dot de presença/timer crítico, shimmer em skeleton, float sutil em ícones da home. Timer crítico (`≤30s`) com `aria-live=assertive` + borda destructive.
 - **Orquestra:** Assentos/votos/feed montam em cascata (`delay: index*100ms`), nunca instantâneo.
 - **Hardware:** animar SÓ `transform` e `opacity`; nunca `top/left/width/height`. Grain só em pseudo fixo `pointer-events-none`. Isolar loops em leaf components, 60fps mínimo.

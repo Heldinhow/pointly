@@ -1,11 +1,13 @@
 import {
 	computeConsensus,
+	consensusSignal,
+	divergenceMagnitude,
 	formatMean,
 	formatMedian,
 	formatRange,
 	groupVotes,
-	isUnanimous,
 	voteToNumber,
+	type ConsensusSignal,
 	type ConsensusStats,
 	type VoteGroup,
 } from "./deck";
@@ -17,6 +19,10 @@ import {
  */
 export interface ConsensusView {
 	consensus: ConsensusStats;
+	/** Sinal único (14.1): unânime, divergente ou sem sinal (<2 numéricos). */
+	consensusSignal: ConsensusSignal;
+	/** Delta numérico `max - min`; null sem numéricos, 0 com todos iguais. */
+	divergenceMagnitude: number | null;
 	numericCount: number;
 	noNumerics: boolean;
 	isSingleNumeric: boolean;
@@ -29,13 +35,13 @@ export function useConsensusStats(
 	votes: ReadonlyArray<string>,
 ): ConsensusView {
 	const consensus = computeConsensus(votes);
-	const unanimousVotes = isUnanimous(votes);
+	const signal = consensusSignal(votes);
 	const numericCount = votes.filter(
 		(vote) => voteToNumber(vote) !== null,
 	).length;
 	const noNumerics = numericCount === 0;
 	const isSingleNumeric = numericCount === 1;
-	const isUnanimousSignal = numericCount >= 2 && unanimousVotes;
+	const isUnanimousSignal = signal === "unanimous";
 	const voteGroups = groupVotes(votes);
 	const resultsAriaLabel = noNumerics
 		? "Sem votos numéricos · pausa e ausência ficam fora dos cálculos"
@@ -46,6 +52,8 @@ export function useConsensusStats(
 				: `Estatísticas pós-reveal · média ${formatMean(consensus.mean)} · mediana ${formatMedian(consensus.median)} · intervalo ${formatRange(consensus.range)}`;
 	return {
 		consensus,
+		consensusSignal: signal,
+		divergenceMagnitude: divergenceMagnitude(votes),
 		numericCount,
 		noNumerics,
 		isSingleNumeric,

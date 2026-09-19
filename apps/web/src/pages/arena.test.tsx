@@ -1938,3 +1938,128 @@ describe("ArenaPage (espectador)", () => {
 		expect(line.textContent).toMatch(/Olho/);
 	});
 });
+
+// ---------------------------------------------------------------------------
+// 14.3 — Celebração de Unânime
+// ---------------------------------------------------------------------------
+
+describe("ArenaPage (14.3 — Celebração de Unânime)", () => {
+	function pairSala(
+		phase: SalaState["phase"],
+		votes: Record<string, string>,
+	): SalaState {
+		const ana = player(
+			{
+				id: "p_host",
+				nick: "Ana",
+				role: "host",
+				hasVoted: true,
+				value: votes.p_host ?? null,
+			},
+			0,
+		);
+		const beto = player(
+			{
+				id: "p_beto",
+				nick: "Beto",
+				hasVoted: true,
+				value: votes.p_beto ?? null,
+			},
+			1,
+		);
+		return sala({ players: [ana, beto], phase, votes });
+	}
+
+	test("transição ao vivo para revealed unânime celebra", async () => {
+		const socket = new FakeSocket();
+		seed({
+			sala: pairSala("revealable", { p_host: "5", p_beto: "5" }),
+			playerId: "p_host",
+			socket,
+		});
+		renderArena();
+		expect(screen.queryByTestId("unanimous-celebration")).toBeNull();
+
+		await act(async () => {
+			socket.emitRoomState(pairSala("revealed", { p_host: "5", p_beto: "5" }));
+		});
+
+		expect(screen.getByTestId("unanimous-celebration")).toBeTruthy();
+	});
+
+	test("reveal divergente não celebra", async () => {
+		const socket = new FakeSocket();
+		seed({
+			sala: pairSala("revealable", { p_host: "5", p_beto: "8" }),
+			playerId: "p_host",
+			socket,
+		});
+		renderArena();
+
+		await act(async () => {
+			socket.emitRoomState(pairSala("revealed", { p_host: "5", p_beto: "8" }));
+		});
+
+		expect(screen.getByTestId("stats-pill").getAttribute("data-stats-unanimous")).toBe(
+			"false",
+		);
+		expect(screen.queryByTestId("unanimous-celebration")).toBeNull();
+	});
+
+	test("já revealed na montagem (reload/join) não replaya", () => {
+		const socket = new FakeSocket();
+		seed({
+			sala: pairSala("revealed", { p_host: "5", p_beto: "5" }),
+			playerId: "p_host",
+			socket,
+		});
+		renderArena();
+
+		expect(screen.getByTestId("stats-unanimous-badge")).toBeTruthy();
+		expect(screen.queryByTestId("unanimous-celebration")).toBeNull();
+	});
+
+	test("edição pós-reveal para unânime atualiza o badge sem celebrar", async () => {
+		const socket = new FakeSocket();
+		seed({
+			sala: pairSala("revealed", { p_host: "5", p_beto: "8" }),
+			playerId: "p_host",
+			socket,
+		});
+		renderArena();
+		expect(screen.queryByTestId("unanimous-celebration")).toBeNull();
+
+		await act(async () => {
+			socket.emitRoomState(pairSala("revealed", { p_host: "5", p_beto: "5" }));
+		});
+
+		await waitFor(() =>
+			expect(screen.getByTestId("stats-unanimous-badge")).toBeTruthy(),
+		);
+		expect(screen.queryByTestId("unanimous-celebration")).toBeNull();
+	});
+
+	test("nova rodada unânime re-arma (remonta) a celebração", async () => {
+		const socket = new FakeSocket();
+		seed({
+			sala: pairSala("revealable", { p_host: "5", p_beto: "5" }),
+			playerId: "p_host",
+			socket,
+		});
+		renderArena();
+
+		await act(async () => {
+			socket.emitRoomState(pairSala("revealed", { p_host: "5", p_beto: "5" }));
+		});
+		const first = screen.getByTestId("unanimous-celebration");
+
+		await act(async () => {
+			socket.emitRoomState(pairSala("voting", {}));
+		});
+		await act(async () => {
+			socket.emitRoomState(pairSala("revealed", { p_host: "8", p_beto: "8" }));
+		});
+
+		expect(screen.getByTestId("unanimous-celebration")).not.toBe(first);
+	});
+});

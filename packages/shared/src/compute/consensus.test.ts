@@ -2,7 +2,13 @@
  * computeConsensus tests — T9 verify (≥5 unit tests).
  */
 import { describe, expect, test } from "bun:test";
-import { computeConsensus, isUnanimous, voteToNumber } from "./consensus";
+import {
+	computeConsensus,
+	consensusSignal,
+	divergenceMagnitude,
+	isUnanimous,
+	voteToNumber,
+} from "./consensus";
 import type { Vote } from "../schemas/sala";
 
 describe("voteToNumber", () => {
@@ -80,12 +86,59 @@ describe("isUnanimous", () => {
 		expect(isUnanimous(["5", "8"] as Vote[])).toBe(false);
 	});
 
+	test("voto único (1 numérico + ☕) → false (não há acordo entre votantes)", () => {
+		expect(isUnanimous(["5", "☕"] as Vote[])).toBe(false);
+	});
+
 	test("só ☕ → false (sem votos numéricos, não há unanimidade)", () => {
 		expect(isUnanimous(["☕", "☕"] as Vote[])).toBe(false);
 	});
 
 	test("vazio → false", () => {
 		expect(isUnanimous([] as Vote[])).toBe(false);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// 14.1 — sinais de Unânime e Divergência
+// ---------------------------------------------------------------------------
+
+describe("consensusSignal", () => {
+	test("≥2 numéricos iguais → unanimous (☕ ignorado)", () => {
+		expect(consensusSignal(["5", "5"] as Vote[])).toBe("unanimous");
+		expect(consensusSignal(["5", "5", "☕"] as Vote[])).toBe("unanimous");
+		expect(consensusSignal(["½", "½"] as Vote[])).toBe("unanimous");
+	});
+
+	test("≥2 numéricos distintos → divergent", () => {
+		expect(consensusSignal(["5", "8"] as Vote[])).toBe("divergent");
+		expect(consensusSignal(["0", "½"] as Vote[])).toBe("divergent");
+		expect(consensusSignal(["5", "13", "☕"] as Vote[])).toBe("divergent");
+	});
+
+	test("<2 numéricos → none (voto único, só ☕, vazio)", () => {
+		expect(consensusSignal(["5", "☕"] as Vote[])).toBe("none");
+		expect(consensusSignal(["5"] as Vote[])).toBe("none");
+		expect(consensusSignal(["☕", "☕"] as Vote[])).toBe("none");
+		expect(consensusSignal([] as Vote[])).toBe("none");
+	});
+});
+
+describe("divergenceMagnitude", () => {
+	test("delta entre maior e menor voto numérico", () => {
+		expect(divergenceMagnitude(["5", "8"] as Vote[])).toBe(3);
+		expect(divergenceMagnitude(["0", "13"] as Vote[])).toBe(13);
+		expect(divergenceMagnitude(["½", "1"] as Vote[])).toBe(0.5);
+	});
+
+	test("0 quando todos os numéricos são iguais (inclusive voto único)", () => {
+		expect(divergenceMagnitude(["5", "5", "☕"] as Vote[])).toBe(0);
+		expect(divergenceMagnitude(["5"] as Vote[])).toBe(0);
+	});
+
+	test("null sem votos numéricos", () => {
+		expect(divergenceMagnitude(["☕"] as Vote[])).toBeNull();
+		expect(divergenceMagnitude([] as Vote[])).toBeNull();
 	});
 });
 
@@ -240,9 +293,8 @@ describe("computeConsensus — ☕ pesado (mais da metade)", () => {
 		expect(r.median).toBe(5);
 		expect(r.mean).toBe(5);
 		expect(r.range).toEqual([5, 5]);
-		// unanimous = false porque ☕ está presente (sem votos numéricos iguais)
-		// wait: isUnanimous compara nums entre si, ☕ ignorado. 1 num = unanimous true.
-		expect(isUnanimous(votes)).toBe(true);
+		// Voto único não é unanimidade: o sinal exige ≥2 numéricos.
+		expect(isUnanimous(votes)).toBe(false);
 	});
 
 	test("12 ☕ → todos null (não unanimous)", () => {
