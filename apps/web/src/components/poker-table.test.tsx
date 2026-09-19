@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { PokerTable, type TablePlayer } from "./poker-table";
 
@@ -131,5 +132,30 @@ describe("PokerTable cartas na mesa", () => {
 		expect(card?.className).toMatch(/poker-played-card--face/);
 		expect(card?.className).not.toMatch(/--dealt/);
 		expect(card?.textContent).toBe("5");
+	});
+});
+
+describe("PokerTable carta votada (14.2)", () => {
+	const css = readFileSync(
+		new URL("./poker-table.css", import.meta.url),
+		"utf8",
+	);
+
+	test("voto entra com flip de meia-volta, sem voo", () => {
+		const dealtRule = css.match(/\.poker-played-card--dealt\s*{[^}]*}/)?.[0];
+		expect(dealtRule).toContain("card-flip");
+		const flip = css.slice(
+			css.indexOf("@keyframes card-flip"),
+			css.indexOf("@keyframes card-reveal"),
+		);
+		expect(flip).toContain("rotateY(180deg)");
+		expect(flip).toContain("rotateY(0)");
+		expect(flip).not.toContain("translateY");
+		expect(css).not.toContain("card-dealt");
+	});
+
+	test("reduced motion desliga o flip do voto", () => {
+		const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion"));
+		expect(reduced).toContain(".poker-played-card--dealt");
 	});
 });
