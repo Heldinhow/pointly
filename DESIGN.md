@@ -214,14 +214,14 @@ Linguagem de cantos contidos e táteis; radius base `--radius: 0.75rem` (`sm 8px
 
 - Hero visual `18px`. Avatar `50%`, pills `999px`, clock `8px`.
 - Deck: radius `9px` (desktop `clamp(44px, 4.8vw, 58px) × 80px`, `font 24px`). Mobile: quatro estimativas por linha, duas linhas, pausa em coluna própria à direita ocupando ambas; cinco colunas ≥`44px`, gap `12px / 6px`, cartas `61px` de altura, fonte `20px`, radius `7px`. Desabilitado perde opacidade e movimento de hover.
-- PokerTable: oval fixa `365px` (compact `330px`), feltro `inset 64px 45px`, rail `10px`, radius `180px`, inner highlight + dashed interno. Assentos `84px`, avatar `44px`, played-card `27×38px rotate(12deg)` ao lado do assento (ombro do avatar). Mobile (<700px, não-compact): coluna `520px`, assentos em 2 colunas laterais `65px` e played-card `22×32px`.
+- PokerTable: oval fixa `365px` (compact `330px`), feltro `inset 64px 45px`, rail `10px`, radius `180px`, inner highlight + dashed interno. Assentos `84px`, avatar `44px`, played-card `27×38px rotate(12deg)` à frente do assento, voltada ao centro da mesa. Mobile (<700px, não-compact): coluna `520px`, assentos em 2 colunas laterais `65px` e played-card `22×32px`.
 
 ## Components
 
 - **Buttons:** flat, sem outer glow. Primary = acento (`button-primary`/`button-primary-hover`); Secondary = ghost/outline. Active tátil `translateY(-1px)` ou `scale(0.98)`; hover = shift de background, nunca glow. Desktop: reveal `40px`, invite `37px`, new-round `38px/100% width`; touch/mobile mínimo `44px`. Convite outline; nova rodada primária, confirmação destructive-outline. Loading preserva nome acessível, usa `aria-busy` e spinner decorativo. Atalhos sempre em `<kbd>` (R revela, N nova rodada).
 - **Cards/Containers (`card`):** elevação só quando comunica hierarquia (ver Elevation).
 - **Deck (assinatura):** nunca spinner no lugar do deck.
-- **PokerTable:** self = primary fill + ring 2px (ver Shapes). Carta votada fica ao lado do assento: verso (`card-dealt`) antes do reveal, face com o valor (`card-reveal`) depois; o pill do assento (`Votou`/valor) segue como leitura acessível.
+- **PokerTable:** self = primary fill + ring 2px (ver Shapes). Carta votada fica à frente do avatar, voltada ao centro da mesa: verso (`card-dealt`) antes do reveal, face com o valor (`card-reveal`) depois; o pill do assento (`Votou`/valor) segue como leitura acessível.
 - **Inputs/Forms (`input`):** label acima, erro abaixo, gap `0.5rem`. Focus ring acento `2px + offset`. Sem floating labels. Invite input `11px`, mono para código da sala.
 - **Alerts:** inline, contextual, com `AlertTitle` + `AlertDescription` + `data-testid` (`vote-error`, `reveal-error`, `new-round-error`, `projectile-error`, `rejoin-error`). Erro de reveal nunca cai no alerta de voto (roteamento por regex já implementado).
 - **Loaders:** esqueleto shimmer nas dimensões do layout. `Spinner` só para `Carregando sala / Reconectando` — nunca spinner circular em lista de votos.

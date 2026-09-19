@@ -196,8 +196,6 @@ button.poker-seat-target[aria-expanded="true"] .poker-avatar {
 }
 .poker-played-card {
   position: absolute;
-  right: -8px;
-  top: 4px;
   z-index: 2;
   display: grid;
   place-items: center;
@@ -210,6 +208,39 @@ button.poker-seat-target[aria-expanded="true"] .poker-avatar {
   transform: rotate(12deg);
   color: #1c4939;
   font: 600 14px var(--font-mono);
+}
+/* Carta votada à frente do avatar, voltada ao centro da mesa: fileiras de
+   cima/baixo empilham no sentido do miolo; assentos laterais encostam na
+   lateral interna do avatar. Rotação e animações seguem intactas. */
+.poker-table:not(.poker-table--compact)
+  .poker-seat:nth-child(-n + 5)
+  .poker-played-card,
+.poker-table--compact
+  .poker-seat:nth-child(-n + 2)
+  .poker-played-card {
+  left: calc(50% - 13.5px);
+  bottom: -42px;
+}
+.poker-table:not(.poker-table--compact)
+  .poker-seat:nth-child(n + 7):nth-child(-n + 11)
+  .poker-played-card,
+.poker-table--compact
+  .poker-seat:nth-child(n + 3)
+  .poker-played-card {
+  left: calc(50% - 13.5px);
+  top: -42px;
+}
+.poker-table:not(.poker-table--compact)
+  .poker-seat:nth-child(6)
+  .poker-played-card {
+  right: calc(50% + 24px);
+  top: 3px;
+}
+.poker-table:not(.poker-table--compact)
+  .poker-seat:nth-child(12)
+  .poker-played-card {
+  left: calc(50% + 24px);
+  top: 3px;
 }
 .poker-card-pattern {
   position: absolute;
@@ -319,10 +350,41 @@ button.poker-seat-target[aria-expanded="true"] .poker-avatar {
     font-size: 12px;
   }
   .poker-played-card {
-    right: -7px;
-    top: 2px;
     width: 22px;
     height: 32px;
+  }
+  /* Mobile vira duas colunas: a carta segue virada ao centro — coluna da
+     esquerda joga à direita do avatar, coluna da direita à esquerda. */
+  .poker-table:not(.poker-table--compact)
+    .poker-seat:nth-child(-n + 6)
+    .poker-played-card {
+    left: calc(50% + 24px);
+    right: auto;
+    top: 6px;
+    bottom: auto;
+  }
+  .poker-table:not(.poker-table--compact)
+    .poker-seat:nth-child(n + 7):nth-child(-n + 12)
+    .poker-played-card {
+    right: calc(50% + 24px);
+    left: auto;
+    top: 6px;
+    bottom: auto;
+  }
+  /* Compact segue em fileiras: topo abaixo, base acima (carta 22×32). */
+  .poker-table--compact
+    .poker-seat:nth-child(-n + 2)
+    .poker-played-card {
+    left: calc(50% - 11px);
+    bottom: -36px;
+    top: auto;
+  }
+  .poker-table--compact
+    .poker-seat:nth-child(n + 3)
+    .poker-played-card {
+    left: calc(50% - 11px);
+    top: -36px;
+    bottom: auto;
   }
   .poker-status {
     font-size: 12px;

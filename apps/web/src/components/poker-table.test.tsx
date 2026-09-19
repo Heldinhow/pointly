@@ -94,7 +94,7 @@ describe("PokerTable avatar (AV-04)", () => {
 });
 
 describe("PokerTable cartas na mesa", () => {
-	test("voto pré-reveal mostra a carta ao lado do assento com verso", () => {
+	test("voto pré-reveal mostra a carta à frente do assento com verso", () => {
 		const { container } = render(
 			<PokerTable
 				seats={[seated({ hasVoted: true })]}
