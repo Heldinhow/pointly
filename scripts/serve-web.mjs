@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 /**
- * Pointly web — static SPA server.
- * Serves apps/web/dist on $PORT (default 8080) with SPA fallback to index.html.
- * Pure Node, no extra deps — fine for production runtime.
+ * Pointly web — servidor estático de apps/web/dist (pure Node/Bun, sem deps).
+ *
+ * Regras de entrega (SEO):
+ * - arquivo real, ou diretório → index.html: serve o HTML pré-renderizado (200);
+ * - /join e /s/*: shell SPA (shell.html) com `X-Robots-Tag: noindex`;
+ * - rota desconhecida: 404 real com dist/404/index.html (fim do soft-404);
+ * - /caminho/ → 301 para /caminho (forma canônica sem barra final).
  */
 import { createReadStream, statSync } from "node:fs";
 import { join, normalize } from "node:path";
@@ -17,6 +21,8 @@ const MIME = {
 	".mjs": "application/javascript; charset=utf-8",
 	".css": "text/css; charset=utf-8",
 	".json": "application/json; charset=utf-8",
+	".xml": "application/xml; charset=utf-8",
+	".txt": "text/plain; charset=utf-8",
 	".svg": "image/svg+xml",
 	".png": "image/png",
 	".jpg": "image/jpeg",
@@ -28,7 +34,6 @@ const MIME = {
 	".woff2": "font/woff2",
 	".ttf": "font/ttf",
 	".map": "application/json; charset=utf-8",
-	".txt": "text/plain; charset=utf-8",
 };
 
 function safeJoin(rel) {
@@ -45,67 +50,102 @@ function mimeOf(p) {
 		: "application/octet-stream";
 }
 
-const server = Bun?.serve ?? null;
+function isFile(p) {
+	if (!p) return false;
+	try {
+		return statSync(p).isFile();
+	} catch {
+		return false;
+	}
+}
+
+/** Arquivo real ou diretório→index.html; null se não existir. */
+function resolveFile(pathname) {
+	const exact = safeJoin(pathname);
+	if (isFile(exact)) return exact;
+	const index = safeJoin(join(pathname, "index.html"));
+	if (isFile(index)) return index;
+	return null;
+}
+
+/**
+ * Decide a resposta para uma URL.
+ * @returns {{status:number, file?:string, text?:string, noindex?:boolean, location?:string}}
+ */
+function decide(rawUrl) {
+	const url = new URL(rawUrl, "http://localhost");
+	let pathname;
+	try {
+		pathname = decodeURIComponent(url.pathname);
+	} catch {
+		return { status: 400, text: "Bad Request" };
+	}
+
+	if (pathname !== "/" && pathname.endsWith("/")) {
+		return {
+			status: 301,
+			location: `${pathname.replace(/\/+$/, "")}${url.search}`,
+		};
+	}
+
+	// Rotas do app: shell SPA (sem conteúdo pré-renderizado), noindex.
+	if (pathname === "/join" || pathname.startsWith("/s/")) {
+		const shell = resolveFile("/shell.html") ?? resolveFile("/index.html");
+		if (shell) return { status: 200, file: shell, noindex: true };
+		return { status: 500, text: "shell.html ausente no build" };
+	}
+
+	const file = resolveFile(pathname === "/" ? "/index.html" : pathname);
+	if (file) return { status: 200, file };
+
+	const notFound = resolveFile("/404");
+	if (notFound) return { status: 404, file: notFound, noindex: true };
+	return { status: 404, text: "Not Found" };
+}
+
+function headersFor(decision, file) {
+	const headers = { "Cache-Control": "no-cache" };
+	if (decision.location) headers.Location = decision.location;
+	if (file) headers["Content-Type"] = mimeOf(file);
+	if (decision.noindex) headers["X-Robots-Tag"] = "noindex";
+	return headers;
+}
+
+const server = globalThis.Bun?.serve ?? null;
 
 if (server) {
-	// Bun is bundled in the alpine image; use it for speed.
 	const srv = server({
 		port: PORT,
 		hostname: HOST,
-		async fetch(req) {
-			const url = new URL(req.url);
-			let pathname = decodeURIComponent(url.pathname);
-			if (pathname === "/") pathname = "/index.html";
-			const full = safeJoin(pathname);
-			if (!full) return new Response("Bad Request", { status: 400 });
-			try {
-				const f = Bun.file(full);
-				if (await f.exists())
-					return new Response(f, {
-						headers: {
-							"Content-Type": mimeOf(full),
-							"Cache-Control": "no-cache",
-						},
-					});
-			} catch {}
-			// SPA fallback
-			const idx = safeJoin("/index.html");
-			if (idx)
-				return new Response(Bun.file(idx), {
-					headers: { "Content-Type": "text/html; charset=utf-8" },
+		fetch(req) {
+			const decision = decide(req.url);
+			if (decision.text) {
+				return new Response(decision.text, {
+					status: decision.status,
+					headers: {
+						...headersFor(decision),
+						"Content-Type": "text/plain; charset=utf-8",
+					},
 				});
-			return new Response("Not Found", { status: 404 });
+			}
+			return new Response(decision.file ? Bun.file(decision.file) : null, {
+				status: decision.status,
+				headers: headersFor(decision, decision.file),
+			});
 		},
 	});
 	console.log(
 		`[pointly-web] serving ${DIST} on http://${srv.hostname}:${srv.port}`,
 	);
 } else {
-	// Pure-Node fallback (shouldn't be reached in our alpine image, but safe).
 	const http = await import("node:http");
 	http
 		.createServer((req, res) => {
-			let pathname = decodeURIComponent(req.url.split("?")[0]);
-			if (pathname === "/") pathname = "/index.html";
-			const full = safeJoin(pathname);
-			if (!full) {
-				res.writeHead(400);
-				return res.end("Bad Request");
-			}
-			try {
-				statSync(full);
-				res.writeHead(200, { "Content-Type": mimeOf(full) });
-				createReadStream(full).pipe(res);
-				return;
-			} catch {}
-			const idx = safeJoin("/index.html");
-			if (idx) {
-				res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-				createReadStream(idx).pipe(res);
-				return;
-			}
-			res.writeHead(404);
-			res.end("Not Found");
+			const decision = decide(req.url ?? "/");
+			res.writeHead(decision.status, headersFor(decision, decision.file));
+			if (decision.text) return res.end(decision.text);
+			if (!decision.file) return res.end();
+			createReadStream(decision.file).pipe(res);
 		})
 		.listen(PORT, HOST, () =>
 			console.log(`[pointly-web] serving ${DIST} on http://${HOST}:${PORT}`),

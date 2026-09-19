@@ -1,5 +1,5 @@
 import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import "@fontsource/geist";
 import "@fontsource/geist/500.css";
@@ -16,10 +16,18 @@ import "./brand.css";
 const root = document.getElementById("root");
 if (!root) throw new Error("Elemento #root não encontrado.");
 
-createRoot(root).render(
+const app = (
 	<StrictMode>
 		<BrowserRouter>
 			<App />
 		</BrowserRouter>
-	</StrictMode>,
+	</StrictMode>
 );
+
+// Rotas pré-renderizadas chegam com HTML pronto (build do G1): hidrata em vez
+// de recriar; rotas do shell SPA (/join, /s/:code) seguem no createRoot.
+if (root.hasChildNodes()) {
+	hydrateRoot(root, app);
+} else {
+	createRoot(root).render(app);
+}

@@ -1,0 +1,388 @@
+.pt-landing {
+  color: var(--foreground);
+}
+.pt-landing__shell {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 0 48px;
+}
+
+/* Hero: copy à esquerda, deck estático à direita (assimétrico, nunca centrado). */
+.pt-landing__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  align-items: center;
+  gap: 48px;
+  padding: 40px 0 44px;
+  border-bottom: 1px solid var(--border);
+}
+.pt-landing__hero-copy {
+  max-width: 680px;
+}
+.pt-landing__kicker {
+  margin: 0 0 18px;
+  color: var(--primary);
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.pt-landing h1,
+.pt-landing h2,
+.pt-landing h3 {
+  margin: 0;
+  letter-spacing: -0.04em;
+}
+.pt-landing h1 {
+  font-size: clamp(34px, 4vw, 52px);
+  font-weight: 600;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+.pt-landing__lede {
+  max-width: 480px;
+  margin: 24px 0 0;
+  color: var(--muted-foreground);
+  font-size: 17px;
+  line-height: 1.6;
+}
+.pt-landing__hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-top: 32px;
+}
+.pt-landing [data-slot="button"] {
+  min-height: 44px;
+}
+.pt-landing__text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 6px;
+}
+.pt-landing__text-link:hover {
+  color: var(--primary);
+}
+.pt-landing__text-link:focus-visible,
+.pt-landing__cross-link a:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+/* Deck estático: o baralho inteiro como assinatura visual do hero. */
+.pt-landing__hero-visual {
+  min-width: 0;
+}
+.pt-landing__deck-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.pt-landing__deck {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pt-landing__deck-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(34px, 3vw, 42px);
+  height: clamp(48px, 4.2vw, 58px);
+  border: 1px solid #e7eee8;
+  border-radius: 9px;
+  background: #f3f5eb;
+  color: #202b27;
+  font-family: var(--font-mono), monospace;
+  font-size: clamp(15px, 1.4vw, 18px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 70%) inset,
+    0 3px 0 rgb(0 0 0 / 22%),
+    0 14px 24px -18px rgb(0 0 0 / 55%);
+}
+.pt-landing__deck-icon {
+  width: 18px;
+  height: 18px;
+}
+.pt-landing__deck-note {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Seções: mesmo ritmo vertical, hairlines como divisória. */
+.pt-landing__how,
+.pt-landing__why,
+.pt-landing__faq,
+.pt-landing__closing {
+  padding-top: 48px;
+}
+.pt-landing__section-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.pt-landing h2 {
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 550;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+.pt-landing__section-intro p {
+  max-width: 65ch;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.pt-landing__steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border);
+}
+.pt-landing__steps li {
+  padding: 20px 24px 24px 0;
+  border-right: 1px solid var(--border);
+}
+.pt-landing__steps li + li {
+  padding-left: 24px;
+}
+.pt-landing__steps li:nth-child(3n) {
+  border-right: 0;
+}
+.pt-landing__steps li:nth-child(n + 4) {
+  border-top: 1px solid var(--border);
+}
+.pt-landing__steps li > span {
+  color: var(--primary);
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+}
+.pt-landing__steps h3 {
+  margin-top: 12px;
+  font-size: 19px;
+  font-weight: 650;
+}
+.pt-landing__steps p {
+  max-width: 280px;
+  margin: 9px 0 0;
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.pt-landing__steps-action {
+  margin-top: 28px;
+}
+
+.pt-landing__points {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 48px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border);
+}
+.pt-landing__points li {
+  padding: 20px 0 24px;
+  border-bottom: 1px solid var(--border);
+}
+.pt-landing__points h3 {
+  font-size: 19px;
+  font-weight: 650;
+}
+.pt-landing__points p {
+  max-width: 52ch;
+  margin: 9px 0 0;
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Prosa informativa: título à esquerda, leitura à direita. */
+.pt-landing__prose {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.3fr);
+  gap: 0 48px;
+  padding-top: 48px;
+}
+.pt-landing__prose h2 {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+}
+.pt-landing__prose p {
+  grid-column: 2;
+  max-width: 68ch;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 15px;
+  line-height: 1.7;
+}
+.pt-landing__prose p + p {
+  margin-top: 14px;
+}
+
+.pt-landing__faq-list {
+  max-width: 780px;
+  margin: 0;
+  border-top: 1px solid var(--border);
+}
+.pt-landing__faq-item {
+  padding: 18px 0 20px;
+  border-bottom: 1px solid var(--border);
+}
+.pt-landing__faq-item dt {
+  font-size: 16px;
+  font-weight: 650;
+}
+.pt-landing__faq-item dd {
+  margin: 8px 0 0;
+  color: var(--muted-foreground);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.pt-landing__closing {
+  padding-bottom: 16px;
+}
+.pt-landing__closing p {
+  max-width: 52ch;
+  margin: 14px 0 0;
+  color: var(--muted-foreground);
+  font-size: 16px;
+  line-height: 1.6;
+}
+.pt-landing__closing [data-slot="button"] {
+  margin-top: 24px;
+}
+.pt-landing__cross-link {
+  margin-top: 26px;
+  font-size: 14px;
+}
+.pt-landing__cross-link a {
+  color: var(--primary);
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.pt-landing) {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (max-width: 1000px) {
+  .pt-landing__hero {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .pt-landing__hero-visual {
+    width: min(100%, 560px);
+    margin-inline: auto;
+  }
+}
+@media (max-width: 760px) {
+  .pt-landing__shell {
+    padding-bottom: 32px;
+  }
+  .pt-landing__hero {
+    padding: 16px 0 32px;
+  }
+  .pt-landing h1 {
+    font-size: clamp(30px, 6.4vw, 44px);
+  }
+  .pt-landing__how,
+  .pt-landing__why,
+  .pt-landing__faq,
+  .pt-landing__closing {
+    padding-top: 32px;
+  }
+  .pt-landing__steps {
+    grid-template-columns: 1fr;
+  }
+  .pt-landing__steps li,
+  .pt-landing__steps li + li {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    column-gap: 12px;
+    padding: 16px 0;
+    border-right: 0;
+    border-top: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .pt-landing__steps li:last-child {
+    border-bottom: 0;
+  }
+  .pt-landing__steps h3 {
+    margin-top: 0;
+  }
+  .pt-landing__steps li > span {
+    align-self: center;
+  }
+  .pt-landing__steps p {
+    grid-column: 2;
+    max-width: none;
+    margin-top: 6px;
+  }
+  .pt-landing__steps-action {
+    width: 100%;
+  }
+  .pt-landing__points {
+    grid-template-columns: 1fr;
+  }
+  /* Baralho em uma linha só: 9 cartas × 32px + gaps cabem em 375px. */
+  .pt-landing__deck {
+    gap: 4px;
+  }
+  .pt-landing__deck-card {
+    width: 32px;
+    height: 46px;
+    font-size: 14px;
+  }
+  .pt-landing__deck-icon {
+    width: 15px;
+    height: 15px;
+  }
+  .pt-landing__prose {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .pt-landing__prose h2,
+  .pt-landing__prose p {
+    grid-column: 1;
+  }
+  .pt-landing__prose p + p {
+    margin-top: 12px;
+  }
+}
+@media (max-width: 380px) {
+  .pt-landing__hero-actions {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+}

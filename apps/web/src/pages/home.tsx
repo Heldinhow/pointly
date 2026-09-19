@@ -127,9 +127,9 @@ export function HomePage(): React.ReactElement {
         <section className="pt-home__hero" data-testid="home-hero">
           <div className="pt-home__hero-copy">
             <h1>
-              Boas conversas.
+              Planning poker online grátis
               <br />
-              <em>Melhores estimativas.</em>
+              <em>para o seu time.</em>
             </h1>
             <p className="pt-home__hero-lede">
               Planning poker sem cadastro. Reúna o time, escolha suas cartas

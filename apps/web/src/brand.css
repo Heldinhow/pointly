@@ -119,6 +119,21 @@ summary:focus-visible {
   font-size: 14px;
   color: var(--muted-foreground);
 }
+.site-footer__nav {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.site-footer__nav a {
+  color: var(--muted-foreground);
+  text-decoration: none;
+}
+.site-footer__nav a:hover,
+.site-footer__nav a[aria-current="page"] {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
 [data-testid="deck"] {
   padding-top: 14px;
 }
