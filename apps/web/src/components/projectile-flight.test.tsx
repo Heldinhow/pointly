@@ -2,30 +2,34 @@ import { afterEach, expect, mock, spyOn, test } from "bun:test";
 import { cleanup, render, waitFor } from "@testing-library/react";
 import { ProjectileFlight, type ProjectileFlightEvent } from "./projectile-flight";
 
-const originalAnimate = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "animate");
-const animations: Array<{ target: HTMLElement; timing: KeyframeAnimationOptions; cancel: ReturnType<typeof mock> }> = [];
+const originalAnimate = Object.getOwnPropertyDescriptor(Element.prototype, "animate");
+const animations: Array<{ target: Element; frames: Keyframe[]; timing: KeyframeAnimationOptions; cancel: ReturnType<typeof mock> }> = [];
+// Tetos de opacidade dos dois ecos, na ordem de atraso.
+const ECHO_MAX_OPACITY = [0.26, 0.13];
 
 afterEach(() => {
   cleanup();
   mock.restore();
   animations.length = 0;
-  if (originalAnimate) Object.defineProperty(HTMLElement.prototype, "animate", originalAnimate);
-  else Reflect.deleteProperty(HTMLElement.prototype, "animate");
+  if (originalAnimate) Object.defineProperty(Element.prototype, "animate", originalAnimate);
+  else Reflect.deleteProperty(Element.prototype, "animate");
 });
 
 function showProjectile(projectileType: ProjectileFlightEvent["projectileType"], outcome: ProjectileFlightEvent["outcome"] = "hit") {
-  Object.defineProperty(HTMLElement.prototype, "animate", {
+  Object.defineProperty(Element.prototype, "animate", {
     configurable: true,
-    value(this: HTMLElement, _frames: Keyframe[], timing: KeyframeAnimationOptions) {
+    value(this: Element, frames: Keyframe[], timing: KeyframeAnimationOptions) {
       const cancel = mock(() => {});
-      animations.push({ target: this, timing, cancel });
+      animations.push({ target: this, frames, timing, cancel });
       return { cancel };
     },
   });
   const arena = document.createElement("div");
   const target = document.createElement("span");
   target.dataset.projectilePlayer = "p_target";
-  arena.append(target);
+  const table = document.createElement("div");
+  table.className = "poker-table";
+  arena.append(target, table);
   const onDone = mock(() => {});
   const view = render(<ProjectileFlight
     event={{ key: 1, receivedAt: Date.now(), senderPlayerId: "p_sender", targetPlayerId: "p_target", projectileType, outcome }}
@@ -73,17 +77,81 @@ test.each(["paper_ball", "paper_plane", "rock", "brick", "tomato", "chair"] as c
   expect(container.querySelector(".projectile-flight svg")).toBeTruthy();
 });
 
-test("sombra de contato acompanha o voo e as partículas saem na direção do arremesso", () => {
+test("sombra de contato acompanha o voo e as partículas ganham animação própria", () => {
   const { container } = showProjectile("rock");
   expect(container.querySelector('[data-testid="projectile-shadow"]')).toBeTruthy();
   expect(animations.some(({ target }) => target.classList.contains("projectile-shadow"))).toBe(true);
-  const particle = container.querySelector<HTMLElement>(".projectile-particle")!;
-  expect(particle.style.getPropertyValue("--dx")).toMatch(/px$/);
-  expect(particle.style.getPropertyValue("--dy")).toMatch(/px$/);
+  expect(animations.filter(({ target }) => target.classList.contains("projectile-particle"))).toHaveLength(5);
 });
 
 test("cadeirada dispensa sombra de contato", () => {
   const { container } = showProjectile("chair");
   expect(container.querySelector('[data-testid="projectile-shadow"]')).toBeNull();
-  expect(animations.some(({ target }) => target.classList.contains("projectile-shadow"))).toBe(false);
+  expect(container.querySelector('[data-testid="projectile-echo"]')).toBeNull();
+  expect(animations.some(({ target }) => target.classList.contains("projectile-shadow") || target.classList.contains("projectile-echo"))).toBe(false);
+});
+
+test.each(["paper_ball", "paper_plane", "rock", "brick", "tomato"] as const)("%s deixa dois ecos que colapsam sobre o líder", (type) => {
+  const { container } = showProjectile(type);
+  expect(container.querySelectorAll('[data-testid="projectile-echo"]')).toHaveLength(2);
+  const echoAnimations = animations.filter(({ target }) => target.classList.contains("projectile-echo"));
+  expect(echoAnimations).toHaveLength(2);
+  echoAnimations.forEach((echoAnimation, index) => {
+    expect(Number(echoAnimation.timing.delay)).toBeGreaterThan(0);
+    const opacities = echoAnimation.frames.map((frame) => Number(frame.opacity ?? 0));
+    const peak = Math.max(...opacities);
+    expect(peak).toBeLessThanOrEqual(ECHO_MAX_OPACITY[index]!);
+    expect(peak).toBeGreaterThan(0);
+    // Depois do contato o rastro já colapsou: opacity 0 nos frames finais.
+    expect(opacities.at(-1)).toBe(0);
+  });
+});
+
+test("partículas seguem arco balístico em keyframes lineares", () => {
+  const { container } = showProjectile("rock");
+  expect(container.querySelectorAll(".projectile-particle").length).toBe(5);
+  const particleAnimations = animations.filter(({ target }) => target.classList.contains("projectile-particle"));
+  expect(particleAnimations).toHaveLength(5);
+  for (const { frames, timing } of particleAnimations) {
+    expect(timing.easing).toBe("linear");
+    expect(frames.length).toBeGreaterThan(4);
+  }
+  const yAt = (frame: Keyframe) => Number(/translate\(-?[\d.]+px, (-?[\d.]+)px\)/.exec(String(frame.transform))?.[1]);
+  const ys = particleAnimations[0]!.frames.map(yAt);
+  const minIndex = ys.indexOf(Math.min(...ys));
+  expect(minIndex).toBeGreaterThan(0);
+  expect(minIndex).toBeLessThan(ys.length - 1);
+  expect(ys[minIndex]!).toBeLessThan(ys.at(-1)!);
+});
+
+test("ripple do feltro aparece só na cadeirada", () => {
+  const chairView = showProjectile("chair");
+  expect(chairView.container.querySelector(".projectile-ripple")).toBeTruthy();
+  const rockView = showProjectile("rock");
+  expect(rockView.container.querySelector(".projectile-ripple")).toBeNull();
+});
+
+test("cadeirada gira em 3D no voo", () => {
+  showProjectile("chair");
+  const chairFlight = animations.find(({ target }) => target.classList.contains("projectile-flight"))!;
+  expect(chairFlight).toBeTruthy();
+  expect(chairFlight.frames.some((frame) => String(frame.transform).includes("rotateY("))).toBe(true);
+  expect(chairFlight.frames.some((frame) => String(frame.transform).includes("rotateX("))).toBe(true);
+});
+
+test("cadeirada sacode a mesa e solta o grip no contato", () => {
+  const { container } = showProjectile("chair");
+  const tableAnimation = animations.find(({ target }) => target.classList.contains("poker-table"));
+  expect(tableAnimation).toBeTruthy();
+  expect(Number(tableAnimation!.timing.delay)).toBeGreaterThan(0);
+  const grip = container.querySelector(".projectile-grip");
+  expect(grip).toBeTruthy();
+  const gripAnimation = animations.find(({ target }) => target === grip);
+  expect(gripAnimation).toBeTruthy();
+  expect(Number(gripAnimation!.frames.at(-1)?.opacity)).toBe(0);
+});
+
+test("projétil comum não sacode a mesa", () => {
+  showProjectile("brick");
+  expect(animations.some(({ target }) => target.classList.contains("poker-table"))).toBe(false);
 });

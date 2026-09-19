@@ -112,31 +112,68 @@ const STAR_STAGGER_MS = 80;
 const IMPACT_PARTICLES = 5;
 const TRAJECTORY_SAMPLES = 60;
 const RELEASE_FRACTION = 0.06;
+const ECHO_DELAYS_MS = [35, 70];
+const ECHO_OPACITIES = [0.26, 0.13];
+const CHAIR_SHAKE_MS = 520;
+const GRIP_RELEASE_MS = 140;
+const PARTICLE_SAMPLES = 14;
+
+/**
+ * Partícula do impacto em coordenadas balísticas (px/s): a posição é função
+ * pura do tempo — gravidade dá o arco de subida, estalo e queda.
+ */
+interface ImpactParticle {
+  vx: number;
+  vy: number;
+  /** Giro em graus por segundo. */
+  spin: number;
+  /** Aceleração da queda (px/s²), calibrada pelo peso. */
+  gravity: number;
+}
 
 function flightDuration(type: Exclude<ProjectileType, "chair">, distance: number): number {
   const motion = PROJECTILE_MOTION[type];
   return Math.min(FLIGHT_MAX_MS, Math.max(FLIGHT_MIN_MS, motion.baseMs + distance * motion.msPerPx));
 }
 
+/** Converte deslocamento desejado ao fim do impacto em velocidade inicial. */
+function launch(dx: number, dy: number, spin: number, gravity: number, seconds: number): ImpactParticle {
+  return { vx: dx / seconds, vy: (dy - 0.5 * gravity * seconds ** 2) / seconds, spin, gravity };
+}
+
 /** Spray radial da cadeirada (impacto em todas as direções). */
-function radialSpray(): Array<{ dx: number; dy: number; spin: number }> {
+function radialSpray(seconds: number): ImpactParticle[] {
   return Array.from({ length: IMPACT_PARTICLES }, (_, index) => {
     const angle = (index / IMPACT_PARTICLES) * Math.PI * 2;
-    return { dx: Math.cos(angle) * 44, dy: Math.sin(angle) * 40 - 12, spin: index % 2 ? 110 : -85 };
+    return launch(Math.cos(angle) * 44, Math.sin(angle) * 40 - 12, index % 2 ? 190 : -140, 150, seconds);
   });
 }
 
 /** Partículas empurradas na direção do voo; peso define abertura e queda. */
-function directionalSpray(weight: ProjectileWeight, ux: number, uy: number): Array<{ dx: number; dy: number; spin: number }> {
+function directionalSpray(weight: ProjectileWeight, ux: number, uy: number, seconds: number): ImpactParticle[] {
   const base = Math.atan2(uy, ux);
   const spread = weight === "heavy" ? 45 : weight === "medium" ? 65 : 100;
   const travel = weight === "heavy" ? 32 : weight === "medium" ? 46 : 42;
   const droop = weight === "heavy" ? 20 : weight === "medium" ? 14 : 7;
+  const gravity = weight === "heavy" ? 170 : weight === "medium" ? 140 : 110;
   return Array.from({ length: IMPACT_PARTICLES }, (_, index) => {
     const lane = (index / (IMPACT_PARTICLES - 1)) * 2 - 1;
     const angle = base + lane * spread * Math.PI / 180 + (index % 2 ? 0.12 : -0.12);
     const speed = travel * (index % 2 ? 1 : 0.82);
-    return { dx: Math.cos(angle) * speed, dy: Math.sin(angle) * speed + droop, spin: index % 2 ? 110 : -85 };
+    return launch(Math.cos(angle) * speed, Math.sin(angle) * speed + droop, index % 2 ? 190 : -140, gravity, seconds);
+  });
+}
+
+/** Amostra o arco balístico em keyframes lineares (a física mora na fórmula). */
+function particleFrames(particle: ImpactParticle, seconds: number): Keyframe[] {
+  return Array.from({ length: PARTICLE_SAMPLES + 1 }, (_, index) => {
+    const progress = index / PARTICLE_SAMPLES;
+    const t = progress * seconds;
+    return {
+      offset: progress,
+      transform: `translate(${particle.vx * t}px, ${particle.vy * t + 0.5 * particle.gravity * t * t}px) rotate(${particle.spin * t}deg)`,
+      opacity: progress < 0.3 ? 1 : Math.max(0, 1 - (progress - 0.3) / 0.7),
+    };
   });
 }
 
@@ -147,12 +184,16 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
 }): React.ReactElement {
   const flightRef = useRef<HTMLSpanElement>(null);
   const shadowRef = useRef<HTMLSpanElement>(null);
+  const echoRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const gripRef = useRef<SVGSVGElement>(null);
   const impactRef = useRef<HTMLSpanElement>(null);
   const chair = event.projectileType === "chair";
 
   useLayoutEffect(() => {
     const node = flightRef.current;
     const shadow = shadowRef.current;
+    const echoes = echoRefs.current;
+    const grip = gripRef.current;
     const impact = impactRef.current;
     const arena = arenaRef.current;
     const done = () => onDone(event.key);
@@ -195,14 +236,18 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
       done();
       return;
     }
-    const contactAt = duration * (type === "chair" ? CHAIR_CONTACT : PROJECTILE_MOTION[type].contact);
+    const contactFraction = type === "chair" ? CHAIR_CONTACT : PROJECTILE_MOTION[type].contact;
+    const contactAt = duration * contactFraction;
     const reactionAt = type !== "chair" && event.outcome === "dodge" ? duration * 0.5 : contactAt;
     const reactionMs = type === "chair" ? 700 : 460;
     const impactMs = type === "chair" ? CHAIR_IMPACT_MS : IMPACT_MS;
     const hasImpact = event.outcome === "hit" || type === "chair";
-    // Inclui a última estrela e a recuperação do avatar, não só o voo.
-    const lifetime = Math.max(duration, reactionAt + reactionMs,
-      hasImpact ? contactAt + impactMs + (type === "chair" ? STAR_STAGGER_MS * 2 : 0) : 0);
+    // Inclui a última estrela, a recuperação do avatar e o eco mais atrasado — não só o trajeto.
+    const lifetime = Math.max(
+      duration + (type === "chair" ? 0 : ECHO_DELAYS_MS[ECHO_DELAYS_MS.length - 1]!),
+      reactionAt + reactionMs,
+      hasImpact ? contactAt + impactMs + (type === "chair" ? STAR_STAGGER_MS * 2 : 0) : 0,
+    );
 
     let frames: Keyframe[];
     let shadowFrames: Keyframe[] | null = null;
@@ -216,26 +261,29 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
       const radians = strikeAngle * Math.PI / 180;
       const tipX = side * 42;
       const tipY = 68;
-      const grip = {
+      const gripPoint = {
         x: to.x - (tipX * Math.cos(radians) - tipY * Math.sin(radians)),
         y: to.y - (tipX * Math.sin(radians) + tipY * Math.cos(radians)),
       };
-      const held = (x: number, y: number, angle: number, scale = 1) =>
-        `translate(${x - pivotX}px, ${y - 10}px) rotate(${angle}deg) scale(${scale})`;
-      const strike = held(grip.x, grip.y, strikeAngle);
+      // 3D falso: rotateY abre o volume no wind-up, rotateX tomba no impacto.
+      const held = (x: number, y: number, angle: number, scale = 1, tiltX = 0, turnY = 0) =>
+        `translate(${x - pivotX}px, ${y - 10}px) rotate(${angle}deg) rotateY(${turnY}deg) rotateX(${tiltX}deg) scale(${scale})`;
+      const strike = held(gripPoint.x, gripPoint.y, strikeAngle, 1.04, 14, -side * 8);
       frames = [
         // Primeiro mostra a cadeira de pé; depois ergue as pernas e arma o golpe.
-        { offset: 0, transform: held(from.x, from.y - 30, 0, 0.85), opacity: 0, easing: "ease-out" },
-        { offset: 0.1, transform: held(from.x + (grip.x - from.x) * 0.2, from.y - 30 + (grip.y - from.y) * 0.2, 0), opacity: 1, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
-        { offset: 0.23, transform: held(grip.x - side * 14, grip.y + 26, -side * 12), opacity: 1, easing: "ease-in-out" },
-        { offset: 0.37, transform: held(grip.x - side * 16, grip.y - 4, -side * 90), opacity: 1, easing: "ease-out" },
-        { offset: 0.43, transform: held(grip.x - side * 20, grip.y - 5, -side * 110), opacity: 1, easing: "cubic-bezier(0.55, 0, 0.85, 0.4)" },
+        { offset: 0, transform: held(from.x, from.y - 30, 0, 0.85, 0, side * 6), opacity: 0, easing: "ease-out" },
+        { offset: 0.1, transform: held(from.x + (gripPoint.x - from.x) * 0.2, from.y - 30 + (gripPoint.y - from.y) * 0.2, 0, 1, 0, side * 10), opacity: 1, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+        { offset: 0.23, transform: held(gripPoint.x - side * 14, gripPoint.y + 26, -side * 12, 1, -5, side * 26), opacity: 1, easing: "ease-in-out" },
+        { offset: 0.37, transform: held(gripPoint.x - side * 16, gripPoint.y - 4, -side * 90, 1, -9, side * 40), opacity: 1, easing: "ease-out" },
+        { offset: 0.43, transform: held(gripPoint.x - side * 20, gripPoint.y - 5, -side * 110, 1, -12, side * 44), opacity: 1, easing: "cubic-bezier(0.55, 0, 0.85, 0.4)" },
         { offset: CHAIR_CONTACT, transform: strike, opacity: 1 },
         // 42 ms de hit-stop: mãos, cadeira e alvo marcam o mesmo contato.
         { offset: CHAIR_CONTACT + 0.03, transform: strike, opacity: 1, easing: "ease-out" },
-        { offset: 0.68, transform: held(grip.x + side * 4, grip.y + 6, -side * 20), opacity: 1, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
-        { offset: 0.86, transform: held(grip.x - side * 14, grip.y - 4, -side * 60), opacity: 1, easing: "ease-in" },
-        { offset: 1, transform: held(grip.x - side * 24, grip.y + 12, -side * 50, 0.92), opacity: 0 },
+        // Compressão, tombo no feltro e um quique antes de escorregar para fora.
+        { offset: 0.68, transform: held(gripPoint.x + side * 6, gripPoint.y + 14, -side * 30, 0.94, 22, -side * 10), opacity: 1, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+        { offset: 0.76, transform: held(gripPoint.x + side * 10, gripPoint.y + 8, -side * 46, 1.02, -6, -side * 16), opacity: 1, easing: "ease-in-out" },
+        { offset: 0.86, transform: held(gripPoint.x - side * 2, gripPoint.y + 20, -side * 62, 0.97, 12, -side * 22), opacity: 1, easing: "ease-in" },
+        { offset: 1, transform: held(gripPoint.x - side * 18, gripPoint.y + 30, -side * 72, 0.9, 16, -side * 26), opacity: 0 },
       ];
     } else {
       const motion = PROJECTILE_MOTION[type];
@@ -304,6 +352,46 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
     // Sem Web Animations API, o voo some e o alvo não reage — sem quebrar.
     if (typeof node.animate === "function") {
       animations.push(node.animate(frames, { duration, fill: "both" }));
+      // Eco/rastro atrás do projétil rápido: mesmos keyframes, atraso crescente
+      // e opacidade que colapsa sobre o líder perto do contato (pico = velocidade).
+      if (type !== "chair") {
+        echoes.forEach((echoNode, index) => {
+          if (!echoNode || typeof echoNode.animate !== "function") return;
+          const base = ECHO_OPACITIES[index] ?? 0;
+          const echoFrames = frames.map((frame) => ({
+            ...frame,
+            opacity: (typeof frame.opacity === "number" ? frame.opacity : 1)
+              * base
+              * Math.max(0, 1 - Number(frame.offset ?? 0) / contactFraction),
+          }));
+          animations.push(echoNode.animate(echoFrames, {
+            duration,
+            delay: ECHO_DELAYS_MS[index] ?? 0,
+            easing: "linear",
+            fill: "both",
+          }));
+        });
+      }
+      // Mãos soltam o encosto no contato; a cadeira segue sozinha.
+      if (chair && grip && typeof grip.animate === "function") {
+        animations.push(grip.animate(
+          [{ opacity: 1 }, { opacity: 1 }, { opacity: 0 }],
+          { duration: GRIP_RELEASE_MS, delay: Math.max(0, contactAt - 20), easing: "ease-out", fill: "both" },
+        ));
+      }
+      // Impacto da cadeirada empurra a mesa no eixo do golpe e assenta com wobble.
+      if (chair) {
+        const table = arena.querySelector<HTMLElement>(".poker-table");
+        if (table) {
+          animations.push(table.animate([
+            { transform: "none" },
+            { offset: 0.12, transform: `translate(${side * 4}px, 1.5px) rotate(${side * 0.5}deg)`, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
+            { offset: 0.42, transform: `translate(${-side * 1.6}px, -0.6px) rotate(${-side * 0.24}deg)`, easing: "ease-in-out" },
+            { offset: 0.7, transform: `translate(${side * 0.7}px, 0.2px) rotate(${side * 0.1}deg)`, easing: "ease-in-out" },
+            { transform: "none" },
+          ], { duration: CHAIR_SHAKE_MS, delay: contactAt, fill: "both" }));
+        }
+      }
       if (shadow && shadowFrames) {
         animations.push(shadow.animate(shadowFrames, { duration, fill: "both" }));
       }
@@ -353,17 +441,21 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
         impact.style.setProperty("--contact-delay", `${contactAt}ms`);
         impact.style.setProperty("--impact-duration", `${impactMs}ms`);
         impact.style.setProperty("--star-offset", `${Math.max(0, 72 - contact.y)}px`);
-        // O spray parte na direção do voo (cadeirada segue radial).
+        // Spray balístico: posição como função pura de t (sobe, trava e cai).
+        const seconds = impactMs / 1000;
         const spray = type === "chair"
-          ? radialSpray()
-          : directionalSpray(PROJECTILE_MOTION[type].weight, ux, uy);
-        impact.querySelectorAll<HTMLElement>(".projectile-particle").forEach((particle, index) => {
-          const shot = spray[index % spray.length] ?? spray[0]!;
-          particle.style.setProperty("--dx", `${shot.dx}px`);
-          particle.style.setProperty("--dy", `${shot.dy}px`);
-          particle.style.setProperty("--spin", `${shot.spin}deg`);
-        });
+          ? radialSpray(seconds)
+          : directionalSpray(PROJECTILE_MOTION[type].weight, ux, uy, seconds);
         if (hasImpact) {
+          impact.querySelectorAll<HTMLElement>(".projectile-particle").forEach((particle, index) => {
+            const shot = spray[index % spray.length] ?? spray[0]!;
+            animations.push(particle.animate(particleFrames(shot, seconds), {
+              duration: impactMs,
+              delay: contactAt,
+              easing: "linear",
+              fill: "both",
+            }));
+          });
           animations.push(impact.animate(
             [{ opacity: 1 }, { opacity: 1 }],
             { duration: impactMs + (type === "chair" ? STAR_STAGGER_MS * 2 : 0), delay: contactAt },
@@ -387,10 +479,22 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
   return (
     <>
       {chair ? null : <span ref={shadowRef} className="projectile-shadow" data-testid="projectile-shadow" aria-hidden="true" />}
+      {chair ? null : ECHO_DELAYS_MS.map((delay, index) => (
+        <span
+          key={delay}
+          ref={(echoNode) => { echoRefs.current[index] = echoNode; }}
+          className="projectile-echo"
+          style={{ "--echo-index": index } as CSSProperties}
+          data-testid="projectile-echo"
+          aria-hidden="true"
+        >
+          <ProjectileIcon type={event.projectileType} />
+        </span>
+      ))}
       <span ref={flightRef} className={chair ? "projectile-flight projectile-flight--chair" : "projectile-flight"} data-testid="projectile-flight" data-target={event.targetPlayerId} data-outcome={event.outcome} data-projectile={event.projectileType} aria-hidden="true">
         <ProjectileIcon type={event.projectileType} />
         {chair ? (
-          <svg className="projectile-grip" viewBox="0 0 80 88" fill="none" aria-hidden="true">
+          <svg ref={gripRef} className="projectile-grip" viewBox="0 0 80 88" fill="none" aria-hidden="true">
             {["translate(15 7)", "translate(40 1)"].map((position) => (
               <g key={position} transform={position} stroke="#79543d" strokeWidth="0.7" strokeLinejoin="round">
                 <path d="m-6 0 7 2-1 5-7-2Z" fill="#303d47" stroke="#a8b5bf" />
@@ -403,6 +507,7 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
         ) : null}
       </span>
       <span ref={impactRef} className={`projectile-impact projectile-impact--${event.projectileType} projectile-impact--${event.outcome}`} data-testid="projectile-impact" aria-hidden="true" style={{ "--contact-delay": "0ms", "--impact-duration": `${IMPACT_MS}ms`, "--star-stagger": `${STAR_STAGGER_MS}ms` } as CSSProperties}>
+        {chair ? <i className="projectile-ripple" aria-hidden="true" /> : null}
         <i className="projectile-ring" aria-hidden="true" />
         {Array.from({ length: IMPACT_PARTICLES }, (_, index) => (
           <i key={index} className="projectile-particle" aria-hidden="true" />

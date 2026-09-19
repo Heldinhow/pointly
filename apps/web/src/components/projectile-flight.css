@@ -20,6 +20,8 @@
   /* Espaço para erguer a cadeira acima dos assentos superiores, sem overflow lateral. */
   overflow: visible;
   clip-path: inset(-120px 0 0);
+  /* Profundidade do giro da cadeirada (rotateX/rotateY). */
+  perspective: 900px;
 }
 .projectile-flight {
   position: absolute;
@@ -28,6 +30,7 @@
   width: 36px;
   height: 36px;
   opacity: 0;
+  will-change: transform, opacity;
 }
 .projectile-flight .projectile-icon {
   width: 36px;
@@ -56,6 +59,23 @@
   height: 100%;
 }
 
+/* Eco do projétil rápido: mesma trajetória, atrás e translúcida; o mais
+   distante desfoca mais — o rastro colapsa sobre o líder perto do contato. */
+.projectile-echo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 36px;
+  height: 36px;
+  opacity: 0;
+  filter: blur(calc(1px * (var(--echo-index, 0) + 1)));
+  will-change: transform, opacity;
+}
+.projectile-echo .projectile-icon {
+  width: 36px;
+  height: 36px;
+}
+
 /* Sombra de contato: ancora o arco no feltro (só projéteis comuns). */
 .projectile-shadow {
   position: absolute;
@@ -68,6 +88,7 @@
   background: rgb(20 40 30 / 32%);
   filter: blur(1.5px);
   opacity: 0;
+  will-change: transform, opacity;
 }
 
 /* Explosão de partículas no ponto de contato (cor por tipo). */
@@ -92,6 +113,19 @@
   animation: projectile-ring calc(var(--impact-duration) * 0.45) ease-out both;
   animation-delay: var(--contact-delay, 800ms);
 }
+/* Onda da cadeirada correndo pelo feltro, achatada pela perspectiva da mesa. */
+.projectile-ripple {
+  position: absolute;
+  left: -9px;
+  top: -4px;
+  width: 18px;
+  height: 8px;
+  border-radius: 9999px;
+  border: 2px solid #bcd9c5;
+  filter: drop-shadow(0 1px 1px rgb(10 30 20 / 35%));
+  animation: projectile-ripple calc(var(--impact-duration) * 0.7) ease-out both;
+  animation-delay: var(--contact-delay, 800ms);
+}
 .projectile-particle {
   position: absolute;
   left: -4px;
@@ -101,8 +135,9 @@
   border-radius: 9999px;
   background: var(--projectile-burst, #fca5a5);
   filter: drop-shadow(0 1px 1.5px rgb(20 40 30 / 45%));
-  animation: projectile-particle var(--impact-duration) cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: var(--contact-delay, 800ms);
+  /* Movimento vem do WAAPI (arco balístico); o CSS só define o material. */
+  opacity: 0;
+  will-change: transform, opacity;
 }
 .projectile-impact--tomato { --projectile-burst: #ef4444; }
 .projectile-impact--rock,
@@ -118,8 +153,10 @@
   border-width: 1px;
 }
 .projectile-impact--chair .projectile-particle {
-  width: 3px;
-  height: 3px;
+  width: 6px;
+  height: 2px;
+  border-radius: 1px;
+  background: #bd8a55;
 }
 .projectile-impact--rock .projectile-particle,
 .projectile-impact--brick .projectile-particle {
@@ -183,9 +220,10 @@
   from { transform: scale(0.2); opacity: 1; }
   to { transform: scale(1.5); opacity: 0; }
 }
-@keyframes projectile-particle {
-  from { transform: translate(0, 0) rotate(0) scale(1); opacity: 1; }
-  to { transform: translate(var(--dx, 0px), var(--dy, 0px)) rotate(var(--spin, 0deg)) scale(0.3); opacity: 0; }
+@keyframes projectile-ripple {
+  from { transform: scale(0.3); opacity: 0; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+  14% { transform: scale(0.75); opacity: 0.9; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+  to { transform: scale(3.2); opacity: 0; }
 }
 @keyframes projectile-flash {
   0% { transform: scale(0.45); opacity: 0.95; }
