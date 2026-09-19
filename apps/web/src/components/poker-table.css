@@ -2,12 +2,12 @@
   position: relative;
   width: 100%;
   min-width: 0;
-  height: 430px;
+  height: 365px;
 }
 .poker-felt {
   position: absolute;
   z-index: 0;
-  inset: 44px 45px;
+  inset: 64px 45px;
   border: 10px solid var(--table-rail);
   border-radius: 180px;
   background: radial-gradient(ellipse at 50% 35%, #246951, #154634);
@@ -33,13 +33,6 @@
   justify-content: center;
   text-align: center;
   color: #f2f7f3;
-}
-/* Camada das cartas votadas: sobre o feltro, abaixo das identidades. */
-.poker-table-cards {
-  position: absolute;
-  z-index: 1;
-  inset: 0;
-  pointer-events: none;
 }
 .poker-seats {
   position: absolute;
@@ -202,22 +195,21 @@ button.poker-seat-target[aria-expanded="true"] .poker-avatar {
   opacity: 0.65;
 }
 .poker-played-card {
-  --card-rotate: var(--card-rot-md, 12deg);
   position: absolute;
-  left: calc(var(--card-x-md, 50) * 1% + var(--card-dx-md, 0px));
-  top: calc(var(--card-y-md, 50) * 1% + var(--card-dy-md, 0px));
+  right: -8px;
+  top: 4px;
   z-index: 2;
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 42px;
+  width: 27px;
+  height: 38px;
   border: 2px solid #e7eee8;
-  border-radius: 6px;
+  border-radius: 5px;
   background: #286451;
   box-shadow: 0 2px 4px #16392a30;
-  transform: translate(-50%, -50%) rotate(var(--card-rotate));
+  transform: rotate(12deg);
   color: #1c4939;
-  font: 600 15px var(--font-mono);
+  font: 600 14px var(--font-mono);
 }
 .poker-card-pattern {
   position: absolute;
@@ -252,19 +244,19 @@ button.poker-seat-target[aria-expanded="true"] .poker-avatar {
 @keyframes card-dealt {
   from {
     opacity: 0;
-    transform: translate(-50%, -50%) translateY(-10px) scale(0.86) rotate(calc(var(--card-rotate) - 6deg));
+    transform: translateY(-10px) scale(0.86) rotate(6deg);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) rotate(var(--card-rotate));
+    transform: rotate(12deg);
   }
 }
 @keyframes card-reveal {
   from {
-    transform: translate(-50%, -50%) rotateY(90deg) rotate(var(--card-rotate));
+    transform: rotateY(90deg) rotate(12deg);
   }
   to {
-    transform: translate(-50%, -50%) rotateY(0) rotate(var(--card-rotate));
+    transform: rotateY(0) rotate(12deg);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -326,15 +318,11 @@ button.poker-seat-target[aria-expanded="true"] .poker-avatar {
     height: 44px;
     font-size: 12px;
   }
-  /* Carta volta para o lado do avatar: layout mobile de 2 colunas. */
-  .poker-table:not(.poker-table--compact) .poker-played-card {
-    --card-rotate: var(--card-rot-sm, 12deg);
-    left: calc(var(--card-x-sm, 9) * 1% + var(--card-dx-sm, 0px));
-    top: calc(var(--card-y-sm, 8) * 1% + var(--card-dy-sm, 0px));
+  .poker-played-card {
+    right: -7px;
+    top: 2px;
     width: 22px;
     height: 32px;
-    border-radius: 5px;
-    font-size: 12px;
   }
   .poker-status {
     font-size: 12px;
