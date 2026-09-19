@@ -88,6 +88,18 @@ summary:focus-visible {
 .site-nav nav a[aria-current="page"] {
   color: var(--foreground);
 }
+/* Seletor de idioma (15.T8): código em mono, alvo de toque de 44px. */
+.lang-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
 /* Troca do ícone sol/lua: rotação + fade (só transform/opacity, 200ms). */
 .theme-toggle__icon {
   display: inline-flex;

@@ -5,9 +5,10 @@ import { cn } from "@/lib/utils";
 
 /** Auditoria #158: atalho de teclado para pular direto ao conteúdo. */
 export function SkipLink({
+  label = "Pular para o conteúdo",
   className,
   ...props
-}: React.ComponentProps<"a">): React.ReactElement {
+}: React.ComponentProps<"a"> & { label?: string }): React.ReactElement {
   return (
     <a
       data-slot="skip-link"
@@ -18,7 +19,7 @@ export function SkipLink({
       )}
       {...props}
     >
-      Pular para o conteúdo
+      {label}
     </a>
   );
 }

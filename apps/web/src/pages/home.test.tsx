@@ -207,3 +207,80 @@ describe("HomePage (ticket 10 — Inicial com demonstração)", () => {
 		);
 	});
 });
+
+describe("HomePage EN (15.T7 — /en)", () => {
+	test("hero, CTAs e passos em inglês", () => {
+		render(
+			<MemoryRouter>
+				<HomePage lang="en" />
+			</MemoryRouter>,
+		);
+
+		const hero = screen.getByTestId("home-hero");
+		expect(hero.textContent).toMatch(/Free online planning poker/);
+		expect(hero.textContent).toMatch(/no signup/i);
+		expect(screen.getByTestId("home-cta-create").textContent).toMatch(
+			/Create room/,
+		);
+		expect(screen.getByTestId("home-cta-join").textContent).toMatch(
+			/Enter with code/,
+		);
+		expect(screen.getByTestId("home-cta-join").closest("a")?.getAttribute("href")).toBe(
+			"/join?mode=join",
+		);
+		expect(screen.getByTestId("deck-hint").textContent).toMatch(
+			/stays out of the average/,
+		);
+		expect(
+			screen.getByTestId("deck-card-☕").getAttribute("aria-label"),
+		).toMatch(/Coffee break/);
+		expect(screen.getByTestId("home-cta-create-bottom").textContent).toMatch(
+			/Create room/,
+		);
+	});
+
+	test("demo completa em inglês: escolher, revelar e ver stats", () => {
+		render(
+			<MemoryRouter>
+				<HomePage lang="en" />
+			</MemoryRouter>,
+		);
+
+		expect(screen.getByTestId("demo-selection").textContent).toMatch(
+			/Choose a card to vote/,
+		);
+		expect(screen.getByTestId("demo-reveal").getAttribute("aria-label")).toBe(
+			"Choose a card to reveal",
+		);
+
+		fireEvent.click(screen.getByTestId("deck-card-5"));
+		expect(screen.getByTestId("demo-selection").textContent).toMatch(
+			/Your vote: 5/,
+		);
+		expect(screen.getByTestId("demo-reveal").getAttribute("aria-label")).toBe(
+			"Reveal simulated votes",
+		);
+		fireEvent.click(screen.getByTestId("demo-reveal"));
+
+		expect(screen.getByTestId("demo-votes").getAttribute("aria-label")).toBe(
+			"Simulated votes",
+		);
+		expect(screen.getByTestId("demo-vote-voce").textContent).toMatch(
+			/You 5/,
+		);
+		expect(screen.getByTestId("stats-eyebrow").textContent).toBe("Median");
+		expect(screen.getByTestId("stats-caption").textContent).toMatch(
+			/average/,
+		);
+		expect(screen.getByTestId("stats-caption").textContent).toMatch(/range/);
+		expect(screen.getByTestId("stats-pip-5").getAttribute("title")).toBe(
+			"3 votes on 5",
+		);
+		expect(screen.getByTestId("demo-create").textContent).toMatch(
+			/Create a room with my team/,
+		);
+		expect(screen.getByTestId("demo-retry").textContent).toMatch(
+			/Try again/,
+		);
+	});
+});

@@ -1,7 +1,24 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import App from "./App";
+import { LANG_STORAGE_KEY } from "./lib/language";
+
+function stubNavigatorLanguages(languages: readonly string[]): void {
+  Object.defineProperty(window.navigator, "languages", {
+    value: languages,
+    configurable: true,
+  });
+  Object.defineProperty(window.navigator, "language", {
+    value: languages[0],
+    configurable: true,
+  });
+}
+
+beforeEach(() => {
+  // jsdom nasce en-US; o default dos testes é um navegador pt-BR.
+  stubNavigatorLanguages(["pt-BR"]);
+});
 
 afterEach(() => {
   cleanup();
@@ -59,5 +76,106 @@ describe("App (issue #158 — polimento e auditoria)", () => {
 
     expect(screen.getByRole("banner")).toBeTruthy();
     expect(screen.getByRole("main").getAttribute("id")).toBe("conteudo");
+  });
+});
+
+describe("App (15.T8 — seleção de idioma)", () => {
+  beforeEach(() => {
+    window.scrollTo = (() => {}) as typeof window.scrollTo;
+  });
+
+  test("seletor na home pt leva para /en e registra a escolha", () => {
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    const switches = screen.getAllByTestId("language-switch");
+    expect(switches).toHaveLength(2);
+    for (const link of switches) {
+      expect(link.getAttribute("href")).toBe("/en");
+      expect(link.getAttribute("hreflang")).toBe("en");
+    }
+    expect(
+      screen.getAllByRole("link", { name: "Ver esta página em inglês" }),
+    ).toHaveLength(2);
+
+    fireEvent.click(switches[0]!);
+
+    expect(window.localStorage.getItem(LANG_STORAGE_KEY)).toBe("en");
+    expect(screen.getByTestId("home-hero").textContent).toMatch(
+      /Free online planning poker/,
+    );
+  });
+
+  test("seletor na home EN leva de volta para /", () => {
+    render(
+      <MemoryRouter initialEntries={["/en"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    const [link] = screen.getAllByRole("link", {
+      name: "View this page in Portuguese",
+    });
+    expect(link!.getAttribute("href")).toBe("/");
+    expect(link!.textContent).toBe("PT");
+
+    fireEvent.click(link!);
+    expect(window.localStorage.getItem(LANG_STORAGE_KEY)).toBe("pt-BR");
+    expect(screen.getByTestId("home-hero").textContent).toMatch(
+      /Planning poker online grátis/,
+    );
+  });
+
+  test("seletor não aparece em rota do app (/join)", () => {
+    render(
+      <MemoryRouter initialEntries={["/join"]}>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByTestId("language-switch")).toBeNull();
+  });
+
+  test("1ª visita na raiz com navegador em inglês vai para /en sem gravar preferência", () => {
+    stubNavigatorLanguages(["en-US"]);
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId("home-hero").textContent).toMatch(
+      /Free online planning poker/,
+    );
+    expect(window.localStorage.getItem(LANG_STORAGE_KEY)).toBeNull();
+  });
+
+  test("preferência salva suprime o redirect da raiz", () => {
+    stubNavigatorLanguages(["en-US"]);
+    window.localStorage.setItem(LANG_STORAGE_KEY, "pt-BR");
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId("home-hero").textContent).toMatch(
+      /Planning poker online grátis/,
+    );
+  });
+
+  test("navegador pt nunca é redirecionado a partir de /en", () => {
+    render(
+      <MemoryRouter initialEntries={["/en"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId("home-hero").textContent).toMatch(
+      /Free online planning poker/,
+    );
+    expect(window.localStorage.getItem(LANG_STORAGE_KEY)).toBeNull();
   });
 });

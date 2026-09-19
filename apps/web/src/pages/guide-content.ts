@@ -4,8 +4,11 @@
  * Briefs: G3 (#182); layout: P1 (#183).
  */
 
+import type { Lang } from "../lib/i18n";
 import { GUIDE_CONTENT_EN, GUIDE_HUB_EN } from "./guide-content.en";
 import { GUIDE_CONTENT_PT, GUIDE_HUB_PT } from "./guide-content.pt";
+
+export type { Lang };
 
 export type GuideStep = { title: string; body: string };
 
@@ -29,7 +32,7 @@ export type GuideSection = {
 };
 
 export type GuideCopy = {
-	lang: "pt-BR" | "en";
+	lang: Lang;
 	path: string;
 	h1: string;
 	lede: string;
@@ -56,7 +59,7 @@ export type GuideHubCard = {
 };
 
 export type GuideHubCopy = {
-	lang: "pt-BR" | "en";
+	lang: Lang;
 	kicker: string;
 	h1: string;
 	lede: string;
@@ -73,5 +76,3 @@ export const GUIDE_HUB = {
 	"pt-BR": GUIDE_HUB_PT,
 	en: GUIDE_HUB_EN,
 } as const;
-
-export type Lang = keyof typeof GUIDE_CONTENT;

@@ -16,8 +16,10 @@ import {
   formatMedian,
   formatRange,
 } from "@/lib/deck";
+import type { Lang } from "@/lib/i18n";
 import { useConsensusStats, voteSelectionText } from "@/lib/stats";
 import type { Vote } from "@/lib/protocol";
+import { HOME_CONTENT } from "./home-content";
 import "./home.css";
 
 const SIMULATED_TEAM: ReadonlyArray<{ nick: string; vote: Vote }> = [
@@ -26,7 +28,12 @@ const SIMULATED_TEAM: ReadonlyArray<{ nick: string; vote: Vote }> = [
   { nick: "Dani", vote: "5" },
 ];
 
-export function HomePage(): React.ReactElement {
+export function HomePage({
+  lang = "pt-BR",
+}: {
+  lang?: Lang;
+}): React.ReactElement {
+  const content = HOME_CONTENT[lang];
   const [myVote, setMyVote] = useState<Vote | null>(null);
   const [revealed, setRevealed] = useState(false);
   const visualRef = useRef<HTMLDivElement | null>(null);
@@ -74,12 +81,12 @@ export function HomePage(): React.ReactElement {
     isUnanimousSignal,
     voteGroups,
     resultsAriaLabel,
-  } = useConsensusStats(revealedVotes);
-  const selectionText = voteSelectionText(myVote, { revealed });
+  } = useConsensusStats(revealedVotes, lang);
+  const selectionText = voteSelectionText(myVote, { revealed, lang });
   const seats = [
     {
       id: "you",
-      nick: "Você",
+      nick: content.visual.you,
       seatIndex: 0,
       hasVoted: myVote !== null,
       value: revealed ? myVote : null,
@@ -127,33 +134,29 @@ export function HomePage(): React.ReactElement {
         <section className="pt-home__hero" data-testid="home-hero">
           <div className="pt-home__hero-copy">
             <h1>
-              Planning poker online grátis
+              {content.hero.h1Lead}
               <br />
-              <em>para o seu time.</em>
+              <em>{content.hero.h1Em}</em>
             </h1>
-            <p className="pt-home__hero-lede">
-              Planning poker sem cadastro. Reúna o time, escolha suas cartas
-              e transforme estimativas diferentes em uma conversa que faz o
-              projeto avançar.
-            </p>
+            <p className="pt-home__hero-lede">{content.hero.lede}</p>
             <div className="pt-home__hero-actions">
               <Button
                 size="xl"
                 data-testid="home-cta-create"
                 render={<Link to="/join" />}
               >
-                Criar sala <ArrowRightIcon aria-hidden="true" />
+                {content.hero.createRoom} <ArrowRightIcon aria-hidden="true" />
               </Button>
               <Link
                 to="/join?mode=join"
                 className="pt-home__text-link"
                 data-testid="home-cta-join"
               >
-                Entrar com código
+                {content.hero.enterWithCode}
               </Link>
             </div>
             <a href="#demo" className="pt-home__demo-link">
-              Experimente uma rodada
+              {content.hero.tryRound}
             </a>
           </div>
           <div
@@ -165,10 +168,10 @@ export function HomePage(): React.ReactElement {
             <div className="pt-home__table-stage" data-tilt-stage>
               <div className="pt-home__felt">
                 <span className="pt-home__felt-kicker">
-                  História em votação
+                  {content.visual.kicker}
                 </span>
                 <strong className="pt-home__felt-story">
-                  Checkout mobile
+                  {content.visual.story}
                 </strong>
                 <div className="pt-home__fan">
                   <span
@@ -197,7 +200,7 @@ export function HomePage(): React.ReactElement {
                     <i className="is-in" />
                     <i className="is-you" />
                   </span>
-                  3 de 4 votaram · falta você
+                  {content.visual.waiting}
                 </span>
               </div>
               <span
@@ -229,7 +232,7 @@ export function HomePage(): React.ReactElement {
                 style={{ "--i": 3 } as CSSProperties}
               >
                 <i>VO</i>
-                <b>Você</b>
+                <b>{content.visual.you}</b>
               </span>
             </div>
           </div>
@@ -244,14 +247,15 @@ export function HomePage(): React.ReactElement {
           <div className="pt-home__section-intro">
             <div>
               <h2 id="demo-title">
-                <span className="pt-home__demo-title-end">Sua vez de votar.</span>{" "}
-                <span className="pt-home__demo-title-end">A sala revela.</span>
+                <span className="pt-home__demo-title-end">
+                  {content.demo.titleLead}
+                </span>{" "}
+                <span className="pt-home__demo-title-end">
+                  {content.demo.titleEnd}
+                </span>
               </h2>
             </div>
-            <p>
-              Escolha sua carta. Bia, Caio e Dani já votaram — a revelação
-              mostra como a conversa começa.
-            </p>
+            <p>{content.demo.intro}</p>
           </div>
           <Card className="pt-home__demo-card">
             <CardPanel className="pt-home__demo-panel">
@@ -260,18 +264,19 @@ export function HomePage(): React.ReactElement {
                 playerId="you"
                 revealed={revealed}
                 compact
+                lang={lang}
               >
                 <div className="pt-home__table-center">
                   <span className="pt-home__table-kicker">
-                    História em votação
+                    {content.demo.kicker}
                   </span>
-                  <strong>Checkout mobile</strong>
+                  <strong>{content.demo.story}</strong>
                   <small>
                     {revealed
-                      ? "Votos revelados"
+                      ? content.demo.statusRevealed
                       : myVote === null
-                        ? "3 de 4 votaram · falta você"
-                        : "Todos votaram · hora de revelar"}
+                        ? content.demo.statusWaiting
+                        : content.demo.statusAllVoted}
                   </small>
                 </div>
               </PokerTable>
@@ -282,7 +287,7 @@ export function HomePage(): React.ReactElement {
               >
                 {selectionText}
               </p>
-              <Deck currentVote={myVote} onSelect={handleSelect} />
+              <Deck currentVote={myVote} onSelect={handleSelect} lang={lang} />
               {!revealed ? (
                 <div className="pt-home__demo-action">
                   <Button
@@ -292,16 +297,16 @@ export function HomePage(): React.ReactElement {
                     onClick={handleReveal}
                     aria-label={
                       myVote === null
-                        ? "Escolha uma carta para revelar"
-                        : "Revelar votos simulados"
+                        ? content.demo.revealAriaEmpty
+                        : content.demo.reveal
                     }
                   >
-                    <EyeIcon aria-hidden="true" /> Revelar votos simulados
+                    <EyeIcon aria-hidden="true" /> {content.demo.reveal}
                   </Button>
                   <span data-testid="demo-reveal-hint" aria-live="polite">
                     {myVote === null
-                      ? "Escolha sua estimativa para revelar. Os votos do time são simulados."
-                      : "Com sua carta na mesa, revele os votos simulados."}
+                      ? content.demo.hintEmpty
+                      : content.demo.hintReady}
                   </span>
                 </div>
               ) : (
@@ -310,15 +315,16 @@ export function HomePage(): React.ReactElement {
                     data-testid="demo-revealed"
                     className="pt-home__revealed-label"
                   >
-                    <CheckIcon aria-hidden="true" /> Votos revelados. A conversa
-                    pode avançar.
+                    <CheckIcon aria-hidden="true" /> {content.demo.revealed}
                   </p>
                   <ul
                     className="pt-home__vote-list"
-                    aria-label="Votos simulados"
+                    aria-label={content.demo.votesAria}
                     data-testid="demo-votes"
                   >
-                    <li data-testid="demo-vote-voce">Você {myVote}</li>
+                    <li data-testid="demo-vote-voce">
+                      {content.demo.you} {myVote}
+                    </li>
                     {SIMULATED_TEAM.map((mate) => (
                       <li
                         key={mate.nick}
@@ -337,14 +343,16 @@ export function HomePage(): React.ReactElement {
                   >
                     <div className="pt-home__stat-primary">
                       {isUnanimousSignal ? (
-                        <span data-testid="stats-unanimous-badge">Unânime</span>
+                        <span data-testid="stats-unanimous-badge">
+                          {content.demo.statsUnanimous}
+                        </span>
                       ) : (
                         <small data-testid="stats-eyebrow">
                           {noNumerics
-                            ? "Sem votos numéricos"
+                            ? content.demo.statsNoNumerics
                             : isSingleNumeric
-                              ? "Voto único"
-                              : "Mediana"}
+                              ? content.demo.statsSingle
+                              : content.demo.statsMedian}
                         </small>
                       )}
                       <strong data-testid="stats-result-value">
@@ -353,11 +361,11 @@ export function HomePage(): React.ReactElement {
                     </div>
                     <div className="pt-home__stat-detail">
                       <span data-testid="stats-caption">
-                        média{" "}
+                        {content.demo.captionMean}{" "}
                         <b data-testid="stats-mean-value">
                           {formatMean(consensus.mean)}
                         </b>{" "}
-                        · intervalo{" "}
+                        · {content.demo.captionRange}{" "}
                         <b data-testid="stats-range-value">
                           {formatRange(consensus.range)}
                         </b>
@@ -371,7 +379,10 @@ export function HomePage(): React.ReactElement {
                             <span
                               key={group.value}
                               data-testid={`stats-pip-${group.value}`}
-                              title={`${group.count} ${group.count > 1 ? "votos" : "voto"} em ${group.value}`}
+                              title={content.demo.pipTitle(
+                                group.count,
+                                group.value,
+                              )}
                             >
                               {group.count}×{group.value}
                             </span>
@@ -385,8 +396,7 @@ export function HomePage(): React.ReactElement {
                       data-testid="stats-no-numerics"
                       className="pt-home__no-numerics"
                     >
-                      Só pausa ou ninguém votou. Sem média, mediana nem
-                      intervalo.
+                      {content.demo.noNumerics}
                     </p>
                   )}
                   <div className="pt-home__results-actions">
@@ -395,7 +405,7 @@ export function HomePage(): React.ReactElement {
                       data-testid="demo-create"
                       render={<Link to="/join" />}
                     >
-                      Criar sala com meu time{" "}
+                      {content.demo.createWithTeam}{" "}
                       <ArrowRightIcon aria-hidden="true" />
                     </Button>
                     <Button
@@ -404,7 +414,7 @@ export function HomePage(): React.ReactElement {
                       data-testid="demo-retry"
                       onClick={handleRetry}
                     >
-                      <RotateCcwIcon aria-hidden="true" /> Tentar de novo
+                      <RotateCcwIcon aria-hidden="true" /> {content.demo.retry}
                     </Button>
                   </div>
                 </div>
@@ -415,25 +425,19 @@ export function HomePage(): React.ReactElement {
         <section className="pt-home__how" id="como-funciona">
           <div className="pt-home__section-intro pt-home__section-intro--how">
             <div>
-              <h2>Agora, reúna seu time.</h2>
+              <h2>{content.how.title}</h2>
             </div>
           </div>
           <ol className="pt-home__steps" role="list">
-            <li>
-              <span aria-hidden="true">01</span>
-              <h3>Crie a sala</h3>
-              <p>Escolha seu apelido e comece sem cadastro.</p>
-            </li>
-            <li>
-              <span aria-hidden="true">02</span>
-              <h3>Compartilhe o código</h3>
-              <p>Convide o time onde vocês já conversam.</p>
-            </li>
-            <li>
-              <span aria-hidden="true">03</span>
-              <h3>Estimem juntos</h3>
-              <p>Revelem as cartas e conversem sobre as diferenças.</p>
-            </li>
+            {content.how.steps.map((step, index) => (
+              <li key={step.title}>
+                <span aria-hidden="true">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+              </li>
+            ))}
           </ol>
           <Button
             size="xl"
@@ -441,7 +445,7 @@ export function HomePage(): React.ReactElement {
             data-testid="home-cta-create-bottom"
             render={<Link to="/join" />}
           >
-            Criar sala <ArrowRightIcon aria-hidden="true" />
+            {content.how.cta} <ArrowRightIcon aria-hidden="true" />
           </Button>
         </section>
       </div>

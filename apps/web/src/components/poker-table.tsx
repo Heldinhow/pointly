@@ -1,6 +1,7 @@
 import { CheckIcon, CrownIcon, DicesIcon, UserRoundIcon } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
+import type { Lang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { NudgeId, ProjectileType } from "@/lib/protocol";
 import { ProjectileMenu } from "./projectile-menu";
@@ -18,6 +19,43 @@ export interface TablePlayer {
   avatar?: string | null;
 }
 
+type TableLabels = {
+  seatsAria: string;
+  demoSeatsAria: string;
+  disconnected: string;
+  noVote: string;
+  voted: string;
+  waiting: string;
+  justify: string;
+  emptySeat: string;
+  emptySeatSr: string;
+};
+
+const TABLE_LABELS: Record<Lang, TableLabels> = {
+  "pt-BR": {
+    seatsAria: "Assentos da sala",
+    demoSeatsAria: "Time da demonstração",
+    disconnected: "Desconectado",
+    noVote: "Sem voto",
+    voted: "Votou",
+    waiting: "Aguardando",
+    justify: "Justifica",
+    emptySeat: "Livre",
+    emptySeatSr: "Assento vazio",
+  },
+  en: {
+    seatsAria: "Room seats",
+    demoSeatsAria: "Demo team",
+    disconnected: "Disconnected",
+    noVote: "No vote",
+    voted: "Voted",
+    waiting: "Waiting",
+    justify: "Justifies first",
+    emptySeat: "Open",
+    emptySeatSr: "Empty seat",
+  },
+};
+
 interface PokerTableProps {
   seats: Array<TablePlayer | null>;
   playerId?: string | null;
@@ -32,6 +70,8 @@ interface PokerTableProps {
   /** Cutucada no alvo (issue #172). Ausente = sem seção "Cutucar". */
   onNudge?: (targetId: string, nudgeId: NudgeId) => void;
   projectileCooldownSecs?: number;
+  /** Idioma dos rótulos; a arena (pt) usa o default. */
+  lang?: Lang;
   children?: ReactNode;
 }
 
@@ -99,8 +139,10 @@ export function PokerTable({
   onThrowProjectile,
   onNudge,
   projectileCooldownSecs = 0,
+  lang = "pt-BR",
   children,
 }: PokerTableProps): React.ReactElement {
+  const labels = TABLE_LABELS[lang];
   return (
     <div
       className={cn("poker-table", compact && "poker-table--compact")}
@@ -112,7 +154,7 @@ export function PokerTable({
       </div>
       <ul
         className="poker-seats"
-        aria-label={compact ? "Time da demonstração" : "Assentos da sala"}
+        aria-label={compact ? labels.demoSeatsAria : labels.seatsAria}
       >
         {seats.map((player, index) => {
           const [x, y] = (compact ? DEMO_SEATS : SEATS)[
@@ -172,15 +214,15 @@ export function PokerTable({
                   {hideStatus ? null : (
                     <span className="poker-status">
                       {disconnected ? (
-                        "Desconectado"
+                        labels.disconnected
                       ) : revealed ? (
-                        (player.value ?? "Sem voto")
+                        (player.value ?? labels.noVote)
                       ) : player.hasVoted ? (
                         <>
-                          <CheckIcon aria-hidden="true" /> Votou
+                          <CheckIcon aria-hidden="true" /> {labels.voted}
                         </>
                       ) : (
-                        "Aguardando"
+                        labels.waiting
                       )}
                     </span>
                   )}
@@ -207,7 +249,7 @@ export function PokerTable({
                       data-testid={`seat-justify-${player.seatIndex}`}
                     >
                       <DicesIcon aria-hidden="true" />
-                      Justifica
+                      {labels.justify}
                     </span>
                   )}
                 </>
@@ -216,8 +258,8 @@ export function PokerTable({
                   <div className="poker-avatar">
                     <UserRoundIcon aria-hidden="true" />
                   </div>
-                  <span className="poker-empty-label">Livre</span>
-                  <span className="sr-only">Assento vazio</span>
+                  <span className="poker-empty-label">{labels.emptySeat}</span>
+                  <span className="sr-only">{labels.emptySeatSr}</span>
                 </>
               )}
             </li>

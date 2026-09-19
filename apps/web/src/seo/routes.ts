@@ -59,6 +59,13 @@ export const JSON_LD_SOFTWARE_APPLICATION = {
 	},
 } as const;
 
+/** Mesmo app, descrição EN — usado só na home em inglês (15.T7). */
+export const JSON_LD_SOFTWARE_APPLICATION_EN = {
+	...JSON_LD_SOFTWARE_APPLICATION,
+	description:
+		"Free online planning poker for agile teams, no signup. Create a room, invite your team and estimate story points in real time.",
+} as const;
+
 export type FaqItem = { question: string; answer: string };
 
 /** FAQPage espelhando o FAQ visível da página (exigência do Google). */
@@ -132,6 +139,8 @@ const EN_WHAT_IS = GUIDE_CONTENT.en["what-is"];
 const EN_STORY_POINTS = GUIDE_CONTENT.en["story-points"];
 
 const PATHS = {
+	homePt: "/",
+	homeEn: "/en",
 	planningPokerPt: "/planning-poker",
 	planningPokerEn: "/en/planning-poker",
 	scrumPokerPt: "/scrum-poker",
@@ -161,13 +170,24 @@ const STORY_POINTS_DESCRIPTION_EN =
 
 export const SEO_ROUTES: readonly SeoRoute[] = [
 	{
-		path: "/",
+		path: PATHS.homePt,
 		lang: "pt-BR",
 		indexable: true,
 		title: "Pointly — Planning Poker para Times Ágeis",
 		description:
 			"Planning poker sem cadastro para times ágeis: crie a sala em segundos, compartilhe o link e estime story points em tempo real.",
+		alternates: alternateVersions(PATHS.homePt, PATHS.homeEn, "pt-BR"),
 		jsonLd: [JSON_LD_SOFTWARE_APPLICATION],
+	},
+	{
+		path: PATHS.homeEn,
+		lang: "en",
+		indexable: true,
+		title: "Pointly — Planning Poker for Agile Teams",
+		description:
+			"Planning poker with no signup for agile teams: create a room in seconds, share the link and estimate story points in real time.",
+		alternates: alternateVersions(PATHS.homePt, PATHS.homeEn, "en"),
+		jsonLd: [JSON_LD_SOFTWARE_APPLICATION_EN],
 	},
 	{
 		path: PATHS.planningPokerPt,

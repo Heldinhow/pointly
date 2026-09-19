@@ -1,5 +1,12 @@
 import { useEffect, useRef } from "react";
-import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
+import {
+  Link,
+  NavLink,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import {
   Brand,
   ShellHeader,
@@ -7,7 +14,13 @@ import {
   SkipLink,
   useHeaderScrolled,
 } from "@/components/shell";
+import { LanguageLink } from "@/components/language-link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import {
+  browserPrefersEnglish,
+  isPublicIndexablePath,
+  readLanguagePreference,
+} from "@/lib/language";
 import { useTheme } from "@/lib/theme";
 import { ArenaPage } from "@/pages/arena";
 import {
@@ -33,8 +46,11 @@ import { NotFoundPage } from "@/pages/not-found";
 export default function App(): React.ReactElement {
   const { theme, toggle } = useTheme();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const inArena = pathname.startsWith("/s/");
   const isEn = pathname === "/en" || pathname.startsWith("/en/");
+  const lang = isEn ? "en" : "pt-BR";
+  const showLanguageSwitch = !inArena && isPublicIndexablePath(pathname);
   const scrolled = useHeaderScrolled();
   const previousPath = useRef(pathname);
 
@@ -45,21 +61,30 @@ export default function App(): React.ReactElement {
     document.getElementById("conteudo")?.focus({ preventScroll: true });
   }, [pathname]);
 
+  // 1ª visita (15.T8): raiz, sem escolha registrada e navegador em inglês
+  // → home EN. Nunca o contrário, e nunca fora da raiz (SERP pt não sofre bounce).
+  useEffect(() => {
+    if (pathname !== "/") return;
+    if (readLanguagePreference() !== null) return;
+    if (!browserPrefersEnglish()) return;
+    navigate("/en", { replace: true });
+  }, [pathname, navigate]);
+
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
-      <SkipLink />
+      <SkipLink label={isEn ? "Skip to content" : undefined} />
       <ShellHeader data-scrolled={scrolled ? "true" : "false"}>
         {inArena ? (
           <Brand />
         ) : (
-          <Link to="/" aria-label="Pointly, início">
+          <Link to="/" aria-label={isEn ? "Pointly, home" : "Pointly, início"}>
             <Brand />
           </Link>
         )}
         <div className="site-nav">
           {!inArena && (
             <nav aria-label={isEn ? "Main navigation" : "Navegação principal"}>
-              <NavLink to="/" end>
+              <NavLink to={isEn ? "/en" : "/"} end>
                 {isEn ? "Home" : "Início"}
               </NavLink>
               <NavLink to="/join?mode=join">
@@ -67,12 +92,20 @@ export default function App(): React.ReactElement {
               </NavLink>
             </nav>
           )}
-          <ThemeToggle theme={theme} onToggle={toggle} />
+          {showLanguageSwitch && (
+            <LanguageLink pathname={pathname} lang={lang} />
+          )}
+          <ThemeToggle
+            theme={theme}
+            onToggle={toggle}
+            lang={isEn ? "en" : "pt-BR"}
+          />
         </div>
       </ShellHeader>
       <ShellMain id="conteudo" tabIndex={-1}>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/en" element={<HomePage lang="en" />} />
           <Route path="/planning-poker" element={<PlanningPokerLandingPage />} />
           <Route path="/scrum-poker" element={<ScrumPokerLandingPage />} />
           <Route path="/guias" element={<GuidesHubPtPage />} />
@@ -114,6 +147,9 @@ export default function App(): React.ReactElement {
             <NavLink to={isEn ? "/en/guides" : "/guias"}>
               {isEn ? "Guides" : "Guias"}
             </NavLink>
+            {showLanguageSwitch && (
+              <LanguageLink pathname={pathname} lang={lang} />
+            )}
           </nav>
           <span>
             {isEn
