@@ -26,6 +26,12 @@
 - Exceção: componentes de domínio assinados do Pointly (`deck`, `poker-table`, feltro/mesa) continuam custom — mas botões, inputs, alerts, loaders, empty states e feedback ao redor deles usam coss.
 - Estilizar coss com os tokens do Pointly (`DESIGN.md` + `apps/web/src/index.css`, Tailwind v4, dark-first via `html.dark`), nunca o default shadcn/coss sem customizar (cores/radii/sombras do sistema).
 
+## Validação (obrigatório em mudança de código)
+
+- Toda mudança de código exige validação via Playwright antes de considerar pronto.
+- Se a mudança for visual (UI/frontend): validar visualmente no navegador via Playwright (abrir página, screenshot/inspeção) e confirmar contra `DESIGN.md` + `apps/web/src/index.css`.
+- Sem pular Playwright por "mudança pequena" — prova real com output da ferramenta, não narração.
+
 ## Como trabalhar
 
 - Direto por padrão; delegação/subagentes só por benefício concreto ou pedido explícito (sem skill orquestradora; agentes disponíveis em `.codex/agents/`).
