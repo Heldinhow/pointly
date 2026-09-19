@@ -228,6 +228,44 @@ describe("Sala — startNewRound", () => {
 });
 
 // ---------------------------------------------------------------------------
+// sendNudge + cooldown compartilhado com arremesso (issue #172)
+// ---------------------------------------------------------------------------
+
+describe("Sala — sendNudge", () => {
+	test("libera em 1s e rejeita dentro do cooldown", () => {
+		sala.sendNudge("p1", 0);
+		expect(() => sala.sendNudge("p1", 999)).toThrow(SalaError);
+		try {
+			sala.sendNudge("p1", 999);
+		} catch (e) {
+			expect((e as SalaError).code).toBe("invalid_phase");
+			expect((e as SalaError).message).toContain("cutucar");
+		}
+		expect(() => sala.sendNudge("p1", 1000)).not.toThrow();
+	});
+
+	test("cutucada e arremesso competem pelo mesmo portão", () => {
+		sala.sendNudge("p1", 0);
+		expect(() => sala.throwProjectile("p1", 500, "tomato")).toThrow(SalaError);
+		sala.throwProjectile("p1", 1000, "tomato");
+		expect(() => sala.sendNudge("p1", 1500)).toThrow(SalaError);
+		expect(() => sala.sendNudge("p1", 2000)).not.toThrow();
+	});
+
+	test("cadeirada segura a cutucada por 8s", () => {
+		sala.throwProjectile("p1", 0, "chair");
+		expect(() => sala.sendNudge("p1", 7999)).toThrow(SalaError);
+		expect(() => sala.sendNudge("p1", 8000)).not.toThrow();
+	});
+
+	test("players diferentes têm recargas independentes", () => {
+		sala.addPlayer(makePlayer("p2", "Bob", "player", 1_001));
+		sala.sendNudge("p1", 0);
+		expect(() => sala.sendNudge("p2", 0)).not.toThrow();
+	});
+});
+
+// ---------------------------------------------------------------------------
 // toState + SalaState snapshot
 // ---------------------------------------------------------------------------
 

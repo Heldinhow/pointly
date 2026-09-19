@@ -1,0 +1,64 @@
+.nudge-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.nudge-balloon {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: inline-flex;
+  align-items: center;
+  max-width: 180px;
+  padding: 5px 11px;
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 8px 20px -8px rgb(20 40 30 / 35%);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  will-change: transform, opacity;
+  animation: nudge-balloon-pop var(--nudge-ms, 2000ms) ease-out both;
+}
+
+.nudge-balloon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 8px;
+  height: 8px;
+  background: var(--popover);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+@keyframes nudge-balloon-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% + 8px)) scale(0.85);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, -100%) scale(1);
+  }
+  78% {
+    opacity: 1;
+    transform: translate(-50%, -100%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% - 10px)) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nudge-balloon {
+    animation: none;
+  }
+}

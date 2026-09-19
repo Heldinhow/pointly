@@ -25,6 +25,10 @@ let seenProjectiles: Array<{
 	type?: string;
 	payload?: { targetPlayerId?: string; projectileType?: string };
 }> = [];
+let seenNudges: Array<{
+	type?: string;
+	payload?: { targetPlayerId?: string; nudgeId?: string };
+}> = [];
 
 function salaFor(code: string, playerId: string): SalaState {
 	return {
@@ -107,6 +111,21 @@ beforeAll(() => {
 							targetPlayerId: json.payload?.targetPlayerId,
 							projectileType: json.payload?.projectileType,
 							outcome: "hit",
+						},
+					}),
+				);
+				return;
+			}
+			if (json.type === "send_nudge") {
+				seenNudges.push(json);
+				// Ecoa o broadcast efêmero da Sala.
+				ws.send(
+					JSON.stringify({
+						type: "nudge_sent",
+						payload: {
+							senderPlayerId: "p_test000001",
+							targetPlayerId: json.payload?.targetPlayerId,
+							nudgeId: json.payload?.nudgeId,
 						},
 					}),
 				);
@@ -441,6 +460,46 @@ describe("PointlySocket", () => {
 				targetPlayerId: "p_beto",
 				projectileType: "tomato",
 				outcome: "hit",
+			});
+		} finally {
+			socket.close({ silent: true });
+		}
+	});
+	test("send_nudge envia alvo+id e broadcast chega no onNudgeSent", async () => {
+		seenNudges = [];
+		const seen: Array<{
+			senderPlayerId: string;
+			targetPlayerId: string;
+			nudgeId: string;
+		}> = [];
+		const socket = new PointlySocket({
+			onNudgeSent: (event) => {
+				seen.push({ ...event });
+			},
+		});
+		expect(socket.sendNudge("p_beto", "bora")).toBe(false);
+		try {
+			await socket.connect(WS_URL, {
+				uuid: "00000000-0000-4000-8000-000000000001",
+				nick: "Ana",
+			});
+			expect(socket.sendNudge("p_beto", "bora")).toBe(true);
+			// Alvo vazio e id fora do catálogo nunca trafegam.
+			expect(socket.sendNudge("", "bora")).toBe(false);
+			expect(
+				socket.sendNudge("p_beto", "fire" as unknown as "bora"),
+			).toBe(false);
+			await new Promise((resolve) => setTimeout(resolve, 150));
+			expect(seenNudges).toHaveLength(1);
+			expect(seenNudges[0]?.type).toBe("send_nudge");
+			expect(seenNudges[0]?.payload).toEqual({
+				targetPlayerId: "p_beto",
+				nudgeId: "bora",
+			});
+			expect(seen).toHaveLength(1);
+			expect(seen[0]).toMatchObject({
+				targetPlayerId: "p_beto",
+				nudgeId: "bora",
 			});
 		} finally {
 			socket.close({ silent: true });

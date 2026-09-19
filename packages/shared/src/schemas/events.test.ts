@@ -11,6 +11,8 @@ import {
 	ErrorEventSchema,
 	HelloPayloadSchema,
 	LeaveRoomPayloadSchema,
+	NudgeIdSchema,
+	NudgeSentEventSchema,
 	PingPayloadSchema,
 	PlayerJoinedEventSchema,
 	PlayerLeftEventSchema,
@@ -19,6 +21,7 @@ import {
 	RoundStartedEventSchema,
 	SalaEndedEventSchema,
 	SalaEndedReasonSchema,
+	SendNudgePayloadSchema,
 	ServerToClientEventSchema,
 	StartNewRoundPayloadSchema,
 	UpdateAvatarPayloadSchema,
@@ -431,6 +434,96 @@ describe("ServerToClientEventSchema (discriminated union)", () => {
 		const r = ServerToClientEventSchema.safeParse({
 			type: "pong",
 			payload: {},
+		});
+		expect(r.success).toBe(true);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Cutucadas (issue #172)
+// ---------------------------------------------------------------------------
+
+describe("NudgeIdSchema + SendNudgePayloadSchema", () => {
+	test("cobre exatamente as 4 cutucadas fixas", () => {
+		expect(NudgeIdSchema.options).toEqual([
+			"bora",
+			"cafe",
+			"polemica",
+			"confia",
+		]);
+	});
+
+	test("aceita send_nudge válido", () => {
+		const r = SendNudgePayloadSchema.safeParse({
+			targetPlayerId: "p2",
+			nudgeId: "bora",
+		});
+		expect(r.success).toBe(true);
+	});
+
+	test("rejeita nudgeId fora do catálogo", () => {
+		const r = SendNudgePayloadSchema.safeParse({
+			targetPlayerId: "p2",
+			nudgeId: "texto_livre",
+		});
+		expect(r.success).toBe(false);
+	});
+
+	test("rejeita targetPlayerId vazio", () => {
+		const r = SendNudgePayloadSchema.safeParse({
+			targetPlayerId: "",
+			nudgeId: "cafe",
+		});
+		expect(r.success).toBe(false);
+	});
+
+	test("rejeita payload extra (strict)", () => {
+		const r = SendNudgePayloadSchema.safeParse({
+			targetPlayerId: "p2",
+			nudgeId: "confia",
+			text: "oi",
+		});
+		expect(r.success).toBe(false);
+	});
+});
+
+describe("NudgeSentEventSchema", () => {
+	test("aceita nudge_sent válido com sender + target", () => {
+		const r = NudgeSentEventSchema.safeParse({
+			senderPlayerId: "p1",
+			targetPlayerId: "p2",
+			nudgeId: "polemica",
+		});
+		expect(r.success).toBe(true);
+	});
+
+	test("rejeita nudgeId desconhecido", () => {
+		const r = NudgeSentEventSchema.safeParse({
+			senderPlayerId: "p1",
+			targetPlayerId: "p2",
+			nudgeId: "fire",
+		});
+		expect(r.success).toBe(false);
+	});
+});
+
+describe("Discriminated unions com send_nudge/nudge_sent", () => {
+	test("ClientToServerEventSchema dispatch send_nudge", () => {
+		const r = ClientToServerEventSchema.safeParse({
+			type: "send_nudge",
+			payload: { targetPlayerId: "p2", nudgeId: "bora" },
+		});
+		expect(r.success).toBe(true);
+	});
+
+	test("ServerToClientEventSchema aceita nudge_sent", () => {
+		const r = ServerToClientEventSchema.safeParse({
+			type: "nudge_sent",
+			payload: {
+				senderPlayerId: "p1",
+				targetPlayerId: "p2",
+				nudgeId: "cafe",
+			},
 		});
 		expect(r.success).toBe(true);
 	});

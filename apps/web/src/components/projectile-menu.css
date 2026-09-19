@@ -85,6 +85,29 @@
   letter-spacing: 0.04em;
 }
 
+/* Cutucadas (issue #172): grade compacta pra não esticar o menu. */
+.projectile-menu-divider {
+  margin: 6px 0;
+}
+
+.projectile-menu-nudges {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+}
+
+.projectile-menu-item--nudge {
+  min-height: 36px;
+  justify-content: center;
+  padding: 4px 8px;
+}
+
+.projectile-menu-item--nudge .projectile-menu-label {
+  flex: 0 1 auto;
+  font-weight: 550;
+  white-space: nowrap;
+}
+
 .projectile-menu-item--epic .projectile-icon {
   filter: drop-shadow(0 0 4px rgb(37 99 235 / 55%));
 }

@@ -199,6 +199,38 @@ export function buildThrowProjectileMessage(
 	};
 }
 
+/**
+ * Cutucadas (issue #172): 4 mensagens fixas, ids estáveis — espelho do
+ * `NudgeIdSchema` do contrato compartilhado. Sem texto livre.
+ */
+export const NUDGE_IDS = ["bora", "cafe", "polemica", "confia"] as const;
+export type NudgeId = (typeof NUDGE_IDS)[number];
+
+export function isNudgeId(value: unknown): value is NudgeId {
+	return isOneOf(NUDGE_IDS, value);
+}
+
+export interface SendNudgePayload {
+	targetPlayerId: string;
+	nudgeId: NudgeId;
+}
+
+export interface NudgeSentPayload {
+	senderPlayerId: string;
+	targetPlayerId: string;
+	nudgeId: NudgeId;
+}
+
+export function buildSendNudgeMessage(
+	targetPlayerId: string,
+	nudgeId: NudgeId,
+): {
+	type: "send_nudge";
+	payload: SendNudgePayload;
+} {
+	return { type: "send_nudge", payload: { targetPlayerId, nudgeId } };
+}
+
 export type ClientToServerEvent =
 	| { type: "hello"; payload: HelloPayload }
 	| { type: "cast_vote"; payload: CastVotePayload }
@@ -207,12 +239,14 @@ export type ClientToServerEvent =
 	| { type: "leave_room"; payload: Record<string, never> }
 	| { type: "update_avatar"; payload: UpdateAvatarPayload }
 	| { type: "throw_projectile"; payload: ThrowProjectilePayload }
+	| { type: "send_nudge"; payload: SendNudgePayload }
 	| { type: "ping"; payload: Record<string, never> };
 
 export type ServerToClientEvent =
 	| { type: "welcome"; payload: WelcomePayload }
 	| { type: "room_state"; payload: RoomStatePayload }
 	| { type: "projectile_thrown"; payload: ProjectileThrownPayload }
+	| { type: "nudge_sent"; payload: NudgeSentPayload }
 	| { type: "pong"; payload: Record<string, never> }
 	| { type: "error"; payload: ServerErrorPayload };
 
@@ -293,6 +327,26 @@ export function parseServerEvent(raw: string): ServerToClientEvent | null {
 					targetPlayerId: payload.targetPlayerId,
 					projectileType: payload.projectileType,
 					outcome: payload.outcome,
+				},
+			};
+		}
+		case "nudge_sent": {
+			const payload = record.payload as Record<string, unknown>;
+			if (
+				typeof payload.senderPlayerId !== "string" ||
+				payload.senderPlayerId.length === 0 ||
+				typeof payload.targetPlayerId !== "string" ||
+				payload.targetPlayerId.length === 0 ||
+				!isNudgeId(payload.nudgeId)
+			) {
+				return null;
+			}
+			return {
+				type: "nudge_sent",
+				payload: {
+					senderPlayerId: payload.senderPlayerId,
+					targetPlayerId: payload.targetPlayerId,
+					nudgeId: payload.nudgeId,
 				},
 			};
 		}

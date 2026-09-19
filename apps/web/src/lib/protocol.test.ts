@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import {
+	buildSendNudgeMessage,
 	buildThrowProjectileMessage,
 	buildUpdateAvatarMessage,
+	isNudgeId,
 	isProjectileOutcome,
 	isProjectileType,
 	parseServerEvent,
@@ -98,6 +100,72 @@ describe("protocol — projéteis (issue #157)", () => {
 						targetPlayerId: "p_beto",
 						projectileType: "tomato",
 						outcome: "hit",
+					},
+				}),
+			),
+		).toBeNull();
+	});
+});
+
+describe("protocol — cutucadas (issue #172)", () => {
+	test("isNudgeId aceita os 4 ids fixos e rejeita o resto", () => {
+		for (const id of ["bora", "cafe", "polemica", "confia"] as const) {
+			expect(isNudgeId(id)).toBe(true);
+		}
+		expect(isNudgeId("texto_livre")).toBe(false);
+		expect(isNudgeId("")).toBe(false);
+		expect(isNudgeId(null)).toBe(false);
+	});
+
+	test("buildSendNudgeMessage monta o evento C→S", () => {
+		expect(buildSendNudgeMessage("p_beto", "bora")).toEqual({
+			type: "send_nudge",
+			payload: { targetPlayerId: "p_beto", nudgeId: "bora" },
+		});
+	});
+
+	test("parseServerEvent aceita nudge_sent válido", () => {
+		const event = parseServerEvent(
+			JSON.stringify({
+				type: "nudge_sent",
+				payload: {
+					senderPlayerId: "p_ana",
+					targetPlayerId: "p_beto",
+					nudgeId: "cafe",
+				},
+			}),
+		);
+		expect(event).toEqual({
+			type: "nudge_sent",
+			payload: {
+				senderPlayerId: "p_ana",
+				targetPlayerId: "p_beto",
+				nudgeId: "cafe",
+			},
+		});
+	});
+
+	test("parseServerEvent rejeita nudge_sent malformado", () => {
+		expect(
+			parseServerEvent(
+				JSON.stringify({
+					type: "nudge_sent",
+					payload: {
+						senderPlayerId: "p_ana",
+						targetPlayerId: "p_beto",
+						nudgeId: "fire",
+					},
+				}),
+			),
+		).toBeNull();
+		expect(
+			parseServerEvent(
+				JSON.stringify({
+					type: "nudge_sent",
+					payload: {
+						senderPlayerId: "",
+						targetPlayerId: "p_beto",
+						nudgeId: "bora",
 					},
 				}),
 			),

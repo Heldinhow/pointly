@@ -97,6 +97,21 @@ export type ThrowProjectilePayload = z.infer<
 >;
 
 /**
+ * Cutucadas (issue #172): 4 mensagens fixas, ids estáveis. Sem texto livre
+ * (sem moderação) — o client mapeia id → label/emoji.
+ */
+export const NudgeIdSchema = z.enum(["bora", "cafe", "polemica", "confia"]);
+export type NudgeId = z.infer<typeof NudgeIdSchema>;
+
+export const SendNudgePayloadSchema = z
+	.object({
+		targetPlayerId: z.string().min(1),
+		nudgeId: NudgeIdSchema,
+	})
+	.strict();
+export type SendNudgePayload = z.infer<typeof SendNudgePayloadSchema>;
+
+/**
  * Discriminated union de todos os eventos C→S.
  * Server dispatcha por `event.type` (T17).
  */
@@ -120,6 +135,10 @@ export const ClientToServerEventSchema = z.discriminatedUnion("type", [
 	z.object({
 		type: z.literal("throw_projectile"),
 		payload: ThrowProjectilePayloadSchema,
+	}),
+	z.object({
+		type: z.literal("send_nudge"),
+		payload: SendNudgePayloadSchema,
 	}),
 ]);
 export type ClientToServerEvent = z.infer<typeof ClientToServerEventSchema>;
@@ -279,6 +298,16 @@ export const ProjectileThrownEventSchema = z
 	.strict();
 export type ProjectileThrownEvent = z.infer<typeof ProjectileThrownEventSchema>;
 
+/** `nudge_sent` — cutucada efêmera (issue #172); nunca persiste, nunca entra no room_state. */
+export const NudgeSentEventSchema = z
+	.object({
+		senderPlayerId: z.string().min(1),
+		targetPlayerId: z.string().min(1),
+		nudgeId: NudgeIdSchema,
+	})
+	.strict();
+export type NudgeSentEvent = z.infer<typeof NudgeSentEventSchema>;
+
 /**
  * Discriminated union de todos os eventos S→C.
  * Client dispatcha por `event.type` (T23).
@@ -306,6 +335,10 @@ export const ServerToClientEventSchema = z.discriminatedUnion("type", [
 	z.object({
 		type: z.literal("projectile_thrown"),
 		payload: ProjectileThrownEventSchema,
+	}),
+	z.object({
+		type: z.literal("nudge_sent"),
+		payload: NudgeSentEventSchema,
 	}),
 ]);
 export type ServerToClientEvent = z.infer<typeof ServerToClientEventSchema>;

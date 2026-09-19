@@ -2,7 +2,7 @@ import { CheckIcon, CrownIcon, UserRoundIcon } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import type { ProjectileType } from "@/lib/protocol";
+import type { NudgeId, ProjectileType } from "@/lib/protocol";
 import { ProjectileMenu } from "./projectile-menu";
 import { UnanimousCelebration } from "./unanimous-celebration";
 import "./poker-table.css";
@@ -27,6 +27,8 @@ interface PokerTableProps {
   /** > 0 dispara a celebração de Unânime (14.3); cada incremento replaya. */
   celebrateKey?: number;
   onThrowProjectile?: (targetId: string, type: ProjectileType) => void;
+  /** Cutucada no alvo (issue #172). Ausente = sem seção "Cutucar". */
+  onNudge?: (targetId: string, nudgeId: NudgeId) => void;
   projectileCooldownSecs?: number;
   children?: ReactNode;
 }
@@ -92,6 +94,7 @@ export function PokerTable({
   compact = false,
   celebrateKey = 0,
   onThrowProjectile,
+  onNudge,
   projectileCooldownSecs = 0,
   children,
 }: PokerTableProps): React.ReactElement {
@@ -154,6 +157,7 @@ export function PokerTable({
                       target={player}
                       cooldownSecs={projectileCooldownSecs}
                       onThrow={onThrowProjectile}
+                      onNudge={onNudge}
                       className="poker-seat-target"
                       align={x < 35 ? "left" : x > 65 ? "right" : "center"}
                     >

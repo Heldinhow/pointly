@@ -89,11 +89,12 @@ export class Sala {
 	private readonly disconnectedAt: Map<string, number> = new Map();
 
 	/**
-	 * Server-internal: timestamp (epoch ms) do último arremesso de cada player.
-	 * NÃO vai no wire format. Usado para validar o cooldown entre arremessos.
+	 * Server-internal: timestamp (epoch ms) e tipo da última interação
+	 * (arremesso ou cutucada — issue #172) de cada player. NÃO vai no wire
+	 * format. Usado para validar o cooldown compartilhado entre interações.
 	 */
-	private readonly lastThrownAt: Map<string, number> = new Map();
-	private readonly lastThrownType: Map<string, string> = new Map();
+	private readonly lastInteractionAt: Map<string, number> = new Map();
+	private readonly lastInteractionType: Map<string, string> = new Map();
 
 	/**
 	 * EVR-04/EVR-05: tracking primitive pra edições pós-reveal.
@@ -179,8 +180,8 @@ export class Sala {
 		if (!existed) return { promoted: null };
 		this.votes.delete(playerId);
 		this.disconnectedAt.delete(playerId);
-		this.lastThrownAt.delete(playerId);
-		this.lastThrownType.delete(playerId);
+		this.lastInteractionAt.delete(playerId);
+		this.lastInteractionType.delete(playerId);
 
 		// Host saiu e ainda há outros → promove mais antigo
 		// (espectador nunca vira host; se só restarem espectadores, hostId zera).
@@ -440,19 +441,57 @@ export class Sala {
 	 * (8 segundos para a cadeirada épica).
 	 */
 	throwProjectile(senderId: string, now: number = Date.now(), projectileType = "paper_ball"): void {
-		const current = projectileType === "chair" ? PROJECTILE_CHAIR_COOLDOWN_MS : PROJECTILE_COOLDOWN_MS;
-		const lastType = this.lastThrownType.get(senderId);
-		const lastCooldown = lastType === "chair" ? PROJECTILE_CHAIR_COOLDOWN_MS : PROJECTILE_COOLDOWN_MS;
-		const cooldown = Math.max(current, lastCooldown);
-		const last = this.lastThrownAt.get(senderId);
+		const cooldown = projectileType === "chair"
+			? PROJECTILE_CHAIR_COOLDOWN_MS
+			: PROJECTILE_COOLDOWN_MS;
+		this.assertCooldown(
+			senderId,
+			now,
+			cooldown,
+			projectileType,
+			"Aguarde o cooldown para arremessar novamente.",
+		);
+	}
+
+	/**
+	 * Cutucada (issue #172): registra a interação de um player. Mesmo portão
+	 * de cooldown do arremesso (roadmap: "sob o mesmo cooldown dos
+	 * projéteis") — cutucar e arremessar competem pela mesma recarga.
+	 */
+	sendNudge(senderId: string, now: number = Date.now()): void {
+		this.assertCooldown(
+			senderId,
+			now,
+			PROJECTILE_COOLDOWN_MS,
+			"nudge",
+			"Aguarde o cooldown para cutucar novamente.",
+		);
+	}
+
+	/**
+	 * Portão único de cooldown das interações (arremesso e cutucada).
+	 * A recarga efetiva é o maior valor entre a do item atual e a do último
+	 * usado — cadeirada épica segura o gate por 8s para o próximo item.
+	 * Registra a interação quando libera.
+	 */
+	private assertCooldown(
+		senderId: string,
+		now: number,
+		nextCooldownMs: number,
+		type: string,
+		message: string,
+	): void {
+		const lastType = this.lastInteractionType.get(senderId);
+		const lastCooldown = lastType === "chair"
+			? PROJECTILE_CHAIR_COOLDOWN_MS
+			: PROJECTILE_COOLDOWN_MS;
+		const cooldown = Math.max(nextCooldownMs, lastCooldown);
+		const last = this.lastInteractionAt.get(senderId);
 		if (last !== undefined && now - last < cooldown) {
-			throw new SalaError(
-				"invalid_phase",
-				"Aguarde o cooldown para arremessar novamente.",
-			);
+			throw new SalaError("invalid_phase", message);
 		}
-		this.lastThrownAt.set(senderId, now);
-		this.lastThrownType.set(senderId, projectileType);
+		this.lastInteractionAt.set(senderId, now);
+		this.lastInteractionType.set(senderId, type);
 	}
 
 	/**

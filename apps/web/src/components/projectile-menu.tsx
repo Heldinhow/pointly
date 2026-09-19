@@ -1,13 +1,16 @@
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
+import { Separator } from "@/components/ui/separator";
+import { NUDGE_CATALOG } from "@/lib/nudges";
 import { PROJECTILE_CATALOG } from "@/lib/projectiles";
-import type { ProjectileType } from "@/lib/protocol";
+import type { NudgeId, ProjectileType } from "@/lib/protocol";
 import { ProjectileIcon } from "./projectile-flight";
 import "./projectile-menu.css";
 
-export function ProjectileMenu({ target, cooldownSecs, onThrow, className, children, align = "center", side = "top" }: {
+export function ProjectileMenu({ target, cooldownSecs, onThrow, onNudge, className, children, align = "center", side = "top" }: {
 	target: { id: string; nick: string };
 	cooldownSecs: number;
 	onThrow: (targetId: string, type: ProjectileType) => void;
+	onNudge?: (targetId: string, nudgeId: NudgeId) => void;
 	className: string;
 	children: React.ReactNode;
 	align?: "left" | "center" | "right";
@@ -23,13 +26,13 @@ export function ProjectileMenu({ target, cooldownSecs, onThrow, className, child
 			<Menu modal={false}>
 				<MenuTrigger
 					className={className}
-					aria-label={`Arremessar em ${target.nick}`}
+					aria-label={`Interagir com ${target.nick}`}
 					openOnHover
 				>
 					{children}
 				</MenuTrigger>
 				<MenuPopup
-					aria-label={`Arremessar em ${target.nick}`}
+					aria-label={`Interagir com ${target.nick}`}
 					align={align === "left" ? "start" : align === "right" ? "end" : "center"}
 					side={side}
 					sideOffset={side === "top" ? 8 : 6}
@@ -53,6 +56,26 @@ export function ProjectileMenu({ target, cooldownSecs, onThrow, className, child
 							{epic ? <span className="projectile-menu-epic">épica</span> : null}
 						</MenuItem>
 					))}
+					{onNudge ? (
+						<>
+							<Separator className="projectile-menu-divider" />
+							<p className="projectile-menu-heading">Cutucar {target.nick}</p>
+							<div className="projectile-menu-nudges">
+								{NUDGE_CATALOG.map(({ id, label }) => (
+									<MenuItem
+										key={id}
+										data-testid={`nudge-${id}`}
+										aria-label={`Cutucar ${target.nick} com ${label}`}
+										disabled={cooldownSecs > 0}
+										onClick={() => onNudge(target.id, id)}
+										className="projectile-menu-item projectile-menu-item--nudge"
+									>
+										<span className="projectile-menu-label">{label}</span>
+									</MenuItem>
+								))}
+							</div>
+						</>
+					) : null}
 				</MenuPopup>
 			</Menu>
 		</div>

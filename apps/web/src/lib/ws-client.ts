@@ -3,13 +3,17 @@ import {
 	buildCastVoteMessage,
 	buildLeaveRoomMessage,
 	buildRevealVotesMessage,
+	buildSendNudgeMessage,
 	buildStartNewRoundMessage,
 	buildThrowProjectileMessage,
 	buildUpdateAvatarMessage,
 	isDeckValue,
+	isNudgeId,
 	isProjectileType,
 	parseServerEvent,
 	type HelloPayload,
+	type NudgeId,
+	type NudgeSentPayload,
 	type ProjectileThrownPayload,
 	type ProjectileType,
 	type SalaState,
@@ -22,6 +26,7 @@ export type SocketStatus = "idle" | "connecting" | "ready" | "closed";
 export interface PointlySocketEvents {
 	onRoomState?: (sala: SalaState) => void;
 	onProjectileThrown?: (event: ProjectileThrownPayload) => void;
+	onNudgeSent?: (event: NudgeSentPayload) => void;
 	onClose?: () => void;
 	onError?: (code: string, message: string) => void;
 	onReconnecting?: (attempt: number, nextInMs: number) => void;
@@ -198,6 +203,21 @@ export class PointlySocket {
 	}
 
 	/**
+	 * Envia `send_nudge { targetPlayerId, nudgeId }` (issue #172).
+	 * Cutucada efêmera: o servidor aplica o cooldown compartilhado com o
+	 * arremesso e faz broadcast `nudge_sent` — nunca persiste nem entra no
+	 * `room_state`. Retorna false sem conexão pronta, alvo vazio ou id fora
+	 * do catálogo.
+	 */
+	sendNudge(targetPlayerId: string, nudgeId: NudgeId): boolean {
+		if (typeof targetPlayerId !== "string" || targetPlayerId.length === 0) {
+			return false;
+		}
+		if (!isNudgeId(nudgeId)) return false;
+		return this.send(buildSendNudgeMessage(targetPlayerId, nudgeId));
+	}
+
+	/**
 	 * Tenta reconectar agora (botão "Tentar agora", `online`, `pageshow`).
 	 * Sem credenciais guardadas ou já `ready`/`connecting` é no-op.
 	 */
@@ -345,6 +365,12 @@ export class PointlySocket {
 			case "projectile_thrown": {
 				if (this.status === "ready") {
 					this.events.onProjectileThrown?.(event.payload);
+				}
+				return;
+			}
+			case "nudge_sent": {
+				if (this.status === "ready") {
+					this.events.onNudgeSent?.(event.payload);
 				}
 				return;
 			}

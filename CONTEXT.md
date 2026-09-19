@@ -69,8 +69,12 @@ O resultado físico/visual de um Arremesso determinado pelo servidor (ex: acerto
 _Avoid_: resultado, fim
 
 **Cooldown**:
-O intervalo obrigatório entre Arremessos do mesmo Player. SSOT no código: `PROJECTILE_COOLDOWN_MS` (1s) e `PROJECTILE_CHAIR_COOLDOWN_MS` (8s, cadeirada épica) em `packages/shared/src/compute/projectile.ts`.
+O intervalo obrigatório entre Arremessos e Cutucadas do mesmo Player. SSOT no código: `PROJECTILE_COOLDOWN_MS` (1s) e `PROJECTILE_CHAIR_COOLDOWN_MS` (8s, cadeirada épica) em `packages/shared/src/compute/projectile.ts`.
 _Avoid_: tempo de recarga, espera, delay
+
+**Cutucada**:
+Mensagem pré-pronta e efêmera — "Bora!", "☕ Café?", "Polêmica!", "Confia" — exibida por ~2s como balão sobre o Assento do alvo. Sem texto livre (sem moderação), qualquer participante conectado pode cutucar qualquer outro menos a si mesmo, inclusive espectadores, em qualquer fase. Compartilha o Cooldown do Arremesso e nunca persiste: some sozinha e não volta no recarregamento.
+_Avoid_: reação, poke, nudge, aviso
 
 **Avatar**:
 Imagem do Player exibida no círculo do Assento na mesa, normalizada para 128x128 JPEG. Sem imagem, exibe as iniciais do Apelido.

@@ -207,6 +207,49 @@ describe("WSService — onMessage (hello + cast_vote + reveal + new_round)", () 
 		});
 	});
 
+	test("send_nudge → nudge_sent broadcast para a sala, sem room_state novo", () => {
+		service.onOpen(ws);
+		service.onMessage(
+			ws,
+			JSON.stringify({
+				type: "hello",
+				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+			}),
+		);
+		const guest = new MockBunWS();
+		service.onOpen(guest);
+		service.onMessage(
+			guest,
+			JSON.stringify({
+				type: "hello",
+				payload: {
+					uuid: "00000000-0000-4000-8000-000000000002",
+					nick: "Beto",
+					code: ws.data.code,
+				},
+			}),
+		);
+		const roomStatesBefore = guest.eventsOfType("room_state").length;
+
+		service.onMessage(
+			ws,
+			JSON.stringify({
+				type: "send_nudge",
+				payload: { targetPlayerId: guest.data.playerId, nudgeId: "bora" },
+			}),
+		);
+
+		const nudges = guest.eventsOfType("nudge_sent");
+		expect(nudges).toHaveLength(1);
+		expect(nudges[0]?.payload).toMatchObject({
+			senderPlayerId: ws.data.playerId,
+			targetPlayerId: guest.data.playerId,
+			nudgeId: "bora",
+		});
+		// Efêmera: não persiste, não mexe no room_state.
+		expect(guest.eventsOfType("room_state")).toHaveLength(roomStatesBefore);
+	});
+
 	test("reveal_votes → votes_revealed broadcast", () => {
 		service.onOpen(ws);
 		service.onMessage(

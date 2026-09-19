@@ -28,6 +28,11 @@ class FakeSocket {
 			projectileType: string;
 			outcome: "hit" | "dodge" | "deflect";
 		}) => void;
+		onNudgeSent?: (event: {
+			senderPlayerId: string;
+			targetPlayerId: string;
+			nudgeId: string;
+		}) => void;
 	} = {};
 	closed = false;
 	sentVotes: string[] = [];
@@ -35,6 +40,7 @@ class FakeSocket {
 	sentNewRounds = 0;
 	sentProjectiles: Array<{ targetPlayerId: string; projectileType: string }> =
 		[];
+	sentNudges: Array<{ targetPlayerId: string; nudgeId: string }> = [];
 
 	setHandlers(handlers: {
 		onRoomState?: RoomHandler;
@@ -48,6 +54,11 @@ class FakeSocket {
 			targetPlayerId: string;
 			projectileType: string;
 			outcome: "hit" | "dodge" | "deflect";
+		}) => void;
+		onNudgeSent?: (event: {
+			senderPlayerId: string;
+			targetPlayerId: string;
+			nudgeId: string;
 		}) => void;
 	}): void {
 		this.handlers = { ...this.handlers, ...handlers };
@@ -80,6 +91,11 @@ class FakeSocket {
 		return true;
 	}
 
+	sendNudge(targetPlayerId: string, nudgeId: string): boolean {
+		this.sentNudges.push({ targetPlayerId, nudgeId });
+		return true;
+	}
+
 	sentAvatars: Array<string | null> = [];
 
 	updateAvatar(avatar: string | null): boolean {
@@ -102,6 +118,14 @@ class FakeSocket {
 		outcome: "hit" | "dodge" | "deflect";
 	}): void {
 		this.handlers.onProjectileThrown?.(event);
+	}
+
+	emitNudge(event: {
+		senderPlayerId: string;
+		targetPlayerId: string;
+		nudgeId: string;
+	}): void {
+		this.handlers.onNudgeSent?.(event);
 	}
 }
 
@@ -168,7 +192,7 @@ function renderArena(route = "/s/AB12"): void {
 }
 
 async function openProjectileMenu(nick = "Beto"): Promise<void> {
-	fireEvent.click(screen.getByRole("button", { name: `Arremessar em ${nick}` }));
+	fireEvent.click(screen.getByRole("button", { name: `Interagir com ${nick}` }));
 	await screen.findByRole("menu");
 }
 
@@ -1499,7 +1523,7 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		renderArena();
 		await openProjectileMenu();
 
-		fireEvent.mouseLeave(screen.getByRole("button", { name: "Arremessar em Beto" }), {
+		fireEvent.mouseLeave(screen.getByRole("button", { name: "Interagir com Beto" }), {
 			relatedTarget: document.body,
 		});
 		expect(screen.getByRole("menu")).toBeTruthy();
@@ -1513,7 +1537,7 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 	test("Escape fecha o menu de projéteis e devolve o foco ao alvo", async () => {
 		const { socket } = revealedSalaWithPair();
 		renderArena();
-		const trigger = screen.getByRole("button", { name: "Arremessar em Beto" });
+		const trigger = screen.getByRole("button", { name: "Interagir com Beto" });
 		act(() => trigger.focus());
 		await openProjectileMenu();
 
@@ -1663,6 +1687,112 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 	});
 });
 
+describe("ArenaPage (issue #172 — Cutucadas)", () => {
+	function nudgeSalaWithPair(): {
+		socket: FakeSocket;
+		ana: Player;
+		beto: Player;
+	} {
+		const socket = new FakeSocket();
+		const ana = player(
+			{ id: "p_ana", nick: "Ana", role: "host", hasVoted: true, value: "5" },
+			0,
+		);
+		const beto = player(
+			{ id: "p_beto", nick: "Beto", hasVoted: true, value: "8" },
+			1,
+		);
+		seed({
+			sala: sala({
+				players: [ana, beto],
+				phase: "revealed",
+				votes: { p_ana: "5", p_beto: "8" },
+			}),
+			playerId: ana.id,
+			socket,
+			nick: "Ana",
+		});
+		return { socket, ana, beto };
+	}
+
+	test("menu do alvo lista as 4 cutucadas e envia ao clicar", async () => {
+		const { socket, beto } = nudgeSalaWithPair();
+		renderArena();
+		await openProjectileMenu();
+
+		for (const id of ["bora", "cafe", "polemica", "confia"]) {
+			expect(screen.getByTestId(`nudge-${id}`)).toBeTruthy();
+		}
+		expect(screen.getByRole("menu").textContent).toContain("Cutucar Beto");
+
+		fireEvent.click(screen.getByTestId("nudge-bora"));
+		expect(socket.sentNudges).toEqual([
+			{ targetPlayerId: beto.id, nudgeId: "bora" },
+		]);
+		expect(socket.sentProjectiles).toEqual([]);
+	});
+
+	test("broadcast desenha o balão sobre o alvo e ele some sozinho", async () => {
+		const { socket, ana, beto } = nudgeSalaWithPair();
+		renderArena();
+
+		await act(async () => {
+			socket.emitNudge({
+				senderPlayerId: beto.id,
+				targetPlayerId: ana.id,
+				nudgeId: "cafe",
+			});
+		});
+
+		const balloon = await screen.findByTestId("nudge-balloon");
+		expect(balloon.textContent).toContain("☕ Café?");
+		expect(balloon.getAttribute("data-target-player")).toBe(ana.id);
+		// Efêmera: some sozinha, sem feed nem persistência.
+		await waitFor(
+			() => expect(screen.queryByTestId("nudge-balloon")).toBeNull(),
+			{ timeout: 2600 },
+		);
+	});
+
+	test("cooldown compartilhado bloqueia arremesso logo após a cutucada", async () => {
+		const { socket } = nudgeSalaWithPair();
+		renderArena();
+		await openProjectileMenu();
+		fireEvent.click(screen.getByTestId("nudge-confia"));
+		expect(socket.sentNudges).toHaveLength(1);
+		await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+
+		await openProjectileMenu();
+		expect(
+			screen.getByTestId("projectile-rock").getAttribute("aria-disabled"),
+		).toBe("true");
+		expect(
+			screen.getByTestId("nudge-cafe").getAttribute("aria-disabled"),
+		).toBe("true");
+		fireEvent.click(screen.getByTestId("nudge-cafe"));
+		expect(socket.sentNudges).toHaveLength(1);
+		expect(socket.sentProjectiles).toHaveLength(0);
+	});
+
+	test("erro de cooldown de cutucada vira feedback sem quebrar", async () => {
+		const { socket } = nudgeSalaWithPair();
+		renderArena();
+
+		await act(async () => {
+			socket.emitError(
+				"invalid_phase",
+				"Aguarde o cooldown para cutucar novamente.",
+			);
+		});
+
+		expect(await screen.findByTestId("projectile-error")).toBeTruthy();
+		expect(screen.getByTestId("projectile-error").textContent).toMatch(
+			/cutucar/i,
+		);
+		expect(screen.getByTestId("deck")).toBeTruthy();
+	});
+});
+
 describe("ArenaPage (issue #158 — polimento e auditoria)", () => {
 	function pairSala(phase: "voting" | "revealed"): FakeSocket {
 		const socket = new FakeSocket();
@@ -1729,17 +1859,18 @@ describe("ArenaPage (issue #158 — polimento e auditoria)", () => {
 		});
 		renderArena();
 
-		expect(screen.queryByRole("button", { name: "Arremessar em Ana" })).toBeNull();
-		const trigger = screen.getByRole("button", { name: "Arremessar em Beto" });
+		expect(screen.queryByRole("button", { name: "Interagir com Ana" })).toBeNull();
+		const trigger = screen.getByRole("button", { name: "Interagir com Beto" });
 		expect(trigger.getAttribute("aria-haspopup")).toBe("menu");
 		expect(trigger.getAttribute("aria-expanded")).toBe("false");
 		await openProjectileMenu();
-		expect(screen.getAllByRole("menuitem")).toHaveLength(6);
+		// 6 projéteis + 4 cutucadas (issue #172) no mesmo menu do alvo.
+		expect(screen.getAllByRole("menuitem")).toHaveLength(10);
 		// Typeahead do menu não pode disparar atalhos de rodada.
 		fireEvent.keyDown(screen.getByRole("menu"), { key: "n" });
 		expect(screen.getByTestId("new-round-button").getAttribute("data-confirming")).toBe("false");
 		act(() => socket.emitRoomState(sala({ players: [ana, { ...beto, status: "disconnected" }], phase: "revealed" })));
-		expect(screen.queryByRole("button", { name: "Arremessar em Beto" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Interagir com Beto" })).toBeNull();
 		expect(screen.queryByRole("menu")).toBeNull();
 	});
 });

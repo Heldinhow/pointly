@@ -17,6 +17,7 @@ import {
 	ClientToServerEventSchema,
 	ServerToClientEventSchema,
 	type ClientToServerEvent,
+	type SendNudgePayload,
 	type ServerToClientEvent,
 	type SalaState,
 	type ThrowProjectilePayload,
@@ -28,6 +29,7 @@ import type { Sala } from "./sala";
 import { handleCastVote } from "./handlers/cast-vote";
 import { handleHello } from "./handlers/hello";
 import { handleRevealVotes } from "./handlers/reveal-votes";
+import { handleSendNudge } from "./handlers/send-nudge";
 import { handleStartNewRound } from "./handlers/start-new-round";
 import { handleThrowProjectile } from "./handlers/throw-projectile";
 import { handleUpdateAvatar } from "./handlers/update-avatar";
@@ -256,6 +258,8 @@ export class WSService {
 				return this.handlePingEvent(ws);
 			case "throw_projectile":
 				return this.handleThrowProjectileEvent(ws, event.payload);
+			case "send_nudge":
+				return this.handleSendNudgeEvent(ws, event.payload);
 			case "update_avatar":
 				return this.handleUpdateAvatarEvent(ws, event.payload);
 		}
@@ -421,6 +425,29 @@ export class WSService {
 				targetPlayerId: payload.targetPlayerId,
 				projectileType: payload.projectileType,
 				outcome: outcome.outcome,
+			},
+		});
+	}
+
+	/**
+	 * `send_nudge` (issue #172): broadcast efêmero `nudge_sent`, sem
+	 * `room_state` e sem persistência — quem não estava conectado não vê.
+	 */
+	private handleSendNudgeEvent(ws: BunWS, payload: SendNudgePayload): void {
+		const playerId = this.requireWsPlayer(ws);
+		if (!playerId) return;
+		const outcome = handleSendNudge(this.hub, playerId, payload);
+		if (!outcome.ok) {
+			this.sendError(ws, outcome.code, outcome.message);
+			return;
+		}
+		const code = ws.data.code!;
+		this.broadcast(code, {
+			type: "nudge_sent",
+			payload: {
+				senderPlayerId: playerId,
+				targetPlayerId: payload.targetPlayerId,
+				nudgeId: payload.nudgeId,
 			},
 		});
 	}

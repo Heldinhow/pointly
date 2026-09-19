@@ -24,6 +24,7 @@ import { AvatarPicker } from "@/components/avatar-picker";
 import { PokerTable } from "@/components/poker-table";
 import { ProjectileFlight, type ProjectileFlightEvent } from "@/components/projectile-flight";
 import { ProjectileMenu } from "@/components/projectile-menu";
+import { NudgeBalloon, type NudgeBalloonEvent } from "@/components/nudge-balloon";
 import "./arena.css";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -38,7 +39,7 @@ import {
   voteSelectionText,
 } from "@/lib/stats";
 import type { Phase, Player, Vote } from "@/lib/protocol";
-import type { ProjectileType } from "@/lib/protocol";
+import type { NudgeId, ProjectileType } from "@/lib/protocol";
 import { useSession } from "@/store/session";
 import { JoinError, friendlyJoinMessage } from "@/lib/errors";
 import { SOCKET_ERROR_COPY } from "@/lib/forms";
@@ -107,9 +108,9 @@ function isTypingTarget(event: KeyboardEvent): boolean {
  * Envio genérico pelo socket da sessão — SSOT do guard + try/catch.
  * Antes 3x `sendReveal/NewRound/ProjectileThroughSession` + 1x leave inline.
  */
-function sendThroughSession<K extends "sendRevealVotes" | "sendStartNewRound" | "sendThrowProjectile" | "sendLeaveRoom">(
+function sendThroughSession<K extends "sendRevealVotes" | "sendStartNewRound" | "sendThrowProjectile" | "sendNudge" | "sendLeaveRoom">(
   method: K,
-  ...args: K extends "sendThrowProjectile" ? [string, ProjectileType] : []
+  ...args: K extends "sendThrowProjectile" ? [string, ProjectileType] : K extends "sendNudge" ? [string, NudgeId] : []
 ): boolean {
   const socket = useSession.getState().socket as unknown as Record<
     K,
@@ -140,6 +141,14 @@ function sendProjectileThroughSession(
   projectileType: ProjectileType,
 ): boolean {
   return sendThroughSession("sendThrowProjectile", targetPlayerId, projectileType);
+}
+
+/** Envia `send_nudge` pelo socket da sessão em qualquer fase (issue #172). */
+function sendNudgeThroughSession(
+  targetPlayerId: string,
+  nudgeId: NudgeId,
+): boolean {
+  return sendThroughSession("sendNudge", targetPlayerId, nudgeId);
 }
 
 /**
@@ -198,6 +207,13 @@ export function ArenaPage(): React.ReactElement {
   const [projectileFlights, setProjectileFlights] = useState<ProjectileFlightEvent[]>([]);
   const removeProjectileFlight = useCallback((key: number) => {
     setProjectileFlights((flights) => flights.filter((flight) => flight.key !== key));
+  }, []);
+  // Cutucadas efêmeras (issue #172): balões sobre o alvo, sem feed e sem
+  // persistência — somem sozinhos via `onDone` do próprio balão.
+  const [nudgeBalloons, setNudgeBalloons] = useState<NudgeBalloonEvent[]>([]);
+  const nudgeKeyRef = useRef(0);
+  const removeNudgeBalloon = useCallback((key: number) => {
+    setNudgeBalloons((balloons) => balloons.filter((balloon) => balloon.key !== key));
   }, []);
   // Ticket 09: F5 reconecta com o mesmo UUID a partir da sessão
   // persistida (sem duplicar o Player · o servidor reidrata voto,
@@ -271,13 +287,26 @@ export function ArenaPage(): React.ReactElement {
           setNowMs(receivedAt);
         }
       },
+      onNudgeSent: (event) => {
+        // Balão efêmero sobre o alvo — sem feed, sem persistência.
+        nudgeKeyRef.current += 1;
+        const key = nudgeKeyRef.current;
+        const receivedAt = Date.now();
+        setNudgeBalloons((prev) => [...prev, { ...event, key, receivedAt }].slice(-8));
+        if (event.senderPlayerId === useSession.getState().playerId) {
+          // Mesmo portão do projétil: o gate local também recarrega.
+          setProjectileError(null);
+          setProjectileCooldownUntil(receivedAt + PROJECTILE_COOLDOWN_MS);
+          setNowMs(receivedAt);
+        }
+      },
       onError: (_code, message) => {
         const text = message || "Não foi possível completar a ação.";
-        // Erros de projétil (cooldown/arremesso) vão para o alerta
-        // de interações sem quebrar a sala (issue #157).
+        // Erros de projétil/cutucada (cooldown/interação) vão para o alerta
+        // de interações sem quebrar a sala (issues #157, #172).
         if (
-          /projectile|throw|cooldown|arremess|recarreg/i.test(text) ||
-          /projectile|throw|cooldown/i.test(_code)
+          /projectile|throw|cooldown|arremess|recarreg|cutuc|nudge/i.test(text) ||
+          /projectile|throw|cooldown|nudge/i.test(_code)
         ) {
           setProjectileError(text);
         } else if (
@@ -732,6 +761,33 @@ export function ArenaPage(): React.ReactElement {
     setNowMs(Date.now());
   }
 
+  /**
+   * Cutucada (issue #172): mesma mecânica do arremesso — gate local de
+   * cooldown (o servidor é o SSOT), alvo precisa estar conectado, e o
+   * balão chega pelo broadcast `nudge_sent`.
+   */
+  function handleNudge(targetId: string, nudgeId: NudgeId): void {
+    const remaining = projectileCooldownUntil - Date.now();
+    if (remaining > 0) {
+      setProjectileError(
+        `Recarregando · aguarde ${Math.ceil(remaining / 1000)}s para cutucar de novo.`,
+      );
+      return;
+    }
+    if (connectionLost || reconnecting || targetId === playerId || !players.some((p) => p.id === targetId && p.status === "connected")) {
+      setProjectileError("Cutucada indisponível: escolha outro participante conectado.");
+      return;
+    }
+    setProjectileError(null);
+    const sent = sendNudgeThroughSession(targetId, nudgeId);
+    if (!sent) {
+      setProjectileError(SOCKET_ERROR_COPY.interact);
+      return;
+    }
+    setProjectileCooldownUntil(Date.now() + PROJECTILE_COOLDOWN_MS);
+    setNowMs(Date.now());
+  }
+
   async function handleCopy(): Promise<void> {
     setCopyError(false);
     try {
@@ -854,6 +910,11 @@ export function ArenaPage(): React.ReactElement {
             <ProjectileFlight key={event.key} event={event} arenaRef={arenaRef} onDone={removeProjectileFlight} />
           ))}
         </div>
+        <div className="nudge-layer">
+          {nudgeBalloons.map((event) => (
+            <NudgeBalloon key={event.key} event={event} arenaRef={arenaRef} onDone={removeNudgeBalloon} />
+          ))}
+        </div>
         <section
           className="arena-play-area"
           aria-label="Mesa de planning poker"
@@ -869,6 +930,7 @@ export function ArenaPage(): React.ReactElement {
             revealed={isRevealed}
             celebrateKey={unanimousCelebrationKey}
             onThrowProjectile={connectionLost || reconnecting ? undefined : handleThrowProjectile}
+            onNudge={connectionLost || reconnecting ? undefined : handleNudge}
             projectileCooldownSecs={projectileCooldownSecs}
           >
             <Card className="arena-reveal">
@@ -1059,7 +1121,7 @@ export function ArenaPage(): React.ReactElement {
                       <span key={p.id}>
                         {index > 0 ? ", " : ""}
                         {p.id !== playerId && !connectionLost && !reconnecting ? (
-                          <ProjectileMenu target={p} cooldownSecs={projectileCooldownSecs} onThrow={handleThrowProjectile} className="arena-spectator-target" align="left" side="bottom">
+                          <ProjectileMenu target={p} cooldownSecs={projectileCooldownSecs} onThrow={handleThrowProjectile} onNudge={handleNudge} className="arena-spectator-target" align="left" side="bottom">
                             <span className="arena-spectator-anchor" data-projectile-player={p.id}><SpectatorAvatar player={p} />{p.nick}</span>
                           </ProjectileMenu>
                         ) : <span className="arena-spectator-anchor" data-projectile-player={p.id}><SpectatorAvatar player={p} />{p.nick}</span>}
