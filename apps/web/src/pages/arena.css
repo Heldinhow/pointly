@@ -323,8 +323,7 @@ button.arena-spectator-target:focus-visible {
 img.arena-spectator-avatar {
   object-fit: cover;
 }
-.arena-results,
-.arena-next-round {
+.arena-results {
   padding-block: 18px;
   border-top: 1px solid var(--border) !important;
 }
@@ -337,15 +336,6 @@ img.arena-spectator-avatar {
 }
 .arena-results [data-testid="stats-no-numerics"] {
   font-size: 14px;
-}
-.arena-next-round [data-slot="card-panel"] > div > span {
-  font-size: 12px;
-  color: var(--muted-foreground);
-}
-.arena-next-round button {
-  width: 100%;
-  font-size: 14px;
-  height: 38px;
 }
 @media (max-width: 1050px) {
   .arena-workspace {
@@ -423,7 +413,10 @@ img.arena-spectator-avatar {
   .arena-invite input {
     font-size: 16px;
   }
-  .arena-reveal [data-slot="card-panel"] > div > span,
+  .arena-reveal
+    [data-slot="card-panel"]
+    > div
+    > span:not([data-testid="new-round-hint"]),
   .arena-table-note {
     display: none;
   }

@@ -868,45 +868,85 @@ export function ArenaPage(): React.ReactElement {
                         : "Aguardando o primeiro voto. Escolha uma carta para começar."}
                 </CardDescription>
               </CardHeader>
-              {!isRevealed || revealError ? (
-                <CardPanel className="flex flex-col gap-3">
-                  {!isRevealed && (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Button
-                        type="button"
-                        data-testid="reveal-button"
-                        disabled={!canReveal}
-                        onClick={handleReveal}
-                        aria-keyshortcuts="r"
-                        aria-label={
-                          canReveal
-                            ? "Revelar votos (atalho R)"
-                            : "Aguardando votos para revelar"
-                        }
-                        title={canReveal ? "Atalho: R" : undefined}
-                      >
-                        <EyeIcon aria-hidden="true" />
-                        Revelar votos
-                      </Button>
-                      <span className="text-xs text-muted-foreground">
-                        <kbd className="rounded border px-1 font-mono">R</kbd>{" "}
-                        revela
-                        {canReveal
-                          ? " · vai à discussão."
-                          : " · disponível após o primeiro voto."}
-                      </span>
-                    </div>
-                  )}
-                  {revealError ? (
-                    <Alert variant="error">
-                      <AlertTitle>Não foi possível revelar</AlertTitle>
-                      <AlertDescription data-testid="reveal-error">
-                        {revealError}
-                      </AlertDescription>
-                    </Alert>
-                  ) : null}
-                </CardPanel>
-              ) : null}
+              <CardPanel className="flex flex-col gap-3">
+                {!isRevealed && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      data-testid="reveal-button"
+                      disabled={!canReveal}
+                      onClick={handleReveal}
+                      aria-keyshortcuts="r"
+                      aria-label={
+                        canReveal
+                          ? "Revelar votos (atalho R)"
+                          : "Aguardando votos para revelar"
+                      }
+                      title={canReveal ? "Atalho: R" : undefined}
+                    >
+                      <EyeIcon aria-hidden="true" />
+                      Revelar votos
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      <kbd className="rounded border px-1 font-mono">R</kbd>{" "}
+                      revela
+                      {canReveal
+                        ? " · vai à discussão."
+                        : " · disponível após o primeiro voto."}
+                    </span>
+                  </div>
+                )}
+                {isRevealed && (
+                  <div className="flex flex-col items-center gap-2">
+                    <Button
+                      type="button"
+                      data-testid="new-round-button"
+                      data-confirming={confirmingNewRound ? "true" : "false"}
+                      variant={
+                        confirmingNewRound ? "destructive-outline" : "default"
+                      }
+                      onClick={handleNewRoundRequest}
+                      aria-keyshortcuts="n"
+                      aria-label={
+                        confirmingNewRound
+                          ? "Confirmar nova rodada (atalho N)"
+                          : "Nova rodada (atalho N, exige confirmação)"
+                      }
+                      title="Atalho: N (duas vezes)"
+                    >
+                      <RotateCcwIcon aria-hidden="true" />
+                      {confirmingNewRound
+                        ? "Confirmar nova rodada"
+                        : "Nova rodada"}
+                    </Button>
+                    <span
+                      data-testid="new-round-hint"
+                      aria-live="polite"
+                      className="text-xs text-muted-foreground"
+                    >
+                      {confirmingNewRound
+                        ? "Ative de novo para confirmar e limpar os votos. A confirmação expira em 5 segundos."
+                        : "Prontos para a próxima estimativa? Os votos serão limpos após sua confirmação."}
+                    </span>
+                  </div>
+                )}
+                {revealError ? (
+                  <Alert variant="error">
+                    <AlertTitle>Não foi possível revelar</AlertTitle>
+                    <AlertDescription data-testid="reveal-error">
+                      {revealError}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+                {newRoundError ? (
+                  <Alert variant="error">
+                    <AlertTitle>Não foi possível abrir nova rodada</AlertTitle>
+                    <AlertDescription data-testid="new-round-error">
+                      {newRoundError}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+              </CardPanel>
             </Card>
           </PokerTable>
           <p className="arena-projectile-hint" data-testid="projectile-hint">
@@ -1180,59 +1220,6 @@ export function ArenaPage(): React.ReactElement {
                     </p>
                   ) : null}
                 </output>
-              </CardPanel>
-            </Card>
-          ) : null}
-
-          {isRevealed ? (
-            <Card className="arena-next-round">
-              <CardHeader>
-                <CardTitle className="text-base">Nova rodada</CardTitle>
-                <CardDescription
-                  data-testid="new-round-hint"
-                  aria-live="polite"
-                >
-                  {confirmingNewRound
-                    ? "Ative de novo para confirmar e limpar os votos. A confirmação expira em 5 segundos."
-                    : "Prontos para a próxima estimativa? Os votos serão limpos após sua confirmação."}
-                </CardDescription>
-              </CardHeader>
-              <CardPanel className="flex flex-col gap-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    type="button"
-                    data-testid="new-round-button"
-                    data-confirming={confirmingNewRound ? "true" : "false"}
-                    variant={confirmingNewRound ? "destructive-outline" : "default"}
-                    onClick={handleNewRoundRequest}
-                    aria-keyshortcuts="n"
-                    aria-label={
-                      confirmingNewRound
-                        ? "Confirmar nova rodada (atalho N)"
-                        : "Nova rodada (atalho N, exige confirmação)"
-                    }
-                    title="Atalho: N (duas vezes)"
-                  >
-                    <RotateCcwIcon aria-hidden="true" />
-                    {confirmingNewRound
-                      ? "Confirmar nova rodada"
-                      : "Nova rodada"}
-                  </Button>
-                  <span className="text-xs text-muted-foreground">
-                    <kbd className="rounded border px-1 font-mono">N</kbd>{" "}
-                    {confirmingNewRound
-                      ? "pressione de novo para confirmar."
-                      : "pede confirmação · um toque só não abre."}
-                  </span>
-                </div>
-                {newRoundError ? (
-                  <Alert variant="error">
-                    <AlertTitle>Não foi possível abrir nova rodada</AlertTitle>
-                    <AlertDescription data-testid="new-round-error">
-                      {newRoundError}
-                    </AlertDescription>
-                  </Alert>
-                ) : null}
               </CardPanel>
             </Card>
           ) : null}

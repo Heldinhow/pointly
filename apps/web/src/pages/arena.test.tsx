@@ -1081,6 +1081,26 @@ describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 		expect(screen.getByTestId("deck")).toBeTruthy();
 		expect(screen.getByTestId("stats-pill")).toBeTruthy();
 	});
+
+	test("nova rodada fica no centro da mesa e some fora do reveal", async () => {
+		const { socket } = revealedTwoPlayer();
+
+		const center = document.querySelector(".poker-center");
+		expect(center).toBeTruthy();
+		expect(center?.contains(screen.getByTestId("new-round-button"))).toBe(true);
+		expect(center?.contains(screen.getByTestId("new-round-hint"))).toBe(true);
+
+		fireEvent.click(screen.getByTestId("new-round-button"));
+		fireEvent.click(screen.getByTestId("new-round-button"));
+		await act(async () => {
+			socket.emitRoomState(sala({ phase: "voting", round: 2, votes: {} }));
+		});
+
+		expect(screen.queryByTestId("new-round-button")).toBeNull();
+		expect(document.querySelector(".poker-center")?.textContent).toMatch(
+			/Qual é a sua estimativa\?/,
+		);
+	});
 });
 
 describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {
