@@ -1,6 +1,7 @@
 import {
   CheckIcon,
   CopyIcon,
+  DicesIcon,
   EyeIcon,
   EyeOffIcon,
   LogOutIcon,
@@ -32,6 +33,8 @@ import {
   formatMean,
   formatMedian,
   formatRange,
+  pickJustifySeat,
+  voteToNumber,
 } from "@/lib/deck";
 import {
   hasAnyVotes,
@@ -657,6 +660,23 @@ export function ArenaPage(): React.ReactElement {
   const isReadyToReveal = sala.phase === "revealable";
   const isRevealed = sala.phase === "revealed";
 
+  // Dado da mesa (14.6): pós-reveal divergente, o sorteio determinístico
+  // aponta um assento para justificar primeiro. Derivado do snapshot —
+  // mesmo assento em todos os clientes, sem servidor e sem replay no
+  // reload; nova Rodada re-sorteia. Pool: assentos com voto numérico.
+  const numericSeatIndexes = [...bySeat.values()]
+    .filter((p) => {
+      const vote = sala.votes?.[p.id];
+      return vote != null && voteToNumber(vote) !== null;
+    })
+    .map((p) => p.seatIndex);
+  const justifySeatIndex =
+    isRevealed && consensusSignal(revealedVotes) === "divergent"
+      ? pickJustifySeat(sala.code, sala.round, numericSeatIndexes)
+      : null;
+  const justifyPlayer =
+    justifySeatIndex === null ? null : (seats[justifySeatIndex] ?? null);
+
   function handleReveal(): void {
     if (!canReveal) return;
     setRevealError(null);
@@ -929,6 +949,7 @@ export function ArenaPage(): React.ReactElement {
             hostId={sala.hostId}
             revealed={isRevealed}
             celebrateKey={unanimousCelebrationKey}
+            justifySeatIndex={justifySeatIndex}
             onThrowProjectile={connectionLost || reconnecting ? undefined : handleThrowProjectile}
             onNudge={connectionLost || reconnecting ? undefined : handleNudge}
             projectileCooldownSecs={projectileCooldownSecs}
@@ -1304,6 +1325,19 @@ export function ArenaPage(): React.ReactElement {
                     </p>
                   ) : null}
                 </output>
+                {justifyPlayer ? (
+                  <p
+                    role="status"
+                    data-testid="justify-line"
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground"
+                  >
+                    <DicesIcon aria-hidden="true" className="size-4 shrink-0" />
+                    Justifica primeiro:{" "}
+                    <strong className="font-semibold text-foreground">
+                      {justifyPlayer.nick}
+                    </strong>
+                  </p>
+                ) : null}
               </CardPanel>
             </Card>
           ) : null}

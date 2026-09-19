@@ -168,6 +168,27 @@ button.poker-seat-target[aria-expanded="true"] .poker-avatar {
   width: 10px;
   height: 10px;
 }
+.poker-justify {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--warning-foreground);
+  background: color-mix(in srgb, var(--warning) 14%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--warning) 45%, var(--border));
+  border-radius: 999px;
+  padding: 1px 7px;
+  margin-top: 4px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.poker-justify svg {
+  width: 10px;
+  height: 10px;
+}
 .poker-seat--self .poker-name {
   border-color: var(--primary);
 }

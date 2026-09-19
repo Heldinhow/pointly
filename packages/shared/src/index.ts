@@ -26,6 +26,7 @@ export * from "./schemas/events";
 
 // Compute (pure functions)
 export * from "./compute/consensus";
+export * from "./compute/justify";
 export * from "./compute/projectile";
 
 // Utils (helpers)

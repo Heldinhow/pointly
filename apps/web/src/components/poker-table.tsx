@@ -1,4 +1,4 @@
-import { CheckIcon, CrownIcon, UserRoundIcon } from "lucide-react";
+import { CheckIcon, CrownIcon, DicesIcon, UserRoundIcon } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,8 @@ interface PokerTableProps {
   compact?: boolean;
   /** > 0 dispara a celebração de Unânime (14.3); cada incremento replaya. */
   celebrateKey?: number;
+  /** Assento sorteado pelo Dado da mesa (14.6); `null` = nenhum destaque. */
+  justifySeatIndex?: number | null;
   onThrowProjectile?: (targetId: string, type: ProjectileType) => void;
   /** Cutucada no alvo (issue #172). Ausente = sem seção "Cutucar". */
   onNudge?: (targetId: string, nudgeId: NudgeId) => void;
@@ -93,6 +95,7 @@ export function PokerTable({
   revealed,
   compact = false,
   celebrateKey = 0,
+  justifySeatIndex = null,
   onThrowProjectile,
   onNudge,
   projectileCooldownSecs = 0,
@@ -196,6 +199,15 @@ export function PokerTable({
                       ) : (
                         <span className="poker-card-pattern" />
                       )}
+                    </span>
+                  )}
+                  {player.seatIndex === justifySeatIndex && (
+                    <span
+                      className="poker-justify"
+                      data-testid={`seat-justify-${player.seatIndex}`}
+                    >
+                      <DicesIcon aria-hidden="true" />
+                      Justifica
                     </span>
                   )}
                 </>

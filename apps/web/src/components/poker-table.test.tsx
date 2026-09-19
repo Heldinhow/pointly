@@ -159,3 +159,34 @@ describe("PokerTable carta votada (14.2)", () => {
 		expect(reduced).toContain(".poker-played-card--dealt");
 	});
 });
+
+describe("PokerTable dado da mesa (14.6)", () => {
+	test("assento sorteado ganha a pill 'Justifica'", () => {
+		render(
+			<PokerTable
+				seats={[
+					seated({ hasVoted: true, value: "5" }),
+					seated({ id: "p_beto", nick: "Beto", seatIndex: 3, hasVoted: true, value: "8" }),
+				]}
+				playerId="p_ana"
+				revealed
+				justifySeatIndex={3}
+			/>,
+		);
+		const pill = screen.getByTestId("seat-justify-3");
+		expect(pill.textContent).toContain("Justifica");
+		expect(screen.queryByTestId("seat-justify-0")).toBeNull();
+	});
+
+	test("sem sorteio (null) nenhum assento recebe a pill", () => {
+		const { container } = render(
+			<PokerTable
+				seats={[seated({ hasVoted: true, value: "5" })]}
+				playerId="p_ana"
+				revealed
+				justifySeatIndex={null}
+			/>,
+		);
+		expect(container.querySelector(".poker-justify")).toBeNull();
+	});
+});

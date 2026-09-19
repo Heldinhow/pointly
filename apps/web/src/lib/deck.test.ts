@@ -10,6 +10,7 @@ import {
 	groupVotes,
 	isPauseVote,
 	isUnanimous,
+	pickJustifySeat,
 	voteLabel,
 	voteToNumber,
 } from "./deck";
@@ -127,5 +128,30 @@ describe("sinais de consenso (14.1 — espelho do shared)", () => {
 		expect(divergenceMagnitude(["5"])).toBe(0);
 		expect(divergenceMagnitude(["☕"])).toBeNull();
 		expect(divergenceMagnitude([])).toBeNull();
+	});
+});
+
+describe("dado da mesa (14.6 — espelho do shared)", () => {
+	const ALL_SEATS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+
+	test("vetores fixos idênticos ao shared (paridade shared ↔ web)", () => {
+		expect(pickJustifySeat("ABCD", 1, ALL_SEATS)).toBe(0);
+		expect(pickJustifySeat("ABCD", 2, ALL_SEATS)).toBe(9);
+		expect(pickJustifySeat("ABCD", 3, ALL_SEATS)).toBe(10);
+		expect(pickJustifySeat("ABCD", 1, [0, 3, 7])).toBe(0);
+	});
+
+	test("determinístico e independente da ordem do pool", () => {
+		expect(pickJustifySeat("ABCD", 1, [7, 0, 3])).toBe(
+			pickJustifySeat("ABCD", 1, [0, 3, 7]),
+		);
+		expect(pickJustifySeat("ABCD", 1, ALL_SEATS)).toBe(
+			pickJustifySeat("ABCD", 1, [...ALL_SEATS].reverse()),
+		);
+	});
+
+	test("pool vazio → null; pool unitário → o próprio assento", () => {
+		expect(pickJustifySeat("ABCD", 1, [])).toBeNull();
+		expect(pickJustifySeat("ABCD", 1, [7])).toBe(7);
 	});
 });

@@ -101,6 +101,36 @@ export function divergenceMagnitude(
 	return range === null ? null : range[1] - range[0];
 }
 
+/**
+ * Dado da mesa (14.6) — espelho de `pickJustifySeat` em
+ * `packages/shared/src/compute/justify.ts` (SSOT).
+ *
+ * Sorteia o `seatIndex` que justifica primeiro a partir da semente
+ * `code:round` e do pool de assentos (ordenado aqui dentro). Determinístico:
+ * mesmo assento em todos os clientes e após reload; muda só em nova Rodada
+ * ou se o pool mudar. `null` quando o pool está vazio.
+ */
+export function pickJustifySeat(
+	code: string,
+	round: number,
+	seatIndexes: ReadonlyArray<number>,
+): number | null {
+	if (seatIndexes.length === 0) return null;
+	const pool = [...seatIndexes].sort((a, b) => a - b);
+	const index = fnv1a(`${code}:${round}`) % pool.length;
+	return pool[index]!;
+}
+
+/** FNV-1a 32-bit — hash pequeno e estável entre clientes (espelho do shared). */
+function fnv1a(input: string): number {
+	let hash = 0x811c9dc5;
+	for (let i = 0; i < input.length; i++) {
+		hash ^= input.charCodeAt(i);
+		hash = Math.imul(hash, 0x01000193);
+	}
+	return hash >>> 0;
+}
+
 export interface VoteGroup {
 	value: Vote | string;
 	count: number;

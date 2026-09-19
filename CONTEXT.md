@@ -52,6 +52,10 @@ _Avoid_: consenso, acordo total, todos de acordo
 Rodada revelada com pelo menos dois votos numéricos e ao menos dois valores distintos. A magnitude da divergência é a distância entre o menor e o maior voto numérico; rodadas com menos de dois votos numéricos não têm sinal.
 _Avoid_: discordância, desacordo, conflito
 
+**Dado da mesa**:
+Sorteio determinístico, local e sem servidor que aponta, após um Reveal divergente, o Assento que justifica primeiro. Todos os clientes veem o mesmo Assento: a semente é o Código + número da Rodada e o pool são os Assentos com voto numérico, então o resultado só muda em nova Rodada ou se o pool mudar. Não persiste: é recomputado do snapshot a cada carregamento.
+_Avoid_: roleta, dice, aleatório
+
 **Deck**:
 Conjunto fixo de 9 cartas usadas para votar: `0, ½, 1, 2, 3, 5, 8, 13, ☕`. Sequência Fibonacci + pausa explícita.
 _Avoid_: baralho, cards, conjunto
