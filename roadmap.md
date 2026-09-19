@@ -11,7 +11,7 @@
 - [x] **G2 — IA/URLs/metadados** — home = marca; landings = keywords transacionais; guias informacionais; EN em `/en/guides/…` com hreflang recíproco; schema FAQPage/Article; footer com "Guias". Metadados da home já aplicados em `apps/web/src/seo/routes.ts`.
 - [x] **G3 — briefs dos 3 guias + `/guias`** (fechados no ticket). **P1 — protótipo do layout** (aprovado; protótipo em `/prototype/guia` e `/prototype/guias`).
 - [x] **T5 — landings `/planning-poker` e `/scrum-poker`** (pré-renderizadas, FAQPage espelhado, ~1k palavras). **T6 — `/guias` + 3 guias pt/EN** (no ar: hub + 3 guias pt/EN + landings EN, hreflang recíproco; revisão EN do diff antes do T4). **T7 — home EN (`/en/`)** (no ar: `/en` pré-renderizada, hreflang recíproco, JSON-LD EN, header Home→`/en`; copy EN revisável no diff antes do T4). **T8 — seleção de idioma** (no ar: switcher EN/PT no header/footer + redirect da raiz para `/en` em navegador inglês, preferência no clique).
-- [ ] **T4 — Deploy + validação** → **T2 — submit sitemap, inspeção de URL, IndexNow**.
+- [x] **T4 — Deploy + validação** (no ar; checklist de prod verde). **T2 — submit sitemap, inspeção de URL, IndexNow** (destravado; operado por você). **T1 — TXT GSC/Bing** e **T3 — 301 www→apex** ainda pendentes (usuário).
 
 ## Later (fog do mapa)
 
