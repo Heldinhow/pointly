@@ -67,3 +67,23 @@ test.each(["dodge", "deflect"] as const)("%s não produz impacto e cancela as an
   unmount();
   for (const animation of animations) expect(animation.cancel).toHaveBeenCalledTimes(1);
 });
+
+test.each(["paper_ball", "paper_plane", "rock", "brick", "tomato", "chair"] as const)("%s usa arte SVG própria no voo", (type) => {
+  const { container } = showProjectile(type);
+  expect(container.querySelector(".projectile-flight svg")).toBeTruthy();
+});
+
+test("sombra de contato acompanha o voo e as partículas saem na direção do arremesso", () => {
+  const { container } = showProjectile("rock");
+  expect(container.querySelector('[data-testid="projectile-shadow"]')).toBeTruthy();
+  expect(animations.some(({ target }) => target.classList.contains("projectile-shadow"))).toBe(true);
+  const particle = container.querySelector<HTMLElement>(".projectile-particle")!;
+  expect(particle.style.getPropertyValue("--dx")).toMatch(/px$/);
+  expect(particle.style.getPropertyValue("--dy")).toMatch(/px$/);
+});
+
+test("cadeirada dispensa sombra de contato", () => {
+  const { container } = showProjectile("chair");
+  expect(container.querySelector('[data-testid="projectile-shadow"]')).toBeNull();
+  expect(animations.some(({ target }) => target.classList.contains("projectile-shadow"))).toBe(false);
+});

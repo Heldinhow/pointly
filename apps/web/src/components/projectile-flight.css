@@ -4,8 +4,6 @@
   width: 24px;
   height: 24px;
   flex-shrink: 0;
-  font-size: 23px;
-  line-height: 1;
 }
 .projectile-icon svg {
   width: 100%;
@@ -34,7 +32,6 @@
 .projectile-flight .projectile-icon {
   width: 36px;
   height: 36px;
-  font-size: 34px;
   filter: drop-shadow(0 3px 2px rgb(20 40 30 / 25%));
 }
 .projectile-flight--chair {
@@ -59,6 +56,20 @@
   height: 100%;
 }
 
+/* Sombra de contato: ancora o arco no feltro (só projéteis comuns). */
+.projectile-shadow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 18px;
+  height: 6px;
+  margin: -3px 0 0 -9px;
+  border-radius: 9999px;
+  background: rgb(20 40 30 / 32%);
+  filter: blur(1.5px);
+  opacity: 0;
+}
+
 /* Explosão de partículas no ponto de contato (cor por tipo). */
 .projectile-impact {
   position: absolute;
@@ -76,6 +87,8 @@
   height: 44px;
   border-radius: 9999px;
   border: 3px solid var(--projectile-burst, #fca5a5);
+  /* Contorno difuso: bursts claros (papel) precisam ler sobre fundo claro. */
+  filter: drop-shadow(0 1px 1.5px rgb(20 40 30 / 45%));
   animation: projectile-ring calc(var(--impact-duration) * 0.45) ease-out both;
   animation-delay: var(--contact-delay, 800ms);
 }
@@ -87,6 +100,7 @@
   height: 8px;
   border-radius: 9999px;
   background: var(--projectile-burst, #fca5a5);
+  filter: drop-shadow(0 1px 1.5px rgb(20 40 30 / 45%));
   animation: projectile-particle var(--impact-duration) cubic-bezier(0.16, 1, 0.3, 1) both;
   animation-delay: var(--contact-delay, 800ms);
 }
@@ -171,7 +185,7 @@
 }
 @keyframes projectile-particle {
   from { transform: translate(0, 0) rotate(0) scale(1); opacity: 1; }
-  to { transform: translate(var(--dx), var(--dy)) rotate(var(--spin)) scale(0.3); opacity: 0; }
+  to { transform: translate(var(--dx, 0px), var(--dy, 0px)) rotate(var(--spin, 0deg)) scale(0.3); opacity: 0; }
 }
 @keyframes projectile-flash {
   0% { transform: scale(0.45); opacity: 0.95; }
