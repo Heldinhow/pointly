@@ -194,6 +194,10 @@
 .pt-landing__steps-action {
   margin-top: 28px;
 }
+.pt-landing__steps-action svg {
+  width: 16px;
+  height: 16px;
+}
 
 .pt-landing__points {
   display: grid;
@@ -357,7 +361,7 @@
     max-width: none;
     margin-top: 6px;
   }
-  .pt-landing__steps-action {
+  button.pt-landing__steps-action {
     width: 100%;
   }
   .pt-landing__points {

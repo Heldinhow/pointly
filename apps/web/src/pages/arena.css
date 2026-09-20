@@ -242,7 +242,7 @@
 }
 .arena-invite [data-slot="card-panel"] > div:first-child button {
   flex: 1;
-  height: 37px;
+  min-height: 44px;
 }
 .arena-invite [aria-live="polite"]:empty {
   display: none;
@@ -374,7 +374,10 @@ img.arena-spectator-avatar {
   }
   .arena-live-status > button {
     font-size: 0;
-    padding: 8px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px;
+    justify-content: center;
   }
   .arena-live-status > button svg {
     width: 18px;

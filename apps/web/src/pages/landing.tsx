@@ -81,13 +81,13 @@ export function LandingPage({
               </li>
             ))}
           </ol>
-          <Button
-            size="xl"
-            className="pt-landing__steps-action"
-            render={<Link to="/join" />}
+          {/* Ação secundária: hero e fechamento já têm o primário (1 CTA principal por tela). */}
+          <Link
+            to="/join"
+            className="pt-landing__text-link pt-landing__steps-action"
           >
             {content.ctaLabel} <ArrowRightIcon aria-hidden="true" />
-          </Button>
+          </Link>
         </section>
 
         <section
