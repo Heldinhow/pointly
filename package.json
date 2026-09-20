@@ -8,6 +8,10 @@
 		"dev:web": "bun --filter pointly-web dev",
 		"build:web": "bun --filter pointly-web build",
 		"typecheck:web": "bun --filter pointly-web typecheck",
-		"test:server": "bun --filter server test"
+		"test:server": "bun --filter server test",
+		"typecheck": "bun --filter pointly-web typecheck && bun --filter server typecheck && bun --filter @planning-poker/shared typecheck",
+		"test": "bun --filter pointly-web test && bun --filter server test && bun --filter @planning-poker/shared test",
+		"build": "bun --filter pointly-web build && bun --filter server build",
+		"verify": "bun run typecheck && bun run test && bun run build:web"
 	}
 }
