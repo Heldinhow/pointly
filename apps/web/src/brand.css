@@ -5,7 +5,7 @@
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
   /* Altura única do chrome global (header + offsets dependentes). */
-  --header-h: 60px;
+  --header-h: 48px;
 }
 body {
   margin: 0;
