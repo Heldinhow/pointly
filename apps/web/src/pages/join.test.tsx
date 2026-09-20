@@ -181,6 +181,19 @@ describe("JoinPage", () => {
 		expect(MockSocket.instances).toHaveLength(0);
 	});
 
+	test("trocar de modo limpa o erro de apelido", () => {
+		installMocks(jsonFetch(200, {}));
+		renderJoin();
+		fireEvent.click(submitButton("Criar sala"));
+		expect(
+			screen.getByText("Apelido precisa de ao menos 2 caracteres."),
+		).toBeTruthy();
+		fireEvent.click(screen.getByRole("radio", { name: "Entrar com código" }));
+		expect(
+			screen.queryByText("Apelido precisa de ao menos 2 caracteres."),
+		).toBeNull();
+	});
+
 	test("converte código digitado para maiúsculas", () => {
 		installMocks(jsonFetch(200, {}));
 		renderJoin();

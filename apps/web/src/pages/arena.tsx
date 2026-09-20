@@ -1030,6 +1030,16 @@ export function ArenaPage({
                         ? content.reveal.newRoundHintConfirm
                         : content.reveal.newRoundHint}
                     </span>
+                    {confirmingNewRound ? (
+                      <span
+                        data-testid="new-round-countdown"
+                        aria-hidden="true"
+                        className="arena-confirm-countdown"
+                        style={{
+                          animationDuration: `${NEW_ROUND_CONFIRM_TIMEOUT_MS}ms`,
+                        }}
+                      />
+                    ) : null}
                   </div>
                 )}
                 {revealError ? (
@@ -1357,8 +1367,13 @@ export function ArenaPage({
                   : content.waiting.body}
               </p>
               {solo && (
-                <p data-testid="solo-hint">
-                  {isSpectator ? content.waiting.soloSpectator : content.waiting.solo}
+                <p data-testid="solo-hint" className="arena-solo-hint">
+                  <UsersIcon aria-hidden="true" />
+                  <span>
+                    {isSpectator
+                      ? content.waiting.soloSpectator
+                      : content.waiting.solo}
+                  </span>
                 </p>
               )}
             </div>

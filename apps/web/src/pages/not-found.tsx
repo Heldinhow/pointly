@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,12 +31,35 @@ const NOT_FOUND_COPY: Record<
 	},
 };
 
+/** Extrai um código de convite da URL atual (`?code=`) ou de um segmento
+ * de sala (`/en/s/ABXD`). O Join normaliza de novo; aqui só preservamos a
+ * intenção para não mandar quem tem convite de volta à estaca zero. */
+function detectInviteCode(pathname: string, search: string): string {
+	const clean = (value: string): string =>
+		value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
+	const fromQuery = clean(new URLSearchParams(search).get("code") ?? "");
+	if (fromQuery) return fromQuery;
+	const segments = pathname.split("/").filter(Boolean);
+	const roomIndex = segments.findIndex(
+		(segment) => segment.toLowerCase() === "s",
+	);
+	if (roomIndex >= 0 && segments[roomIndex + 1]) {
+		return clean(segments[roomIndex + 1]);
+	}
+	return "";
+}
+
 export function NotFoundPage({
 	lang = "pt-BR",
 }: {
 	lang?: Lang;
 }): React.ReactElement {
 	const copy = NOT_FOUND_COPY[lang];
+	const location = useLocation();
+	const inviteCode = detectInviteCode(location.pathname, location.search);
+	const joinTo = inviteCode
+		? `/join?mode=join&code=${inviteCode}`
+		: "/join?mode=join";
 	useEffect(() => {
 		const previous = document.title;
 		document.title =
@@ -59,7 +82,7 @@ export function NotFoundPage({
 					</Button>
 					<Button
 						variant="outline"
-						render={<Link to="/join?mode=join" />}
+						render={<Link to={joinTo} />}
 					>
 						{copy.join}
 					</Button>

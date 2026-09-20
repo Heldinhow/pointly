@@ -113,6 +113,7 @@ export function JoinPage({
     setMode(next);
     setFormError(null);
     setCodeError(null);
+    setNickError(null);
   }
 
   async function handleSubmit(event: React.FormEvent): Promise<void> {

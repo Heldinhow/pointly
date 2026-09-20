@@ -323,6 +323,9 @@ describe("ArenaPage (ticket 04)", () => {
 		renderArena();
 
 		expect(screen.getByTestId("solo-hint")).toBeTruthy();
+		expect(screen.getByTestId("solo-hint").className).toMatch(
+			/arena-solo-hint/,
+		);
 		fireEvent.click(
 			screen.getByRole("button", { name: /Ocultar convite/ }),
 		);
@@ -982,6 +985,21 @@ describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 		expect(screen.getByTestId("new-round-hint").textContent).toMatch(
 			/Ative de novo para confirmar/,
 		);
+	});
+
+	test("armação mostra countdown no ritmo da janela e some ao confirmar", async () => {
+		const { socket } = revealedTwoPlayer();
+		const { NEW_ROUND_CONFIRM_TIMEOUT_MS } = await import("./arena");
+
+		expect(screen.queryByTestId("new-round-countdown")).toBeNull();
+		fireEvent.click(screen.getByTestId("new-round-button"));
+		const countdown = screen.getByTestId("new-round-countdown");
+		expect(countdown.style.animationDuration).toBe(
+			`${NEW_ROUND_CONFIRM_TIMEOUT_MS}ms`,
+		);
+		fireEvent.click(screen.getByTestId("new-round-button"));
+		expect(socket.sentNewRounds).toBe(1);
+		expect(screen.queryByTestId("new-round-countdown")).toBeNull();
 	});
 
 	test("segundo clique confirma e envia start_new_round uma vez", () => {
@@ -1772,10 +1790,12 @@ describe("ArenaPage (issue #172 — Cutucadas)", () => {
 		const balloon = await screen.findByTestId("nudge-balloon");
 		expect(balloon.textContent).toContain("☕ Café?");
 		expect(balloon.getAttribute("data-target-player")).toBe(ana.id);
-		// Efêmera: some sozinha, sem feed nem persistência.
+		// Efêmera: some sozinha, sem feed nem persistência. Margem folgada
+		// (vida de 2000ms) porque a suite roda arquivos em paralelo e
+		// timers reais atrasam sob carga.
 		await waitFor(
 			() => expect(screen.queryByTestId("nudge-balloon")).toBeNull(),
-			{ timeout: 2600 },
+			{ timeout: 5000 },
 		);
 	});
 
