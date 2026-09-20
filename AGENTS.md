@@ -9,8 +9,10 @@
 
 ## Comandos (usar os filtros existentes)
 
+- Piso de Done: `bun run verify` (= `typecheck` → `test` → `build:web`, fail fast). Guarde os exit codes como prova.
 - Web: `bun --filter pointly-web dev | build | typecheck`, `bun test src/` dentro de `apps/web`.
 - Server: `bun --filter server test`, `tsc --noEmit` dentro de `apps/server`.
+- Shared: `bun --filter @planning-poker/shared test | typecheck`.
 - Não criar scripts novos quando o filtro já resolve.
 
 ## UI — preferir coss (`https://coss.com/ui`) sempre que possível
@@ -26,11 +28,14 @@
 - Exceção: componentes de domínio assinados do Pointly (`deck`, `poker-table`, feltro/mesa) continuam custom — mas botões, inputs, alerts, loaders, empty states e feedback ao redor deles usam coss.
 - Estilizar coss com os tokens do Pointly (`DESIGN.md` + `apps/web/src/index.css`, Tailwind v4, dark-first via `html.dark`), nunca o default shadcn/coss sem customizar (cores/radii/sombras do sistema).
 
-## Validação (obrigatório em mudança de código)
+## Validação — Definition of Done (executável)
 
-- Toda mudança de código exige validação via Playwright antes de considerar pronto.
-- Se a mudança for visual (UI/frontend): validar visualmente no navegador via Playwright (abrir página, screenshot/inspeção) e confirmar contra `DESIGN.md` + `apps/web/src/index.css`.
-- Sem pular Playwright por "mudança pequena" — prova real com output da ferramenta, não narração.
+- Sempre: rode `bun run verify` (ou os filtros equivalentes) e guarde os exit codes como prova. Sem `verify` verde (ou falha pré-existente documentada), nada está "done".
+- `packages/shared`: `shared test + typecheck` suficiente (`bun --filter @planning-poker/shared test && bun --filter @planning-poker/shared typecheck`).
+- `apps/server`: `server test + typecheck`; opcional `/health` se o server estiver rodando.
+- `apps/web` não-visual: `web test + typecheck + build:web` (coberto pelo `verify`).
+- `apps/web` visual: `verify` MAIS ou (a) futuro `verify:ui`/Playwright quando restaurado (PR B) OU (b) checklist OpenChamber/browser contra `DESIGN.md` nos viewports 375/390/768/1024/1440, com screenshots salvos fora do git (path untracked, ex.: `/tmp/...`) — nunca alegar Playwright se a suite não existe nesta tree.
+- Mudanças Docker/compose: rode `docker compose build` quando Docker estiver disponível; senão, deixe para o CI (PR C) e registre como indisponível.
 
 ## Como trabalhar
 
