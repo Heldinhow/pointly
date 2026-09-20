@@ -279,6 +279,52 @@
 .arena-waiting p + p {
   margin-top: 12px;
 }
+/* Janela de confirmação da nova rodada: barra de 2px que encolhe no ritmo
+   exato de NEW_ROUND_CONFIRM_TIMEOUT_MS (duração via inline style, sem
+   duplicar o valor). Só transform; global reduced-motion já colapsa. */
+.arena-confirm-countdown {
+  align-self: stretch;
+  display: block;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--destructive);
+  transform-origin: left center;
+  animation-name: arena-confirm-shrink;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes arena-confirm-shrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+/* Convite solo como orientação, não parágrafo solto: borda cheia + fill
+   muted (sem side-stripe), ícone do sistema, texto em cor de frente. */
+.arena-waiting p.arena-solo-hint {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--secondary);
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.arena-solo-hint > svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--primary);
+}
+.arena-solo-hint > span {
+  min-width: 0;
+}
 .arena-projectile-hint {
   margin: 8px 0 12px;
   text-align: center;
