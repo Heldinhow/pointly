@@ -1790,10 +1790,12 @@ describe("ArenaPage (issue #172 — Cutucadas)", () => {
 		const balloon = await screen.findByTestId("nudge-balloon");
 		expect(balloon.textContent).toContain("☕ Café?");
 		expect(balloon.getAttribute("data-target-player")).toBe(ana.id);
-		// Efêmera: some sozinha, sem feed nem persistência.
+		// Efêmera: some sozinha, sem feed nem persistência. Margem folgada
+		// (vida de 2000ms) porque a suite roda arquivos em paralelo e
+		// timers reais atrasam sob carga.
 		await waitFor(
 			() => expect(screen.queryByTestId("nudge-balloon")).toBeNull(),
-			{ timeout: 2600 },
+			{ timeout: 5000 },
 		);
 	});
 
