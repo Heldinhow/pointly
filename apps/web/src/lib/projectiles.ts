@@ -1,3 +1,4 @@
+import type { Lang } from "./i18n";
 import type { ProjectileType } from "./protocol";
 
 /**
@@ -9,13 +10,23 @@ export const PROJECTILE_CHAIR_COOLDOWN_MS = 8000;
 
 export const PROJECTILE_CATALOG: ReadonlyArray<{
 	type: ProjectileType;
-	label: string;
+	label: Record<Lang, string>;
 	epic?: boolean;
 }> = [
-	{ type: "paper_ball", label: "Bola de papel" },
-	{ type: "paper_plane", label: "Aviãozinho de papel" },
-	{ type: "rock", label: "Pedra" },
-	{ type: "brick", label: "Tijolo" },
-	{ type: "tomato", label: "Tomate" },
-	{ type: "chair", label: "Cadeirada do Datena", epic: true },
+	{
+		type: "paper_ball",
+		label: { "pt-BR": "Bola de papel", en: "Paper ball" },
+	},
+	{
+		type: "paper_plane",
+		label: { "pt-BR": "Aviãozinho de papel", en: "Paper plane" },
+	},
+	{ type: "rock", label: { "pt-BR": "Pedra", en: "Rock" } },
+	{ type: "brick", label: { "pt-BR": "Tijolo", en: "Brick" } },
+	{ type: "tomato", label: { "pt-BR": "Tomate", en: "Tomato" } },
+	{
+		type: "chair",
+		label: { "pt-BR": "Cadeirada do Datena", en: "Flying chair" },
+		epic: true,
+	},
 ];

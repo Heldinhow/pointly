@@ -1,3 +1,4 @@
+import type { Lang } from "./i18n";
 import { safeGet, safeRemove, safeSet } from "./storage";
 
 /**
@@ -36,8 +37,21 @@ const MESSAGES: Record<AvatarErrorCode, string> = {
 	unsupported: "Este navegador não processa imagens. Segue com iniciais.",
 };
 
-export function avatarErrorMessage(code: AvatarErrorCode): string {
-	return MESSAGES[code];
+const AVATAR_MESSAGES: Record<Lang, Record<AvatarErrorCode, string>> = {
+	"pt-BR": MESSAGES,
+	en: {
+		invalid_type: "Use a png, jpeg or webp image.",
+		too_large: "The image is over 5MB. Pick a smaller one.",
+		unreadable: "Couldn't read the image. Try another one.",
+		unsupported: "This browser can't process images. Initials it is.",
+	},
+};
+
+export function avatarErrorMessage(
+	code: AvatarErrorCode,
+	lang: Lang = "pt-BR",
+): string {
+	return AVATAR_MESSAGES[lang][code];
 }
 
 interface DecodedImage {

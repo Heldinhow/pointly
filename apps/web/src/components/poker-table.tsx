@@ -205,6 +205,7 @@ export function PokerTable({
                       onNudge={onNudge}
                       className="poker-seat-target"
                       align={x < 35 ? "left" : x > 65 ? "right" : "center"}
+                      lang={lang}
                     >
                       {identity}
                     </ProjectileMenu>

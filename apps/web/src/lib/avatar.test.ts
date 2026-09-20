@@ -136,6 +136,12 @@ describe("avatarErrorMessage", () => {
 		expect(avatarErrorMessage("invalid_type")).toMatch(/png, jpeg ou webp/i);
 		expect(avatarErrorMessage("too_large")).toMatch(/5MB/);
 	});
+	test("mensagens em EN por código", () => {
+		expect(avatarErrorMessage("invalid_type", "en")).toMatch(
+			/png, jpeg or webp/i,
+		);
+		expect(avatarErrorMessage("unsupported", "en")).toMatch(/can't process/);
+	});
 });
 
 describe("loadAvatar/saveAvatar/clearAvatar", () => {

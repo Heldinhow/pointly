@@ -3,23 +3,61 @@ import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
+	Field,
+	FieldDescription,
+	FieldError,
+	FieldLabel,
 } from "@/components/ui/field";
 import {
-  AvatarError,
-  avatarErrorMessage,
-  normalizeAvatar,
+	AvatarError,
+	avatarErrorMessage,
+	normalizeAvatar,
 } from "@/lib/avatar";
+import type { Lang } from "@/lib/i18n";
 import "./avatar-picker.css";
 
 interface AvatarPickerProps {
-  value: string | null;
-  onChange: (value: string | null) => void;
-  compact?: boolean;
+	value: string | null;
+	onChange: (value: string | null) => void;
+	compact?: boolean;
+	/** Idioma dos rótulos; o default pt-BR preserva o uso antigo. */
+	lang?: Lang;
 }
+
+const AVATAR_PICKER_LABELS: Record<
+	Lang,
+	{
+		field: string;
+		previewAlt: string;
+		choose: string;
+		change: string;
+		remove: string;
+		preparing: string;
+		visible: string;
+		readError: string;
+	}
+> = {
+	"pt-BR": {
+		field: "Foto de perfil",
+		previewAlt: "Prévia do avatar",
+		choose: "Escolher foto",
+		change: "Trocar foto",
+		remove: "Remover",
+		preparing: "Preparando sua foto…",
+		visible: "Visível para todos na sala",
+		readError: "Não foi possível ler a imagem. Tente outra.",
+	},
+	en: {
+		field: "Profile picture",
+		previewAlt: "Avatar preview",
+		choose: "Choose photo",
+		change: "Change photo",
+		remove: "Remove",
+		preparing: "Preparing your photo…",
+		visible: "Visible to everyone in the room",
+		readError: "Couldn't read the image. Try another one.",
+	},
+};
 
 /**
  * Picker de avatar (AV-05): input file escondido + preview circular +
@@ -27,93 +65,95 @@ interface AvatarPickerProps {
  * (join/arena). Durante o processamento mantém o avatar anterior visível.
  */
 export function AvatarPicker({
-  value,
-  onChange,
-  compact = false,
+	value,
+	onChange,
+	compact = false,
+	lang = "pt-BR",
 }: AvatarPickerProps): React.ReactElement {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+	const labels = AVATAR_PICKER_LABELS[lang];
+	const inputRef = useRef<HTMLInputElement>(null);
+	const [error, setError] = useState<string | null>(null);
+	const [busy, setBusy] = useState(false);
 
-  async function handleFile(file: File | undefined): Promise<void> {
-    if (!file || busy) return;
-    setBusy(true);
-    try {
-      const dataUrl = await normalizeAvatar(file);
-      setError(null);
-      onChange(dataUrl);
-    } catch (err) {
-      setError(
-        err instanceof AvatarError
-          ? avatarErrorMessage(err.code)
-          : "Não foi possível ler a imagem. Tente outra.",
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
+	async function handleFile(file: File | undefined): Promise<void> {
+		if (!file || busy) return;
+		setBusy(true);
+		try {
+			const dataUrl = await normalizeAvatar(file);
+			setError(null);
+			onChange(dataUrl);
+		} catch (err) {
+			setError(
+				err instanceof AvatarError
+					? avatarErrorMessage(err.code, lang)
+					: labels.readError,
+			);
+		} finally {
+			setBusy(false);
+		}
+	}
 
-  function handleRemove(): void {
-    setError(null);
-    onChange(null);
-    if (inputRef.current) inputRef.current.value = "";
-  }
+	function handleRemove(): void {
+		setError(null);
+		onChange(null);
+		if (inputRef.current) inputRef.current.value = "";
+	}
 
-  return (
-    <Field
-      className={cn("avatar-picker", compact && "avatar-picker--compact")}
-      invalid={error !== null}
-    >
-      <FieldLabel>Foto de perfil</FieldLabel>
-      <div className="avatar-picker-row">
-        <span className="avatar-picker-preview" data-testid="avatar-preview">
-          {value ? (
-            <img src={value} alt="Prévia do avatar" />
-          ) : (
-            <UserRoundIcon aria-hidden="true" />
-          )}
-        </span>
-        <div className="avatar-picker-actions">
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            hidden
-            aria-label="Escolher foto"
-            disabled={busy}
-            onChange={(event) => {
-              void handleFile(event.target.files?.[0]);
-              event.target.value = "";
-            }}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            loading={busy}
-            onClick={() => inputRef.current?.click()}
-          >
-            <ImagePlusIcon aria-hidden="true" />
-            {value ? "Trocar foto" : "Escolher foto"}
-          </Button>
-          {value ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              disabled={busy}
-              onClick={handleRemove}
-            >
-              <Trash2Icon aria-hidden="true" />
-              Remover
-            </Button>
-          ) : null}
-        </div>
-      </div>
-      <FieldDescription aria-live="polite">
-        {busy ? "Preparando sua foto…" : "Visível para todos na sala"}
-      </FieldDescription>
-      {error ? <FieldError match={true}>{error}</FieldError> : null}
-    </Field>
-  );
+	return (
+		<Field
+			className={cn("avatar-picker", compact && "avatar-picker--compact")}
+			invalid={error !== null}
+		>
+			<FieldLabel>{labels.field}</FieldLabel>
+			<div className="avatar-picker-row">
+				<span className="avatar-picker-preview" data-testid="avatar-preview">
+					{value ? (
+						<img src={value} alt={labels.previewAlt} />
+					) : (
+						<UserRoundIcon aria-hidden="true" />
+					)}
+				</span>
+				<div className="avatar-picker-actions">
+					<input
+						ref={inputRef}
+						type="file"
+						accept="image/png,image/jpeg,image/webp"
+						hidden
+						aria-label={labels.choose}
+						disabled={busy}
+						onChange={(event) => {
+							void handleFile(event.target.files?.[0]);
+							event.target.value = "";
+						}}
+					/>
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						loading={busy}
+						onClick={() => inputRef.current?.click()}
+					>
+						<ImagePlusIcon aria-hidden="true" />
+						{value ? labels.change : labels.choose}
+					</Button>
+					{value ? (
+						<Button
+							type="button"
+							variant="ghost"
+							size="sm"
+							disabled={busy}
+							onClick={handleRemove}
+						>
+							<Trash2Icon aria-hidden="true" />
+							{labels.remove}
+						</Button>
+					) : null}
+				</div>
+			</div>
+			<FieldDescription aria-live="polite">
+				{busy ? labels.preparing : labels.visible}
+			</FieldDescription>
+			{error ? <FieldError match={true}>{error}</FieldError> : null}
+		</Field>
+	);
 }

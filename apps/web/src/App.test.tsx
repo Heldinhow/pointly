@@ -129,13 +129,61 @@ describe("App (15.T8 — seleção de idioma)", () => {
     );
   });
 
-  test("seletor não aparece em rota do app (/join)", () => {
+  test("seletor em rota do app (/join) alterna EN/PT na hora", () => {
     render(
       <MemoryRouter initialEntries={["/join"]}>
         <App />
       </MemoryRouter>,
     );
-    expect(screen.queryByTestId("language-switch")).toBeNull();
+
+    const [toggle] = screen.getAllByTestId("language-switch");
+    fireEvent.click(toggle!);
+    expect(window.localStorage.getItem(LANG_STORAGE_KEY)).toBe("en");
+    expect(screen.getByLabelText("Nickname")).toBeTruthy();
+
+    const [backToPt] = screen.getAllByTestId("language-switch");
+    fireEvent.click(backToPt!);
+    expect(window.localStorage.getItem(LANG_STORAGE_KEY)).toBe("pt-BR");
+    expect(screen.getByLabelText("Apelido")).toBeTruthy();
+  });
+
+  test("preferência EN leva /join para inglês", () => {
+    window.localStorage.setItem(LANG_STORAGE_KEY, "en");
+    render(
+      <MemoryRouter initialEntries={["/join"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByLabelText("Nickname")).toBeTruthy();
+    expect(
+      screen.getByRole("group", { name: "Create a room or join with a code" }),
+    ).toBeTruthy();
+  });
+
+  test("navegador EN sem preferência vê /join em inglês", () => {
+    stubNavigatorLanguages(["en-US"]);
+    render(
+      <MemoryRouter initialEntries={["/join"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByLabelText("Nickname")).toBeTruthy();
+    expect(window.localStorage.getItem(LANG_STORAGE_KEY)).toBeNull();
+  });
+
+  test("preferência EN não muda as rotas públicas (path manda)", () => {
+    window.localStorage.setItem(LANG_STORAGE_KEY, "en");
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId("home-hero").textContent).toMatch(
+      /Planning poker online grátis/,
+    );
   });
 
   test("1ª visita na raiz com navegador em inglês vai para /en sem gravar preferência", () => {

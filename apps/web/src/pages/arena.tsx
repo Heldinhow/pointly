@@ -44,8 +44,9 @@ import {
 import type { Phase, Player, Vote } from "@/lib/protocol";
 import type { NudgeId, ProjectileType } from "@/lib/protocol";
 import { useSession } from "@/store/session";
-import { JoinError, friendlyJoinMessage } from "@/lib/errors";
+import { JoinError, friendlyJoinMessage, genericJoinMessage } from "@/lib/errors";
 import { SOCKET_ERROR_COPY } from "@/lib/forms";
+import type { Lang } from "@/lib/i18n";
 import { clearAvatar, loadAvatar, saveAvatar } from "@/lib/avatar";
 import { clearSession, loadSession } from "@/lib/identity";
 import { safeClear } from "@/lib/storage";
@@ -56,6 +57,7 @@ import {
   PROJECTILE_COOLDOWN_MS,
 } from "@/lib/projectiles";
 import { PointlySocket } from "@/lib/ws-client";
+import { ARENA_CONTENT } from "./arena-content";
 
 /** Limite duro do domínio: 12 assentos por sala. */
 export const SEAT_COUNT = 12;
@@ -73,17 +75,6 @@ export { PROJECTILE_CHAIR_COOLDOWN_MS, PROJECTILE_COOLDOWN_MS };
 /** Cadeirada épica recarrega mais devagar que os projéteis comuns. */
 function cooldownFor(type: ProjectileType): number {
   return type === "chair" ? PROJECTILE_CHAIR_COOLDOWN_MS : PROJECTILE_COOLDOWN_MS;
-}
-
-const PHASE_LABEL: Record<Phase, string> = {
-  idle: "Aguardando votos",
-  voting: "Votando",
-  revealable: "Pronta para revelar",
-  revealed: "Revelada",
-};
-
-function phaseLabel(phase: Phase): string {
-  return PHASE_LABEL[phase] ?? phase;
 }
 
 function isTypingTarget(event: KeyboardEvent): boolean {
@@ -181,7 +172,14 @@ function SpectatorAvatar({ player }: { player: Player }): React.ReactElement {
   );
 }
 
-export function ArenaPage(): React.ReactElement {
+export function ArenaPage({
+  lang = "pt-BR",
+}: {
+  lang?: Lang;
+}): React.ReactElement {
+  const content = ARENA_CONTENT[lang];
+  const errorCopy = SOCKET_ERROR_COPY[lang];
+  const phaseLabel = (phase: Phase): string => content.phase[phase] ?? phase;
   const { code = "" } = useParams();
   const navigate = useNavigate();
   const sala = useSession((state) => state.sala);
@@ -304,14 +302,18 @@ export function ArenaPage(): React.ReactElement {
         }
       },
       onError: (_code, message) => {
-        const text = message || "Não foi possível completar a ação.";
+        const text = message || content.errors.genericAction;
+        // Mensagens do servidor são pt-BR; em EN a arena usa copy local por
+        // contexto, preservando o texto original no PT.
+        const shown = (fallback: string): string =>
+          lang === "en" ? fallback : text;
         // Erros de projétil/cutucada (cooldown/interação) vão para o alerta
         // de interações sem quebrar a sala (issues #157, #172).
         if (
           /projectile|throw|cooldown|arremess|recarreg|cutuc|nudge/i.test(text) ||
           /projectile|throw|cooldown|nudge/i.test(_code)
         ) {
-          setProjectileError(text);
+          setProjectileError(shown(content.errors.interact));
         } else if (
           /new.?round|start_new|nova.?rodada/i.test(text) ||
           /new.?round|start_new/i.test(_code)
@@ -321,17 +323,17 @@ export function ArenaPage(): React.ReactElement {
             newRoundTimer.current = null;
           }
           setConfirmingNewRound(false);
-          setNewRoundError(text);
+          setNewRoundError(shown(content.errors.newRound));
         } else if (/reveal/i.test(text) || /reveal/i.test(_code)) {
           // Erros de reveal (invalid_phase com "reveal") vão para o
           // alerta de reveal; o resto continua no alerta de voto.
-          setRevealError(text);
+          setRevealError(shown(content.errors.reveal));
         } else {
-          setVoteError(text || "Não foi possível registrar o voto.");
+          setVoteError(shown(content.errors.vote));
         }
       },
     });
-  }, [socket]);
+  }, [socket, lang, content]);
 
   // Liveness é do servidor (ping de protocolo — aba oculta não derruba).
   // Este poke cobre só morte REAL percebida ao voltar: se o socket está
@@ -394,12 +396,12 @@ export function ArenaPage(): React.ReactElement {
       setRevealError(null);
       const sent = sendRevealThroughSession();
       if (!sent) {
-        setRevealError(SOCKET_ERROR_COPY.reveal);
+        setRevealError(errorCopy.reveal);
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [errorCopy]);
 
   // Atalho N pede/confirma nova rodada (qualquer Player, só após o
   // reveal). Exige a mesma confirmação dupla do botão: a primeira
@@ -434,12 +436,12 @@ export function ArenaPage(): React.ReactElement {
       setNewRoundError(null);
       const sent = sendNewRoundThroughSession();
       if (!sent) {
-        setNewRoundError(SOCKET_ERROR_COPY.newRound);
+        setNewRoundError(errorCopy.newRound);
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [errorCopy]);
 
   useEffect(() => {
     return () => {
@@ -509,8 +511,8 @@ export function ArenaPage(): React.ReactElement {
         }
         const message =
           error instanceof JoinError
-            ? friendlyJoinMessage(error.code, error.message)
-            : "Algo deu errado. Tente de novo.";
+            ? friendlyJoinMessage(error.code, error.message, lang)
+            : genericJoinMessage(lang);
         setRejoinError(message);
       } finally {
         if (!cancelled) setRejoining(false);
@@ -533,7 +535,7 @@ export function ArenaPage(): React.ReactElement {
         // Socket já morto · nada a fazer.
       }
     };
-  }, [hasSession, navigate, routeCode, retryNonce]);
+  }, [hasSession, lang, navigate, routeCode, retryNonce]);
 
   const inviteUrl = useMemo(() => {
     if (!sala) return "";
@@ -566,7 +568,7 @@ export function ArenaPage(): React.ReactElement {
         <Card className="arena-connection">
           <CardHeader>
             <CardTitle className="text-base">
-              Não foi possível reconectar
+              {content.loading.reconnectTitle}
             </CardTitle>
             <CardDescription data-testid="rejoin-error">
               {rejoinError}
@@ -578,7 +580,7 @@ export function ArenaPage(): React.ReactElement {
               data-testid="rejoin-retry"
               onClick={() => setRetryNonce((n) => n + 1)}
             >
-              Tentar de novo
+              {content.loading.retry}
             </Button>
             <Button
               type="button"
@@ -590,7 +592,7 @@ export function ArenaPage(): React.ReactElement {
                 });
               }}
             >
-              Voltar à entrada
+              {content.loading.backToJoin}
             </Button>
           </CardPanel>
         </Card>
@@ -600,10 +602,14 @@ export function ArenaPage(): React.ReactElement {
       <Card className="arena-connection">
         <CardPanel className="flex items-center gap-3" role="status">
           <Spinner
-            aria-label={rejoining ? "Reconectando" : "Carregando sala"}
+            aria-label={
+              rejoining
+                ? content.loading.reconnectingAria
+                : content.loading.loadingAria
+            }
           />
           <p className="text-sm text-muted-foreground">
-            {rejoining ? "Reconectando…" : "Carregando sala…"}
+            {rejoining ? content.loading.reconnecting : content.loading.loading}
           </p>
         </CardPanel>
       </Card>
@@ -649,7 +655,7 @@ export function ArenaPage(): React.ReactElement {
     isUnanimousSignal,
     voteGroups,
     resultsAriaLabel,
-  } = useConsensusStats(revealedVotes);
+  } = useConsensusStats(revealedVotes, lang);
 
   // Reveal (issue 06): qualquer Player revela após pelo menos um
   // voto; sala "pronta para revelar" quando todos votaram sem revelar de
@@ -682,7 +688,7 @@ export function ArenaPage(): React.ReactElement {
     setRevealError(null);
     const sent = sendRevealThroughSession();
     if (!sent) {
-      setRevealError(SOCKET_ERROR_COPY.reveal);
+      setRevealError(errorCopy.reveal);
     }
   }
 
@@ -710,14 +716,14 @@ export function ArenaPage(): React.ReactElement {
     setNewRoundError(null);
     const sent = sendNewRoundThroughSession();
     if (!sent) {
-      setNewRoundError(SOCKET_ERROR_COPY.newRound);
+      setNewRoundError(errorCopy.newRound);
     }
   }
 
   function handleCardSelect(value: Vote): void {
     if (isSpectator) {
       setVoteError(
-        "Espectadores não votam. Para votar, saia e entre como jogador.",
+        content.deck.spectatorVoteError,
       );
       return;
     }
@@ -727,7 +733,7 @@ export function ArenaPage(): React.ReactElement {
     setVoteError(null);
     const sent = socket?.sendCastVote(value) ?? false;
     if (!sent) {
-      setVoteError(SOCKET_ERROR_COPY.vote);
+      setVoteError(errorCopy.vote);
     }
   }
 
@@ -749,7 +755,7 @@ export function ArenaPage(): React.ReactElement {
       sent = false;
     }
     if (!sent) {
-      setAvatarError("Não foi possível trocar a foto. Tente de novo.");
+      setAvatarError(content.sidebar.avatarError);
       return;
     }
     setAvatarError(null);
@@ -763,18 +769,18 @@ export function ArenaPage(): React.ReactElement {
       // Segundo envio dentro do cooldown: recusa com feedback,
       // sem trafegar nada e sem quebrar (acceptance #157).
       setProjectileError(
-        `Recarregando · aguarde ${Math.ceil(remaining / 1000)}s para arremessar de novo.`,
+        content.projectile.cooldown(Math.ceil(remaining / 1000)),
       );
       return;
     }
     if (connectionLost || reconnecting || targetId === playerId || !players.some((p) => p.id === targetId && p.status === "connected")) {
-      setProjectileError("Arremesso indisponível: escolha outro participante conectado.");
+      setProjectileError(content.projectile.unavailable);
       return;
     }
     setProjectileError(null);
     const sent = sendProjectileThroughSession(targetId, projectileType);
     if (!sent) {
-      setProjectileError(SOCKET_ERROR_COPY.interact);
+      setProjectileError(errorCopy.interact);
       return;
     }
     setProjectileCooldownUntil(Date.now() + cooldownFor(projectileType));
@@ -789,19 +795,17 @@ export function ArenaPage(): React.ReactElement {
   function handleNudge(targetId: string, nudgeId: NudgeId): void {
     const remaining = projectileCooldownUntil - Date.now();
     if (remaining > 0) {
-      setProjectileError(
-        `Recarregando · aguarde ${Math.ceil(remaining / 1000)}s para cutucar de novo.`,
-      );
+      setProjectileError(content.projectile.nudgeCooldown(Math.ceil(remaining / 1000)));
       return;
     }
     if (connectionLost || reconnecting || targetId === playerId || !players.some((p) => p.id === targetId && p.status === "connected")) {
-      setProjectileError("Cutucada indisponível: escolha outro participante conectado.");
+      setProjectileError(content.projectile.nudgeUnavailable);
       return;
     }
     setProjectileError(null);
     const sent = sendNudgeThroughSession(targetId, nudgeId);
     if (!sent) {
-      setProjectileError(SOCKET_ERROR_COPY.interact);
+      setProjectileError(errorCopy.interact);
       return;
     }
     setProjectileCooldownUntil(Date.now() + PROJECTILE_COOLDOWN_MS);
@@ -842,43 +846,37 @@ export function ArenaPage(): React.ReactElement {
             <UsersIcon />
           </span>
           <div>
-            <h1 data-testid="sala-code">Sala <span>{sala.code}</span></h1>
+            <h1 data-testid="sala-code">
+              {content.toolbar.room} <span>{sala.code}</span>
+            </h1>
             <p data-testid="round-label">
-              Rodada {sala.round} · {phaseLabel(sala.phase)}
+              {content.toolbar.round(sala.round, phaseLabel(sala.phase))}
             </p>
           </div>
         </div>
         <div className="arena-live-status">
           <span data-testid="presence-line" aria-live="polite">
             <UsersIcon aria-hidden="true" />
-            {connectedSpectators.length > 0 ? (
-              <>
-                {connectedVoters.length}{" "}
-                {connectedVoters.length === 1 ? "jogando" : "jogando"} ·{" "}
-                {connectedSpectators.length}{" "}
-                {connectedSpectators.length === 1 ? "assistindo" : "assistindo"}{" "}
-                · {voted} {voted === 1 ? "votou" : "votaram"}
-              </>
-            ) : (
-              <>
-                {connected.length} na sala · {voted}{" "}
-                {voted === 1 ? "votou" : "votaram"}
-              </>
-            )}
+            {connectedSpectators.length > 0
+              ? content.toolbar.presenceSpectators(
+                  connectedVoters.length,
+                  connectedSpectators.length,
+                  voted,
+                )
+              : content.toolbar.presence(connected.length, voted)}
           </span>
           <Button variant="ghost" onClick={handleLeave}>
             <LogOutIcon aria-hidden="true" />
-            Sair da sala
+            {content.toolbar.leave}
           </Button>
         </div>
       </header>
       {reconnecting && !connectionLost && (
         <Alert variant="warning">
-          <AlertTitle>Reconectando…</AlertTitle>
+          <AlertTitle>{content.reconnecting.title}</AlertTitle>
           <AlertDescription className="flex flex-wrap items-center gap-2">
             <span data-testid="reconnecting-hint">
-              Tentativa {reconnectAttempt} de reconexão — o placar pode estar
-              desatualizado.
+              {content.reconnecting.hint(reconnectAttempt)}
             </span>
             <Button
               type="button"
@@ -893,18 +891,16 @@ export function ArenaPage(): React.ReactElement {
                 }
               }}
             >
-              Tentar agora
+              {content.reconnecting.retryNow}
             </Button>
           </AlertDescription>
         </Alert>
       )}
       {connectionLost && (
         <Alert variant="warning">
-          <AlertTitle>Conexão perdida</AlertTitle>
+          <AlertTitle>{content.connectionLost.title}</AlertTitle>
           <AlertDescription className="flex flex-wrap items-center gap-2">
-            <span>
-              O placar pode estar desatualizado. Tente se conectar de novo.
-            </span>
+            <span>{content.connectionLost.hint}</span>
             <Button
               type="button"
               variant="outline"
@@ -919,7 +915,7 @@ export function ArenaPage(): React.ReactElement {
                 }
               }}
             >
-              Tentar de novo
+              {content.connectionLost.retry}
             </Button>
           </AlertDescription>
         </Alert>
@@ -932,16 +928,18 @@ export function ArenaPage(): React.ReactElement {
         </div>
         <div className="nudge-layer">
           {nudgeBalloons.map((event) => (
-            <NudgeBalloon key={event.key} event={event} arenaRef={arenaRef} onDone={removeNudgeBalloon} />
+            <NudgeBalloon key={event.key} event={event} arenaRef={arenaRef} onDone={removeNudgeBalloon} lang={lang} />
           ))}
         </div>
         <section
           className="arena-play-area"
-          aria-label="Mesa de planning poker"
+          aria-label={content.playArea.aria}
         >
           <div className="arena-table-caption">
-            <span>Mesa de planning poker</span>
-            <span>{connectedVoters.length} de 12 lugares</span>
+            <span>{content.playArea.caption}</span>
+            <span>
+              {content.playArea.seatsLeft(connectedVoters.length, SEAT_COUNT)}
+            </span>
           </div>
           <PokerTable
             seats={seats}
@@ -953,24 +951,25 @@ export function ArenaPage(): React.ReactElement {
             onThrowProjectile={connectionLost || reconnecting ? undefined : handleThrowProjectile}
             onNudge={connectionLost || reconnecting ? undefined : handleNudge}
             projectileCooldownSecs={projectileCooldownSecs}
+            lang={lang}
           >
             <Card className="arena-reveal">
               <CardHeader>
                 <CardTitle className="text-base">
                   {isRevealed
-                    ? "Cartas na mesa"
+                    ? content.reveal.titleRevealed
                     : isReadyToReveal
-                      ? "Vamos revelar?"
-                      : "Qual é a sua estimativa?"}
+                      ? content.reveal.titleReady
+                      : content.reveal.titleVoting}
                 </CardTitle>
                 <CardDescription data-testid="reveal-hint" aria-live="polite">
                   {isRevealed
-                    ? "Votos revelados. Discutam as diferenças."
+                    ? content.reveal.descRevealed
                     : isReadyToReveal
-                      ? "Todos votaram."
+                      ? content.reveal.descReady
                       : canReveal
-                        ? "Já temos votos. Qualquer pessoa pode revelar."
-                        : "Aguardando o primeiro voto. Escolha uma carta para começar."}
+                        ? content.reveal.descCanReveal
+                        : content.reveal.descWaiting}
                 </CardDescription>
               </CardHeader>
               <CardPanel className="flex flex-col gap-3">
@@ -984,20 +983,20 @@ export function ArenaPage(): React.ReactElement {
                       aria-keyshortcuts="r"
                       aria-label={
                         canReveal
-                          ? "Revelar votos (atalho R)"
-                          : "Aguardando votos para revelar"
+                          ? content.reveal.revealAria
+                          : content.reveal.revealAriaWaiting
                       }
                       title={canReveal ? "Atalho: R" : undefined}
                     >
                       <EyeIcon aria-hidden="true" />
-                      Revelar votos
+                      {content.reveal.reveal}
                     </Button>
                     <span className="text-xs text-muted-foreground">
                       <kbd className="rounded border px-1 font-mono">R</kbd>{" "}
-                      revela
+                      {content.reveal.revealHint}
                       {canReveal
-                        ? " · vai à discussão."
-                        : " · disponível após o primeiro voto."}
+                        ? content.reveal.revealHintReady
+                        : content.reveal.revealHintWaiting}
                     </span>
                   </div>
                 )}
@@ -1014,15 +1013,15 @@ export function ArenaPage(): React.ReactElement {
                       aria-keyshortcuts="n"
                       aria-label={
                         confirmingNewRound
-                          ? "Confirmar nova rodada (atalho N)"
-                          : "Nova rodada (atalho N, exige confirmação)"
+                          ? content.reveal.newRoundAriaConfirm
+                          : content.reveal.newRoundAria
                       }
                       title="Atalho: N (duas vezes)"
                     >
                       <RotateCcwIcon aria-hidden="true" />
                       {confirmingNewRound
-                        ? "Confirmar nova rodada"
-                        : "Nova rodada"}
+                        ? content.reveal.newRoundConfirm
+                        : content.reveal.newRound}
                     </Button>
                     <span
                       data-testid="new-round-hint"
@@ -1030,14 +1029,14 @@ export function ArenaPage(): React.ReactElement {
                       className="text-xs text-muted-foreground"
                     >
                       {confirmingNewRound
-                        ? "Ative de novo para confirmar e limpar os votos. A confirmação expira em 5 segundos."
-                        : "Prontos para a próxima estimativa? Os votos serão limpos após sua confirmação."}
+                        ? content.reveal.newRoundHintConfirm
+                        : content.reveal.newRoundHint}
                     </span>
                   </div>
                 )}
                 {revealError ? (
                   <Alert variant="error">
-                    <AlertTitle>Não foi possível revelar</AlertTitle>
+                    <AlertTitle>{content.reveal.errorTitle}</AlertTitle>
                     <AlertDescription data-testid="reveal-error">
                       {revealError}
                     </AlertDescription>
@@ -1045,7 +1044,7 @@ export function ArenaPage(): React.ReactElement {
                 ) : null}
                 {newRoundError ? (
                   <Alert variant="error">
-                    <AlertTitle>Não foi possível abrir nova rodada</AlertTitle>
+                    <AlertTitle>{content.reveal.newRoundErrorTitle}</AlertTitle>
                     <AlertDescription data-testid="new-round-error">
                       {newRoundError}
                     </AlertDescription>
@@ -1055,27 +1054,28 @@ export function ArenaPage(): React.ReactElement {
             </Card>
           </PokerTable>
           <p className="arena-projectile-hint" data-testid="projectile-hint">
-            Passe o mouse ou toque em alguém para arremessar · 1s de intervalo (cadeirada: 8s).
+            {content.projectile.hint}
           </p>
           {projectileError ? (
             <Alert variant="error">
-              <AlertTitle>Não foi possível interagir</AlertTitle>
+              <AlertTitle>{content.projectile.errorTitle}</AlertTitle>
               <AlertDescription data-testid="projectile-error">{projectileError}</AlertDescription>
             </Alert>
           ) : null}
           <Card className="arena-deck">
             <CardHeader>
               <CardTitle className="text-base">
-                {isSpectator ? "Você está assistindo" : "Sua estimativa"}
+                {isSpectator ? content.deck.spectatorTitle : content.deck.title}
               </CardTitle>
               <CardDescription data-testid="deck-selection" aria-live="polite">
                 {isSpectator
-                  ? "Espectadores acompanham e reagem, mas não votam. Para votar, saia e entre como jogador."
+                  ? content.deck.spectatorDesc
                   : !isRevealed && currentVote === null
-                    ? "Escolha uma carta para votar. Você pode ajustar depois."
+                    ? content.deck.pickAdjustable
                     : voteSelectionText(currentVote, {
                         revealed: isRevealed,
                         adjustable: true,
+                        lang,
                       })}
               </CardDescription>
             </CardHeader>
@@ -1084,10 +1084,11 @@ export function ArenaPage(): React.ReactElement {
                 currentVote={currentVote}
                 onSelect={handleCardSelect}
                 disabled={isSpectator}
+                lang={lang}
               />
               {voteError ? (
                 <Alert variant="error">
-                  <AlertTitle>Não foi possível votar</AlertTitle>
+                  <AlertTitle>{content.deck.errorTitle}</AlertTitle>
                   <AlertDescription data-testid="vote-error">
                     {voteError}
                   </AlertDescription>
@@ -1097,21 +1098,22 @@ export function ArenaPage(): React.ReactElement {
           </Card>
 
           <div className="arena-table-note">
-            <span>Estimativas independentes. Conversas em conjunto.</span>
+            <span>{content.tableNote.estimate}</span>
             <span>
-              <kbd>R</kbd> revelar · <kbd>N</kbd> nova rodada
+              <kbd>R</kbd> {content.tableNote.revealShortcut} · <kbd>N</kbd>{" "}
+              {content.tableNote.newRoundShortcut}
             </span>
           </div>
         </section>
-        <aside className="arena-sidebar" aria-label="Informações da sala">
+        <aside className="arena-sidebar" aria-label={content.sidebar.aria}>
           <div className="arena-self" data-testid="self-line">
-            Você é <strong>{self?.nick ?? nick}</strong>
-            {isSpectator ? " · Assistindo" : ""}
-            {!isSpectator && isSelfHost ? " · Host da sala" : ""}
+            {content.sidebar.youAre} <strong>{self?.nick ?? nick}</strong>
+            {isSpectator ? content.sidebar.watching : ""}
+            {!isSpectator && isSelfHost ? content.sidebar.selfHost : ""}
             {host && host.id !== playerId ? (
               <>
-                {" "}
-                · Host: <strong>{host.nick}</strong>
+                {content.sidebar.hostLead}
+                <strong>{host.nick}</strong>
               </>
             ) : null}
           </div>
@@ -1119,10 +1121,11 @@ export function ArenaPage(): React.ReactElement {
             value={self?.avatar ?? null}
             onChange={handleAvatarChange}
             compact
+            lang={lang}
           />
           {avatarError ? (
             <Alert variant="error">
-              <AlertTitle>Não foi possível trocar a foto</AlertTitle>
+              <AlertTitle>{content.sidebar.avatarErrorTitle}</AlertTitle>
               <AlertDescription data-testid="avatar-error">
                 {avatarError}
               </AlertDescription>
@@ -1136,13 +1139,13 @@ export function ArenaPage(): React.ReactElement {
             >
               <EyeIcon aria-hidden="true" />
               <span>
-                Assistindo ({connectedSpectators.length}):{" "}
+                {content.sidebar.spectators(connectedSpectators.length)}{" "}
                 <strong>
                     {connectedSpectators.map((p, index) => (
                       <span key={p.id}>
                         {index > 0 ? ", " : ""}
                         {p.id !== playerId && !connectionLost && !reconnecting ? (
-                          <ProjectileMenu target={p} cooldownSecs={projectileCooldownSecs} onThrow={handleThrowProjectile} onNudge={handleNudge} className="arena-spectator-target" align="left" side="bottom">
+                          <ProjectileMenu target={p} cooldownSecs={projectileCooldownSecs} onThrow={handleThrowProjectile} onNudge={handleNudge} className="arena-spectator-target" align="left" side="bottom" lang={lang}>
                             <span className="arena-spectator-anchor" data-projectile-player={p.id}><SpectatorAvatar player={p} />{p.nick}</span>
                           </ProjectileMenu>
                         ) : <span className="arena-spectator-anchor" data-projectile-player={p.id}><SpectatorAvatar player={p} />{p.nick}</span>}
@@ -1155,9 +1158,9 @@ export function ArenaPage(): React.ReactElement {
           {showInvite ? (
             <Card className="arena-invite">
               <CardHeader>
-                <CardTitle className="text-base">Convidar o time</CardTitle>
+                <CardTitle className="text-base">{content.invite.title}</CardTitle>
                 <CardDescription>
-                  Compartilhe o link e reúna o time à mesa.
+                  {content.invite.description}
                 </CardDescription>
               </CardHeader>
               <CardPanel className="flex flex-col gap-3">
@@ -1165,7 +1168,7 @@ export function ArenaPage(): React.ReactElement {
                   <Input
                     readOnly
                     value={inviteUrl}
-                    aria-label="Link de convite"
+                    aria-label={content.invite.linkAria}
                     onFocus={(event) => event.currentTarget.select()}
                   />
                   <Button
@@ -1180,7 +1183,7 @@ export function ArenaPage(): React.ReactElement {
                     ) : (
                       <CopyIcon aria-hidden="true" />
                     )}
-                    {copied ? "Copiado!" : "Copiar"}
+                    {copied ? content.invite.copied : content.invite.copy}
                   </Button>
                 </div>
                 <div aria-live="polite" className="min-h-5 text-sm">
@@ -1189,13 +1192,12 @@ export function ArenaPage(): React.ReactElement {
                       className="text-success-foreground"
                       data-testid="copy-feedback"
                     >
-                      Link copiado! É só enviar ao time.
+                      {content.invite.copyFeedback}
                     </span>
                   ) : null}
                   {copyError ? (
                     <span className="text-destructive-foreground">
-                      Não foi possível copiar. Selecione o link e copie
-                      manualmente.
+                      {content.invite.copyError}
                     </span>
                   ) : null}
                 </div>
@@ -1208,7 +1210,7 @@ export function ArenaPage(): React.ReactElement {
                       onClick={() => setInviteHidden(true)}
                     >
                       <EyeOffIcon aria-hidden="true" />
-                      Ocultar convite
+                      {content.invite.hide}
                     </Button>
                   </div>
                 ) : null}
@@ -1222,7 +1224,7 @@ export function ArenaPage(): React.ReactElement {
                 size="sm"
                 onClick={() => setInviteHidden(false)}
               >
-                Mostrar convite
+                {content.invite.show}
               </Button>
             </div>
           )}
@@ -1230,10 +1232,9 @@ export function ArenaPage(): React.ReactElement {
           {isRevealed ? (
             <Card className="arena-results">
               <CardHeader>
-                <CardTitle className="text-base">Resultados</CardTitle>
+                <CardTitle className="text-base">{content.results.title}</CardTitle>
                 <CardDescription>
-                  Média, mediana, menor e maior estimativa · pausa e ausência
-                  ficam fora dos cálculos.
+                  {content.results.description}
                 </CardDescription>
               </CardHeader>
               <CardPanel>
@@ -1251,7 +1252,7 @@ export function ArenaPage(): React.ReactElement {
                           data-testid="stats-unanimous-badge"
                           className="rounded-full bg-success/12 px-2.5 py-0.5 font-mono text-xs tracking-widest text-success-foreground uppercase"
                         >
-                          Unânime
+                          {content.results.unanimous}
                         </span>
                       ) : (
                         <span
@@ -1259,10 +1260,10 @@ export function ArenaPage(): React.ReactElement {
                           className="text-xs text-muted-foreground"
                         >
                           {noNumerics
-                            ? "Sem votos numéricos"
+                            ? content.results.noNumerics
                             : isSingleNumeric
-                              ? "Voto único"
-                              : "Mediana"}
+                              ? content.results.single
+                              : content.results.median}
                         </span>
                       )}
                       <span
@@ -1281,14 +1282,14 @@ export function ArenaPage(): React.ReactElement {
                         data-testid="stats-caption"
                         className="text-sm text-muted-foreground"
                       >
-                        média{" "}
+                        {content.results.mean}{" "}
                         <span
                           data-testid="stats-mean-value"
                           className="font-mono text-foreground tabular-nums"
                         >
                           {formatMean(consensus.mean)}
                         </span>{" "}
-                        · intervalo{" "}
+                        · {content.results.range}{" "}
                         <span
                           data-testid="stats-range-value"
                           className="font-mono text-foreground tabular-nums"
@@ -1305,7 +1306,10 @@ export function ArenaPage(): React.ReactElement {
                             <span
                               key={group.value}
                               data-testid={`stats-pip-${group.value}`}
-                              title={`${group.count} ${group.count > 1 ? "votos" : "voto"} em ${group.value}`}
+                              title={content.results.pipTitle(
+                                group.count,
+                                group.value,
+                              )}
                               className="rounded-full bg-muted px-2 py-0.5 font-mono text-xs tabular-nums"
                             >
                               {group.count}×{group.value}
@@ -1320,8 +1324,7 @@ export function ArenaPage(): React.ReactElement {
                       data-testid="stats-no-numerics"
                       className="text-sm text-muted-foreground"
                     >
-                      Só pausa ou ninguém votou · sem média, mediana nem
-                      intervalo.
+                      {content.results.noNumericsNote}
                     </p>
                   ) : null}
                 </output>
@@ -1332,7 +1335,7 @@ export function ArenaPage(): React.ReactElement {
                     className="flex items-center gap-1.5 text-sm text-muted-foreground"
                   >
                     <DicesIcon aria-hidden="true" className="size-4 shrink-0" />
-                    Justifica primeiro:{" "}
+                    {content.results.justifyLead}
                     <strong className="font-semibold text-foreground">
                       {justifyPlayer.nick}
                     </strong>
@@ -1345,17 +1348,19 @@ export function ArenaPage(): React.ReactElement {
           {!isRevealed && (
             <div className="arena-waiting">
               <EyeOffIcon aria-hidden="true" />
-              <h2>{isSpectator ? "Acompanhe a votação." : "Cada opinião conta."}</h2>
+              <h2>
+                {isSpectator
+                  ? content.waiting.spectatorTitle
+                  : content.waiting.title}
+              </h2>
               <p>
                 {isSpectator
-                  ? "As cartas ficam escondidas até a revelação. Você assiste sem votar."
-                  : "As cartas ficam escondidas até a revelação. Escolha sem influência do time."}
+                  ? content.waiting.spectatorBody
+                  : content.waiting.body}
               </p>
               {solo && (
                 <p data-testid="solo-hint">
-                  {isSpectator
-                    ? "Você está sozinho. Copie o convite para chamar o time."
-                    : "Você está sozinho. Copie o convite para chamar o time. Dá para votar sozinho para testar o fluxo."}
+                  {isSpectator ? content.waiting.soloSpectator : content.waiting.solo}
                 </p>
               )}
             </div>

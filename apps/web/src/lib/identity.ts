@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Lang } from "./i18n";
 import { safeGet, safeRemove, safeSet } from "./storage";
 
 /**
@@ -124,17 +125,50 @@ export function isValidCode(code: string): boolean {
 	return /^[A-Z0-9]{4}$/.test(code);
 }
 
-export const NickSchema = z
-	.string()
-	.min(2, "Apelido precisa de ao menos 2 caracteres.")
-	.max(20, "Apelido pode ter no máximo 20 caracteres.")
-	.refine((value) => value === value.trim(), {
-		message: "Apelido não pode começar ou terminar com espaço.",
-	})
-	.refine((value) => !/\s{2}/.test(value), {
-		message: "Apelido não pode ter espaços duplos.",
-	});
+export const IDENTITY_MESSAGES: Record<
+	Lang,
+	{
+		nickMin: string;
+		nickMax: string;
+		nickTrim: string;
+		nickSpaces: string;
+		codeFormat: string;
+	}
+> = {
+	"pt-BR": {
+		nickMin: "Apelido precisa de ao menos 2 caracteres.",
+		nickMax: "Apelido pode ter no máximo 20 caracteres.",
+		nickTrim: "Apelido não pode começar ou terminar com espaço.",
+		nickSpaces: "Apelido não pode ter espaços duplos.",
+		codeFormat: "Código tem 4 letras ou números.",
+	},
+	en: {
+		nickMin: "Nickname needs at least 2 characters.",
+		nickMax: "Nickname can have at most 20 characters.",
+		nickTrim: "Nickname can't start or end with a space.",
+		nickSpaces: "Nickname can't have double spaces.",
+		codeFormat: "Code has 4 letters or digits.",
+	},
+};
 
-export const CodeSchema = z
-	.string()
-	.regex(/^[A-Z0-9]{4}$/, "Código tem 4 letras ou números.");
+export function nickSchema(lang: Lang = "pt-BR") {
+	const messages = IDENTITY_MESSAGES[lang];
+	return z
+		.string()
+		.min(2, messages.nickMin)
+		.max(20, messages.nickMax)
+		.refine((value) => value === value.trim(), {
+			message: messages.nickTrim,
+		})
+		.refine((value) => !/\s{2}/.test(value), {
+			message: messages.nickSpaces,
+		});
+}
+
+export function codeSchema(lang: Lang = "pt-BR") {
+	return z.string().regex(/^[A-Z0-9]{4}$/, IDENTITY_MESSAGES[lang].codeFormat);
+}
+
+/** Schemas pt-BR — default do produto e contrato dos testes. */
+export const NickSchema = nickSchema("pt-BR");
+export const CodeSchema = codeSchema("pt-BR");

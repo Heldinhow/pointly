@@ -1,4 +1,5 @@
 import { DECK_VALUES, type Vote } from "./protocol";
+import type { Lang } from "./i18n";
 
 export { DECK_VALUES, type Vote };
 
@@ -20,9 +21,19 @@ export function voteToNumber(vote: Vote | string): number | null {
 	return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function voteLabel(value: Vote | string): string {
-	if (value === PAUSE_VOTE) return "Pausa para café (fora da média)";
-	return `Votar ${value}`;
+const VOTE_LABELS: Record<Lang, (value: string) => string> = {
+	"pt-BR": (value) =>
+		value === PAUSE_VOTE
+			? "Pausa para café (fora da média)"
+			: `Votar ${value}`,
+	en: (value) =>
+		value === PAUSE_VOTE
+			? "Coffee break (out of the average)"
+			: `Vote ${value}`,
+};
+
+export function voteLabel(value: Vote | string, lang: Lang = "pt-BR"): string {
+	return VOTE_LABELS[lang](value);
 }
 
 /**

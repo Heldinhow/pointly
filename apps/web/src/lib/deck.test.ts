@@ -41,6 +41,8 @@ describe("deck (ticket 05 — Votar)", () => {
 		expect(isPauseVote("5")).toBe(false);
 		expect(voteToNumber("☕")).toBeNull();
 		expect(voteLabel("☕")).toMatch(/fora da média/i);
+		expect(voteLabel("☕", "en")).toMatch(/coffee break/i);
+		expect(voteLabel("5", "en")).toBe("Vote 5");
 	});
 });
 

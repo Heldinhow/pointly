@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import {
   Link,
   NavLink,
@@ -15,12 +15,16 @@ import {
   useHeaderScrolled,
 } from "@/components/shell";
 import { LanguageLink } from "@/components/language-link";
+import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
   browserPrefersEnglish,
   isPublicIndexablePath,
   readLanguagePreference,
+  resolveInternalLang,
+  subscribeLanguage,
 } from "@/lib/language";
+import type { Lang } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { ArenaPage } from "@/pages/arena";
 import {
@@ -48,11 +52,25 @@ export default function App(): React.ReactElement {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const inArena = pathname.startsWith("/s/");
-  const isEn = pathname === "/en" || pathname.startsWith("/en/");
-  const lang = isEn ? "en" : "pt-BR";
-  const showLanguageSwitch = !inArena && isPublicIndexablePath(pathname);
+  const isEnPath = pathname === "/en" || pathname.startsWith("/en/");
+  const isPublic = isPublicIndexablePath(pathname);
+  // Rotas públicas mandam pelo path (SEO/prerender). Nas internas
+  // (`/join`, `/s/:code`, 404) o idioma vem da preferência/navegador.
+  const pathLang: Lang | null = isEnPath ? "en" : isPublic ? "pt-BR" : null;
+  const internalLang = useSyncExternalStore(
+    subscribeLanguage,
+    resolveInternalLang,
+    resolveInternalLang,
+  );
+  const lang: Lang = pathLang ?? internalLang;
+  const isEn = lang === "en";
+  const showLanguageSwitch = !inArena && isPublic;
   const scrolled = useHeaderScrolled();
   const previousPath = useRef(pathname);
+
+  useEffect(() => {
+    document.documentElement.lang = isEn ? "en" : "pt-BR";
+  }, [isEn]);
 
   useEffect(() => {
     if (previousPath.current === pathname) return;
@@ -77,7 +95,7 @@ export default function App(): React.ReactElement {
         {inArena ? (
           <Brand />
         ) : (
-          <Link to="/" aria-label={isEn ? "Pointly, home" : "Pointly, início"}>
+          <Link to={isEn ? "/en" : "/"} aria-label={isEn ? "Pointly, home" : "Pointly, início"}>
             <Brand />
           </Link>
         )}
@@ -92,13 +110,15 @@ export default function App(): React.ReactElement {
               </NavLink>
             </nav>
           )}
-          {showLanguageSwitch && (
+          {showLanguageSwitch ? (
             <LanguageLink pathname={pathname} lang={lang} />
+          ) : (
+            <LanguageToggle lang={lang} />
           )}
           <ThemeToggle
             theme={theme}
             onToggle={toggle}
-            lang={isEn ? "en" : "pt-BR"}
+            lang={lang}
           />
         </div>
       </ShellHeader>
@@ -124,9 +144,9 @@ export default function App(): React.ReactElement {
             element={<WhatIsEnPage />}
           />
           <Route path="/en/guides/story-points" element={<StoryPointsEnPage />} />
-          <Route path="/join" element={<JoinPage />} />
-          <Route path="/s/:code" element={<ArenaPage />} />
-          <Route path="*" element={<NotFoundPage />} />
+          <Route path="/join" element={<JoinPage lang={lang} />} />
+          <Route path="/s/:code" element={<ArenaPage lang={lang} />} />
+          <Route path="*" element={<NotFoundPage lang={lang} />} />
         </Routes>
       </ShellMain>
       {!inArena && (
@@ -147,8 +167,10 @@ export default function App(): React.ReactElement {
             <NavLink to={isEn ? "/en/guides" : "/guias"}>
               {isEn ? "Guides" : "Guias"}
             </NavLink>
-            {showLanguageSwitch && (
+            {showLanguageSwitch ? (
               <LanguageLink pathname={pathname} lang={lang} />
+            ) : (
+              <LanguageToggle lang={lang} />
             )}
           </nav>
           <span>

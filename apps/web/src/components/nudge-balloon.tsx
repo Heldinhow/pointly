@@ -1,5 +1,6 @@
 import type { CSSProperties, RefObject } from "react";
 import { useLayoutEffect, useState } from "react";
+import type { Lang } from "@/lib/i18n";
 import { NUDGE_CATALOG } from "@/lib/nudges";
 import type { NudgeId } from "@/lib/protocol";
 import "./nudge-balloon.css";
@@ -19,6 +20,8 @@ interface NudgeBalloonProps {
 	event: NudgeBalloonEvent;
 	arenaRef: RefObject<HTMLDivElement | null>;
 	onDone: (key: number) => void;
+	/** Idioma do rótulo do balão; default pt-BR preserva o uso antigo. */
+	lang?: Lang;
 }
 
 /** Escapa aspas/barra do id para uso no seletor de atributo (CSS.escape é opcional no jsdom). */
@@ -37,6 +40,7 @@ export function NudgeBalloon({
 	event,
 	arenaRef,
 	onDone,
+	lang = "pt-BR",
 }: NudgeBalloonProps): React.ReactElement | null {
 	const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
 
@@ -67,7 +71,7 @@ export function NudgeBalloon({
 
 	if (!pos) return null;
 	const label =
-		NUDGE_CATALOG.find((entry) => entry.id === event.nudgeId)?.label ??
+		NUDGE_CATALOG.find((entry) => entry.id === event.nudgeId)?.label[lang] ??
 		event.nudgeId;
 	return (
 		<span

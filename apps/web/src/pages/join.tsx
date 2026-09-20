@@ -22,22 +22,27 @@ import { OTPField, OTPFieldInput } from "@/components/ui/otp-field";
 import { AvatarPicker } from "@/components/avatar-picker";
 import { checkSala, resolveWsUrl } from "@/lib/api";
 import { clearAvatar, loadAvatar, saveAvatar } from "@/lib/avatar";
-import { JoinError, friendlyJoinMessage } from "@/lib/errors";
-import { firstIssueMessage } from "@/lib/forms";
 import {
-  CodeSchema,
-  NickSchema,
-  loadNickDraft,
-  normalizeCode,
-  saveNickDraft,
-} from "@/lib/identity";
+  JoinError,
+  friendlyJoinMessage,
+  genericJoinMessage,
+} from "@/lib/errors";
+import { firstIssueMessage } from "@/lib/forms";
+import type { Lang } from "@/lib/i18n";
+import { codeSchema, nickSchema, loadNickDraft, normalizeCode, saveNickDraft } from "@/lib/identity";
 import { PointlySocket } from "@/lib/ws-client";
 import { useSession } from "@/store/session";
+import { JOIN_CONTENT } from "./join-content";
 import "./join.css";
 
 type Mode = "create" | "join";
 
-export function JoinPage(): React.ReactElement {
+export function JoinPage({
+  lang = "pt-BR",
+}: {
+  lang?: Lang;
+}): React.ReactElement {
+  const content = JOIN_CONTENT[lang];
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const uuid = useSession((state) => state.uuid);
@@ -110,18 +115,18 @@ export function JoinPage(): React.ReactElement {
     event.preventDefault();
     if (busy) return;
 
-    const nickResult = NickSchema.safeParse(nick);
+    const nickResult = nickSchema(lang).safeParse(nick);
     if (!nickResult.success) {
-      setNickError(firstIssueMessage(nickResult.error));
+      setNickError(firstIssueMessage(nickResult.error, lang));
     } else {
       setNickError(null);
     }
 
     let codeValue: string | undefined;
     if (mode === "join") {
-      const codeResult = CodeSchema.safeParse(code);
+      const codeResult = codeSchema(lang).safeParse(code);
       if (!codeResult.success) {
-        setCodeError(firstIssueMessage(codeResult.error));
+        setCodeError(firstIssueMessage(codeResult.error, lang));
       } else {
         setCodeError(null);
         codeValue = codeResult.data;
@@ -136,12 +141,12 @@ export function JoinPage(): React.ReactElement {
       if (mode === "join" && codeValue) {
         const check = await checkSala(codeValue);
         if (check.status === "missing") {
-          setFormError("Sala não encontrada. Confira o código.");
+          setFormError(friendlyJoinMessage("sala_nao_encontrada", undefined, lang));
           setBusy(false);
           return;
         }
         if (check.status === "invalid") {
-          setCodeError("Código inválido. Use 4 letras ou números.");
+          setCodeError(friendlyJoinMessage("invalid_code", undefined, lang));
           setBusy(false);
           return;
         }
@@ -155,7 +160,7 @@ export function JoinPage(): React.ReactElement {
         },
         onClose: () => {
           if (!navigatedRef.current) {
-            setFormError(friendlyJoinMessage("connection_failed"));
+            setFormError(friendlyJoinMessage("connection_failed", undefined, lang));
             setBusy(false);
           }
         },
@@ -181,9 +186,9 @@ export function JoinPage(): React.ReactElement {
       navigate(`/s/${welcome.sala.code}`);
     } catch (error) {
       if (error instanceof JoinError) {
-        setFormError(friendlyJoinMessage(error.code, error.message));
+        setFormError(friendlyJoinMessage(error.code, error.message, lang));
       } else {
-        setFormError("Algo deu errado. Tente de novo.");
+        setFormError(genericJoinMessage(lang));
       }
       setBusy(false);
     }
@@ -193,51 +198,32 @@ export function JoinPage(): React.ReactElement {
     <div className="join-page">
       <section className="join-intro" aria-labelledby="join-intro-title">
         <h1 id="join-intro-title">
-          Seu time.
+          {content.intro.h1Line1}
           <br />
-          Na mesma mesa.
+          {content.intro.h1Line2}
         </h1>
-        <p className="join-intro-copy">
-          Abra uma sala para começar uma rodada ou use o código de um convite.
-          Sem cadastro, sem espera.
-        </p>
-        <ol className="join-ritual" aria-label="Como funciona">
-          <li>
-            <span className="join-ritual-index" aria-hidden="true">
-              01
-            </span>
-            <div className="join-ritual-text">
-              <strong>Crie a sala</strong>
-              <span>Escolha um apelido, sem conta.</span>
-            </div>
-          </li>
-          <li>
-            <span className="join-ritual-index" aria-hidden="true">
-              02
-            </span>
-            <div className="join-ritual-text">
-              <strong>Compartilhe o código</strong>
-              <span>Convide onde o time já conversa.</span>
-            </div>
-          </li>
-          <li>
-            <span className="join-ritual-index" aria-hidden="true">
-              03
-            </span>
-            <div className="join-ritual-text">
-              <strong>Estimem juntos</strong>
-              <span>Revelem e conversem sobre as diferenças.</span>
-            </div>
-          </li>
+        <p className="join-intro-copy">{content.intro.copy}</p>
+        <ol className="join-ritual" aria-label={content.intro.stepsAria}>
+          {content.intro.steps.map((step, index) => (
+            <li key={step.title}>
+              <span className="join-ritual-index" aria-hidden="true">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <div className="join-ritual-text">
+                <strong>{step.title}</strong>
+                <span>{step.body}</span>
+              </div>
+            </li>
+          ))}
         </ol>
       </section>
 
       <Card className="join-card">
         <CardHeader className="join-card-header">
-          <CardTitle>{mode === "create" ? "Prepare sua sala" : "Entre na sala"}</CardTitle>
-          <CardDescription>
-            Sem cadastro, só um apelido para a mesa.
-          </CardDescription>
+          <CardTitle>
+            {mode === "create" ? content.card.titleCreate : content.card.titleJoin}
+          </CardTitle>
+          <CardDescription>{content.card.description}</CardDescription>
         </CardHeader>
         <CardPanel className="join-card-panel">
           <form
@@ -252,7 +238,7 @@ export function JoinPage(): React.ReactElement {
               <div
                 className="join-mode-switch"
                 role="group"
-                aria-label="Criar sala ou entrar com código"
+                aria-label={content.card.modesAria}
               >
                 <Button
                   className="join-mode-button"
@@ -261,7 +247,7 @@ export function JoinPage(): React.ReactElement {
                   aria-pressed={mode === "create"}
                   onClick={() => switchMode("create")}
                 >
-                  Criar sala
+                  {content.card.createRoom}
                 </Button>
                 <Button
                   className="join-mode-button"
@@ -270,12 +256,12 @@ export function JoinPage(): React.ReactElement {
                   aria-pressed={mode === "join"}
                   onClick={() => switchMode("join")}
                 >
-                  Entrar com código
+                  {content.card.joinWithCode}
                 </Button>
               </div>
 
               <Field invalid={nickError !== null}>
-                <FieldLabel htmlFor="nick">Apelido</FieldLabel>
+                <FieldLabel htmlFor="nick">{content.card.nickLabel}</FieldLabel>
                 <Input
                   className="join-input"
                   id="nick"
@@ -289,13 +275,13 @@ export function JoinPage(): React.ReactElement {
                   spellCheck={false}
                   enterKeyHint={mode === "join" ? "next" : "go"}
                   disabled={busy}
-                  placeholder="Como o time te chama?"
+                  placeholder={content.card.nickPlaceholder}
                   aria-invalid={nickError ? true : undefined}
                   aria-describedby={nickError ? "nick-error" : "nick-hint"}
                   onChange={(event) => handleNickChange(event.target.value)}
                 />
                 <FieldDescription id="nick-hint">
-                  2 a 20 caracteres, sem espaços duplos.
+                  {content.card.nickHint}
                 </FieldDescription>
                 {nickError ? (
                   <FieldError id="nick-error" match={true}>
@@ -306,7 +292,7 @@ export function JoinPage(): React.ReactElement {
 
               {mode === "join" ? (
                 <Field invalid={codeError !== null}>
-                  <FieldLabel htmlFor="code">Código da sala</FieldLabel>
+                  <FieldLabel htmlFor="code">{content.card.codeLabel}</FieldLabel>
                   <OTPField
                     className="join-otp"
                     id="code"
@@ -323,12 +309,16 @@ export function JoinPage(): React.ReactElement {
                     {[0, 1, 2, 3].map((index) => (
                       <OTPFieldInput
                         key={index}
-                        aria-label={index === 0 ? undefined : `Caractere ${index + 1} de 4`}
+                        aria-label={
+                          index === 0
+                            ? undefined
+                            : content.card.codeCharAria(index)
+                        }
                       />
                     ))}
                   </OTPField>
                   <FieldDescription id="code-hint">
-                    4 letras ou números. Cole o código do convite.
+                    {content.card.codeHint}
                   </FieldDescription>
                   {codeError ? (
                     <FieldError id="code-error" match={true}>
@@ -338,7 +328,11 @@ export function JoinPage(): React.ReactElement {
                 </Field>
               ) : null}
 
-              <AvatarPicker value={avatar} onChange={handleAvatarChange} />
+              <AvatarPicker
+                value={avatar}
+                onChange={handleAvatarChange}
+                lang={lang}
+              />
 
               <label className="join-spectate" htmlFor="spectate">
                 <input
@@ -352,10 +346,10 @@ export function JoinPage(): React.ReactElement {
                 <span className="join-spectate-text">
                   <span className="join-spectate-title">
                     <EyeIcon aria-hidden="true" />
-                    Entrar como espectador
+                    {content.card.spectatorTitle}
                   </span>
                   <span className="join-spectate-hint">
-                    Assiste e reage, mas não vota nem ocupa assento.
+                    {content.card.spectatorHint}
                   </span>
                 </span>
               </label>
@@ -363,7 +357,7 @@ export function JoinPage(): React.ReactElement {
               {formError ? (
                 <Alert variant="error">
                   <CircleAlertIcon aria-hidden="true" />
-                  <AlertTitle>Não foi possível entrar</AlertTitle>
+                  <AlertTitle>{content.card.errorTitle}</AlertTitle>
                   <AlertDescription>{formError}</AlertDescription>
                 </Alert>
               ) : null}
@@ -377,10 +371,16 @@ export function JoinPage(): React.ReactElement {
             form="join-form"
             loading={busy}
           >
-            {mode === "create" ? "Criar sala" : "Entrar na sala"}
+            {mode === "create"
+              ? content.card.submitCreate
+              : content.card.submitJoin}
           </Button>
           <span role="status" className="sr-only">
-            {busy ? (mode === "create" ? "Criando sala…" : "Entrando na sala…") : ""}
+            {busy
+              ? mode === "create"
+                ? content.card.statusCreating
+                : content.card.statusJoining
+              : ""}
           </span>
         </CardFooter>
       </Card>

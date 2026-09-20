@@ -10,6 +10,7 @@ import {
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { useSession } from "../store/session";
 import { JoinPage } from "./join";
+import type { Lang } from "@/lib/i18n";
 
 class MockSocket {
 	static instances: MockSocket[] = [];
@@ -70,11 +71,11 @@ afterEach(() => {
 	});
 });
 
-function renderJoin(initial = "/join"): void {
+function renderJoin(initial = "/join", lang: Lang = "pt-BR"): void {
 	render(
 		<MemoryRouter initialEntries={[initial]}>
 			<Routes>
-				<Route path="/join" element={<JoinPage />} />
+				<Route path="/join" element={<JoinPage lang={lang} />} />
 				<Route path="/s/:code" element={<div>ARENA</div>} />
 			</Routes>
 		</MemoryRouter>,
@@ -150,6 +151,19 @@ describe("JoinPage", () => {
 		expect(ritual.textContent).toMatch("Crie a sala");
 		expect(ritual.textContent).toMatch("Compartilhe o código");
 		expect(ritual.textContent).toMatch("Estimem juntos");
+	});
+
+	test("renderiza em inglês quando lang=en (inclui validação)", () => {
+		installMocks(jsonFetch(200, {}));
+		renderJoin("/join", "en");
+		expect(screen.getByRole("list", { name: "How it works" })).toBeTruthy();
+		fireEvent.click(submitButton("Create room"));
+		expect(
+			screen.getByText("Nickname needs at least 2 characters."),
+		).toBeTruthy();
+		fireEvent.click(screen.getByRole("button", { name: "Join with code" }));
+		expect(screen.getByRole("group", { name: "Room code" })).toBeTruthy();
+		expect(submitButton("Join the room")).toBeTruthy();
 	});
 
 	test("bloqueia envio com apelido inválido sem chamar rede", () => {

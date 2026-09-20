@@ -6,6 +6,8 @@ import {
 	languageSwitchTarget,
 	readLanguagePreference,
 	rememberLanguage,
+	resolveInternalLang,
+	subscribeLanguage,
 } from "./language";
 
 function stubLanguages(
@@ -85,5 +87,33 @@ describe("seleção de idioma (15.T8)", () => {
 		expect(browserPrefersEnglish()).toBe(true);
 		stubLanguages(undefined, "pt-BR");
 		expect(browserPrefersEnglish()).toBe(false);
+	});
+
+	test("rotas internas: preferência salva → navegador → pt-BR", () => {
+		stubLanguages(["pt-BR"]);
+		expect(resolveInternalLang()).toBe("pt-BR");
+
+		stubLanguages(["en-US"]);
+		expect(resolveInternalLang()).toBe("en");
+
+		rememberLanguage("pt-BR");
+		stubLanguages(["en-US"]);
+		expect(resolveInternalLang()).toBe("pt-BR");
+
+		rememberLanguage("en");
+		stubLanguages(["pt-BR"]);
+		expect(resolveInternalLang()).toBe("en");
+	});
+
+	test("mudança de preferência notifica os observadores", () => {
+		let notifications = 0;
+		const unsubscribe = subscribeLanguage(() => {
+			notifications += 1;
+		});
+		rememberLanguage("en");
+		expect(notifications).toBe(1);
+		unsubscribe();
+		rememberLanguage("pt-BR");
+		expect(notifications).toBe(1);
 	});
 });

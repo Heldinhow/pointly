@@ -1,3 +1,4 @@
+import type { Lang } from "./i18n";
 import type { NudgeId } from "./protocol";
 
 /**
@@ -7,10 +8,10 @@ import type { NudgeId } from "./protocol";
  */
 export const NUDGE_CATALOG: ReadonlyArray<{
 	id: NudgeId;
-	label: string;
+	label: Record<Lang, string>;
 }> = [
-	{ id: "bora", label: "Bora!" },
-	{ id: "cafe", label: "☕ Café?" },
-	{ id: "polemica", label: "Polêmica!" },
-	{ id: "confia", label: "Confia" },
+	{ id: "bora", label: { "pt-BR": "Bora!", en: "Let's go!" } },
+	{ id: "cafe", label: { "pt-BR": "☕ Café?", en: "☕ Coffee?" } },
+	{ id: "polemica", label: { "pt-BR": "Polêmica!", en: "Hot take!" } },
+	{ id: "confia", label: { "pt-BR": "Confia", en: "Trust me" } },
 ];

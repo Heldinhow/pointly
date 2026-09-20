@@ -3,9 +3,11 @@ import {
 	CodeSchema,
 	NickSchema,
 	clearSession,
+	codeSchema,
 	getOrCreateUuid,
 	isValidCode,
 	loadSession,
+	nickSchema,
 	normalizeCode,
 	saveSession,
 } from "./identity";
@@ -70,6 +72,14 @@ describe("NickSchema", () => {
 		const short = NickSchema.safeParse("");
 		if (short.success) throw new Error("deveria falhar");
 		expect(short.error.issues[0]?.message).toMatch(/2 caracteres/);
+	});
+	test("fábrica EN traduz as mensagens", () => {
+		const short = nickSchema("en").safeParse("");
+		if (short.success) throw new Error("deveria falhar");
+		expect(short.error.issues[0]?.message).toMatch(/at least 2 characters/);
+		const code = codeSchema("en").safeParse("AB");
+		if (code.success) throw new Error("deveria falhar");
+		expect(code.error.issues[0]?.message).toMatch(/4 letters or digits/);
 	});
 });
 

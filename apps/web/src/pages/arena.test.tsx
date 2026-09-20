@@ -8,6 +8,7 @@ import {
 	waitFor,
 } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import type { Lang } from "../lib/i18n";
 import type { Player, SalaState, Vote } from "../lib/protocol";
 import { useSession } from "../store/session";
 import { ArenaPage } from "./arena";
@@ -180,11 +181,11 @@ function seed(session: {
 	return session.socket;
 }
 
-function renderArena(route = "/s/AB12"): void {
+function renderArena(route = "/s/AB12", lang: Lang = "pt-BR"): void {
 	render(
 		<MemoryRouter initialEntries={[route]}>
 			<Routes>
-				<Route path="/s/:code" element={<ArenaPage />} />
+				<Route path="/s/:code" element={<ArenaPage lang={lang} />} />
 				<Route path="/join" element={<div>JOIN</div>} />
 			</Routes>
 		</MemoryRouter>,
@@ -256,6 +257,21 @@ describe("ArenaPage (ticket 04)", () => {
 		expect(screen.getByTestId("seat-1").className).toMatch(
 			/poker-seat--self/,
 		);
+	});
+
+	test("renderiza a mesa em inglês quando lang=en", () => {
+		const socket = new FakeSocket();
+		const host = player({ id: "p_host", nick: "Ana", role: "host" }, 0);
+		seed({ sala: sala({ players: [host] }), playerId: host.id, socket });
+		renderArena("/s/AB12", "en");
+
+		expect(screen.getByTestId("sala-code").textContent).toMatch(/Room AB12/);
+		expect(screen.getByTestId("round-label").textContent).toMatch(/Round 1/);
+		expect(screen.getByTestId("presence-line").textContent).toMatch(
+			/1 in the room/,
+		);
+		expect(screen.getByText("Reveal votes")).toBeTruthy();
+		expect(screen.getAllByText("Empty seat")).toHaveLength(11);
 	});
 
 	test("segundo navegador aparece ao vivo com assento e votos corretos", async () => {

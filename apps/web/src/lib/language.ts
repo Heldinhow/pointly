@@ -44,9 +44,29 @@ export function readLanguagePreference(): Lang | null {
 	return stored === "en" || stored === "pt-BR" ? stored : null;
 }
 
+/**
+ * Idioma das rotas internas (`/join`, `/s/:code`), que não têm URL de idioma:
+ * preferência salva → idioma do navegador → pt-BR. Rotas públicas seguem o
+ * path (`/en/…`), que manda no SEO.
+ */
+export function resolveInternalLang(): Lang {
+	return readLanguagePreference() ?? (browserPrefersEnglish() ? "en" : "pt-BR");
+}
+
+const languageListeners = new Set<() => void>();
+
+/** Observador da preferência (SSOT do re-render do seletor in-place). */
+export function subscribeLanguage(listener: () => void): () => void {
+	languageListeners.add(listener);
+	return () => {
+		languageListeners.delete(listener);
+	};
+}
+
 /** Chamado só no clique do seletor: escolha explícita suprime o redirect. */
 export function rememberLanguage(lang: Lang): void {
 	safeSet(LANG_STORAGE_KEY, lang);
+	for (const listener of languageListeners) listener();
 }
 
 /** Idioma primário do navegador; só inglês conta para o redirect. */
