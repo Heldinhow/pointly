@@ -20,6 +20,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { OTPField, OTPFieldInput } from "@/components/ui/otp-field";
 import { AvatarPicker } from "@/components/avatar-picker";
+import {
+  trackRoomCreated,
+  trackRoomJoined,
+} from "@/lib/analytics";
 import { checkSala, resolveWsUrl } from "@/lib/api";
 import { clearAvatar, loadAvatar, saveAvatar } from "@/lib/avatar";
 import {
@@ -182,6 +186,8 @@ export function JoinPage({
         socket,
         spectate: welcome.role === "spectator",
       });
+      if (mode === "create") trackRoomCreated();
+      else trackRoomJoined();
       navigatedRef.current = true;
       navigate(`/s/${welcome.sala.code}`);
     } catch (error) {
