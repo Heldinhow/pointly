@@ -32,7 +32,7 @@ export function ShellHeader({
     <header
       data-slot="shell-header"
       className={cn(
-        "site-header mx-auto flex h-20 w-full items-center justify-between px-5 sm:px-8",
+        "site-header mx-auto flex h-[var(--header-h)] w-full items-center justify-between px-5 sm:px-8",
         className,
       )}
       {...props}

@@ -47,10 +47,10 @@
 
 .pt-guide__toc {
   position: sticky;
-  top: 72px;
-  /* Header sticky h-20 (80px) menos 8px de respiro; altura limitada para o
+  top: calc(var(--header-h) - 8px);
+  /* Header sticky var(--header-h) menos 8px de respiro; altura limitada para o
      bloco nunca cobrir o conteúdo em zoom ou viewport baixa. */
-  max-height: calc(100dvh - 72px - 24px);
+  max-height: calc(100dvh - var(--header-h) - 16px);
   overflow-y: auto;
   z-index: 1;
   margin-top: 32px;
@@ -103,7 +103,7 @@
 
 .pt-guide__section {
   padding-top: 44px;
-  scroll-margin-top: 96px;
+  scroll-margin-top: calc(var(--header-h) + 16px);
 }
 .pt-guide__section h2,
 .pt-guide__closing h2 {

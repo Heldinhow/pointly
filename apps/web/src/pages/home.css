@@ -20,10 +20,11 @@
   gap: 48px;
   padding: 32px 0 40px;
   border-bottom: 1px solid var(--home-line);
-  /* Primeira dobra limpa: hero ocupa a primeira tela (header sticky h-20
-     + site-main padding-top 32px descontados), demo fica 100% abaixo. */
-  min-height: calc(100svh - 80px - 32px);
-  min-height: calc(100dvh - 80px - 32px);
+  /* Primeira dobra limpa: hero ocupa a primeira tela (header sticky
+     var(--header-h) + site-main padding-top 32px descontados), demo fica
+     100% abaixo. */
+  min-height: calc(100svh - var(--header-h) - 32px);
+  min-height: calc(100dvh - var(--header-h) - 32px);
 }
 .pt-home__hero-copy {
   max-width: 680px;
@@ -424,7 +425,7 @@
   padding-top: 40px;
 }
 .pt-home__demo-wrap {
-  scroll-margin-top: 96px;
+  scroll-margin-top: calc(var(--header-h) + 16px);
 }
 .pt-home__demo-title-end {
   display: inline-block;
