@@ -237,27 +237,31 @@ export function JoinPage({
             <fieldset className="join-fields" disabled={busy}>
               <div
                 className="join-mode-switch"
-                role="group"
+                role="radiogroup"
                 aria-label={content.card.modesAria}
               >
-                <Button
-                  className="join-mode-button"
-                  type="button"
-                  variant={mode === "create" ? "outline" : "ghost"}
-                  aria-pressed={mode === "create"}
-                  onClick={() => switchMode("create")}
-                >
-                  {content.card.createRoom}
-                </Button>
-                <Button
-                  className="join-mode-button"
-                  type="button"
-                  variant={mode === "join" ? "outline" : "ghost"}
-                  aria-pressed={mode === "join"}
-                  onClick={() => switchMode("join")}
-                >
-                  {content.card.joinWithCode}
-                </Button>
+                <label className="join-mode-button">
+                  <input
+                    type="radio"
+                    name="join-mode"
+                    className="sr-only"
+                    checked={mode === "create"}
+                    aria-label={content.card.createRoom}
+                    onChange={() => switchMode("create")}
+                  />
+                  <span>{content.card.createRoom}</span>
+                </label>
+                <label className="join-mode-button">
+                  <input
+                    type="radio"
+                    name="join-mode"
+                    className="sr-only"
+                    checked={mode === "join"}
+                    aria-label={content.card.joinWithCode}
+                    onChange={() => switchMode("join")}
+                  />
+                  <span>{content.card.joinWithCode}</span>
+                </label>
               </div>
 
               <Field invalid={nickError !== null}>
@@ -334,25 +338,27 @@ export function JoinPage({
                 lang={lang}
               />
 
-              <label className="join-spectate" htmlFor="spectate">
-                <input
-                  id="spectate"
-                  name="spectate"
-                  type="checkbox"
-                  checked={spectate}
-                  disabled={busy}
-                  onChange={(event) => setSpectate(event.target.checked)}
-                />
-                <span className="join-spectate-text">
-                  <span className="join-spectate-title">
-                    <EyeIcon aria-hidden="true" />
-                    {content.card.spectatorTitle}
+              {mode === "join" ? (
+                <label className="join-spectate" htmlFor="spectate">
+                  <input
+                    id="spectate"
+                    name="spectate"
+                    type="checkbox"
+                    checked={spectate}
+                    disabled={busy}
+                    onChange={(event) => setSpectate(event.target.checked)}
+                  />
+                  <span className="join-spectate-text">
+                    <span className="join-spectate-title">
+                      <EyeIcon aria-hidden="true" />
+                      {content.card.spectatorTitle}
+                    </span>
+                    <span className="join-spectate-hint">
+                      {content.card.spectatorHint}
+                    </span>
                   </span>
-                  <span className="join-spectate-hint">
-                    {content.card.spectatorHint}
-                  </span>
-                </span>
-              </label>
+                </label>
+              ) : null}
 
               {formError ? (
                 <Alert variant="error">
@@ -375,7 +381,7 @@ export function JoinPage({
               ? content.card.submitCreate
               : content.card.submitJoin}
           </Button>
-          <span role="status" className="sr-only">
+          <span role="status" className="join-busy-note">
             {busy
               ? mode === "create"
                 ? content.card.statusCreating

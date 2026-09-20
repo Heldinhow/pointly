@@ -50,7 +50,7 @@ export function LandingPage({
               <Button size="xl" render={<Link to="/join" />}>
                 {content.ctaLabel} <ArrowRightIcon aria-hidden="true" />
               </Button>
-              <a href="#como-funciona" className="pt-landing__text-link">
+              <a href="#how-it-works" className="pt-landing__text-link">
                 {content.howAnchorLabel}
               </a>
             </div>
@@ -63,7 +63,7 @@ export function LandingPage({
 
         <section
           className="pt-landing__how"
-          id="como-funciona"
+          id="how-it-works"
           aria-labelledby="landing-how-title"
         >
           <div className="pt-landing__section-intro">
@@ -119,7 +119,7 @@ export function LandingPage({
 
         <section
           className="pt-landing__faq"
-          id="perguntas"
+          id="faq"
           aria-labelledby="landing-faq-title"
         >
           <div className="pt-landing__section-intro">
@@ -152,7 +152,7 @@ export function LandingPage({
             {content.guidesLink.text}{" "}
             <Link to={content.guidesLink.to}>{content.guidesLink.label}</Link>.
           </p>
-          <p className="pt-landing__cross-link">
+          <p className="pt-landing__cross-link pt-landing__cross-link--quiet">
             {content.crossLink.text}{" "}
             <Link to={content.crossLink.to}>{content.crossLink.label}</Link>.
           </p>

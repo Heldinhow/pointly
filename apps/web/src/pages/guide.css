@@ -46,10 +46,14 @@
 }
 
 .pt-guide__toc {
+  position: sticky;
+  top: 72px;
+  z-index: 1;
   margin-top: 32px;
   padding: 20px 0 22px;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
+  background: var(--background);
 }
 .pt-guide__toc-title {
   margin: 0 0 14px;
@@ -88,6 +92,10 @@
   color: var(--primary);
   text-decoration: underline;
 }
+.pt-guide__toc a[aria-current="true"] {
+  color: var(--primary);
+  font-weight: 600;
+}
 
 .pt-guide__section {
   padding-top: 44px;
@@ -104,8 +112,10 @@
 }
 .pt-guide__section p {
   margin: 16px 0 0;
+  max-width: 70ch;
   font-size: 17px;
   line-height: 1.7;
+  text-wrap: pretty;
 }
 .pt-guide__section p + p {
   margin-top: 14px;
@@ -179,7 +189,7 @@
 }
 .pt-guide__callout p + p {
   margin: 8px 0 0;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.65;
 }
 
@@ -213,8 +223,7 @@
 .pt-guide__table td:first-child {
   color: var(--primary);
   font-family: var(--font-mono), monospace;
-  font-size: 13px;
-  white-space: nowrap;
+  font-size: 14px;
 }
 
 .pt-guide__list {
@@ -234,22 +243,47 @@
   margin: 20px 0 0;
   border-top: 1px solid var(--border);
 }
-.pt-guide__faq > div {
-  padding: 16px 0 18px;
+.pt-guide__faq > details {
+  padding: 14px 0 16px;
   border-bottom: 1px solid var(--border);
 }
-.pt-guide__faq > div:last-child {
+.pt-guide__faq > details:last-child {
   border-bottom: 0;
 }
-.pt-guide__faq dt {
+.pt-guide__faq summary {
+  cursor: pointer;
   font-size: 17px;
   font-weight: 650;
+  line-height: 1.4;
+  list-style: none;
 }
-.pt-guide__faq dd {
-  margin: 8px 0 0;
+.pt-guide__faq summary::-webkit-details-marker {
+  display: none;
+}
+.pt-guide__faq summary::before {
+  content: "+";
+  display: inline-block;
+  margin-right: 10px;
+  color: var(--primary);
+  font-family: var(--font-mono), monospace;
+  font-weight: 500;
+  transition: transform 150ms ease-out;
+}
+.pt-guide__faq details[open] summary::before {
+  transform: rotate(45deg);
+}
+.pt-guide__faq summary:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.pt-guide__faq details p {
+  margin: 8px 0 0 24px;
+  max-width: 70ch;
   color: var(--muted-foreground);
   font-size: 16px;
   line-height: 1.65;
+  text-wrap: pretty;
 }
 
 .pt-guide__closing {
@@ -338,11 +372,22 @@
   line-height: 1.6;
 }
 .pt-guides-hub__meta {
-  margin: 0;
+  margin: 12px 0 0;
   color: var(--muted-foreground);
   font-family: var(--font-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.04em;
+}
+.pt-guides-hub__start {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 .pt-guides-hub__closing {
   margin-top: 48px;

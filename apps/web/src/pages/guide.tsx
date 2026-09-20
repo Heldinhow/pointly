@@ -1,5 +1,6 @@
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -100,6 +101,29 @@ export function GuidePage({
 }: {
   content: GuideCopy;
 }): React.ReactElement {
+  const [activeId, setActiveId] = useState<string | null>(null);
+  // TOC ativo: observa as seções e marca onde a leitura está.
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+    const ids = content.sections.map((section) => section.id);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActiveId(entry.target.id);
+        }
+      },
+      { rootMargin: "0px 0px -80% 0px" },
+    );
+    const elements: Element[] = [];
+    for (const id of ids) {
+      const element = document.getElementById(id);
+      if (element) {
+        elements.push(element);
+        observer.observe(element);
+      }
+    }
+    return () => observer.disconnect();
+  }, [content]);
   return (
     <div className="pt-guide">
       <article className="pt-guide__article" data-testid="guide-article">
@@ -123,7 +147,12 @@ export function GuidePage({
                 <span aria-hidden="true">
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <a href={`#${section.id}`}>{section.title}</a>
+                <a
+                  href={`#${section.id}`}
+                  aria-current={activeId === section.id ? "true" : undefined}
+                >
+                  {section.title}
+                </a>
               </li>
             ))}
           </ol>
@@ -138,14 +167,14 @@ export function GuidePage({
           >
             <h2 id={`${section.id}-title`}>{section.title}</h2>
             {section.blocks.length === 0 ? (
-              <dl className="pt-guide__faq" data-testid="guide-faq">
-                {content.faq.items.map((item) => (
-                  <div key={item.question}>
-                    <dt>{item.question}</dt>
-                    <dd>{item.answer}</dd>
-                  </div>
+              <div className="pt-guide__faq" data-testid="guide-faq">
+                {content.faq.items.map((item, itemIndex) => (
+                  <details key={item.question} open={itemIndex === 0}>
+                    <summary>{item.question}</summary>
+                    <p>{item.answer}</p>
+                  </details>
                 ))}
-              </dl>
+              </div>
             ) : (
               section.blocks.map((block, blockIndex) => (
                 <GuideBlockView key={blockIndex} block={block} />
@@ -189,13 +218,16 @@ export function GuideHubPage({
       </header>
 
       <ul className="pt-guides-hub__list" role="list">
-        {content.cards.map((guide) => (
+        {content.cards.map((guide, index) => (
           <li key={guide.to}>
             <Card className="pt-guides-hub__card" render={<Link to={guide.to} />}>
               <CardHeader>
-                <p className="pt-guides-hub__meta">{guide.readingTime}</p>
+                {index === 0 ? (
+                  <p className="pt-guides-hub__start">{content.startHere}</p>
+                ) : null}
                 <CardTitle render={<h2 />}>{guide.title}</CardTitle>
                 <CardDescription>{guide.description}</CardDescription>
+                <p className="pt-guides-hub__meta">{guide.readingTime}</p>
               </CardHeader>
             </Card>
           </li>

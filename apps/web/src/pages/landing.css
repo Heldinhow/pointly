@@ -122,7 +122,7 @@
 .pt-landing__deck-note {
   margin: 0;
   color: var(--muted-foreground);
-  font-size: 13px;
+  font-size: 14px;
   text-align: center;
 }
 
@@ -141,7 +141,7 @@
 }
 .pt-landing h2 {
   font-size: clamp(26px, 3vw, 38px);
-  font-weight: 550;
+  font-weight: 600;
   line-height: 1.15;
   text-wrap: balance;
 }
@@ -239,6 +239,7 @@
   color: var(--muted-foreground);
   font-size: 15px;
   line-height: 1.7;
+  text-wrap: pretty;
 }
 .pt-landing__prose p + p {
   margin-top: 14px;
@@ -259,9 +260,11 @@
 }
 .pt-landing__faq-item dd {
   margin: 8px 0 0;
+  max-width: 70ch;
   color: var(--muted-foreground);
   font-size: 15px;
   line-height: 1.65;
+  text-wrap: pretty;
 }
 
 .pt-landing__closing {
@@ -280,6 +283,12 @@
 .pt-landing__cross-link {
   margin-top: 26px;
   font-size: 14px;
+}
+.pt-landing__cross-link--quiet {
+  margin-top: 10px;
+}
+.pt-landing__cross-link--quiet a {
+  font-weight: 500;
 }
 .pt-landing__cross-link a {
   color: var(--primary);

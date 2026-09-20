@@ -277,7 +277,7 @@ describe("HomePage EN (15.T7 — /en)", () => {
 			"3 votes on 5",
 		);
 		expect(screen.getByTestId("demo-create").textContent).toMatch(
-			/Create a room with my team/,
+			/Create room/,
 		);
 		expect(screen.getByTestId("demo-retry").textContent).toMatch(
 			/Try again/,

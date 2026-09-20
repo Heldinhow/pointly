@@ -161,7 +161,7 @@ describe("JoinPage", () => {
 		expect(
 			screen.getByText("Nickname needs at least 2 characters."),
 		).toBeTruthy();
-		fireEvent.click(screen.getByRole("button", { name: "Join with code" }));
+		fireEvent.click(screen.getByRole("radio", { name: "Join with code" }));
 		expect(screen.getByRole("group", { name: "Room code" })).toBeTruthy();
 		expect(submitButton("Join the room")).toBeTruthy();
 	});
@@ -184,7 +184,7 @@ describe("JoinPage", () => {
 	test("converte código digitado para maiúsculas", () => {
 		installMocks(jsonFetch(200, {}));
 		renderJoin();
-		fireEvent.click(screen.getByRole("button", { name: "Entrar com código" }));
+		fireEvent.click(screen.getByRole("radio", { name: "Entrar com código" }));
 		const slots = document.querySelectorAll('input[inputmode="text"]');
 		const first = slots[0] as HTMLInputElement;
 		fireEvent.change(first, { target: { value: "a" } });
@@ -288,10 +288,10 @@ describe("JoinPage", () => {
 		expect(hello.payload.spectate).toBe(true);
 	});
 
-	test("modo create mostra entrar como espectador", () => {
+	test("modo create não oferece entrar como espectador", () => {
 		installMocks(jsonFetch(200, {}));
 		renderJoin("/join");
-		expect(screen.getByLabelText(/Entrar como espectador/)).toBeTruthy();
+		expect(screen.queryByLabelText(/Entrar como espectador/)).toBeNull();
 	});
 
 	test("join com avatar envia no hello e persiste no dispositivo", async () => {

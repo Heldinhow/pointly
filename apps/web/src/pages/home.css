@@ -405,6 +405,7 @@
   margin-top: 8px;
   color: var(--home-muted);
   font-size: 14px;
+  font-weight: 600;
   text-decoration-line: underline;
   text-underline-offset: 4px;
   text-decoration-thickness: 1px;
@@ -573,6 +574,17 @@
   color: var(--home-muted);
   font-size: 14px;
 }
+.pt-home__stat-detail > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--home-ink);
+  width: fit-content;
+}
+.pt-home__stat-detail > summary:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
 .pt-home__stat-detail b {
   color: var(--home-ink);
   font-family: var(--font-mono), monospace;
@@ -694,12 +706,12 @@
   .pt-home__felt {
     position: relative;
     inset: auto;
-    min-height: 300px;
+    min-height: 240px;
     border-width: 8px;
-    padding: 24px 16px 26px;
+    padding: 20px 12px 22px;
   }
   .pt-home__felt-story {
-    font-size: 19px;
+    font-size: 17px;
   }
   .pt-home__fan > * + * {
     margin-left: -10px;

@@ -92,11 +92,14 @@ describe("Guias (15.T6 — pt + EN)", () => {
         expect(screen.getByRole("heading", { name: section.title })).toBeTruthy();
       }
 
-      // FAQ visível espelha o conteúdo.
-      const faq = within(screen.getByTestId("guide-faq")).getAllByRole("term");
-      expect(faq.map((item) => item.textContent)).toEqual(
-        content.faq.items.map((item) => item.question),
-      );
+      // FAQ visível espelha o conteúdo (accordion nativo, 1º aberto).
+      const faq = within(screen.getByTestId("guide-faq"));
+      expect(
+        content.faq.items.map((item) => faq.getByText(item.question).textContent),
+      ).toEqual(content.faq.items.map((item) => item.question));
+      for (const item of content.faq.items) {
+        expect(faq.getByText(item.answer)).toBeTruthy();
+      }
 
       // CTA para criar sala.
       expect(

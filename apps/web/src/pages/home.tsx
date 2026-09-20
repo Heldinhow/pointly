@@ -231,7 +231,7 @@ export function HomePage({
                 className="pt-home__seat pt-home__seat--you"
                 style={{ "--i": 3 } as CSSProperties}
               >
-                <i>VO</i>
+                <i>{lang === "en" ? "YO" : "VO"}</i>
                 <b>{content.visual.you}</b>
               </span>
             </div>
@@ -359,7 +359,8 @@ export function HomePage({
                         {formatMedian(consensus.median)}
                       </strong>
                     </div>
-                    <div className="pt-home__stat-detail">
+                    <details className="pt-home__stat-detail">
+                      <summary>{content.demo.statsDetails}</summary>
                       <span data-testid="stats-caption">
                         {content.demo.captionMean}{" "}
                         <b data-testid="stats-mean-value">
@@ -389,7 +390,7 @@ export function HomePage({
                           ))}
                         </span>
                       )}
-                    </div>
+                    </details>
                   </output>
                   {noNumerics && (
                     <p

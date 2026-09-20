@@ -39,10 +39,11 @@ export const HOME_CONTENT_EN: HomeContent = {
 		statsMedian: "Median",
 		captionMean: "average",
 		captionRange: "range",
+		statsDetails: "Details",
 		pipTitle: (count, value) =>
 			`${count} ${count > 1 ? "votes" : "vote"} on ${value}`,
 		noNumerics: "Only pause or nobody voted. No average, median or range.",
-		createWithTeam: "Create a room with my team",
+		createWithTeam: "Create room",
 		retry: "Try again",
 	},
 	how: {

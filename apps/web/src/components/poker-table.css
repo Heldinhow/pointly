@@ -109,6 +109,10 @@ button.poker-seat-target:hover .poker-avatar,
 button.poker-seat-target[aria-expanded="true"] .poker-avatar {
   box-shadow: 0 0 0 2px var(--primary);
 }
+/* Affordance persistente: assentos interativos mostram anel primário sutil. */
+button.poker-seat-target .poker-avatar {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 45%, var(--border));
+}
 /* Painel acima dos voos quando aberto. */
 .poker-seat:has(button.poker-seat-target[aria-expanded="true"]) {
   z-index: 6;

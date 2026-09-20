@@ -40,10 +40,11 @@ export const HOME_CONTENT_PT: HomeContent = {
 		statsMedian: "Mediana",
 		captionMean: "média",
 		captionRange: "intervalo",
+		statsDetails: "Detalhes",
 		pipTitle: (count, value) =>
 			`${count} ${count > 1 ? "votos" : "voto"} em ${value}`,
 		noNumerics: "Só pausa ou ninguém votou. Sem média, mediana nem intervalo.",
-		createWithTeam: "Criar sala com meu time",
+		createWithTeam: "Criar sala",
 		retry: "Tentar de novo",
 	},
 	how: {

@@ -127,28 +127,37 @@
   background: var(--muted);
 }
 .join-mode-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 44px;
-  border-color: transparent;
+  border: 1px solid transparent;
   border-radius: 9px;
   font-size: 14px;
+  cursor: pointer;
   transition:
     background-color 180ms ease-out,
     border-color 180ms ease-out,
     box-shadow 180ms ease-out;
 }
-.join-mode-button[aria-pressed="true"] {
+.join-mode-button:has(input:checked) {
   background: var(--card);
   color: var(--foreground);
   border-color: var(--border);
   box-shadow: 0 1px 3px color-mix(in srgb, var(--foreground) 8%, transparent);
+  font-weight: 600;
 }
-.join-mode-button[aria-pressed="false"] {
+.join-mode-button:has(input:not(:checked)) {
   background: transparent;
   color: var(--muted-foreground);
   box-shadow: none;
 }
 .join-mode-button:hover {
   color: var(--foreground);
+}
+.join-mode-button:has(input:focus-visible) {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 .join-form [data-slot="field-description"] {
   font-size: 14px;
@@ -219,6 +228,19 @@
 .join-card-footer {
   padding-top: 0;
   padding-bottom: clamp(28px, 4vw, 44px);
+  flex-direction: column;
+  align-items: stretch;
+}
+.join-busy-note {
+  min-height: 22px;
+  margin: 10px 0 0;
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 1.55;
+  text-align: center;
+}
+.join-busy-note:empty {
+  display: none;
 }
 .join-submit {
   width: 100%;
@@ -265,6 +287,8 @@
 .not-found-footer {
   padding-top: 26px;
   padding-bottom: 42px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .not-found-code {
   font-family: var(--font-mono);
@@ -290,7 +314,10 @@
     font-size: 15px;
   }
   .join-ritual {
-    display: none;
+    margin-top: 20px;
+  }
+  .join-ritual li {
+    padding: 8px 0;
   }
 }
 @media (max-width: 390px) {

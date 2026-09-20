@@ -1141,6 +1141,15 @@ describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 			/Qual é a sua estimativa\?/,
 		);
 	});
+
+	test("reveal mostra resultados antes do convite na sidebar", () => {
+		revealedTwoPlayer();
+		const stats = screen.getByTestId("stats-pill");
+		const invite = screen.getByLabelText("Link de convite");
+		expect(
+			stats.compareDocumentPosition(invite) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+	});
 });
 
 describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {

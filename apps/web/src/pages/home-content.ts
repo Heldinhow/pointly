@@ -49,6 +49,7 @@ export type HomeContent = {
 		statsMedian: string;
 		captionMean: string;
 		captionRange: string;
+		statsDetails: string;
 		pipTitle: (count: number, value: string) => string;
 		noNumerics: string;
 		createWithTeam: string;

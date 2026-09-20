@@ -63,6 +63,8 @@ export type GuideHubCopy = {
 	kicker: string;
 	h1: string;
 	lede: string;
+	/** Selo do primeiro card (porta de entrada da ordem R3). */
+	startHere: string;
 	cards: readonly GuideHubCard[];
 	closing: { title: string; body: string; cta: string };
 };

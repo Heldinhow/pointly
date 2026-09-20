@@ -7,6 +7,7 @@ export const GUIDE_HUB_PT: GuideHubCopy = {
 	kicker: "Aprenda o ritual",
 	h1: "Guias de planning poker",
 	lede: "Guias práticos para rodar estimativas melhores: comece pelo passo a passo, entenda o porquê e domine os story points.",
+	startHere: "Comece aqui",
 	cards: [
 		{
 			to: "/guias/como-jogar-planning-poker",

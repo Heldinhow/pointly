@@ -324,7 +324,7 @@ export function ArenaPage({
           }
           setConfirmingNewRound(false);
           setNewRoundError(shown(content.errors.newRound));
-        } else if (/reveal/i.test(text) || /reveal/i.test(_code)) {
+        } else if (/reveal|revelar|revela/i.test(text) || /reveal/i.test(_code)) {
           // Erros de reveal (invalid_phase com "reveal") vão para o
           // alerta de reveal; o resto continua no alerta de voto.
           setRevealError(shown(content.errors.reveal));
@@ -986,7 +986,6 @@ export function ArenaPage({
                           ? content.reveal.revealAria
                           : content.reveal.revealAriaWaiting
                       }
-                      title={canReveal ? "Atalho: R" : undefined}
                     >
                       <EyeIcon aria-hidden="true" />
                       {content.reveal.reveal}
@@ -1016,7 +1015,6 @@ export function ArenaPage({
                           ? content.reveal.newRoundAriaConfirm
                           : content.reveal.newRoundAria
                       }
-                      title="Atalho: N (duas vezes)"
                     >
                       <RotateCcwIcon aria-hidden="true" />
                       {confirmingNewRound
@@ -1155,80 +1153,6 @@ export function ArenaPage({
               </span>
             </div>
           ) : null}
-          {showInvite ? (
-            <Card className="arena-invite">
-              <CardHeader>
-                <CardTitle className="text-base">{content.invite.title}</CardTitle>
-                <CardDescription>
-                  {content.invite.description}
-                </CardDescription>
-              </CardHeader>
-              <CardPanel className="flex flex-col gap-3">
-                <div className="flex gap-2">
-                  <Input
-                    readOnly
-                    value={inviteUrl}
-                    aria-label={content.invite.linkAria}
-                    onFocus={(event) => event.currentTarget.select()}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      void handleCopy();
-                    }}
-                  >
-                    {copied ? (
-                      <CheckIcon aria-hidden="true" />
-                    ) : (
-                      <CopyIcon aria-hidden="true" />
-                    )}
-                    {copied ? content.invite.copied : content.invite.copy}
-                  </Button>
-                </div>
-                <div aria-live="polite" className="min-h-5 text-sm">
-                  {copied ? (
-                    <span
-                      className="text-success-foreground"
-                      data-testid="copy-feedback"
-                    >
-                      {content.invite.copyFeedback}
-                    </span>
-                  ) : null}
-                  {copyError ? (
-                    <span className="text-destructive-foreground">
-                      {content.invite.copyError}
-                    </span>
-                  ) : null}
-                </div>
-                {solo ? (
-                  <div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setInviteHidden(true)}
-                    >
-                      <EyeOffIcon aria-hidden="true" />
-                      {content.invite.hide}
-                    </Button>
-                  </div>
-                ) : null}
-              </CardPanel>
-            </Card>
-          ) : (
-            <div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setInviteHidden(false)}
-              >
-                {content.invite.show}
-              </Button>
-            </div>
-          )}
-
           {isRevealed ? (
             <Card className="arena-results">
               <CardHeader>
@@ -1344,6 +1268,80 @@ export function ArenaPage({
               </CardPanel>
             </Card>
           ) : null}
+
+          {showInvite ? (
+            <Card className="arena-invite">
+              <CardHeader>
+                <CardTitle className="text-base">{content.invite.title}</CardTitle>
+                <CardDescription>
+                  {content.invite.description}
+                </CardDescription>
+              </CardHeader>
+              <CardPanel className="flex flex-col gap-3">
+                <div className="flex gap-2">
+                  <Input
+                    readOnly
+                    value={inviteUrl}
+                    aria-label={content.invite.linkAria}
+                    onFocus={(event) => event.currentTarget.select()}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      void handleCopy();
+                    }}
+                  >
+                    {copied ? (
+                      <CheckIcon aria-hidden="true" />
+                    ) : (
+                      <CopyIcon aria-hidden="true" />
+                    )}
+                    {copied ? content.invite.copied : content.invite.copy}
+                  </Button>
+                </div>
+                <div aria-live="polite" className="min-h-5 text-sm">
+                  {copied ? (
+                    <span
+                      className="text-success-foreground"
+                      data-testid="copy-feedback"
+                    >
+                      {content.invite.copyFeedback}
+                    </span>
+                  ) : null}
+                  {copyError ? (
+                    <span className="text-destructive-foreground">
+                      {content.invite.copyError}
+                    </span>
+                  ) : null}
+                </div>
+                {solo ? (
+                  <div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setInviteHidden(true)}
+                    >
+                      <EyeOffIcon aria-hidden="true" />
+                      {content.invite.hide}
+                    </Button>
+                  </div>
+                ) : null}
+              </CardPanel>
+            </Card>
+          ) : (
+            <div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setInviteHidden(false)}
+              >
+                {content.invite.show}
+              </Button>
+            </div>
+          )}
 
           {!isRevealed && (
             <div className="arena-waiting">
