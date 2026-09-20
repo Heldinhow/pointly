@@ -2,3 +2,5 @@ User-agent: *
 Allow: /
 
 Sitemap: https://pointly.space/sitemap.xml
+
+# Machine-readable site index for LLMs: https://pointly.space/llms.txt
