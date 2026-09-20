@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import App from "./App";
+import { __resetAnalyticsForTests } from "./lib/analytics";
 import { LANG_STORAGE_KEY } from "./lib/language";
 
 function stubNavigatorLanguages(languages: readonly string[]): void {
@@ -157,7 +158,9 @@ describe("App (15.T8 — seleção de idioma)", () => {
 
     expect(screen.getByLabelText("Nickname")).toBeTruthy();
     expect(
-      screen.getByRole("group", { name: "Create a room or join with a code" }),
+      screen.getByRole("radiogroup", {
+        name: "Create a room or join with a code",
+      }),
     ).toBeTruthy();
   });
 
@@ -225,5 +228,88 @@ describe("App (15.T8 — seleção de idioma)", () => {
       /Free online planning poker/,
     );
     expect(window.localStorage.getItem(LANG_STORAGE_KEY)).toBeNull();
+  });
+});
+
+describe("App (GA4 — pageview nunca vaza código de sala)", () => {
+  const GA_ID = "G-TESTAPP";
+  let calls: unknown[][];
+
+  function setGaEnv(id: string): void {
+    process.env.VITE_GA_MEASUREMENT_ID = id;
+    (import.meta.env as Record<string, string | undefined>).VITE_GA_MEASUREMENT_ID =
+      id;
+  }
+
+  function clearGaEnv(): void {
+    delete process.env.VITE_GA_MEASUREMENT_ID;
+    delete (import.meta.env as Record<string, string | undefined>)
+      .VITE_GA_MEASUREMENT_ID;
+  }
+
+  function removeGtagScripts(): void {
+    for (const node of document.querySelectorAll(
+      'script[src*="googletagmanager.com/gtag/js"]',
+    )) {
+      node.remove();
+    }
+  }
+
+  function pageViewPaths(): string[] {
+    return calls
+      .filter((args) => args[0] === "event" && args[1] === "page_view")
+      .map((args) => (args[2] as Record<string, unknown> | undefined)?.page_path)
+      .filter((path): path is string => typeof path === "string");
+  }
+
+  beforeEach(() => {
+    __resetAnalyticsForTests();
+    clearGaEnv();
+    removeGtagScripts();
+    delete window.gtag;
+    delete window.dataLayer;
+    window.scrollTo = (() => {}) as typeof window.scrollTo;
+    setGaEnv(GA_ID);
+    calls = [];
+    window.gtag = (...args: unknown[]) => {
+      calls.push(args);
+    };
+  });
+
+  afterEach(() => {
+    __resetAnalyticsForTests();
+    clearGaEnv();
+    removeGtagScripts();
+    delete window.gtag;
+    delete window.dataLayer;
+  });
+
+  test("/join?code=XXXX envia /join (query descartada)", () => {
+    render(
+      <MemoryRouter initialEntries={["/join?code=ABCD&mode=join"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(pageViewPaths()).toEqual(["/join"]);
+    expect(JSON.stringify(calls)).not.toContain("ABCD");
+  });
+
+  test("/s/XXXX envia /s/[room] (código mascarado)", () => {
+    render(
+      <MemoryRouter initialEntries={["/s/ABCD"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    // Sem sessão, a arena redireciona para /join — ambos os pageviews
+    // devem sair sanitizados.
+    const paths = pageViewPaths();
+    expect(paths.length).toBeGreaterThan(0);
+    expect(paths[0]).toBe("/s/[room]");
+    for (const path of paths) {
+      expect(["/s/[room]", "/join"]).toContain(path);
+    }
+    expect(JSON.stringify(calls)).not.toContain("ABCD");
   });
 });

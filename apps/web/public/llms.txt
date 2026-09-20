@@ -1,0 +1,48 @@
+# Pointly
+
+> Free online planning poker for agile teams. No signup. Ephemeral rooms.
+
+Pointly is a lightweight planning poker (scrum poker) tool: create a room, share a 4-character code or link, vote with a Fibonacci deck, reveal together, start a new round. Rooms are temporary — nothing to register, no accounts, no session history.
+
+Site: https://pointly.space
+
+## Português
+
+Pointly é planning poker online grátis para times ágeis: sem cadastro, salas efêmeras. Crie a sala, compartilhe o código, vote, revele e estime juntos em tempo real.
+
+### Como começar
+- Abra https://pointly.space/join e crie uma sala (ou entre com um código).
+- Compartilhe o link `/s/XXXX` ou o código de 4 caracteres com o time.
+- Cada pessoa escolhe uma carta; qualquer jogador pode revelar e abrir nova rodada.
+
+### URLs principais
+- Início: https://pointly.space/
+- Planning poker: https://pointly.space/planning-poker
+- Scrum poker: https://pointly.space/scrum-poker
+- Guias: https://pointly.space/guias
+- Como jogar: https://pointly.space/guias/como-jogar-planning-poker
+- O que é planning poker: https://pointly.space/guias/o-que-e-planning-poker
+- Story points: https://pointly.space/guias/story-points
+- Entrar / criar sala: https://pointly.space/join
+
+## English
+
+Pointly is free online planning poker for agile teams: no signup, ephemeral rooms. Create a room, share the code, vote, reveal, and estimate together in real time.
+
+### How to start
+- Open https://pointly.space/join and create a room (or join with a code).
+- Share the `/s/XXXX` link or the 4-character code with your team.
+- Everyone picks a card; any player can reveal and start a new round.
+
+### Primary URLs
+- Home: https://pointly.space/en
+- Planning poker: https://pointly.space/en/planning-poker
+- Scrum poker: https://pointly.space/en/scrum-poker
+- Guides: https://pointly.space/en/guides
+- How to play: https://pointly.space/en/guides/how-to-play-planning-poker
+- What is planning poker: https://pointly.space/en/guides/what-is-planning-poker
+- Story points: https://pointly.space/en/guides/story-points
+- Join / create room: https://pointly.space/join
+
+## Optional
+- Join with a code (prefilled form): https://pointly.space/join?mode=join

@@ -43,6 +43,11 @@ import {
 } from "@/lib/stats";
 import type { Phase, Player, Vote } from "@/lib/protocol";
 import type { NudgeId, ProjectileType } from "@/lib/protocol";
+import {
+  trackNewRound,
+  trackVoteCast,
+  trackVotesRevealed,
+} from "@/lib/analytics";
 import { useSession } from "@/store/session";
 import { JoinError, friendlyJoinMessage, genericJoinMessage } from "@/lib/errors";
 import { SOCKET_ERROR_COPY } from "@/lib/forms";
@@ -395,9 +400,8 @@ export function ArenaPage({
       event.preventDefault();
       setRevealError(null);
       const sent = sendRevealThroughSession();
-      if (!sent) {
-        setRevealError(errorCopy.reveal);
-      }
+      if (sent) trackVotesRevealed();
+      else setRevealError(errorCopy.reveal);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -435,9 +439,8 @@ export function ArenaPage({
       setConfirmingNewRound(false);
       setNewRoundError(null);
       const sent = sendNewRoundThroughSession();
-      if (!sent) {
-        setNewRoundError(errorCopy.newRound);
-      }
+      if (sent) trackNewRound();
+      else setNewRoundError(errorCopy.newRound);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -687,9 +690,8 @@ export function ArenaPage({
     if (!canReveal) return;
     setRevealError(null);
     const sent = sendRevealThroughSession();
-    if (!sent) {
-      setRevealError(errorCopy.reveal);
-    }
+    if (sent) trackVotesRevealed();
+    else setRevealError(errorCopy.reveal);
   }
 
   // Nova rodada (issue 08): qualquer Player abre após o reveal, mas com
@@ -715,9 +717,8 @@ export function ArenaPage({
     setConfirmingNewRound(false);
     setNewRoundError(null);
     const sent = sendNewRoundThroughSession();
-    if (!sent) {
-      setNewRoundError(errorCopy.newRound);
-    }
+    if (sent) trackNewRound();
+    else setNewRoundError(errorCopy.newRound);
   }
 
   function handleCardSelect(value: Vote): void {
@@ -732,9 +733,8 @@ export function ArenaPage({
     if (currentVote === value) return;
     setVoteError(null);
     const sent = socket?.sendCastVote(value) ?? false;
-    if (!sent) {
-      setVoteError(errorCopy.vote);
-    }
+    if (sent) trackVoteCast();
+    else setVoteError(errorCopy.vote);
   }
 
   // Alvos = demais participantes conectados, incluindo espectadores.

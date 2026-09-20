@@ -25,6 +25,11 @@ import {
   subscribeLanguage,
 } from "@/lib/language";
 import type { Lang } from "@/lib/i18n";
+import {
+  initAnalytics,
+  sanitizePagePath,
+  trackPageView,
+} from "@/lib/analytics";
 import { useTheme } from "@/lib/theme";
 import { ArenaPage } from "@/pages/arena";
 import {
@@ -71,6 +76,19 @@ export default function App(): React.ReactElement {
   useEffect(() => {
     document.documentElement.lang = isEn ? "en" : "pt-BR";
   }, [isEn]);
+
+  // GA4: init uma vez; pageviews em mudanças de rota (SPA).
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+
+  useEffect(() => {
+    // page_path sanitizado: `/s/:code` → `/s/[room]` e query nunca é
+    // enviada (`/join?code=` vira `/join`). Sem page_title: títulos SEO
+    // vivem no prerender/HTML estático; `document.title` no momento da
+    // troca de rota seria stale na maioria das rotas.
+    trackPageView(sanitizePagePath(pathname));
+  }, [pathname]);
 
   useEffect(() => {
     if (previousPath.current === pathname) return;
