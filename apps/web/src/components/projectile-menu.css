@@ -75,6 +75,8 @@
 }
 
 .projectile-menu-epic {
+  flex-shrink: 0;
+  white-space: nowrap;
   padding: 1px 8px;
   border-radius: 9999px;
   background: var(--accent);

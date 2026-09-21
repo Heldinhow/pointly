@@ -102,20 +102,22 @@ const PROJECTILE_MOTION: Record<Exclude<ProjectileType, "chair">, ProjectileMoti
   tomato: { baseMs: 300, msPerPx: 1.4, arcRatio: 0.2, arcMin: 42, arcMax: 100, spin: 720, contact: 0.68, weight: "medium" },
 };
 
-const CHAIR_FLIGHT_MS = 1400;
-const CHAIR_CONTACT = 0.58;
+const CHAIR_FLIGHT_MS = 900;
+const CHAIR_CONTACT_MS = 540;
+const CHAIR_HIT_STOP_MS = 60;
+const CHAIR_CONTACT = CHAIR_CONTACT_MS / CHAIR_FLIGHT_MS;
 const FLIGHT_MIN_MS = 560;
 const FLIGHT_MAX_MS = 1400;
 const IMPACT_MS = 600;
-const CHAIR_IMPACT_MS = 800;
+const CHAIR_IMPACT_MS = 500;
 const STAR_STAGGER_MS = 80;
 const IMPACT_PARTICLES = 5;
 const TRAJECTORY_SAMPLES = 60;
 const RELEASE_FRACTION = 0.06;
 const ECHO_DELAYS_MS = [35, 70];
 const ECHO_OPACITIES = [0.26, 0.13];
-const CHAIR_SHAKE_MS = 520;
-const GRIP_RELEASE_MS = 140;
+const CHAIR_SHAKE_MS = 240;
+const GRIP_RELEASE_MS = 80;
 const PARTICLE_SAMPLES = 14;
 
 /**
@@ -196,9 +198,29 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
     const grip = gripRef.current;
     const impact = impactRef.current;
     const arena = arenaRef.current;
-    const done = () => onDone(event.key);
+    const animations: Animation[] = [];
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let observer: MutationObserver | undefined;
+    let finished = false;
+    let cleaned = false;
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      clearTimeout(timer);
+      observer?.disconnect();
+      animations.forEach((animation) => animation.cancel());
+      window.removeEventListener("resize", done);
+      document.removeEventListener("visibilitychange", done);
+      reducedMotion.removeEventListener("change", done);
+    };
+    const done = () => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      onDone(event.key);
+    };
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (!node || !arena || reducedMotion.matches) {
+    if (!node || !arena) {
       done();
       return;
     }
@@ -210,6 +232,27 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
       `[data-projectile-player="${event.targetPlayerId}"]`,
     );
     if (!target) {
+      done();
+      return;
+    }
+    const watchLifetime = (lifetime: number) => {
+      timer = setTimeout(done, lifetime);
+      window.addEventListener("resize", done);
+      document.addEventListener("visibilitychange", done);
+      reducedMotion.addEventListener("change", done);
+      observer = new window.MutationObserver(() => {
+        if (!arena.contains(target)) done();
+      });
+      observer.observe(arena, { childList: true, subtree: true });
+    };
+    if (reducedMotion.matches) {
+      // O destaque pertence ao alvo: o overlay continua oculto em reduced-motion.
+      if (chair && Date.now() - event.receivedAt <= CHAIR_FLIGHT_MS && typeof target.animate === "function") {
+        const highlight = { outline: "2px solid var(--ring)", outlineOffset: "4px" };
+        animations.push(target.animate([highlight, highlight], { duration: 600 }));
+        watchLifetime(600);
+        return cleanup;
+      }
       done();
       return;
     }
@@ -229,8 +272,8 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
     const side = dx < 0 ? -1 : 1;
 
     const type = event.projectileType;
-    // Cadeirada espalha a poeira um pouco antes do alvo, à frente do corpo.
-    const contact = type === "chair" ? { x: to.x - side * 10, y: to.y - 10 } : to;
+    // No contato o avatar já está comprimido e deslocado pelo golpe.
+    const contact = type === "chair" ? { x: to.x + ux * 18, y: to.y + uy * 18 } : to;
     const duration = type === "chair" ? CHAIR_FLIGHT_MS : flightDuration(type, distance);
     if (Date.now() - event.receivedAt > duration) {
       done();
@@ -239,7 +282,7 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
     const contactFraction = type === "chair" ? CHAIR_CONTACT : PROJECTILE_MOTION[type].contact;
     const contactAt = duration * contactFraction;
     const reactionAt = type !== "chair" && event.outcome === "dodge" ? duration * 0.5 : contactAt;
-    const reactionMs = type === "chair" ? 700 : 460;
+    const reactionMs = type === "chair" ? 660 : 460;
     const impactMs = type === "chair" ? CHAIR_IMPACT_MS : IMPACT_MS;
     const hasImpact = event.outcome === "hit" || type === "chair";
     // Inclui a última estrela, a recuperação do avatar e o eco mais atrasado — não só o trajeto.
@@ -257,33 +300,36 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
       const pivotX = side > 0 ? 30 : 50;
       node.style.transformOrigin = `${pivotX}px 10px`;
       node.style.setProperty("--chair-facing", String(side));
-      const strikeAngle = -side * 30;
-      const radians = strikeAngle * Math.PI / 180;
+      const mobile = window.matchMedia("(max-width: 700px)").matches;
+      const size = mobile ? 1.1 : 1.35;
       const tipX = side * 42;
       const tipY = 68;
+      // Pernas apontam para fora da mesa; o encosto fica do lado de dentro.
+      // O ponto de contato inclui escala/espelho e não usa perspectiva 3D.
+      const angle = (Math.atan2(uy, ux) - Math.atan2(tipY, tipX)) * 180 / Math.PI;
+      // Nas duas colunas do mobile, bate pela lateral para caber na viewport.
+      const strikeAngle = mobile ? -side * 60 : ((angle + 540) % 360) - 180;
+      const radians = strikeAngle * Math.PI / 180;
       const gripPoint = {
-        x: to.x - (tipX * Math.cos(radians) - tipY * Math.sin(radians)),
-        y: to.y - (tipX * Math.sin(radians) + tipY * Math.cos(radians)),
+        x: contact.x - size * (tipX * Math.cos(radians) - tipY * Math.sin(radians)),
+        y: contact.y - size * (tipX * Math.sin(radians) + tipY * Math.cos(radians)),
       };
-      // 3D falso: rotateY abre o volume no wind-up, rotateX tomba no impacto.
-      const held = (x: number, y: number, angle: number, scale = 1, tiltX = 0, turnY = 0) =>
-        `translate(${x - pivotX}px, ${y - 10}px) rotate(${angle}deg) rotateY(${turnY}deg) rotateX(${tiltX}deg) scale(${scale})`;
-      const strike = held(gripPoint.x, gripPoint.y, strikeAngle, 1.04, 14, -side * 8);
+      const held = (x: number, y: number, rotation: number, scale = size, tiltX = 0, turnY = 0) =>
+        `translate(${x - pivotX}px, ${y - 10}px) rotate(${rotation}deg) rotateY(${turnY}deg) rotateX(${tiltX}deg) scale(${scale})`;
+      const windup = strikeAngle - side * 85;
+      const strike = held(gripPoint.x, gripPoint.y, strikeAngle);
+      const frame = (ms: number, transform: string, opacity = 1, easing = "linear"): Keyframe =>
+        ({ offset: ms / CHAIR_FLIGHT_MS, transform, opacity, easing });
       frames = [
-        // Primeiro mostra a cadeira de pé; depois ergue as pernas e arma o golpe.
-        { offset: 0, transform: held(from.x, from.y - 30, 0, 0.85, 0, side * 6), opacity: 0, easing: "ease-out" },
-        { offset: 0.1, transform: held(from.x + (gripPoint.x - from.x) * 0.2, from.y - 30 + (gripPoint.y - from.y) * 0.2, 0, 1, 0, side * 10), opacity: 1, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
-        { offset: 0.23, transform: held(gripPoint.x - side * 14, gripPoint.y + 26, -side * 12, 1, -5, side * 26), opacity: 1, easing: "ease-in-out" },
-        { offset: 0.37, transform: held(gripPoint.x - side * 16, gripPoint.y - 4, -side * 90, 1, -9, side * 40), opacity: 1, easing: "ease-out" },
-        { offset: 0.43, transform: held(gripPoint.x - side * 20, gripPoint.y - 5, -side * 110, 1, -12, side * 44), opacity: 1, easing: "cubic-bezier(0.55, 0, 0.85, 0.4)" },
-        { offset: CHAIR_CONTACT, transform: strike, opacity: 1 },
-        // 42 ms de hit-stop: mãos, cadeira e alvo marcam o mesmo contato.
-        { offset: CHAIR_CONTACT + 0.03, transform: strike, opacity: 1, easing: "ease-out" },
-        // Compressão, tombo no feltro e um quique antes de escorregar para fora.
-        { offset: 0.68, transform: held(gripPoint.x + side * 6, gripPoint.y + 14, -side * 30, 0.94, 22, -side * 10), opacity: 1, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
-        { offset: 0.76, transform: held(gripPoint.x + side * 10, gripPoint.y + 8, -side * 46, 1.02, -6, -side * 16), opacity: 1, easing: "ease-in-out" },
-        { offset: 0.86, transform: held(gripPoint.x - side * 2, gripPoint.y + 20, -side * 62, 0.97, 12, -side * 22), opacity: 1, easing: "ease-in" },
-        { offset: 1, transform: held(gripPoint.x - side * 18, gripPoint.y + 30, -side * 72, 0.9, 16, -side * 26), opacity: 0 },
+        frame(0, held(from.x, from.y - 30, 0, size * 0.55), 0, "cubic-bezier(0.16, 1, 0.3, 1)"),
+        frame(140, held(from.x, from.y - 30, 0), 1, "cubic-bezier(0.35, 0, 0.65, 1)"),
+        // Aproxima e arma em um movimento único, sem estacionar junto ao alvo.
+        frame(420, held(gripPoint.x - ux * 22, gripPoint.y - uy * 22 - 24, windup, size, -8, side * 18), 1, "cubic-bezier(0.55, 0, 0.9, 0.35)"),
+        frame(CHAIR_CONTACT_MS, strike),
+        frame(CHAIR_CONTACT_MS + CHAIR_HIT_STOP_MS, strike, 1, "cubic-bezier(0.16, 1, 0.3, 1)"),
+        // Um rebote e queda para dentro da mesa; libera a leitura do avatar.
+        frame(710, held(gripPoint.x - ux * 24, gripPoint.y - uy * 24 - 14, strikeAngle - side * 24, size, -5, side * 8), 1, "ease-in"),
+        frame(900, held(gripPoint.x - ux * 46, gripPoint.y - uy * 46 + 34, strikeAngle + side * 24, size * 0.8), 0),
       ];
     } else {
       const motion = PROJECTILE_MOTION[type];
@@ -348,7 +394,6 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
       }
     }
 
-    const animations: Animation[] = [];
     // Sem Web Animations API, o voo some e o alvo não reage — sem quebrar.
     if (typeof node.animate === "function") {
       animations.push(node.animate(frames, { duration, fill: "both" }));
@@ -376,7 +421,7 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
       if (chair && grip && typeof grip.animate === "function") {
         animations.push(grip.animate(
           [{ opacity: 1 }, { opacity: 1 }, { opacity: 0 }],
-          { duration: GRIP_RELEASE_MS, delay: Math.max(0, contactAt - 20), easing: "ease-out", fill: "both" },
+          { duration: GRIP_RELEASE_MS, delay: contactAt + CHAIR_HIT_STOP_MS, easing: "ease-out", fill: "both" },
         ));
       }
       // Impacto da cadeirada empurra a mesa no eixo do golpe e assenta com wobble.
@@ -385,11 +430,11 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
         if (table) {
           animations.push(table.animate([
             { transform: "none" },
-            { offset: 0.12, transform: `translate(${side * 4}px, 1.5px) rotate(${side * 0.5}deg)`, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
+            { offset: 0.12, transform: `translate(${ux * 6}px, ${uy * 4}px) rotate(${side * 0.6}deg)`, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
             { offset: 0.42, transform: `translate(${-side * 1.6}px, -0.6px) rotate(${-side * 0.24}deg)`, easing: "ease-in-out" },
             { offset: 0.7, transform: `translate(${side * 0.7}px, 0.2px) rotate(${side * 0.1}deg)`, easing: "ease-in-out" },
             { transform: "none" },
-          ], { duration: CHAIR_SHAKE_MS, delay: contactAt, fill: "both" }));
+          ], { duration: CHAIR_SHAKE_MS, delay: contactAt + CHAIR_HIT_STOP_MS, fill: "none" }));
         }
       }
       if (shadow && shadowFrames) {
@@ -401,12 +446,10 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
       const push = type === "chair" ? 0 : heavyHit ? 10 : type === "tomato" ? 6 : 3;
       const reaction: Keyframe[] = type === "chair"
         ? [
-          { offset: 0, transform: "none" },
-          { offset: 0.06, transform: `translate(${side * 10}px, 7px) rotate(${side * 10}deg) scale(0.96, 0.92)` },
-          { offset: 0.12, transform: `translate(${side * 10}px, 7px) rotate(${side * 10}deg) scale(0.96, 0.92)` },
-          { offset: 0.3, transform: `translate(${side * 14}px, 9px) rotate(${side * 13}deg) scale(0.98, 0.96)` },
-          { offset: 0.58, transform: `translate(${-side * 2}px, -1px) rotate(${-side * 3}deg)` },
-          { offset: 0.78, transform: `translateX(${side}px) rotate(${side}deg)` },
+          { offset: 0, transform: `translate(${ux * 18}px, ${uy * 18}px) rotate(${side * 18}deg) scale(0.88, 0.78)` },
+          { offset: CHAIR_HIT_STOP_MS / reactionMs, transform: `translate(${ux * 18}px, ${uy * 18}px) rotate(${side * 18}deg) scale(0.88, 0.78)`, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
+          { offset: 0.48, transform: `translate(${-ux * 4}px, ${-uy * 4}px) rotate(${-side * 6}deg) scale(1.04, 1.06)`, easing: "ease-in-out" },
+          { offset: 0.75, transform: `translate(${ux * 2}px, ${uy * 2}px) rotate(${side * 3}deg)`, easing: "ease-out" },
           { offset: 1, transform: "none" },
         ]
         : event.outcome === "dodge"
@@ -432,7 +475,7 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
       animations.push(target.animate(reaction, {
         duration: reactionMs,
         delay: reactionAt,
-        easing: "ease-out",
+        easing: chair ? "linear" : "ease-out",
       }));
       // Explosão de partículas no ponto de contato (cor por tipo, via CSS).
       if (impact) {
@@ -440,7 +483,7 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
         impact.style.top = `${contact.y}px`;
         impact.style.setProperty("--contact-delay", `${contactAt}ms`);
         impact.style.setProperty("--impact-duration", `${impactMs}ms`);
-        impact.style.setProperty("--star-offset", `${Math.max(0, 72 - contact.y)}px`);
+        impact.style.setProperty("--star-offset", `${Math.max(0, 64 - bounds.top - contact.y)}px`);
         // Spray balístico: posição como função pura de t (sobe, trava e cai).
         const seconds = impactMs / 1000;
         const spray = type === "chair"
@@ -463,18 +506,8 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
         }
       }
     }
-    const timer = setTimeout(done, lifetime);
-    // Não mantém uma trajetória antiga após resize, ocultação ou troca de preferência.
-    window.addEventListener("resize", done);
-    document.addEventListener("visibilitychange", done);
-    reducedMotion.addEventListener("change", done);
-    return () => {
-      clearTimeout(timer);
-      animations.forEach((animation) => animation.cancel());
-      window.removeEventListener("resize", done);
-      document.removeEventListener("visibilitychange", done);
-      reducedMotion.removeEventListener("change", done);
-    };
+    watchLifetime(lifetime);
+    return cleanup;
   }, [event, arenaRef, onDone]);
   return (
     <>

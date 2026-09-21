@@ -339,6 +339,7 @@ Hierarquia por **camadas tonais e bordas**; sombra só quando comunica elevaçã
 - **Entrada:** introdução curta seguida do formulário, sem repetir os três passos da home; desktop mantém o ritual ao lado; ao mudar de rota, scroll volta ao topo e foco vai ao conteúdo principal.
 - **Guide:** TOC sticky (`top: calc(var(--header-h) - 8px)`, `max-height: calc(100dvh - var(--header-h) - 16px)`) com scroll-spy; FAQ em accordion nativo.
 - **404:** título `32px`, CTA primário com ponte ao ritual, preserva o convite.
+- **Cadeirada:** preparação contínua, golpe acelerado, pausa compartilhada entre cadeira e alvo, um rebote e recuperação com estrelas. Escala maior no desktop; no layout de duas colunas, golpe lateral para manter a cadeira dentro da tela. O pé da cadeira encontra o avatar já deslocado pela reação, considerando escala e espelho. Tempos canônicos em `projectile-flight.tsx`. Movimento reduzido mostra apenas um contorno estático breve no alvo. Resize, ocultação, troca de preferência e remoção do alvo cancelam os efeitos. O menu antecipa o cooldown no selo épico, derivado da constante existente.
 
 ## Do's and Don'ts
 

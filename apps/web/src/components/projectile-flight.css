@@ -19,7 +19,7 @@
 .projectile-layer:has(.projectile-flight--chair) {
   /* Espaço para erguer a cadeira acima dos assentos superiores, sem overflow lateral. */
   overflow: visible;
-  clip-path: inset(-120px 0 0);
+  clip-path: inset(-160px -24px -80px);
   /* Profundidade do giro da cadeirada (rotateX/rotateY). */
   perspective: 900px;
 }
@@ -189,7 +189,7 @@
   animation-delay: var(--contact-delay);
 }
 .projectile-impact--chair::before {
-  inset: -10px;
+  inset: -20px;
   background: #eee0af;
   animation-duration: 140ms;
   clip-path: polygon(50% 0, 59% 30%, 85% 10%, 73% 39%, 100% 50%, 72% 61%, 88% 88%, 58% 73%, 50% 100%, 39% 72%, 10% 90%, 27% 59%, 0 50%, 29% 40%, 12% 12%, 41% 28%);
@@ -238,8 +238,9 @@
 }
 @keyframes projectile-star {
   0% { transform: scale(0) rotate(-30deg); opacity: 0; }
-  30% { transform: scale(1.3) rotate(10deg); opacity: 1; }
-  100% { transform: scale(0.9) translateY(-10px); opacity: 0; }
+  20% { transform: scale(1.3) rotate(10deg); opacity: 1; }
+  55% { transform: translate(8px, -6px) scale(1.1) rotate(25deg); opacity: 1; }
+  100% { transform: translate(-4px, 2px) scale(0.9) rotate(-15deg); opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

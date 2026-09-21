@@ -2,7 +2,7 @@ import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { Separator } from "@/components/ui/separator";
 import type { Lang } from "@/lib/i18n";
 import { NUDGE_CATALOG } from "@/lib/nudges";
-import { PROJECTILE_CATALOG } from "@/lib/projectiles";
+import { PROJECTILE_CATALOG, PROJECTILE_CHAIR_COOLDOWN_MS } from "@/lib/projectiles";
 import type { NudgeId, ProjectileType } from "@/lib/protocol";
 import { ProjectileIcon } from "./projectile-flight";
 import "./projectile-menu.css";
@@ -25,7 +25,7 @@ const MENU_LABELS: Record<Lang, MenuLabels> = {
 		throwAt: (nick) => `Arremessar em ${nick}`,
 		choose: "Escolha um projétil",
 		itemAt: (label, nick) => `${label} em ${nick}`,
-		epic: "épica",
+		epic: "Épica",
 		nudge: (nick) => `Cutucar ${nick}`,
 		nudgeWith: (label, nick) => `Cutucar ${nick} com ${label}`,
 	},
@@ -35,7 +35,7 @@ const MENU_LABELS: Record<Lang, MenuLabels> = {
 		throwAt: (nick) => `Throw at ${nick}`,
 		choose: "Choose a projectile",
 		itemAt: (label, nick) => `${label} at ${nick}`,
-		epic: "epic",
+		epic: "Epic",
 		nudge: (nick) => `Nudge ${nick}`,
 		nudgeWith: (label, nick) => `Nudge ${nick} with ${label}`,
 	},
@@ -83,14 +83,14 @@ export function ProjectileMenu({ target, cooldownSecs, onThrow, onNudge, classNa
 						<MenuItem
 							key={type}
 							data-testid={`projectile-${type}`}
-							aria-label={labels.itemAt(label[lang], target.nick)}
+							aria-label={`${labels.itemAt(label[lang], target.nick)}${epic ? ` · ${labels.epic} · ${PROJECTILE_CHAIR_COOLDOWN_MS / 1000}s` : ""}`}
 							disabled={cooldownSecs > 0}
 							onClick={() => onThrow(target.id, type)}
 							className={epic ? "projectile-menu-item projectile-menu-item--epic" : "projectile-menu-item"}
 						>
 							<ProjectileIcon type={type} />
 							<span className="projectile-menu-label">{label[lang]}</span>
-							{epic ? <span className="projectile-menu-epic">{labels.epic}</span> : null}
+							{epic ? <span className="projectile-menu-epic">{labels.epic} · {PROJECTILE_CHAIR_COOLDOWN_MS / 1000}s</span> : null}
 						</MenuItem>
 					))}
 					{onNudge ? (

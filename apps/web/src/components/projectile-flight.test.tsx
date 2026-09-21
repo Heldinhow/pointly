@@ -57,7 +57,7 @@ test.each(["chair", "tomato", "rock", "brick", "paper_ball", "paper_plane"] as c
 
 test("cadeirada permanece até o fim das estrelas e termina uma única vez", async () => {
   const { onDone } = showProjectile("chair");
-  await new Promise((resolve) => setTimeout(resolve, 1450));
+  await new Promise((resolve) => setTimeout(resolve, 1100));
   expect(onDone).not.toHaveBeenCalled();
   await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
   expect(onDone).toHaveBeenCalledWith(1);
@@ -154,4 +154,49 @@ test("cadeirada sacode a mesa e solta o grip no contato", () => {
 test("projétil comum não sacode a mesa", () => {
   showProjectile("brick");
   expect(animations.some(({ target }) => target.classList.contains("poker-table"))).toBe(false);
+});
+
+
+test("cadeirada sincroniza contato, pausa de 60ms e termina em 1200ms", () => {
+  const timers = spyOn(globalThis, "setTimeout");
+  const { target } = showProjectile("chair");
+  const flight = animations.find(({ target }) => target.classList.contains("projectile-flight"))!;
+  const reaction = animations.find((animation) => animation.target === target)!;
+  const contact = Number(reaction.timing.delay);
+  expect(contact).toBe(540);
+  // A curva global não pode antecipar o fim do hit-stop.
+  expect(reaction.timing.easing).toBe("linear");
+  const at = (time: number) => flight.frames.find((frame) => Math.abs(Number(frame.offset) * Number(flight.timing.duration) - time) < 0.01);
+  expect(at(540)?.transform).toBe(at(600)?.transform);
+  expect(reaction.frames[0]?.transform).toBe(reaction.frames[1]?.transform);
+  expect(Number(reaction.frames[1]?.offset) * Number(reaction.timing.duration)).toBe(60);
+  expect(Number(timers.mock.calls.at(-1)?.[1])).toBe(1200);
+});
+
+test("movimento reduzido mantém destaque estático no alvo e limpa ao desmontar", () => {
+  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  spyOn(window, "matchMedia").mockReturnValue({ ...media, matches: true });
+  const { target, onDone, unmount } = showProjectile("chair");
+  expect(onDone).not.toHaveBeenCalled();
+  expect(animations).toHaveLength(1);
+  expect(animations[0]!.target).toBe(target);
+  expect(animations[0]!.frames.every((frame) => !frame.transform)).toBe(true);
+  unmount();
+  expect(animations[0]!.cancel).toHaveBeenCalledTimes(1);
+});
+
+test("cancelamento repetido conclui uma única vez", () => {
+  const { onDone } = showProjectile("chair");
+  window.dispatchEvent(new Event("resize"));
+  window.dispatchEvent(new Event("resize"));
+  document.dispatchEvent(new Event("visibilitychange"));
+  expect(onDone).toHaveBeenCalledTimes(1);
+});
+
+test("saída do alvo encerra a cadeirada e cancela seus efeitos", async () => {
+  const { target, onDone, unmount } = showProjectile("chair");
+  target.remove();
+  await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+  unmount();
+  for (const animation of animations) expect(animation.cancel).toHaveBeenCalledTimes(1);
 });
