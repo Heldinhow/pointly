@@ -41,6 +41,11 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		caption: "Planning poker table",
 		seatsLeft: (taken, total) => `${taken} of ${total} seats`,
 	},
+	story: {
+		active: "Active story",
+		criterion: "Acceptance criteria",
+		announce: (titulo) => `Active story: ${titulo}`,
+	},
 	reveal: {
 		titleRevealed: "Cards on the table",
 		titleReady: "Ready to reveal?",

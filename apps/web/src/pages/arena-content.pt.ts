@@ -44,6 +44,11 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		caption: "Mesa de planning poker",
 		seatsLeft: (taken, total) => `${taken} de ${total} lugares`,
 	},
+	story: {
+		active: "História ativa",
+		criterion: "Critério",
+		announce: (titulo) => `História ativa: ${titulo}`,
+	},
 	reveal: {
 		titleRevealed: "Cartas na mesa",
 		titleReady: "Vamos revelar?",
