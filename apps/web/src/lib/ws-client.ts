@@ -7,19 +7,29 @@ import {
 	buildStartNewRoundMessage,
 	buildThrowProjectileMessage,
 	buildUpdateAvatarMessage,
+	HistoriaAddPayloadSchema,
+	HistoriaMovePayloadSchema,
+	HistoriaRemovePayloadSchema,
+	HistoriaSelectPayloadSchema,
+	HistoriaUpdatePayloadSchema,
 	isDeckValue,
 	isNudgeId,
 	isProjectileType,
 	parseServerEvent,
 	type HelloPayload,
+	type Historia,
+	type HistoriaAtualId,
 	type NudgeId,
 	type NudgeSentPayload,
+	type Pauta,
 	type ProjectileThrownPayload,
 	type ProjectileType,
 	type SalaState,
 	type Vote,
 	type WelcomePayload,
 } from "@planning-poker/shared";
+
+export type { Historia, HistoriaAtualId, Pauta };
 
 export type SocketStatus = "idle" | "connecting" | "ready" | "closed";
 
@@ -65,6 +75,11 @@ interface PointlySocketOptions {
  * Rede de segurança: queda REAL pós-ready (rede, sleep, discard) agenda
  * retry com backoff exponencial por 5min (mesmo `hello`/UUID — o servidor
  * reidrata voto, assento e fase dentro do grace period).
+ *
+ * Pauta (#164): `welcome`/`room_state` já carregam `pauta` +
+ * `historiaAtualId` via `SalaState` do contrato compartilhado — o
+ * connect/hello os recebe sem código extra; os 5 métodos acima enviam os
+ * eventos finos e os erros chegam no `onError` sem crash.
  */
 export class PointlySocket {
 	private socket: WebSocket | null = null;
@@ -217,6 +232,77 @@ export class PointlySocket {
 		return this.send(buildSendNudgeMessage(targetPlayerId, nudgeId));
 	}
 
+	// -----------------------------------------------------------------------
+	// Pauta — wire client (#164, parent #160). Sem UI aqui (isso é #165).
+	// Métodos finos add/update/move/remove/select: validam o payload no
+	// contrato compartilhado (@planning-poker/shared, sem espelho local —
+	// #147) e enviam o evento C→S tipado. Retornam false sem conexão
+	// pronta ou payload inválido — nunca lançam. Erros do servidor
+	// (historia_nao_encontrada, pauta_cheia, invalid_phase, role_denied)
+	// chegam via `error` pós-ready no `onError`, sem derrubar o socket
+	// (handleMessage abaixo — mesmo caminho dos demais erros).
+	// -----------------------------------------------------------------------
+
+	/**
+	 * Envia `historia_add { titulo, criterio? }`. Título 1–120 não
+	 * só-espaços; critério texto puro ≤1000 opcional. O servidor gera
+	 * id/ordem/pontos=null, auto-seleciona a primeira e responde com
+	 * `room_state` (pauta + historiaAtualId); pauta cheia → `error`
+	 * `pauta_cheia` no `onError`.
+	 */
+	addHistoria(input: { titulo: string; criterio?: string }): boolean {
+		const parsed = HistoriaAddPayloadSchema.safeParse(input);
+		if (!parsed.success) return false;
+		return this.send({ type: "historia_add", payload: parsed.data });
+	}
+
+	/**
+	 * Envia `historia_update { id, titulo?, criterio? }`. Exige ao menos
+	 * um campo editável; `criterio: null` limpa o critério. Id ausente →
+	 * `error` `historia_nao_encontrada` no `onError`, sem crash.
+	 */
+	updateHistoria(
+		id: string,
+		patch: { titulo?: string; criterio?: string | null },
+	): boolean {
+		const parsed = HistoriaUpdatePayloadSchema.safeParse({ id, ...patch });
+		if (!parsed.success) return false;
+		return this.send({ type: "historia_update", payload: parsed.data });
+	}
+
+	/**
+	 * Envia `historia_move { id, toIndex }`. Índice explícito 0..49
+	 * (sem drag-and-drop na UI); fora da pauta real o servidor responde
+	 * `historia_nao_encontrada`, mover a ativa em voting/revealable →
+	 * `invalid_phase` — ambos no `onError`, sem crash.
+	 */
+	moveHistoria(id: string, toIndex: number): boolean {
+		const parsed = HistoriaMovePayloadSchema.safeParse({ id, toIndex });
+		if (!parsed.success) return false;
+		return this.send({ type: "historia_move", payload: parsed.data });
+	}
+
+	/**
+	 * Envia `historia_remove { id }`. Id ausente → `error`
+	 * `historia_nao_encontrada` no `onError`, sem crash e sem broadcast.
+	 */
+	removeHistoria(id: string): boolean {
+		const parsed = HistoriaRemovePayloadSchema.safeParse({ id });
+		if (!parsed.success) return false;
+		return this.send({ type: "historia_remove", payload: parsed.data });
+	}
+
+	/**
+	 * Envia `historia_select { historiaId }`. `null` limpa a ativa.
+	 * Troca em `voting`/`revealable` → `invalid_phase` no `onError`.
+	 * O `room_state` seguinte hidrata pauta + ativa no store.
+	 */
+	selectHistoria(historiaId: string | null): boolean {
+		const parsed = HistoriaSelectPayloadSchema.safeParse({ historiaId });
+		if (!parsed.success) return false;
+		return this.send({ type: "historia_select", payload: parsed.data });
+	}
+
 	/**
 	 * Tenta reconectar agora (botão "Tentar agora", `online`, `pageshow`).
 	 * Sem credenciais guardadas ou já `ready`/`connecting` é no-op.
@@ -349,6 +435,9 @@ export class PointlySocket {
 				return;
 			}
 			case "error": {
+				// Pós-ready: erros da Pauta (historia_nao_encontrada,
+				// pauta_cheia, invalid_phase, role_denied) usam este mesmo
+				// caminho — `onError` sem broadcast, socket segue aberto.
 				if (!this.helloSettled) {
 					this.failHello(new JoinError(event.payload.code, event.payload.message));
 				} else if (this.status === "ready") {
