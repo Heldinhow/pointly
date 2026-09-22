@@ -4,9 +4,9 @@
  * Remove da pauta e reindexa. Tradução fina: payload validado (Zod
  * no boundary WS) → `Sala.removeHistoria`. Sem regra de negócio aqui.
  *
- * Nota: o contrato #161 (`HistoriaRemovePayload`) carrega só `{ id }`
- * — sem `confirmScored` no v1. Apagar pontuada sem confirmação falha
- * com `invalid_phase` no domínio (cliente #164+ trata a confirmação).
+ * Nota: `confirmScored: true` (segundo toque da confirmação dupla da
+ * UI, padrão 5s — #165) é repassado ao domínio; sem ele, apagar uma
+ * história pontuada falha com `invalid_phase` (#162).
  *
  * Erros do domínio (via `mapDomainError`, socket segue aberto):
  *  - `role_denied` — espectador tentando apagar
@@ -51,7 +51,9 @@ export function handleHistoriaRemove(
 	const sala = salaOrError;
 
 	try {
-		const historia = sala.removeHistoria(playerId, payload.id);
+		const historia = sala.removeHistoria(playerId, payload.id, {
+			confirmScored: payload.confirmScored,
+		});
 		return { ok: true, historia };
 	} catch (e) {
 		return mapDomainError(e);

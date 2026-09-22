@@ -398,6 +398,9 @@ img.arena-spectator-avatar {
   .arena-self {
     grid-column: 1 / -1;
   }
+  .arena-pauta {
+    grid-column: 1 / -1;
+  }
   .arena-live-status {
     flex-wrap: wrap;
     row-gap: 6px;

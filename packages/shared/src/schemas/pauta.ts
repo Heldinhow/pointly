@@ -163,10 +163,16 @@ export const HistoriaMovePayloadSchema = z
 	.strict();
 export type HistoriaMovePayload = z.infer<typeof HistoriaMovePayloadSchema>;
 
-/** `historia_remove { id }` — remove da pauta. Id ausente → `historia_nao_encontrada`. */
+/**
+ * `historia_remove { id, confirmScored? }` — remove da pauta. Id ausente →
+ * `historia_nao_encontrada`. `confirmScored: true` é o segundo toque da
+ * confirmação dupla da UI (padrão 5s) e libera apagar história pontuada;
+ * sem ele o domínio responde `invalid_phase` (#162).
+ */
 export const HistoriaRemovePayloadSchema = z
 	.object({
 		id: HistoriaIdSchema,
+		confirmScored: z.boolean().optional(),
 	})
 	.strict();
 export type HistoriaRemovePayload = z.infer<typeof HistoriaRemovePayloadSchema>;

@@ -85,6 +85,37 @@ export type ArenaContent = {
 		pickAdjustable: string;
 		spectatorVoteError: string;
 		errorTitle: string;
+		awaitingStory: string;
+	};
+	pauta: {
+		title: string;
+		description: string;
+		addLabel: string;
+		tituloLabel: string;
+		tituloPlaceholder: string;
+		criterioToggle: string;
+		criterioToggleOpen: string;
+		criterioLabel: string;
+		criterioPlaceholder: string;
+		add: string;
+		emptyTitle: string;
+		empty: string;
+		active: string;
+		select: string;
+		selectAria: (titulo: string) => string;
+		moveUpAria: (titulo: string) => string;
+		moveDownAria: (titulo: string) => string;
+		editAria: (titulo: string) => string;
+		save: string;
+		cancel: string;
+		removeAria: (titulo: string) => string;
+		removeConfirm: string;
+		confirmHint: string;
+		scoredLabel: string;
+		listAria: string;
+		error: string;
+		lockedHint: string;
+		spectator: string;
 	};
 	tableNote: {
 		estimate: string;

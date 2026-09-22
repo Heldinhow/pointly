@@ -9,8 +9,9 @@ import {
 } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { Lang } from "../lib/i18n";
-import type { Player, SalaState, Vote } from "@planning-poker/shared";
+import type { Historia, Player, SalaState, Vote } from "@planning-poker/shared";
 import { useSession } from "../store/session";
+import { CONFIRM_TIMEOUT_MS } from "../lib/confirm";
 import { ArenaPage } from "./arena";
 
 type RoomHandler = (sala: SalaState) => void;
@@ -42,6 +43,15 @@ class FakeSocket {
 	sentProjectiles: Array<{ targetPlayerId: string; projectileType: string }> =
 		[];
 	sentNudges: Array<{ targetPlayerId: string; nudgeId: string }> = [];
+	sentHistoriasAdd: Array<{ titulo: string; criterio?: string }> = [];
+	sentHistoriaUpdates: Array<{
+		id: string;
+		titulo?: string;
+		criterio?: string | null;
+	}> = [];
+	sentHistoriaMoves: Array<{ id: string; toIndex: number }> = [];
+	sentHistoriaRemoves: Array<{ id: string; confirmScored?: boolean }> = [];
+	sentHistoriaSelects: Array<string | null> = [];
 
 	setHandlers(handlers: {
 		onRoomState?: RoomHandler;
@@ -94,6 +104,34 @@ class FakeSocket {
 
 	sendNudge(targetPlayerId: string, nudgeId: string): boolean {
 		this.sentNudges.push({ targetPlayerId, nudgeId });
+		return true;
+	}
+
+	addHistoria(input: { titulo: string; criterio?: string }): boolean {
+		this.sentHistoriasAdd.push(input);
+		return true;
+	}
+
+	updateHistoria(
+		id: string,
+		patch: { titulo?: string; criterio?: string | null },
+	): boolean {
+		this.sentHistoriaUpdates.push({ id, ...patch });
+		return true;
+	}
+
+	moveHistoria(id: string, toIndex: number): boolean {
+		this.sentHistoriaMoves.push({ id, toIndex });
+		return true;
+	}
+
+	removeHistoria(id: string, options: { confirmScored?: boolean } = {}): boolean {
+		this.sentHistoriaRemoves.push({ id, ...options });
+		return true;
+	}
+
+	selectHistoria(id: string | null): boolean {
+		this.sentHistoriaSelects.push(id);
 		return true;
 	}
 
@@ -159,6 +197,29 @@ function sala(overrides: Partial<SalaState> = {}): SalaState {
 		createdAt: 1,
 		...overrides,
 	};
+}
+
+function historia(id: string, overrides: Partial<Historia> = {}): Historia {
+	return {
+		id,
+		titulo: `História ${id}`,
+		pontos: null,
+		ordem: 0,
+		...overrides,
+	};
+}
+
+/** Sala com pauta; a ativa default é a primeira (sobrescreva se precisar). */
+function pautaSala(
+	historias: Historia[],
+	overrides: Partial<SalaState> = {},
+): SalaState {
+	const pauta = historias.map((item, index) => ({ ...item, ordem: index }));
+	return sala({
+		pauta,
+		historiaAtualId: pauta[0]?.id ?? null,
+		...overrides,
+	});
 }
 
 function seed(session: {
@@ -938,7 +999,7 @@ describe("ArenaPage (16.C — Copiar resultado #201)", () => {
 				index,
 			),
 		);
-		const votesMap: Record<string, string> = {};
+		const votesMap: Record<string, Vote> = {};
 		for (const entry of votes) {
 			if (entry.value !== null) votesMap[entry.id] = entry.value;
 		}
@@ -2365,5 +2426,303 @@ describe("ArenaPage (14.3 — Celebração de Unânime)", () => {
 		});
 
 		expect(screen.getByTestId("unanimous-celebration")).not.toBe(first);
+	});
+});
+
+describe("Card Pauta (#165)", () => {
+	function hostOnly(): Player {
+		return player({ id: "p_host", nick: "Ana", role: "host" }, 0);
+	}
+
+	test("sala vazia: empty state + deck desabilitado; primeira história auto-seleciona e libera o deck", async () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		seed({
+			sala: pautaSala([], { players: [host] }),
+			playerId: host.id,
+			socket,
+		});
+		renderArena();
+
+		expect(screen.getByTestId("pauta-empty").textContent).toMatch(
+			/Nenhuma história ainda/,
+		);
+		const deckCard = screen.getByTestId("deck-card-5") as HTMLButtonElement;
+		expect(deckCard.disabled).toBe(true);
+		expect(screen.getByTestId("deck-selection").textContent).toMatch(
+			/liberar as cartas/,
+		);
+
+		fireEvent.change(screen.getByTestId("pauta-novo-titulo"), {
+			target: { value: "Checkout PIX" },
+		});
+		fireEvent.click(screen.getByTestId("pauta-add-button"));
+		expect(socket.sentHistoriasAdd).toEqual([{ titulo: "Checkout PIX" }]);
+
+		// O servidor gera id, auto-seleciona a primeira e broadcasta.
+		await act(async () => {
+			socket.emitRoomState(
+				pautaSala([historia("h1", { titulo: "Checkout PIX" })], {
+					players: [host],
+				}),
+			);
+		});
+
+		expect(screen.queryByTestId("pauta-empty")).toBeNull();
+		expect(screen.getByTestId("pauta-item-h1").textContent).toMatch(
+			/Checkout PIX/,
+		);
+		expect(screen.getByTestId("pauta-active-h1")).toBeTruthy();
+		expect(
+			(screen.getByTestId("deck-card-5") as HTMLButtonElement).disabled,
+		).toBe(false);
+	});
+
+	test("título vazio mostra historia-error inline e não envia", () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		seed({
+			sala: pautaSala([], { players: [host] }),
+			playerId: host.id,
+			socket,
+		});
+		renderArena();
+
+		fireEvent.click(screen.getByTestId("pauta-add-button"));
+		expect(screen.getByTestId("historia-error").textContent).toMatch(
+			/título/i,
+		);
+		expect(socket.sentHistoriasAdd).toHaveLength(0);
+
+		// Reeditar limpa o erro inline.
+		fireEvent.change(screen.getByTestId("pauta-novo-titulo"), {
+			target: { value: "A" },
+		});
+		expect(screen.queryByTestId("historia-error")).toBeNull();
+	});
+
+	test("critério colapsável envia junto quando preenchido", () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		seed({
+			sala: pautaSala([], { players: [host] }),
+			playerId: host.id,
+			socket,
+		});
+		renderArena();
+
+		expect(screen.queryByTestId("pauta-novo-criterio")).toBeNull();
+		fireEvent.change(screen.getByTestId("pauta-novo-titulo"), {
+			target: { value: "Extrato" },
+		});
+		fireEvent.click(screen.getByTestId("pauta-criterio-toggle"));
+		fireEvent.change(screen.getByTestId("pauta-novo-criterio"), {
+			target: { value: "Saldo por dia" },
+		});
+		fireEvent.click(screen.getByTestId("pauta-add-button"));
+
+		expect(socket.sentHistoriasAdd).toEqual([
+			{ titulo: "Extrato", criterio: "Saldo por dia" },
+		]);
+	});
+
+	test("editar, mover e selecionar refletem na lista", async () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		const um = historia("h1", { titulo: "Um" });
+		const dois = historia("h2", { titulo: "Dois" });
+		seed({
+			sala: pautaSala([um, dois], { players: [host] }),
+			playerId: host.id,
+			socket,
+		});
+		renderArena();
+
+		// Mover h2 para cima (índice explícito; sem drag).
+		fireEvent.click(screen.getByTestId("pauta-up-h2"));
+		expect(socket.sentHistoriaMoves).toEqual([{ id: "h2", toIndex: 0 }]);
+		await act(async () => {
+			socket.emitRoomState(
+				pautaSala([dois, um], { players: [host], historiaAtualId: "h1" }),
+			);
+		});
+		expect(
+			screen
+				.getAllByTestId(/^pauta-item-/)
+				.map((item) => item.getAttribute("data-testid")),
+		).toEqual(["pauta-item-h2", "pauta-item-h1"]);
+
+		// Selecionar h2 e depois voltar para h1.
+		fireEvent.click(screen.getByTestId("pauta-select-h2"));
+		expect(socket.sentHistoriaSelects).toEqual(["h2"]);
+		await act(async () => {
+			socket.emitRoomState(
+				pautaSala([dois, um], { players: [host], historiaAtualId: "h2" }),
+			);
+		});
+		expect(screen.getByTestId("pauta-active-h2")).toBeTruthy();
+		expect(screen.queryByTestId("pauta-active-h1")).toBeNull();
+
+		fireEvent.click(screen.getByTestId("pauta-select-h1"));
+		expect(socket.sentHistoriaSelects).toEqual(["h2", "h1"]);
+
+		// Editar título de h1.
+		fireEvent.click(screen.getByTestId("pauta-edit-h1"));
+		fireEvent.change(screen.getByTestId("pauta-edit-titulo-h1"), {
+			target: { value: "Um v2" },
+		});
+		fireEvent.click(screen.getByTestId("pauta-save-h1"));
+		expect(socket.sentHistoriaUpdates).toEqual([
+			{ id: "h1", titulo: "Um v2", criterio: null },
+		]);
+		await act(async () => {
+			socket.emitRoomState(
+				pautaSala([dois, historia("h1", { titulo: "Um v2" })], {
+					players: [host],
+					historiaAtualId: "h2",
+				}),
+			);
+		});
+		expect(screen.getByTestId("pauta-item-h1").textContent).toMatch(/Um v2/);
+	});
+
+	test("apagar sem pontos envia direto, sem confirmação", () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		seed({
+			sala: pautaSala(
+				[historia("h1", { titulo: "Pontuada", pontos: 5 }), historia("h2")],
+				{ players: [host], historiaAtualId: "h1" },
+			),
+			playerId: host.id,
+			socket,
+		});
+		renderArena();
+
+		fireEvent.click(screen.getByTestId("pauta-remove-h2"));
+		expect(socket.sentHistoriaRemoves).toEqual([{ id: "h2" }]);
+	});
+
+	test("apagar pontuada exige confirmação dupla; timeout volta ao estado inicial", async () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		seed({
+			sala: pautaSala(
+				[historia("h1", { titulo: "Pontuada", pontos: 5 }), historia("h2")],
+				{ players: [host], historiaAtualId: "h2" },
+			),
+			playerId: host.id,
+			socket,
+		});
+		renderArena();
+
+		const remove = screen.getByTestId("pauta-remove-h1");
+		expect(remove.getAttribute("data-confirming")).toBe("false");
+
+		// Primeiro toque arma, sem tráfego, com countdown na janela padrão.
+		fireEvent.click(remove);
+		expect(socket.sentHistoriaRemoves).toHaveLength(0);
+		expect(
+			screen.getByTestId("pauta-remove-h1").getAttribute("data-confirming"),
+		).toBe("true");
+		expect(
+			screen.getByTestId("pauta-remove-countdown-h1").style.animationDuration,
+		).toBe(`${CONFIRM_TIMEOUT_MS}ms`);
+		expect(
+			screen.getByTestId("pauta-remove-hint-h1").textContent,
+		).toMatch(/Ative de novo para confirmar/);
+
+		// Sem o segundo toque a tempo, volta ao estado inicial sem enviar.
+		await act(async () => {
+			await new Promise((resolve) =>
+				setTimeout(resolve, CONFIRM_TIMEOUT_MS + 400),
+			);
+		});
+		expect(
+			screen.getByTestId("pauta-remove-h1").getAttribute("data-confirming"),
+		).toBe("false");
+		expect(screen.queryByTestId("pauta-remove-countdown-h1")).toBeNull();
+		expect(socket.sentHistoriaRemoves).toHaveLength(0);
+
+		// Segundo toque dentro da janela confirma com o flag no wire.
+		fireEvent.click(screen.getByTestId("pauta-remove-h1"));
+		fireEvent.click(screen.getByTestId("pauta-remove-h1"));
+		expect(socket.sentHistoriaRemoves).toEqual([
+			{ id: "h1", confirmScored: true },
+		]);
+	}, 15000);
+
+	test("lista e Pontuação anunciam em aria-live com número mono tabular", () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		seed({
+			sala: pautaSala(
+				[historia("h1", { titulo: "Pontuada", pontos: 5 }), historia("h2")],
+				{ players: [host], historiaAtualId: "h2" },
+			),
+			playerId: host.id,
+			socket,
+		});
+		renderArena();
+
+		expect(screen.getByTestId("pauta-list").getAttribute("aria-live")).toBe(
+			"polite",
+		);
+		const score = screen.getByTestId("pauta-pontos-h1");
+		expect(score.textContent).toMatch(/Pontuação/);
+		expect(score.textContent).toMatch(/5/);
+		const value = score.querySelector(".pauta-score-value");
+		expect(value?.className).toMatch(/font-mono/);
+		expect(value?.className).toMatch(/tabular-nums/);
+		expect(value?.getAttribute("aria-live")).toBe("polite");
+	});
+
+	test("espectador vê a pauta sem editar", () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		const spectator = player(
+			{ id: "p_olho", nick: "Olho", role: "spectator", seatIndex: -1 },
+			1,
+		);
+		seed({
+			sala: pautaSala([historia("h1")], {
+				players: [host, spectator],
+			}),
+			playerId: spectator.id,
+			socket,
+		});
+		renderArena();
+
+		expect(screen.queryByTestId("pauta-novo-titulo")).toBeNull();
+		expect(screen.getByTestId("pauta-spectator")).toBeTruthy();
+		expect(
+			(screen.getByTestId("pauta-remove-h1") as HTMLButtonElement).disabled,
+		).toBe(true);
+		expect(
+			(screen.getByTestId("pauta-edit-h1") as HTMLButtonElement).disabled,
+		).toBe(true);
+	});
+
+	test("erro do servidor da pauta cai inline no card, sem alerta de voto", async () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		seed({
+			sala: pautaSala([historia("h1")], { players: [host] }),
+			playerId: host.id,
+			socket,
+		});
+		renderArena();
+
+		await act(async () => {
+			socket.emitError(
+				"historia_nao_encontrada",
+				"História h1 não encontrada.",
+			);
+		});
+
+		expect(screen.getByTestId("historia-error").textContent).toMatch(
+			/História h1 não encontrada/,
+		);
+		expect(screen.queryByTestId("vote-error")).toBeNull();
 	});
 });

@@ -205,6 +205,21 @@ describe("5 eventos finos C→S na união discriminada", () => {
 		).toBe(false);
 	});
 
+	test("historia_remove aceita confirmScored opcional (#165)", () => {
+		expect(
+			ClientToServerEventSchema.safeParse({
+				type: "historia_remove",
+				payload: { id: "h1", confirmScored: true },
+			}).success,
+		).toBe(true);
+		expect(
+			HistoriaRemovePayloadSchema.safeParse({
+				id: "h1",
+				confirmScored: "sim",
+			}).success,
+		).toBe(false);
+	});
+
 	test("historia_select com id ou null (limpa ativa)", () => {
 		expect(
 			ClientToServerEventSchema.safeParse({
