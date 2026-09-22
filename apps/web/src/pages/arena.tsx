@@ -286,10 +286,16 @@ export function ArenaPage({
         setReconnecting(true);
         setReconnectAttempt(attempt);
       },
-      onReconnected: () => {
+      onReconnected: (welcome) => {
         setReconnecting(false);
         setReconnectAttempt(0);
         setConnectionLost(false);
+        // #166: o welcome é o snapshot canônico pós-reconexão (mesmo
+        // UUID). Hidrata a pauta completa + ativa + Pontuações sem
+        // esperar o próximo broadcast (que pode nunca vir numa sala
+        // parada). F5 usa o caminho de rejoin, que já lê o welcome.
+        const restored = welcome?.sala;
+        if (restored) useSession.getState().updateSala(restored);
       },
       onReconnectFailed: () => {
         setReconnecting(false);
