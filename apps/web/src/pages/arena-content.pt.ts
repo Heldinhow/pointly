@@ -133,6 +133,12 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		noNumericsNote:
 			"Só pausa ou ninguém votou · sem média, mediana nem intervalo.",
 		justifyLead: "Justifica primeiro:",
+		copy: "Copiar resultado",
+		copied: "Copiado!",
+		copyFeedback: "Resultado copiado! É só colar onde quiser.",
+		copyError:
+			"Não foi possível copiar. Selecione o resultado e copie manualmente.",
+		copyTemplate: (median, votes) => `Mediana: ${median} — votos: ${votes}`,
 	},
 	waiting: {
 		spectatorTitle: "Acompanhe a votação.",

@@ -125,6 +125,11 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		noNumericsNote:
 			"Only pause or nobody voted · no average, median or range.",
 		justifyLead: "Justifies first:",
+		copy: "Copy results",
+		copied: "Copied!",
+		copyFeedback: "Results copied! Just paste it anywhere.",
+		copyError: "Couldn't copy. Select the result and copy it manually.",
+		copyTemplate: (median, votes) => `Median: ${median} — votes: ${votes}`,
 	},
 	waiting: {
 		spectatorTitle: "Follow the voting.",

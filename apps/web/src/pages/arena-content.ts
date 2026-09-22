@@ -124,6 +124,11 @@ export type ArenaContent = {
 		pipTitle: (count: number, value: string) => string;
 		noNumericsNote: string;
 		justifyLead: string;
+		copy: string;
+		copied: string;
+		copyFeedback: string;
+		copyError: string;
+		copyTemplate: (median: string, votes: string) => string;
 	};
 	waiting: {
 		spectatorTitle: string;

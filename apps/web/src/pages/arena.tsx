@@ -196,6 +196,8 @@ export function ArenaPage({
   const [inviteHidden, setInviteHidden] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
+  const [resultsCopied, setResultsCopied] = useState(false);
+  const [resultsCopyError, setResultsCopyError] = useState(false);
   const [connectionLost, setConnectionLost] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const [reconnectAttempt, setReconnectAttempt] = useState(0);
@@ -230,6 +232,7 @@ export function ArenaPage({
   const [retryNonce, setRetryNonce] = useState(0);
   const rejoinKeyRef = useRef<string | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resultsCopyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const newRoundTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Espelho mutável do `confirmingNewRound` para os handlers de teclado
   // (o listener lê o valor fresco sem re-subscrever a cada render).
@@ -449,6 +452,7 @@ export function ArenaPage({
   useEffect(() => {
     return () => {
       if (copyTimer.current) clearTimeout(copyTimer.current);
+      if (resultsCopyTimer.current) clearTimeout(resultsCopyTimer.current);
       if (newRoundTimer.current) clearTimeout(newRoundTimer.current);
     };
   }, []);
@@ -686,6 +690,24 @@ export function ArenaPage({
   const justifyPlayer =
     justifySeatIndex === null ? null : (seats[justifySeatIndex] ?? null);
 
+  // 16.C (#201): texto plano do resultado — mediana + lista plana
+  // ascendente sem ☕ (pausa fica fora dos cálculos, como no consenso).
+  // voteGroups vem em ordem do deck; reordena pelo valor numérico para
+  // garantir ascendente mesmo se o deck mudar.
+  const resultsCopyText = noNumerics
+    ? ""
+    : content.results.copyTemplate(
+        formatMedian(consensus.median),
+        voteGroups
+          .filter((group) => voteToNumber(group.value) !== null)
+          .sort(
+            (a, b) =>
+              (voteToNumber(a.value) ?? 0) - (voteToNumber(b.value) ?? 0),
+          )
+          .flatMap((group) => Array<string>(group.count).fill(group.value))
+          .join(", "),
+      );
+
   function handleReveal(): void {
     if (!canReveal) return;
     setRevealError(null);
@@ -821,6 +843,22 @@ export function ArenaPage({
       copyTimer.current = setTimeout(() => setCopied(false), 2500);
     } catch {
       setCopyError(true);
+    }
+  }
+
+  async function handleCopyResults(): Promise<void> {
+    if (noNumerics || resultsCopyText === "") return;
+    setResultsCopyError(false);
+    try {
+      await copyText(resultsCopyText);
+      setResultsCopied(true);
+      if (resultsCopyTimer.current) clearTimeout(resultsCopyTimer.current);
+      resultsCopyTimer.current = setTimeout(
+        () => setResultsCopied(false),
+        2500,
+      );
+    } catch {
+      setResultsCopyError(true);
     }
   }
 
@@ -1262,6 +1300,44 @@ export function ArenaPage({
                     </p>
                   ) : null}
                 </output>
+                <div className="flex flex-col gap-1.5">
+                  <div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      data-testid="copy-results-button"
+                      disabled={noNumerics}
+                      onClick={() => {
+                        void handleCopyResults();
+                      }}
+                    >
+                      {resultsCopied ? (
+                        <CheckIcon aria-hidden="true" />
+                      ) : (
+                        <CopyIcon aria-hidden="true" />
+                      )}
+                      {resultsCopied
+                        ? content.results.copied
+                        : content.results.copy}
+                    </Button>
+                  </div>
+                  <div aria-live="polite" className="min-h-5 text-sm">
+                    {resultsCopied ? (
+                      <span
+                        className="text-success-foreground"
+                        data-testid="copy-results-feedback"
+                      >
+                        {content.results.copyFeedback}
+                      </span>
+                    ) : null}
+                    {resultsCopyError ? (
+                      <span className="text-destructive-foreground">
+                        {content.results.copyError}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
                 {justifyPlayer ? (
                   <p
                     role="status"

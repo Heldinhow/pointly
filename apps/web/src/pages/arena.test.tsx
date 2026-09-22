@@ -922,6 +922,134 @@ describe("ArenaPage (ticket 07 — Resultados)", () => {
 	});
 });
 
+describe("ArenaPage (16.C — Copiar resultado #201)", () => {
+	function revealedSala(
+		votes: Array<{ id: string; nick: string; value: Vote | null }>,
+		extra: Partial<SalaState> = {},
+	): SalaState {
+		const players = votes.map((entry, index) =>
+			player(
+				{
+					id: entry.id,
+					nick: entry.nick,
+					hasVoted: entry.value !== null,
+					value: entry.value,
+				},
+				index,
+			),
+		);
+		const votesMap: Record<string, string> = {};
+		for (const entry of votes) {
+			if (entry.value !== null) votesMap[entry.id] = entry.value;
+		}
+		return sala({
+			players,
+			phase: "revealed",
+			votes: votesMap,
+			...extra,
+		});
+	}
+
+	test("clique copia a string exata PT sem ☕ e em ordem ascendente", async () => {
+		const written = stubClipboard();
+		const socket = new FakeSocket();
+		const state = revealedSala([
+			{ id: "p_a", nick: "Ana", value: "5" },
+			{ id: "p_b", nick: "Beto", value: "3" },
+			{ id: "p_c", nick: "Carol", value: "8" },
+			{ id: "p_d", nick: "Dave", value: "5" },
+			{ id: "p_e", nick: "Eve", value: "☕" },
+		]);
+		seed({ sala: state, playerId: "p_a", socket });
+		renderArena();
+
+		const button = screen.getByTestId(
+			"copy-results-button",
+		) as HTMLButtonElement;
+		expect(button.disabled).toBe(false);
+		fireEvent.click(button);
+		expect(await screen.findByTestId("copy-results-feedback")).toBeTruthy();
+		expect(written).toEqual(["Mediana: 5 — votos: 3, 5, 5, 8"]);
+		// Feedback reaproveita o padrão do convite: troca o rótulo por 2.5s.
+		expect(button.textContent).toMatch(/Copiado!/);
+	});
+
+	test("EN copia `Median: … — votes: …`", async () => {
+		const written = stubClipboard();
+		const socket = new FakeSocket();
+		const state = revealedSala([
+			{ id: "p_a", nick: "Ana", value: "5" },
+			{ id: "p_b", nick: "Beto", value: "3" },
+		]);
+		seed({ sala: state, playerId: "p_a", socket });
+		renderArena("/s/AB12", "en");
+
+		fireEvent.click(screen.getByTestId("copy-results-button"));
+		expect(await screen.findByTestId("copy-results-feedback")).toBeTruthy();
+		// Mediana de [3,5] → 4; lista plana ascendente "3, 5".
+		expect(written).toEqual(["Median: 4 — votes: 3, 5"]);
+		expect(screen.getByTestId("copy-results-button").textContent).toMatch(
+			/Copied!/,
+		);
+	});
+
+	test("voto único copia `Mediana: 5 — votos: 5`", async () => {
+		const written = stubClipboard();
+		const socket = new FakeSocket();
+		const state = revealedSala([{ id: "p_a", nick: "Ana", value: "5" }]);
+		seed({ sala: state, playerId: "p_a", socket });
+		renderArena();
+
+		fireEvent.click(screen.getByTestId("copy-results-button"));
+		expect(await screen.findByTestId("copy-results-feedback")).toBeTruthy();
+		expect(written).toEqual(["Mediana: 5 — votos: 5"]);
+	});
+
+	test("pré-reveal oculta o botão (não desabilita)", () => {
+		const socket = new FakeSocket();
+		const host = player(
+			{ id: "p_host", nick: "Ana", role: "host", hasVoted: true, value: "5" },
+			0,
+		);
+		seed({
+			sala: sala({ players: [host], phase: "voting" }),
+			playerId: host.id,
+			socket,
+		});
+		renderArena();
+
+		expect(screen.queryByTestId("stats-pill")).toBeNull();
+		expect(screen.queryByTestId("copy-results-button")).toBeNull();
+		expect(screen.queryByTestId("copy-results-feedback")).toBeNull();
+	});
+
+	test("noNumerics mantém o botão desabilitado com a nota e aria-live", async () => {
+		stubClipboard();
+		const socket = new FakeSocket();
+		const state = revealedSala([
+			{ id: "p_a", nick: "Ana", value: "☕" },
+			{ id: "p_b", nick: "Beto", value: "☕" },
+		]);
+		seed({ sala: state, playerId: "p_a", socket });
+		renderArena();
+
+		const button = screen.getByTestId(
+			"copy-results-button",
+		) as HTMLButtonElement;
+		expect(button.disabled).toBe(true);
+		// Layout mantido: nota de ausência segue visível.
+		expect(screen.getByTestId("stats-no-numerics")).toBeTruthy();
+		// Feedback inline é aria-live polite (mesmo padrão do convite).
+		const liveRegion = screen
+			.getByTestId("copy-results-button")
+			.parentElement?.parentElement?.querySelector('[aria-live="polite"]');
+		expect(liveRegion).toBeTruthy();
+		// Clique com desabilitado não copia nem mostra feedback.
+		fireEvent.click(button);
+		expect(screen.queryByTestId("copy-results-feedback")).toBeNull();
+	});
+});
+
 describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 	function revealedTwoPlayer(): {
 		socket: FakeSocket;
