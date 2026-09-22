@@ -16,11 +16,16 @@
  * @see docs/adr/0002-host-is-creator-not-ruler.md      (host fraco; reveal/new_round democráticos)
  */
 
+import { randomUUID } from "node:crypto";
 import {
 	DECK_VALUES,
+	HistoriaCriterioSchema,
+	HistoriaTituloSchema,
+	PAUTA_MAX_HISTORIAS,
 	PROJECTILE_CHAIR_COOLDOWN_MS,
 	PROJECTILE_COOLDOWN_MS,
 	type ConsensusStats,
+	type Historia,
 	type Player,
 	type Phase,
 	type SalaState,
@@ -45,7 +50,9 @@ export class SalaError extends Error {
 		| "invalid_phase"
 		| "invalid_vote"
 		| "role_denied"
-		| "invalid_nick";
+		| "invalid_nick"
+		| "pauta_cheia"
+		| "historia_nao_encontrada";
 	constructor(code: SalaError["code"], message: string) {
 		super(message);
 		this.name = "SalaError";
@@ -80,6 +87,15 @@ export class Sala {
 	phase: Phase = "idle";
 	readonly players: Map<string, Player> = new Map();
 	readonly votes: Map<string, Vote> = new Map();
+
+	/**
+	 * Pauta efêmera em memória (issue #162, parent #160). Some junto com a
+	 * Sala (hub remove a Sala quando o último sai — sem persistência).
+	 * Ordem canônica = índice no array; `ordem` espelha o índice.
+	 */
+	pauta: Historia[] = [];
+	/** História ativa da rodada. `null` = nenhuma ativa. */
+	historiaAtualId: string | null = null;
 
 	/**
 	 * Server-internal: timestamp (epoch ms) de quando cada player
@@ -196,6 +212,9 @@ export class Sala {
 		if (this.players.size === 0) {
 			this.hostId = null;
 			this.phase = "idle";
+			// Pauta efêmera some junto com a Sala (#160: sem persistência).
+			this.pauta.length = 0;
+			this.historiaAtualId = null;
 		}
 		return { promoted: promotedId };
 	}
@@ -388,9 +407,11 @@ export class Sala {
 		// `recomputeConsensus()` é side-effect-free (valor descartado) —
 		// só executamos pra forçar a checagem de invariantes e dar
 		// cobertura testável. WS handler consome o flag em T5.
+		// #162: Pontuação da ativa segue o recompute (mediana atual).
 		if (this.phase === "revealed") {
-			this.recomputeConsensus();
+			const stats = this.recomputeConsensus();
 			this.markConsensusDirty();
+			this.stampActivePontos(stats.median);
 		}
 
 		// Primeira transição da rodada: idle → voting (F-013)
@@ -425,6 +446,10 @@ export class Sala {
 
 		const stats = this.consensusSnapshot();
 		this.phase = "revealed";
+
+		// #162: Pontuação = mediana atual carimbada na ativa enquanto
+		// revealed (sem override manual no v1). Sem ativa = sala legada.
+		this.stampActivePontos(stats.median);
 
 		return {
 			votes: Object.fromEntries(this.votes),
@@ -516,6 +541,197 @@ export class Sala {
 		this.votes.clear();
 		this.round += 1;
 		this.phase = "voting";
+		// #162: Nova Rodada auto-avança para a próxima não-pontuada.
+		// Última pontuada → sem ativa (null).
+		this.advancePautaToNextUnscored();
+	}
+
+	// -----------------------------------------------------------------------
+	// Pauta — domínio em memória (#162, parent #160)
+	// -----------------------------------------------------------------------
+
+	/**
+	 * História por id. `undefined` se não existe.
+	 */
+	getHistoria(id: string): Historia | undefined {
+		return this.pauta.find((h) => h.id === id);
+	}
+
+	/**
+	 * Cria história no fim da pauta. Primeira criada auto-seleciona
+	 * (quando não há ativa). Democrático: host/player podem; espectador
+	 * recebe `role_denied`. Pauta cheia (50) → `pauta_cheia`.
+	 */
+	addHistoria(
+		callerId: string,
+		input: { titulo: string; criterio?: string },
+	): Historia {
+		this.requirePautaEditor(callerId);
+		if (this.pauta.length >= PAUTA_MAX_HISTORIAS) {
+			throw new SalaError(
+				"pauta_cheia",
+				`pauta_cheia: máximo ${PAUTA_MAX_HISTORIAS} histórias`,
+			);
+		}
+		const titulo = HistoriaTituloSchema.parse(input.titulo);
+		let criterio: string | undefined;
+		if (input.criterio !== undefined) {
+			criterio = HistoriaCriterioSchema.parse(input.criterio);
+		}
+		const historia: Historia = {
+			id: makeHistoriaId(new Set(this.pauta.map((h) => h.id))),
+			titulo,
+			...(criterio !== undefined ? { criterio } : {}),
+			pontos: null,
+			ordem: this.pauta.length,
+		};
+		this.pauta.push(historia);
+		// Primeira criada (ou pauta sem ativa) auto-seleciona.
+		if (this.historiaAtualId == null) {
+			this.historiaAtualId = historia.id;
+		}
+		return { ...historia };
+	}
+
+	/**
+	 * Edição parcial de texto (last-write-wins). Sempre editável —
+	 * inclusive pontuada e inclusive a ativa em voting/revealable (só
+	 * texto, não invalida voto). Nunca toca `pontos`/`ordem` (sem
+	 * override manual no v1). `criterio: null` limpa o critério.
+	 */
+	updateHistoria(
+		callerId: string,
+		id: string,
+		patch: { titulo?: string; criterio?: string | null },
+	): Historia {
+		this.requirePautaEditor(callerId);
+		const idx = this.pauta.findIndex((h) => h.id === id);
+		if (idx === -1) {
+			throw new SalaError(
+				"historia_nao_encontrada",
+				`História ${id} não encontrada.`,
+			);
+		}
+		const cur = this.pauta[idx]!;
+		let nextTitulo = cur.titulo;
+		let nextCriterio = cur.criterio;
+		if (patch.titulo !== undefined) {
+			nextTitulo = HistoriaTituloSchema.parse(patch.titulo);
+		}
+		if (patch.criterio !== undefined) {
+			nextCriterio =
+				patch.criterio === null
+					? undefined
+					: HistoriaCriterioSchema.parse(patch.criterio);
+		}
+		const next: Historia = {
+			...cur,
+			titulo: nextTitulo,
+			...(nextCriterio === undefined ? {} : { criterio: nextCriterio }),
+			pontos: cur.pontos,
+			ordem: cur.ordem,
+		};
+		if (nextCriterio === undefined) {
+			const { criterio: _dropped, ...rest } = next;
+			void _dropped;
+			this.pauta[idx] = rest as Historia;
+			return { ...(this.pauta[idx] as Historia) };
+		}
+		this.pauta[idx] = next;
+		return { ...next };
+	}
+
+	/**
+	 * Reordena por índice explícito (sem drag na UI). Move só a
+	 * história-alvo; `ordem` reindexada 0..n-1. Mover a ativa em
+	 * voting/revealable → `invalid_phase`; mover não-ativa é livre.
+	 * `toIndex` fora da pauta real → `historia_nao_encontrada`.
+	 */
+	moveHistoria(callerId: string, id: string, toIndex: number): Historia[] {
+		this.requirePautaEditor(callerId);
+		const from = this.pauta.findIndex((h) => h.id === id);
+		if (from === -1) {
+			throw new SalaError(
+				"historia_nao_encontrada",
+				`História ${id} não encontrada.`,
+			);
+		}
+		if (!Number.isInteger(toIndex) || toIndex < 0 || toIndex >= this.pauta.length) {
+			throw new SalaError(
+				"historia_nao_encontrada",
+				`Destino ${toIndex} fora da pauta (0..${this.pauta.length - 1}).`,
+			);
+		}
+		this.assertActiveNotLocked(id, "reordenar");
+		const [item] = this.pauta.splice(from, 1);
+		this.pauta.splice(toIndex, 0, item!);
+		this.reindexPauta();
+		return this.pauta.map((h) => ({ ...h }));
+	}
+
+	/**
+	 * Remove da pauta e reindexa. Apagar a ativa em voting/revealable →
+	 * `invalid_phase` (rodada intacta). Apagar pontuada exige
+	 * `confirmScored: true`, senão `invalid_phase`. Remover a ativa
+	 * (em idle/revealed) limpa `historiaAtualId`.
+	 */
+	removeHistoria(
+		callerId: string,
+		id: string,
+		opts?: { confirmScored?: boolean },
+	): Historia {
+		this.requirePautaEditor(callerId);
+		const idx = this.pauta.findIndex((h) => h.id === id);
+		if (idx === -1) {
+			throw new SalaError(
+				"historia_nao_encontrada",
+				`História ${id} não encontrada.`,
+			);
+		}
+		this.assertActiveNotLocked(id, "apagar");
+		const target = this.pauta[idx]!;
+		if (target.pontos !== null && opts?.confirmScored !== true) {
+			throw new SalaError(
+				"invalid_phase",
+				"História pontuada exige confirmação (confirmScored).",
+			);
+		}
+		const [removed] = this.pauta.splice(idx, 1);
+		this.reindexPauta();
+		if (this.historiaAtualId === id) {
+			this.historiaAtualId = null;
+		}
+		return { ...removed! };
+	}
+
+	/**
+	 * Define a história ativa. `null` limpa. Liberada apenas em
+	 * idle/revealed; em voting/revealable qualquer troca (inclusive
+	 * limpar) → `invalid_phase` sem invalidar votos. No-op (mesmo id
+	 * ou null repetido) é permitido em qualquer fase.
+	 */
+	selectHistoria(callerId: string, historiaId: string | null): void {
+		this.requirePautaEditor(callerId);
+		if (historiaId === this.historiaAtualId) return;
+		if (this.isVotingPhase()) {
+			throw new SalaError(
+				"invalid_phase",
+				"invalid_phase: historia_select requer phase=idle|revealed; atual=" +
+					this.phase,
+			);
+		}
+		if (historiaId === null) {
+			this.historiaAtualId = null;
+			return;
+		}
+		const found = this.pauta.some((h) => h.id === historiaId);
+		if (!found) {
+			throw new SalaError(
+				"historia_nao_encontrada",
+				`História ${historiaId} não encontrada.`,
+			);
+		}
+		this.historiaAtualId = historiaId;
 	}
 
 	// -----------------------------------------------------------------------
@@ -536,6 +752,96 @@ export class Sala {
 			if (p.hasVoted) connectedVoted += 1;
 		}
 		return connectedCount > 0 && connectedCount === connectedVoted;
+	}
+
+	/**
+	 * #162: garante que o chamador pode editar a pauta. Espectador →
+	 * `role_denied`; chamador fora da sala → `historia_nao_encontrada`.
+	 */
+	private requirePautaEditor(callerId: string): Player {
+		const caller = this.players.get(callerId);
+		if (!caller) {
+			throw new SalaError(
+				"historia_nao_encontrada",
+				`Player ${callerId} não está na sala.`,
+			);
+		}
+		if (caller.role === "spectator") {
+			throw new SalaError("role_denied", "Espectadores não editam a pauta.");
+		}
+		return caller;
+	}
+
+	/**
+	 * #162: `true` em voting/revealable (votos em curso).
+	 */
+	private isVotingPhase(): boolean {
+		return this.phase === "voting" || this.phase === "revealable";
+	}
+
+	/**
+	 * #162: apagar/reordenar a ativa em voting/revealable é
+	 * `invalid_phase` (rodada intacta — chamador não muta nada).
+	 */
+	private assertActiveNotLocked(id: string, verbo: string): void {
+		if (this.isVotingPhase() && this.historiaAtualId === id) {
+			throw new SalaError(
+				"invalid_phase",
+				`invalid_phase: não é possível ${verbo} a ativa em ${this.phase}`,
+			);
+		}
+	}
+
+	/**
+	 * #162: `ordem` espelha o índice (0..n-1) após move/remove.
+	 */
+	private reindexPauta(): void {
+		for (let i = 0; i < this.pauta.length; i++) {
+			this.pauta[i]!.ordem = i;
+		}
+	}
+
+	/**
+	 * #162: Pontuação = mediana atual carimbada na ativa. Chamada no
+	 * reveal e no recompute pós-reveal. Sem ativa = no-op (sala legada).
+	 */
+	private stampActivePontos(median: number | null): void {
+		if (this.historiaAtualId == null) return;
+		const idx = this.pauta.findIndex((h) => h.id === this.historiaAtualId);
+		if (idx === -1) return;
+		this.pauta[idx] = { ...this.pauta[idx]!, pontos: median };
+	}
+
+	/**
+	 * #162: Nova Rodada auto-avança para a próxima não-pontuada após a
+	 * ativa atual. Atual ainda não-pontuada (ex. mediana null) = mantém.
+	 * Nenhuma à frente → sem ativa (null). Sem ativa atual = primeira
+	 * não-pontuada do início.
+	 */
+	private advancePautaToNextUnscored(): void {
+		if (this.pauta.length === 0) {
+			this.historiaAtualId = null;
+			return;
+		}
+		if (this.historiaAtualId == null) {
+			const first = this.pauta.find((h) => h.pontos == null);
+			this.historiaAtualId = first ? first.id : null;
+			return;
+		}
+		const idx = this.pauta.findIndex((h) => h.id === this.historiaAtualId);
+		if (idx === -1) {
+			const first = this.pauta.find((h) => h.pontos == null);
+			this.historiaAtualId = first ? first.id : null;
+			return;
+		}
+		if (this.pauta[idx]!.pontos == null) return;
+		for (let i = idx + 1; i < this.pauta.length; i++) {
+			if (this.pauta[i]!.pontos == null) {
+				this.historiaAtualId = this.pauta[i]!.id;
+				return;
+			}
+		}
+		this.historiaAtualId = null;
 	}
 
 	/**
@@ -603,6 +909,8 @@ export class Sala {
 			round: this.round,
 			votes: Object.fromEntries(this.votes),
 			createdAt: this.createdAt,
+			pauta: this.pauta.map((h) => ({ ...h })),
+			historiaAtualId: this.historiaAtualId,
 		};
 	}
 
@@ -631,6 +939,18 @@ export function computeFirstFreeSeat(players: readonly Player[]): number {
 		if (!taken.has(s)) return s;
 	}
 	throw new Error("no free seat — sala cheia");
+}
+
+/**
+ * Gera id único de história (`h_<12 hex>`). Colisão improvável, mas o
+ * loop garante unicidade dentro da pauta.
+ */
+function makeHistoriaId(existing: Set<string>): string {
+	let id = `h_${randomUUID().replace(/-/g, "").slice(0, 12)}`;
+	while (existing.has(id)) {
+		id = `h_${randomUUID().replace(/-/g, "").slice(0, 12)}`;
+	}
+	return id;
 }
 
 /**
