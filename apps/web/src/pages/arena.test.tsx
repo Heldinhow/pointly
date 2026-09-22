@@ -1462,6 +1462,38 @@ describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {
 		});
 	}
 
+	/** Welcome com pauta: h1 pontuada (5), h2 ativa em voting (F5 #166). */
+	function welcomeComPauta(code: string, playerId: string): string {
+		return JSON.stringify({
+			type: "welcome",
+			payload: {
+				playerId,
+				role: "host",
+				sala: pautaSala(
+					[
+						historia("h1", { titulo: "Carrinho", pontos: 5 }),
+						historia("h2", { titulo: "Checkout" }),
+					],
+					{
+						code,
+						hostId: playerId,
+						players: [
+							player({
+								id: playerId,
+								uuid: "00000000-0000-4000-8000-000000000099",
+								nick: "Ana",
+								role: "host",
+							}, 0),
+						],
+						phase: "voting",
+						round: 2,
+						historiaAtualId: "h2",
+					},
+				),
+			},
+		});
+	}
+
 	test("F5 no meio da votação recupera voto, assento e fase sem duplicar o Player", async () => {
 		installRejoinMock();
 		try {
@@ -1501,6 +1533,56 @@ describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {
 			);
 			// Sessão segue persistida para o próximo reload.
 			expect(window.localStorage.getItem("pointly-session")).toContain("AB12");
+		} finally {
+			restoreWs();
+			try {
+				(
+					useSession.getState().socket as unknown as {
+						close?: (options?: { silent?: boolean }) => void;
+					} | null
+				)?.close?.({ silent: true });
+			} catch {
+				// Socket já morto — nada a fazer.
+			}
+		}
+	});
+
+	test("F5 mantém pauta, ativa e Pontuações do snapshot do servidor", async () => {
+		installRejoinMock();
+		try {
+			const uuid = "00000000-0000-4000-8000-000000000099";
+			resetStoreForRejoin(uuid);
+			persistSession("AB12", "Ana");
+			renderArena("/s/AB12");
+
+			await waitFor(() => expect(RejoinMockWS.instances).toHaveLength(1));
+			const ws = RejoinMockWS.instances[0]!;
+			await act(async () => {
+				ws.open();
+			});
+			await waitFor(() => expect(ws.sent.length).toBeGreaterThan(0));
+
+			await act(async () => {
+				ws.receive(welcomeComPauta("AB12", "p_ana00000001"));
+			});
+
+			// Pauta completa + ativa + Pontuação vêm no welcome (F5 #166).
+			await waitFor(() =>
+				expect(screen.getByTestId("pauta-list")).toBeTruthy(),
+			);
+			expect(
+				screen
+					.getAllByTestId(/^pauta-item-/)
+					.map((item) => item.getAttribute("data-testid")),
+			).toEqual(["pauta-item-h1", "pauta-item-h2"]);
+			expect(screen.getByTestId("pauta-active-h2")).toBeTruthy();
+			expect(screen.getByTestId("pauta-pontos-h1").textContent).toMatch(/5/);
+			expect(
+				(screen.getByTestId("deck-card-5") as HTMLButtonElement).disabled,
+			).toBe(false);
+			expect(screen.getByTestId("presence-line").textContent).toMatch(
+				/1 na sala/,
+			);
 		} finally {
 			restoreWs();
 			try {
@@ -1658,6 +1740,44 @@ describe("ArenaPage (reconnect em aba inativa)", () => {
 		});
 		expect(screen.queryByTestId("reconnecting-hint")).toBeNull();
 		expect(screen.queryByText("Conexão perdida")).toBeNull();
+	});
+
+	test("reconexão reidrata pauta, ativa e Pontuações do welcome", async () => {
+		const socket = new FakeSocket();
+		const host = player({ id: "p_host", nick: "Ana", role: "host" }, 0);
+		seed({
+			sala: pautaSala([], { players: [host] }),
+			playerId: "p_host",
+			socket,
+		});
+		renderArena();
+		expect(screen.getByTestId("pauta-empty")).toBeTruthy();
+
+		await act(async () => {
+			socket.handlers.onReconnected?.({
+				playerId: "p_host",
+				role: "host",
+				sala: pautaSala(
+					[
+						historia("h1", { titulo: "Carrinho", pontos: 5 }),
+						historia("h2", { titulo: "Checkout" }),
+					],
+					{
+						players: [host],
+						phase: "voting",
+						round: 2,
+						historiaAtualId: "h2",
+					},
+				),
+			});
+		});
+
+		expect(screen.queryByTestId("pauta-empty")).toBeNull();
+		expect(screen.getByTestId("pauta-active-h2")).toBeTruthy();
+		expect(screen.getByTestId("pauta-pontos-h1").textContent).toMatch(/5/);
+		expect(screen.getByTestId("round-label").textContent).toMatch(
+			/Rodada 2 · Votando/,
+		);
 	});
 
 	test("falha após a janela mostra Conexão perdida com Tentar de novo", async () => {
@@ -2724,5 +2844,217 @@ describe("Card Pauta (#165)", () => {
 			/História h1 não encontrada/,
 		);
 		expect(screen.queryByTestId("vote-error")).toBeNull();
+	});
+});
+
+describe("Card Pauta — ciclo #166 (dois navegadores)", () => {
+	function hostOnly(): Player {
+		return player({ id: "p_host", nick: "Ana", role: "host" }, 0);
+	}
+
+	test("entrada tardia recebe 3 histórias, ativa e Pontuações sem quebrar", async () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		const late = player({ id: "p_late", nick: "Tardio" }, 2);
+		seed({
+			sala: pautaSala([], { players: [host, late] }),
+			playerId: late.id,
+			socket,
+			nick: "Tardio",
+		});
+		renderArena();
+
+		// Antes do snapshot chegar: empty state, sala legível.
+		expect(screen.getByTestId("pauta-empty")).toBeTruthy();
+
+		// O snapshot do servidor (welcome/room_state) traz a pauta inteira.
+		await act(async () => {
+			socket.emitRoomState(
+				pautaSala(
+					[
+						historia("h1", { titulo: "Carrinho", pontos: 5 }),
+						historia("h2", { titulo: "Checkout" }),
+						historia("h3", { titulo: "PIX" }),
+					],
+					{
+						players: [host, late],
+						phase: "voting",
+						round: 2,
+						historiaAtualId: "h3",
+					},
+				),
+			);
+		});
+
+		expect(
+			screen
+				.getAllByTestId(/^pauta-item-/)
+				.map((item) => item.getAttribute("data-testid")),
+		).toEqual(["pauta-item-h1", "pauta-item-h2", "pauta-item-h3"]);
+		expect(screen.getByTestId("pauta-active-h3")).toBeTruthy();
+		expect(screen.getByTestId("pauta-pontos-h1").textContent).toMatch(/5/);
+		expect(screen.getByTestId("round-label").textContent).toMatch(/Rodada 2/);
+		// Rodada em andamento com ativa: deck liberado para o votante tardio.
+		expect(
+			(screen.getByTestId("deck-card-5") as HTMLButtonElement).disabled,
+		).toBe(false);
+	});
+
+	test("revelar na A carimba a Pontuação no card do B", async () => {
+		const socket = new FakeSocket();
+		const host = player(
+			{ id: "p_host", nick: "Ana", role: "host", hasVoted: true, value: "5" },
+			0,
+		);
+		const me = player(
+			{ id: "p_bob", nick: "Bob", hasVoted: true, value: "3" },
+			1,
+		);
+		seed({
+			sala: pautaSala([historia("h1", { titulo: "Carrinho" })], {
+				players: [host, me],
+				phase: "revealable",
+				votes: { p_host: "5", p_bob: "3" },
+			}),
+			playerId: me.id,
+			socket,
+			nick: "Bob",
+		});
+		renderArena();
+
+		expect(screen.queryByTestId("pauta-pontos-h1")).toBeNull();
+
+		await act(async () => {
+			socket.emitRoomState(
+				pautaSala([historia("h1", { titulo: "Carrinho", pontos: 4 })], {
+					players: [host, me],
+					phase: "revealed",
+					votes: { p_host: "5", p_bob: "3" },
+				}),
+			);
+		});
+
+		expect(screen.getByTestId("stats-pill")).toBeTruthy();
+		expect(screen.getByTestId("pauta-pontos-h1").textContent).toMatch(/4/);
+	});
+
+	test("Nova Rodada na A avança a ativa e zera o voto no B", async () => {
+		const socket = new FakeSocket();
+		const hostVoted = player(
+			{ id: "p_host", nick: "Ana", role: "host", hasVoted: true, value: "5" },
+			0,
+		);
+		const meVoted = player(
+			{ id: "p_bob", nick: "Bob", hasVoted: true, value: "5" },
+			1,
+		);
+		const host = hostOnly();
+		const me = player({ id: "p_bob", nick: "Bob" }, 1);
+		const h1 = historia("h1", { titulo: "Carrinho", pontos: 5 });
+		const h2 = historia("h2", { titulo: "Checkout" });
+		seed({
+			sala: pautaSala([h1, h2], {
+				players: [hostVoted, meVoted],
+				phase: "revealed",
+				votes: { p_host: "5", p_bob: "5" },
+			}),
+			playerId: meVoted.id,
+			socket,
+			nick: "Bob",
+		});
+		renderArena();
+
+		expect(screen.getByTestId("pauta-active-h1")).toBeTruthy();
+
+		await act(async () => {
+			socket.emitRoomState(
+				pautaSala([h1, h2], {
+					players: [host, me],
+					phase: "voting",
+					round: 2,
+					votes: {},
+					historiaAtualId: "h2",
+				}),
+			);
+		});
+
+		expect(screen.getByTestId("pauta-active-h2")).toBeTruthy();
+		expect(screen.queryByTestId("pauta-active-h1")).toBeNull();
+		expect(screen.getByTestId("pauta-pontos-h1").textContent).toMatch(/5/);
+		// Voto zerado: deck volta ao estado "escolha" e o reveal some.
+		expect(screen.getByTestId("deck-selection").textContent).toMatch(/Escolha/);
+		expect(screen.queryByTestId("new-round-button")).toBeNull();
+		expect(screen.getByTestId("round-label").textContent).toMatch(
+			/Rodada 2 · Votando/,
+		);
+	});
+
+	test("editar o voto pós-reveal move a Pontuação no card do B", async () => {
+		const socket = new FakeSocket();
+		const host = player(
+			{ id: "p_host", nick: "Ana", role: "host", hasVoted: true, value: "5" },
+			0,
+		);
+		const me = player(
+			{ id: "p_bob", nick: "Bob", hasVoted: true, value: "5" },
+			1,
+		);
+		seed({
+			sala: pautaSala([historia("h1", { titulo: "Carrinho", pontos: 5 })], {
+				players: [host, me],
+				phase: "revealed",
+				votes: { p_host: "5", p_bob: "5" },
+			}),
+			playerId: me.id,
+			socket,
+			nick: "Bob",
+		});
+		renderArena();
+		expect(screen.getByTestId("pauta-pontos-h1").textContent).toMatch(/5/);
+
+		await act(async () => {
+			socket.emitRoomState(
+				pautaSala([historia("h1", { titulo: "Carrinho", pontos: 6.5 })], {
+					players: [host, me],
+					phase: "revealed",
+					votes: { p_host: "8", p_bob: "5" },
+				}),
+			);
+		});
+
+		expect(screen.getByTestId("pauta-pontos-h1").textContent).toMatch(/6\.5/);
+	});
+
+	test("espectador tentando editar recebe erro inline com a pauta intacta", async () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		const spectator = player(
+			{ id: "p_olho", nick: "Olho", role: "spectator", seatIndex: -1 },
+			1,
+		);
+		seed({
+			sala: pautaSala([historia("h1", { titulo: "Carrinho" })], {
+				players: [host, spectator],
+			}),
+			playerId: spectator.id,
+			socket,
+			nick: "Olho",
+		});
+		renderArena();
+
+		await act(async () => {
+			socket.emitError("role_denied", "Espectadores não editam a pauta.");
+		});
+
+		expect(screen.getByTestId("historia-error").textContent).toMatch(
+			/Espectadores não editam/,
+		);
+		expect(screen.queryByTestId("vote-error")).toBeNull();
+		// Sem efeito: nada trafegou e a lista segue igual.
+		expect(socket.sentHistoriasAdd).toHaveLength(0);
+		expect(socket.sentHistoriaUpdates).toHaveLength(0);
+		expect(screen.getByTestId("pauta-item-h1").textContent).toMatch(
+			/Carrinho/,
+		);
 	});
 });
