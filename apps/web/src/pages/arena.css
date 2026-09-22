@@ -140,6 +140,104 @@
   font-size: 12px;
   color: #c3dbce;
 }
+/* História ativa no centro da mesa (#211): contexto persistente e compacto
+   acima da pergunta. Título clampado em 2 linhas; critério em disclosure
+   secundário que nunca compete com Revelar / Nova Rodada. */
+.arena-reveal[data-story="true"] {
+  gap: 8px;
+}
+.arena-reveal[data-story="true"] [data-slot="card-title"] {
+  font-size: 17px;
+}
+.arena-reveal[data-story="true"] [data-slot="card-description"] {
+  margin-top: 4px;
+}
+/* No revelado o título da história fala por si (o card já anuncia "Cartas na
+   mesa" e a rodada avança): sem eyebrow, o bloco sobe e não encosta no rail. */
+.arena-reveal[data-story="true"][data-revealed="true"] .arena-story-eyebrow {
+  display: none;
+}
+.arena-story {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  max-width: 290px;
+  margin: 0 auto;
+}
+.arena-story-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.arena-story-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: 0;
+  max-width: 100%;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+  overflow-wrap: anywhere;
+}
+/* Alvo de toque de 44px sem custo de layout: o box visual fica em 28px
+   (mesmo padrão do toggle da Pauta) e o ::after amplia a área efetiva. */
+.arena-story-criterion-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.arena-story-criterion-toggle::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+.arena-story-criterion-toggle:hover {
+  color: var(--foreground);
+}
+.arena-story-criterion-toggle:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.arena-story-criterion-toggle svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s ease;
+}
+.arena-story-criterion-toggle[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+.arena-story-criterion {
+  margin: 2px 0 0;
+  max-height: 4.8em;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .arena-deck {
   border: 1px solid var(--border);
   background: var(--card);

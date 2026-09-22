@@ -1,5 +1,6 @@
 import {
   CheckIcon,
+  ChevronDownIcon,
   CopyIcon,
   DicesIcon,
   EyeIcon,
@@ -20,6 +21,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Deck } from "@/components/deck";
+import {
+  Collapsible,
+  CollapsiblePanel,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { AvatarPicker } from "@/components/avatar-picker";
 import { PautaCard } from "@/components/pauta-card";
@@ -1076,7 +1082,55 @@ export function ArenaPage({
             projectileCooldownSecs={projectileCooldownSecs}
             lang={lang}
           >
-            <Card className="arena-reveal">
+            <Card
+              className="arena-reveal"
+              data-story={historiaAtiva ? "true" : "false"}
+              data-revealed={isRevealed ? "true" : "false"}
+            >
+              {/*
+                #211: história ativa no centro da mesa — contexto persistente
+                do voto (o card da sidebar não fica visível sem scroll no
+                mobile). Região viva sempre montada para anunciar a entrada
+                e a troca da ativa; some com a pauta ausente/sem ativa para
+                preservar a copy atual do centro.
+              */}
+              <p
+                className="sr-only"
+                data-testid="arena-story-live"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                {historiaAtiva ? content.story.announce(historiaAtiva.titulo) : ""}
+              </p>
+              {historiaAtiva ? (
+                <div className="arena-story" data-testid="arena-story">
+                  <span className="arena-story-eyebrow">
+                    {content.story.active}
+                  </span>
+                  <p className="arena-story-title" data-testid="arena-story-title">
+                    {historiaAtiva.titulo}
+                  </p>
+                  {historiaAtiva.criterio ? (
+                    <Collapsible key={historiaAtiva.id}>
+                      <CollapsibleTrigger
+                        className="arena-story-criterion-toggle"
+                        data-testid="arena-story-criterion-toggle"
+                      >
+                        <ChevronDownIcon aria-hidden="true" />
+                        {content.story.criterion}
+                      </CollapsibleTrigger>
+                      <CollapsiblePanel>
+                        <p
+                          className="arena-story-criterion"
+                          data-testid="arena-story-criterion"
+                        >
+                          {historiaAtiva.criterio}
+                        </p>
+                      </CollapsiblePanel>
+                    </Collapsible>
+                  ) : null}
+                </div>
+              ) : null}
               <CardHeader>
                 <CardTitle className="text-base">
                   {isRevealed

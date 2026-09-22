@@ -26,7 +26,9 @@
 }
 .poker-center {
   position: absolute;
-  inset: 28px 55px;
+  /* #211: 18px dá respiro à história ativa empilhada acima da pergunta;
+     conteúdo que cabe segue centralizado no mesmo lugar. */
+  inset: 18px 55px;
   display: flex;
   flex-direction: column;
   align-items: center;

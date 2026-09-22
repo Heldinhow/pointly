@@ -3058,3 +3058,221 @@ describe("Card Pauta — ciclo #166 (dois navegadores)", () => {
 		);
 	});
 });
+
+describe("História ativa no centro da mesa (#211)", () => {
+	function hostOnly(): Player {
+		return player({ id: "p_host", nick: "Ana", role: "host" }, 0);
+	}
+
+	test("título da ativa aparece no centro em votando e revelado", async () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		seed({
+			sala: pautaSala([historia("h1", { titulo: "Checkout PIX" })], {
+				players: [host],
+				phase: "voting",
+			}),
+			playerId: host.id,
+			socket,
+		});
+		renderArena();
+
+		const center = document.querySelector(".poker-center");
+		const title = screen.getByTestId("arena-story-title");
+		expect(title.textContent).toBe("Checkout PIX");
+		expect(center?.contains(title)).toBe(true);
+		// O contexto não depende do card da sidebar (que fica abaixo da
+		// dobra no mobile).
+		expect(center?.contains(screen.getByTestId("pauta-item-h1"))).toBe(false);
+
+		await act(async () => {
+			socket.emitRoomState(
+				pautaSala([historia("h1", { titulo: "Checkout PIX" })], {
+					players: [host],
+					phase: "revealed",
+					votes: { p_host: "5" },
+				}),
+			);
+		});
+
+		expect(screen.getByTestId("arena-story-title").textContent).toBe(
+			"Checkout PIX",
+		);
+		expect(screen.getByTestId("new-round-button")).toBeTruthy();
+	});
+
+	test("critério abre colapsado e não esconde Revelar / Nova Rodada", async () => {
+		const socket = new FakeSocket();
+		const host = player(
+			{ id: "p_host", nick: "Ana", role: "host", hasVoted: true, value: "5" },
+			0,
+		);
+		seed({
+			sala: pautaSala(
+				[
+					historia("h1", {
+						titulo: "Carrinho",
+						criterio: "Saldo por dia útil",
+					}),
+				],
+				{ players: [host], phase: "voting", votes: { p_host: "5" } },
+			),
+			playerId: host.id,
+			socket,
+		});
+		renderArena();
+
+		// Fechado por padrão: o título é o contexto; o critério é secundário.
+		expect(screen.queryByTestId("arena-story-criterion")).toBeNull();
+		const toggle = screen.getByTestId("arena-story-criterion-toggle");
+		expect(toggle.getAttribute("aria-expanded")).toBe("false");
+		expect(toggle.textContent).toMatch(/Critério/);
+		expect(screen.getByTestId("reveal-button")).toBeTruthy();
+
+		await act(async () => {
+			fireEvent.click(toggle);
+		});
+		expect(screen.getByTestId("arena-story-criterion").textContent).toBe(
+			"Saldo por dia útil",
+		);
+		expect(
+			screen
+				.getByTestId("arena-story-criterion-toggle")
+				.getAttribute("aria-expanded"),
+		).toBe("true");
+		// Reveal segue disponível com o critério aberto.
+		expect(screen.getByTestId("reveal-button")).toBeTruthy();
+
+		// Pós-reveal o critério continua aberto e a Nova Rodada aparece.
+		await act(async () => {
+			socket.emitRoomState(
+				pautaSala(
+					[
+						historia("h1", {
+							titulo: "Carrinho",
+							criterio: "Saldo por dia útil",
+						}),
+					],
+					{ players: [host], phase: "revealed", votes: { p_host: "5" } },
+				),
+			);
+		});
+		expect(screen.getByTestId("new-round-button")).toBeTruthy();
+		expect(screen.getByTestId("arena-story-criterion").textContent).toBe(
+			"Saldo por dia útil",
+		);
+	});
+
+	test("trocar a ativa atualiza o centro e o aria-live anuncia", async () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		const carrinho = historia("h1", { titulo: "Carrinho" });
+		const checkout = historia("h2", { titulo: "Checkout" });
+		seed({
+			sala: pautaSala([carrinho, checkout], {
+				players: [host],
+				historiaAtualId: "h1",
+			}),
+			playerId: host.id,
+			socket,
+		});
+		renderArena();
+
+		const live = screen.getByTestId("arena-story-live");
+		expect(live.getAttribute("aria-live")).toBe("polite");
+		expect(screen.getByTestId("arena-story-title").textContent).toBe(
+			"Carrinho",
+		);
+		expect(live.textContent).toMatch(/História ativa: Carrinho/);
+
+		await act(async () => {
+			socket.emitRoomState(
+				pautaSala([carrinho, checkout], {
+					players: [host],
+					historiaAtualId: "h2",
+				}),
+			);
+		});
+
+		expect(screen.getByTestId("arena-story-title").textContent).toBe(
+			"Checkout",
+		);
+		expect(screen.getByTestId("arena-story-live").textContent).toMatch(
+			/História ativa: Checkout/,
+		);
+	});
+
+	test("sem pauta o centro mantém a copy atual", () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		seed({ sala: sala({ players: [host] }), playerId: host.id, socket });
+		renderArena();
+
+		expect(screen.queryByTestId("arena-story")).toBeNull();
+		expect(screen.getByTestId("arena-story-live").textContent).toBe("");
+		expect(document.querySelector(".poker-center")?.textContent).toMatch(
+			/Qual é a sua estimativa\?/,
+		);
+		expect(screen.getByTestId("reveal-hint").textContent).toMatch(
+			/Aguardando o primeiro voto/,
+		);
+	});
+
+	test("pauta sem ativa mantém a copy atual e o deck bloqueado", () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		seed({
+			sala: pautaSala([historia("h1")], {
+				players: [host],
+				historiaAtualId: null,
+			}),
+			playerId: host.id,
+			socket,
+		});
+		renderArena();
+
+		expect(screen.queryByTestId("arena-story")).toBeNull();
+		expect(document.querySelector(".poker-center")?.textContent).toMatch(
+			/Qual é a sua estimativa\?/,
+		);
+		expect(screen.getByTestId("deck-selection").textContent).toMatch(
+			/liberar as cartas/,
+		);
+	});
+
+	test("EN: rótulos e anúncio da história ativa", async () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		seed({
+			sala: pautaSala(
+				[
+					historia("h1", {
+						titulo: "Mobile checkout",
+						criterio: "Daily balance",
+					}),
+				],
+				{ players: [host], phase: "voting" },
+			),
+			playerId: host.id,
+			socket,
+		});
+		renderArena("/s/AB12", "en");
+
+		expect(screen.getByTestId("arena-story").textContent).toMatch(
+			/Active story/,
+		);
+		expect(screen.getByTestId("arena-story-title").textContent).toBe(
+			"Mobile checkout",
+		);
+		expect(screen.getByTestId("arena-story-live").textContent).toMatch(
+			/Active story: Mobile checkout/,
+		);
+
+		await act(async () => {
+			fireEvent.click(screen.getByTestId("arena-story-criterion-toggle"));
+		});
+		expect(
+			(await screen.findByTestId("arena-story-criterion")).textContent,
+		).toBe("Daily balance");
+	});
+});

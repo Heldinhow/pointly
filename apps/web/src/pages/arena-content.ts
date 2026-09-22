@@ -47,6 +47,11 @@ export type ArenaContent = {
 		caption: string;
 		seatsLeft: (taken: number, total: number) => string;
 	};
+	story: {
+		active: string;
+		criterion: string;
+		announce: (titulo: string) => string;
+	};
 	reveal: {
 		titleRevealed: string;
 		titleReady: string;
