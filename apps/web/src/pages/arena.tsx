@@ -22,6 +22,7 @@ import {
 import { Deck } from "@/components/deck";
 import { Input } from "@/components/ui/input";
 import { AvatarPicker } from "@/components/avatar-picker";
+import { PautaCard } from "@/components/pauta-card";
 import { PokerTable } from "@/components/poker-table";
 import { ProjectileFlight, type ProjectileFlightEvent } from "@/components/projectile-flight";
 import { ProjectileMenu } from "@/components/projectile-menu";
@@ -56,6 +57,8 @@ import {
 import { useSession } from "@/store/session";
 import { JoinError, friendlyJoinMessage, genericJoinMessage } from "@/lib/errors";
 import { SOCKET_ERROR_COPY } from "@/lib/forms";
+import { CONFIRM_TIMEOUT_MS } from "@/lib/confirm";
+import { getHistoriaAtiva } from "@/lib/pauta";
 import type { Lang } from "@/lib/i18n";
 import { clearAvatar, loadAvatar, saveAvatar } from "@/lib/avatar";
 import { clearSession, loadSession } from "@/lib/identity";
@@ -77,7 +80,7 @@ export const SEAT_COUNT = 12;
  * ou N) arma o estado de confirmação; sem a segunda ativação a tempo o
  * comando volta ao estado inicial sem trafegar nada.
  */
-export const NEW_ROUND_CONFIRM_TIMEOUT_MS = 5000;
+export const NEW_ROUND_CONFIRM_TIMEOUT_MS = CONFIRM_TIMEOUT_MS;
 
 // Re-export de compat (SSOT em `@/lib/projectiles`).
 export { PROJECTILE_CHAIR_COOLDOWN_MS, PROJECTILE_COOLDOWN_MS };
@@ -208,6 +211,9 @@ export function ArenaPage({
   const [reconnectAttempt, setReconnectAttempt] = useState(0);
   const [voteError, setVoteError] = useState<string | null>(null);
   const [revealError, setRevealError] = useState<string | null>(null);
+  // Erros da Pauta (#165): roteados aqui pelo onError do socket e exibidos
+  // inline no card (data-testid historia-error), sem quebrar a sala.
+  const [historiaError, setHistoriaError] = useState<string | null>(null);
   const [confirmingNewRound, setConfirmingNewRound] = useState(false);
   const [newRoundError, setNewRoundError] = useState<string | null>(null);
   // Projéteis em qualquer fase: cooldown de 1s e voos confirmados pelo servidor.
@@ -341,6 +347,13 @@ export function ArenaPage({
           // Erros de reveal (invalid_phase com "reveal") vão para o
           // alerta de reveal; o resto continua no alerta de voto.
           setRevealError(shown(content.errors.reveal));
+        } else if (
+          /hist[óo]ria|pauta/i.test(text) ||
+          /historia|pauta/i.test(_code)
+        ) {
+          // Pauta (#165): historia_nao_encontrada, pauta_cheia,
+          // invalid_phase de select/remove e role_denied caem no card.
+          setHistoriaError(shown(content.pauta.error));
         } else {
           setVoteError(shown(content.errors.vote));
         }
@@ -656,6 +669,13 @@ export function ArenaPage({
 
   const currentVote = (self?.value ?? null) as Vote | null;
 
+  // Pauta (#165): o deck só libera com história ativa. Sala legada sem
+  // `pauta` no wire segue com o deck antigo (compat retroativa).
+  const historiaAtiva = getHistoriaAtiva(sala.pauta, sala.historiaAtualId);
+  const hasPauta = sala.pauta !== undefined;
+  const awaitingStory = hasPauta && historiaAtiva === null;
+  const deckDisabled = isSpectator || awaitingStory;
+
   // Resultados (issue 07): espelho client-side do consenso do servidor,
   // calculado do `room_state` (source of truth). Pausa e ausência ficam
   // fora dos cálculos; ½ vale 0,5 e 0 é voto válido.
@@ -755,6 +775,10 @@ export function ArenaPage({
       );
       return;
     }
+    if (awaitingStory) {
+      setVoteError(content.deck.awaitingStory);
+      return;
+    }
     // Mesma carta em duplo clique é no-op: mantém o voto sem
     // removê-lo e sem broadcast (espelha EVR-14 do servidor).
     if (currentVote === value) return;
@@ -762,6 +786,56 @@ export function ArenaPage({
     const sent = socket?.sendCastVote(value) ?? false;
     if (sent) trackVoteCast();
     else setVoteError(errorCopy.vote);
+  }
+
+  /**
+   * Ações da Pauta (#165): mesmo guard dos demais sends — socket ausente
+   * ou throw retorna false e o card mostra erro inline. Sucesso limpa o
+   * erro da pauta; erros do servidor chegam assíncronos pelo `onError`.
+   */
+  function sendPauta(action: (live: PointlySocket) => boolean): boolean {
+    if (!socket) return false;
+    try {
+      return action(socket);
+    } catch {
+      return false;
+    }
+  }
+
+  function handleHistoriaAdd(input: { titulo: string; criterio?: string }): boolean {
+    const sent = sendPauta((live) => live.addHistoria(input));
+    if (sent) setHistoriaError(null);
+    return sent;
+  }
+
+  function handleHistoriaUpdate(
+    id: string,
+    patch: { titulo?: string; criterio?: string | null },
+  ): boolean {
+    const sent = sendPauta((live) => live.updateHistoria(id, patch));
+    if (sent) setHistoriaError(null);
+    return sent;
+  }
+
+  function handleHistoriaMove(id: string, toIndex: number): boolean {
+    const sent = sendPauta((live) => live.moveHistoria(id, toIndex));
+    if (sent) setHistoriaError(null);
+    return sent;
+  }
+
+  function handleHistoriaRemove(
+    id: string,
+    options?: { confirmScored?: boolean },
+  ): boolean {
+    const sent = sendPauta((live) => live.removeHistoria(id, options));
+    if (sent) setHistoriaError(null);
+    return sent;
+  }
+
+  function handleHistoriaSelect(id: string | null): boolean {
+    const sent = sendPauta((live) => live.selectHistoria(id));
+    if (sent) setHistoriaError(null);
+    return sent;
   }
 
   // Alvos = demais participantes conectados, incluindo espectadores.
@@ -1121,20 +1195,22 @@ export function ArenaPage({
               <CardDescription data-testid="deck-selection" aria-live="polite">
                 {isSpectator
                   ? content.deck.spectatorDesc
-                  : !isRevealed && currentVote === null
-                    ? content.deck.pickAdjustable
-                    : voteSelectionText(currentVote, {
-                        revealed: isRevealed,
-                        adjustable: true,
-                        lang,
-                      })}
+                  : awaitingStory
+                    ? content.deck.awaitingStory
+                    : !isRevealed && currentVote === null
+                      ? content.deck.pickAdjustable
+                      : voteSelectionText(currentVote, {
+                          revealed: isRevealed,
+                          adjustable: true,
+                          lang,
+                        })}
               </CardDescription>
             </CardHeader>
             <CardPanel className="flex flex-col gap-3">
               <Deck
                 currentVote={currentVote}
                 onSelect={handleCardSelect}
-                disabled={isSpectator}
+                disabled={deckDisabled}
                 lang={lang}
               />
               {voteError ? (
@@ -1157,6 +1233,21 @@ export function ArenaPage({
           </div>
         </section>
         <aside className="arena-sidebar" aria-label={content.sidebar.aria}>
+          {hasPauta ? (
+            <PautaCard
+              pauta={sala.pauta}
+              historiaAtualId={sala.historiaAtualId}
+              phase={sala.phase}
+              isSpectator={isSpectator}
+              lang={lang}
+              serverError={historiaError}
+              onAdd={handleHistoriaAdd}
+              onUpdate={handleHistoriaUpdate}
+              onMove={handleHistoriaMove}
+              onRemove={handleHistoriaRemove}
+              onSelect={handleHistoriaSelect}
+            />
+          ) : null}
           <div className="arena-self" data-testid="self-line">
             {content.sidebar.youAre} <strong>{self?.nick ?? nick}</strong>
             {isSpectator ? content.sidebar.watching : ""}

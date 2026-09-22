@@ -283,11 +283,19 @@ export class PointlySocket {
 	}
 
 	/**
-	 * Envia `historia_remove { id }`. Id ausente → `error`
-	 * `historia_nao_encontrada` no `onError`, sem crash e sem broadcast.
+	 * Envia `historia_remove { id, confirmScored? }`. Id ausente →
+	 * `error` `historia_nao_encontrada` no `onError`, sem crash e sem
+	 * broadcast. `confirmScored: true` é o segundo toque da confirmação
+	 * dupla da UI (padrão 5s, #165) e libera apagar pontuada; sem ele o
+	 * servidor responde `invalid_phase` para história com Pontuação.
 	 */
-	removeHistoria(id: string): boolean {
-		const parsed = HistoriaRemovePayloadSchema.safeParse({ id });
+	removeHistoria(
+		id: string,
+		options: { confirmScored?: boolean } = {},
+	): boolean {
+		const parsed = HistoriaRemovePayloadSchema.safeParse(
+			options.confirmScored ? { id, confirmScored: true } : { id },
+		);
 		if (!parsed.success) return false;
 		return this.send({ type: "historia_remove", payload: parsed.data });
 	}

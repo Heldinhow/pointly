@@ -1,0 +1,168 @@
+/* Card Pauta da Arena (#165) — sidebar fantasma; estados e ações densos. */
+
+.arena-pauta {
+  border-bottom: 1px solid var(--border) !important;
+  padding-bottom: 18px;
+}
+.pauta-add {
+  display: flex;
+  flex-direction: column;
+}
+.pauta-criterio-toggle {
+  padding-inline: 0;
+  min-height: 32px;
+  height: auto;
+  font-size: 12px;
+}
+.pauta-criterio-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+}
+.pauta-add-button {
+  width: 100%;
+}
+.pauta-spectator {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+.pauta-empty {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+.pauta-empty svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--primary);
+}
+.pauta-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pauta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.pauta-item[data-active="true"] {
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
+  background: color-mix(in srgb, var(--secondary) 72%, transparent);
+}
+.pauta-item-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+.pauta-item-index {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+  padding-top: 2px;
+}
+.pauta-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.pauta-item-title {
+  font-size: 14px;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.pauta-item-criterio {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.pauta-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+.pauta-item-meta:empty {
+  display: none;
+}
+.pauta-active {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.pauta-score {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--muted);
+}
+.pauta-score-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.pauta-score-value {
+  font-size: 12px;
+  font-weight: 600;
+}
+.pauta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.pauta-actions .pauta-select {
+  flex: 1 1 auto;
+}
+.pauta-item-form {
+  gap: 8px;
+}
+.pauta-criterio-inline {
+  padding-inline: 0;
+  min-height: 28px;
+  height: auto;
+  font-size: 12px;
+}
+.pauta-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pauta-hint {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}

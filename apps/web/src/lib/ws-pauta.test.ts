@@ -182,6 +182,7 @@ describe("ws-client pauta — hello + eventos tipados (#164)", () => {
 			expect(socket.updateHistoria("h1", { criterio: null })).toBe(true);
 			expect(socket.moveHistoria("h2", 0)).toBe(true);
 			expect(socket.removeHistoria("h2")).toBe(true);
+			expect(socket.removeHistoria("h2", { confirmScored: true })).toBe(true);
 			expect(socket.selectHistoria("h2")).toBe(true);
 			expect(socket.selectHistoria(null)).toBe(true);
 			await new Promise((resolve) => setTimeout(resolve, 200));
@@ -206,6 +207,11 @@ describe("ws-client pauta — hello + eventos tipados (#164)", () => {
 			expect(seen.historia_remove[0]).toEqual({
 				type: "historia_remove",
 				payload: { id: "h2" },
+			});
+			// Segundo toque da confirmação dupla carrega o flag no wire (#165).
+			expect(seen.historia_remove[1]).toEqual({
+				type: "historia_remove",
+				payload: { id: "h2", confirmScored: true },
 			});
 			expect(seen.historia_select).toHaveLength(2);
 			expect(seen.historia_select[0]?.payload).toEqual({ historiaId: "h2" });

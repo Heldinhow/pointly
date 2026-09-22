@@ -241,8 +241,34 @@ describe("handleHistoriaRemove", () => {
 		expect(hub.getSala(code)!.pauta[0]!.ordem).toBe(0);
 	});
 
-	test("apagar a ativa em voting recebe invalid_phase", () => {
-		const { playerId } = createHost();
+	test("apagar pontuada exige confirmScored; com o segundo toque remove", () => {
+		const { playerId, code } = createHost();
+		const h1 = handleHistoriaAdd(hub, playerId, { titulo: "H1" });
+		handleHistoriaAdd(hub, playerId, { titulo: "H2" });
+		if (!h1.ok) throw new Error("setup falhou");
+		const sala = hub.getSala(code)!;
+		// Pontua a ativa (H1): voto + reveal carimba a mediana.
+		sala.castVote(playerId, "5");
+		sala.reveal(playerId);
+		expect(sala.getHistoria(h1.historia.id)!.pontos).toBe(5);
+
+		const semConfirmacao = handleHistoriaRemove(hub, playerId, {
+			id: h1.historia.id,
+		});
+		expect(semConfirmacao.ok).toBe(false);
+		if (semConfirmacao.ok) throw new Error("expected error");
+		expect(semConfirmacao.code).toBe("invalid_phase");
+
+		const confirmada = handleHistoriaRemove(hub, playerId, {
+			id: h1.historia.id,
+			confirmScored: true,
+		});
+		expect(confirmada.ok).toBe(true);
+		expect(sala.pauta.map((h) => h.titulo)).toEqual(["H2"]);
+		expect(sala.historiaAtualId).toBeNull();
+	});
+
+	test("apagar a ativa em voting recebe invalid_phase", () => {		const { playerId } = createHost();
 		const bob = handleHello(hub, {
 			uuid: UUID_P2,
 			nick: "Bob",
