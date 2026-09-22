@@ -22,6 +22,7 @@
 
 // Schemas (Zod runtime)
 export * from "./schemas/sala";
+export * from "./schemas/pauta";
 export * from "./schemas/events";
 
 // Protocol (builders/guards/parse client — issue #147)

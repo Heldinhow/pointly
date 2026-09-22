@@ -8,6 +8,7 @@
  * @see CONTEXT.md                                       (glossário 12 termos)
  */
 import { z } from "zod";
+import { HistoriaAtualIdSchema, PautaSchema } from "./pauta";
 
 // ---------------------------------------------------------------------------
 // Primitives
@@ -167,6 +168,16 @@ export const SalaStateSchema = z.object({
 	votes: z.record(z.string(), VoteSchema),
 	/** epoch ms — usado pelo client pra detectar sala stale. */
 	createdAt: z.number().int().positive(),
+	/**
+	 * Pauta efêmera ≤50 (contrato #161). Opcional no wire pra compat
+	 * retroativa — salas antigas sem pauta ainda parseiam; #162 popula.
+	 */
+	pauta: PautaSchema.optional(),
+	/**
+	 * História ativa da rodada. null = nenhuma ativa. Opcional no wire
+	 * pelo mesmo motivo de compat (ver `pauta`).
+	 */
+	historiaAtualId: HistoriaAtualIdSchema.optional(),
 });
 
 export type SalaState = z.infer<typeof SalaStateSchema>;
