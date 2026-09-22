@@ -28,14 +28,17 @@ export interface HandlerError {
 
 type NotFoundCode = Extract<
 	HandlerErrorCode,
-	"invalid_vote" | "invalid_phase" | "sala_nao_encontrada"
+	| "invalid_vote"
+	| "invalid_phase"
+	| "sala_nao_encontrada"
+	| "historia_nao_encontrada"
 >;
 
 /**
  * Localiza a sala do player ou retorna outcome de erro pronto.
  * `notFoundCode` preserva o código histórico de cada handler
  * (cast-vote: invalid_vote · reveal/new-round: invalid_phase ·
- * throw: sala_nao_encontrada).
+ * throw: sala_nao_encontrada · pauta #163: historia_nao_encontrada).
  *
  * ATENÇÃO ao estreitar: use `instanceof Sala` — nunca `"code" in`,
  * pois `Sala` também tem campo `code` (código da sala).

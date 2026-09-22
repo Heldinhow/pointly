@@ -17,6 +17,11 @@ import {
 	ClientToServerEventSchema,
 	ServerToClientEventSchema,
 	type ClientToServerEvent,
+	type HistoriaAddPayload,
+	type HistoriaMovePayload,
+	type HistoriaRemovePayload,
+	type HistoriaSelectPayload,
+	type HistoriaUpdatePayload,
 	type SendNudgePayload,
 	type ServerToClientEvent,
 	type SalaState,
@@ -28,6 +33,11 @@ import type { Hub } from "./hub";
 import type { Sala } from "./sala";
 import { handleCastVote } from "./handlers/cast-vote";
 import { handleHello } from "./handlers/hello";
+import { handleHistoriaAdd } from "./handlers/historia-add";
+import { handleHistoriaMove } from "./handlers/historia-move";
+import { handleHistoriaRemove } from "./handlers/historia-remove";
+import { handleHistoriaSelect } from "./handlers/historia-select";
+import { handleHistoriaUpdate } from "./handlers/historia-update";
 import { handleRevealVotes } from "./handlers/reveal-votes";
 import { handleSendNudge } from "./handlers/send-nudge";
 import { handleStartNewRound } from "./handlers/start-new-round";
@@ -262,6 +272,16 @@ export class WSService {
 				return this.handleSendNudgeEvent(ws, event.payload);
 			case "update_avatar":
 				return this.handleUpdateAvatarEvent(ws, event.payload);
+			case "historia_add":
+				return this.handleHistoriaAddEvent(ws, event.payload);
+			case "historia_update":
+				return this.handleHistoriaUpdateEvent(ws, event.payload);
+			case "historia_move":
+				return this.handleHistoriaMoveEvent(ws, event.payload);
+			case "historia_remove":
+				return this.handleHistoriaRemoveEvent(ws, event.payload);
+			case "historia_select":
+				return this.handleHistoriaSelectEvent(ws, event.payload);
 		}
 	}
 
@@ -465,6 +485,91 @@ export class WSService {
 		}
 		// Campo ignorado (teto/formato): ok sem mudança, sem broadcast.
 		if (!outcome.changed) return;
+		const code = ws.data.code!;
+		this.broadcastRoomState(code);
+	}
+
+	// -----------------------------------------------------------------------
+	// Pauta — handlers finos #163 (tradução + dispatch + broadcast room_state)
+	// -----------------------------------------------------------------------
+
+	/**
+	 * `historia_add` (#163): válido → broadcast `room_state` completo
+	 * (pauta + historiaAtualId) pra toda a sala. Erro → `error` só pro
+	 * sender, sem broadcast, socket segue aberto.
+	 */
+	private handleHistoriaAddEvent(ws: BunWS, payload: HistoriaAddPayload): void {
+		const playerId = this.requireWsPlayer(ws);
+		if (!playerId) return;
+		const outcome = handleHistoriaAdd(this.hub, playerId, payload);
+		if (!outcome.ok) {
+			this.sendError(ws, outcome.code, outcome.message);
+			return;
+		}
+		const code = ws.data.code!;
+		this.broadcastRoomState(code);
+	}
+
+	/** `historia_update` (#163): mesmo padrão — erro sem broadcast. */
+	private handleHistoriaUpdateEvent(
+		ws: BunWS,
+		payload: HistoriaUpdatePayload,
+	): void {
+		const playerId = this.requireWsPlayer(ws);
+		if (!playerId) return;
+		const outcome = handleHistoriaUpdate(this.hub, playerId, payload);
+		if (!outcome.ok) {
+			this.sendError(ws, outcome.code, outcome.message);
+			return;
+		}
+		const code = ws.data.code!;
+		this.broadcastRoomState(code);
+	}
+
+	/** `historia_move` (#163): mesmo padrão — erro sem broadcast. */
+	private handleHistoriaMoveEvent(
+		ws: BunWS,
+		payload: HistoriaMovePayload,
+	): void {
+		const playerId = this.requireWsPlayer(ws);
+		if (!playerId) return;
+		const outcome = handleHistoriaMove(this.hub, playerId, payload);
+		if (!outcome.ok) {
+			this.sendError(ws, outcome.code, outcome.message);
+			return;
+		}
+		const code = ws.data.code!;
+		this.broadcastRoomState(code);
+	}
+
+	/** `historia_remove` (#163): mesmo padrão — erro sem broadcast. */
+	private handleHistoriaRemoveEvent(
+		ws: BunWS,
+		payload: HistoriaRemovePayload,
+	): void {
+		const playerId = this.requireWsPlayer(ws);
+		if (!playerId) return;
+		const outcome = handleHistoriaRemove(this.hub, playerId, payload);
+		if (!outcome.ok) {
+			this.sendError(ws, outcome.code, outcome.message);
+			return;
+		}
+		const code = ws.data.code!;
+		this.broadcastRoomState(code);
+	}
+
+	/** `historia_select` (#163): mesmo padrão — erro sem broadcast. */
+	private handleHistoriaSelectEvent(
+		ws: BunWS,
+		payload: HistoriaSelectPayload,
+	): void {
+		const playerId = this.requireWsPlayer(ws);
+		if (!playerId) return;
+		const outcome = handleHistoriaSelect(this.hub, playerId, payload);
+		if (!outcome.ok) {
+			this.sendError(ws, outcome.code, outcome.message);
+			return;
+		}
 		const code = ws.data.code!;
 		this.broadcastRoomState(code);
 	}
