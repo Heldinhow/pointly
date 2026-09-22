@@ -5,7 +5,7 @@
  */
 
 import type { Lang } from "@/lib/i18n";
-import type { Phase } from "@/lib/protocol";
+import type { Phase } from "@planning-poker/shared";
 import { ARENA_CONTENT_EN } from "./arena-content.en";
 import { ARENA_CONTENT_PT } from "./arena-content.pt";
 

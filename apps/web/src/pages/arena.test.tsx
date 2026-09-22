@@ -9,7 +9,7 @@ import {
 } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { Lang } from "../lib/i18n";
-import type { Player, SalaState, Vote } from "../lib/protocol";
+import type { Player, SalaState, Vote } from "@planning-poker/shared";
 import { useSession } from "../store/session";
 import { ArenaPage } from "./arena";
 
@@ -724,7 +724,7 @@ describe("ArenaPage (ticket 07 — Resultados)", () => {
 				index,
 			),
 		);
-		const votesMap: Record<string, string> = {};
+		const votesMap: Record<string, Vote> = {};
 		for (const entry of votes) {
 			if (entry.value !== null) votesMap[entry.id] = entry.value;
 		}
@@ -2122,7 +2122,7 @@ describe("ArenaPage (espectador)", () => {
 describe("ArenaPage (14.3 — Celebração de Unânime)", () => {
 	function pairSala(
 		phase: SalaState["phase"],
-		votes: Record<string, string>,
+		votes: Record<string, Vote>,
 	): SalaState {
 		const ana = player(
 			{

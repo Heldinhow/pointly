@@ -3,7 +3,7 @@ import { Separator } from "@/components/ui/separator";
 import type { Lang } from "@/lib/i18n";
 import { NUDGE_CATALOG } from "@/lib/nudges";
 import { PROJECTILE_CATALOG, PROJECTILE_CHAIR_COOLDOWN_MS } from "@/lib/projectiles";
-import type { NudgeId, ProjectileType } from "@/lib/protocol";
+import type { NudgeId, ProjectileType } from "@planning-poker/shared";
 import { ProjectileIcon } from "./projectile-flight";
 import "./projectile-menu.css";
 

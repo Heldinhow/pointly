@@ -6,7 +6,7 @@ import {
 	saveNickDraft,
 	saveSession,
 } from "../lib/identity";
-import type { Role, SalaState } from "../lib/protocol";
+import type { Role, SalaState } from "@planning-poker/shared";
 import type { PointlySocket } from "../lib/ws-client";
 
 /**

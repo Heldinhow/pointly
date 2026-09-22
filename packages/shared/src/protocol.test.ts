@@ -1,3 +1,9 @@
+/**
+ * Protocol helpers tests — issue #147.
+ *
+ * Port de `apps/web/src/lib/protocol.test.ts` (espelho apagado):
+ * guards/builders/parse agora vivem no contrato compartilhado.
+ */
 import { describe, expect, test } from "bun:test";
 import {
 	buildSendNudgeMessage,
@@ -170,5 +176,64 @@ describe("protocol — cutucadas (issue #172)", () => {
 				}),
 			),
 		).toBeNull();
+	});
+});
+
+describe("protocol — parse S→C via schemas (issue #147)", () => {
+	test("parseServerEvent ignora lixo e tipos futuros", () => {
+		expect(parseServerEvent("isto não é json{{{")).toBeNull();
+		expect(parseServerEvent(JSON.stringify({ type: "magic", payload: {} }))).toBeNull();
+	});
+
+	test("parseServerEvent aceita welcome/room_state/pong/error do contrato", () => {
+		const sala = {
+			code: "AB12",
+			hostId: "p1",
+			players: [
+				{
+					id: "p1",
+					uuid: "550e8400-e29b-41d4-a716-446655440000",
+					nick: "Ana",
+					role: "host" as const,
+					seatIndex: 0,
+					hasVoted: false,
+					value: null,
+					status: "connected" as const,
+					joinedAt: 1700000000000,
+				},
+			],
+			phase: "idle" as const,
+			round: 1,
+			votes: {},
+			createdAt: 1700000000000,
+		};
+		expect(
+			parseServerEvent(
+				JSON.stringify({
+					type: "welcome",
+					payload: { playerId: "p1", role: "host", sala },
+				}),
+			),
+		).toEqual({
+			type: "welcome",
+			payload: { playerId: "p1", role: "host", sala },
+		});
+		expect(
+			parseServerEvent(JSON.stringify({ type: "room_state", payload: { sala } })),
+		).toEqual({ type: "room_state", payload: { sala } });
+		expect(
+			parseServerEvent(JSON.stringify({ type: "pong", payload: {} })),
+		).toEqual({ type: "pong", payload: {} });
+		expect(
+			parseServerEvent(
+				JSON.stringify({
+					type: "error",
+					payload: { code: "sala_cheia", message: "12/12" },
+				}),
+			),
+		).toEqual({
+			type: "error",
+			payload: { code: "sala_cheia", message: "12/12" },
+		});
 	});
 });

@@ -41,8 +41,13 @@ import {
   useConsensusStats,
   voteSelectionText,
 } from "@/lib/stats";
-import type { Phase, Player, Vote } from "@/lib/protocol";
-import type { NudgeId, ProjectileType } from "@/lib/protocol";
+import type {
+	NudgeId,
+	Phase,
+	Player,
+	ProjectileType,
+	Vote,
+} from "@planning-poker/shared";
 import {
   trackNewRound,
   trackVoteCast,

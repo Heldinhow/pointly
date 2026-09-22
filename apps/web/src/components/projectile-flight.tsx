@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, type CSSProperties, type RefObject } from "react";
-import type { ProjectileThrownPayload, ProjectileType } from "@/lib/protocol";
+import type { ProjectileThrownPayload, ProjectileType } from "@planning-poker/shared";
 import "./projectile-flight.css";
 
 export interface ProjectileFlightEvent extends ProjectileThrownPayload {

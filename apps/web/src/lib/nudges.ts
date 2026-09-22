@@ -1,5 +1,5 @@
 import type { Lang } from "./i18n";
-import type { NudgeId } from "./protocol";
+import type { NudgeId } from "@planning-poker/shared";
 
 /**
  * Catálogo de cutucadas fixas (issue #172) — SSOT dos rótulos do client.

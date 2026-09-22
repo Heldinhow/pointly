@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { JoinError } from "./errors";
 import { PointlySocket } from "./ws-client";
-import type { SalaState } from "./protocol";
+import type { SalaState } from "@planning-poker/shared";
 
 const PORT = 3191;
 const WS_URL = `ws://127.0.0.1:${PORT}/ws`;
