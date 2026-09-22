@@ -5,4 +5,5 @@
  * único" para re-exports downstream (types.ts, index.ts).
  */
 export * from "./sala";
+export * from "./pauta";
 export * from "./events";

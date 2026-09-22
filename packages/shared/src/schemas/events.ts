@@ -15,6 +15,13 @@ import {
 	UuidSchema,
 	NickSchema,
 } from "./sala";
+import {
+	HistoriaAddPayloadSchema,
+	HistoriaMovePayloadSchema,
+	HistoriaRemovePayloadSchema,
+	HistoriaSelectPayloadSchema,
+	HistoriaUpdatePayloadSchema,
+} from "./pauta";
 
 // ---------------------------------------------------------------------------
 // Client → Server events
@@ -114,6 +121,7 @@ export type SendNudgePayload = z.infer<typeof SendNudgePayloadSchema>;
 /**
  * Discriminated union de todos os eventos C→S.
  * Server dispatcha por `event.type` (T17).
+ * Pauta (#161): historia_add/update/move/remove/select.
  */
 export const ClientToServerEventSchema = z.discriminatedUnion("type", [
 	z.object({ type: z.literal("hello"), payload: HelloPayloadSchema }),
@@ -139,6 +147,26 @@ export const ClientToServerEventSchema = z.discriminatedUnion("type", [
 	z.object({
 		type: z.literal("send_nudge"),
 		payload: SendNudgePayloadSchema,
+	}),
+	z.object({
+		type: z.literal("historia_add"),
+		payload: HistoriaAddPayloadSchema,
+	}),
+	z.object({
+		type: z.literal("historia_update"),
+		payload: HistoriaUpdatePayloadSchema,
+	}),
+	z.object({
+		type: z.literal("historia_move"),
+		payload: HistoriaMovePayloadSchema,
+	}),
+	z.object({
+		type: z.literal("historia_remove"),
+		payload: HistoriaRemovePayloadSchema,
+	}),
+	z.object({
+		type: z.literal("historia_select"),
+		payload: HistoriaSelectPayloadSchema,
 	}),
 ]);
 export type ClientToServerEvent = z.infer<typeof ClientToServerEventSchema>;
@@ -262,6 +290,9 @@ export type SalaEndedEvent = z.infer<typeof SalaEndedEventSchema>;
  * @see spec US-1 (invalid_nick, sala_nao_encontrada, sala_cheia)
  * @see spec US-2 AC7 (invalid_phase)
  * @see tasks T14 (invalid_vote)
+ * @see issue #161 (pauta_cheia, historia_nao_encontrada; reuso de
+ *      invalid_phase pra select em voting/revealable e role_denied pra
+ *      espectador escrevendo na pauta)
  */
 export const ErrorCodeSchema = z.enum([
 	"invalid_nick",
@@ -269,8 +300,10 @@ export const ErrorCodeSchema = z.enum([
 	"sala_cheia",
 	"invalid_phase",
 	"invalid_vote",
-	"role_denied", // espectador tentou votar
+	"role_denied", // espectador tentou votar (reuso: espectador escrevendo na pauta)
 	"rate_limited", // T17a
+	"pauta_cheia", // #161: 51ª história rejeitada (lista ≤50)
+	"historia_nao_encontrada", // #161: id ausente em update/move/remove/select
 	"internal_error",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
