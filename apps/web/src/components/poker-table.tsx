@@ -3,7 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
 import type { Lang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import type { NudgeId, ProjectileType } from "@/lib/protocol";
+import type { NudgeId, ProjectileType } from "@planning-poker/shared";
 import { ProjectileMenu } from "./projectile-menu";
 import { UnanimousCelebration } from "./unanimous-celebration";
 import "./poker-table.css";

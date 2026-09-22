@@ -43,11 +43,13 @@ export const NickSchema = z
  * spectator assiste e reage, mas não vota nem ocupa assento (seatIndex -1).
  */
 export const RoleSchema = z.enum(["host", "player", "spectator"]);
+export type Role = z.infer<typeof RoleSchema>;
 
 /**
  * Conexão WS momentânea — sala "limpa" players disconnected > 60s (T12a).
  */
 export const PlayerStatusSchema = z.enum(["connected", "disconnected"]);
+export type PlayerStatus = z.infer<typeof PlayerStatusSchema>;
 
 /**
  * Avatar do player: dataURL normalizada (128x128 JPEG q0.8 via canvas).

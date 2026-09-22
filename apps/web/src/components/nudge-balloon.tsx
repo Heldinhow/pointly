@@ -2,7 +2,7 @@ import type { CSSProperties, RefObject } from "react";
 import { useLayoutEffect, useState } from "react";
 import type { Lang } from "@/lib/i18n";
 import { NUDGE_CATALOG } from "@/lib/nudges";
-import type { NudgeId } from "@/lib/protocol";
+import type { NudgeId } from "@planning-poker/shared";
 import "./nudge-balloon.css";
 
 export interface NudgeBalloonEvent {

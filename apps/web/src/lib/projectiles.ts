@@ -1,5 +1,5 @@
 import type { Lang } from "./i18n";
-import type { ProjectileType } from "./protocol";
+import type { ProjectileType } from "@planning-poker/shared";
 
 /**
  * Catálogo de projéteis disponíveis em qualquer fase.

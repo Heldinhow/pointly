@@ -12,6 +12,7 @@
 		"test": "bun test src/"
 	},
 	"dependencies": {
+		"@planning-poker/shared": "workspace:*",
 		"@base-ui/react": "1.8.0",
 		"@fontsource/geist": "5.3.0",
 		"@fontsource/geist-mono": "5.3.0",

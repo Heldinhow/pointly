@@ -18,7 +18,7 @@ import {
 } from "@/lib/deck";
 import type { Lang } from "@/lib/i18n";
 import { useConsensusStats, voteSelectionText } from "@/lib/stats";
-import type { Vote } from "@/lib/protocol";
+import type { Vote } from "@planning-poker/shared";
 import { HOME_CONTENT } from "./home-content";
 import "./home.css";
 

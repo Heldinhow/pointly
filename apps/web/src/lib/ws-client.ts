@@ -19,7 +19,7 @@ import {
 	type SalaState,
 	type Vote,
 	type WelcomePayload,
-} from "./protocol";
+} from "@planning-poker/shared";
 
 export type SocketStatus = "idle" | "connecting" | "ready" | "closed";
 
@@ -352,7 +352,7 @@ export class PointlySocket {
 				if (!this.helloSettled) {
 					this.failHello(new JoinError(event.payload.code, event.payload.message));
 				} else if (this.status === "ready") {
-					this.events.onError?.(event.payload.code, event.payload.message);
+					this.events.onError?.(event.payload.code, event.payload.message ?? "");
 				}
 				return;
 			}
@@ -377,6 +377,12 @@ export class PointlySocket {
 			case "pong": {
 				// Legado do ping app-level (o cliente novo não envia ping;
 				// o heartbeat é o frame de protocolo do servidor). Ignora.
+				return;
+			}
+			default: {
+				// Eventos S→C que a web não consome (player_joined, player_left,
+				// vote_cast, votes_revealed, round_started, sala_ended): o
+				// room_state subsequente hidrata o store. Ignora em silêncio.
 				return;
 			}
 		}

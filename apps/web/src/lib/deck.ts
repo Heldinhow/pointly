@@ -1,4 +1,4 @@
-import { DECK_VALUES, type Vote } from "./protocol";
+import { DECK_VALUES, type Vote } from "@planning-poker/shared";
 import type { Lang } from "./i18n";
 
 export { DECK_VALUES, type Vote };

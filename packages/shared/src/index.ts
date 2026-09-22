@@ -24,6 +24,9 @@
 export * from "./schemas/sala";
 export * from "./schemas/events";
 
+// Protocol (builders/guards/parse client — issue #147)
+export * from "./protocol";
+
 // Compute (pure functions)
 export * from "./compute/consensus";
 export * from "./compute/justify";
