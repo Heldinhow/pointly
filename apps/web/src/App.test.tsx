@@ -16,6 +16,15 @@ function stubNavigatorLanguages(languages: readonly string[]): void {
   });
 }
 
+const JSDOM_USER_AGENT = window.navigator.userAgent;
+
+function stubUserAgent(userAgent: string): void {
+  Object.defineProperty(window.navigator, "userAgent", {
+    value: userAgent,
+    configurable: true,
+  });
+}
+
 beforeEach(() => {
   // jsdom nasce en-US; o default dos testes é um navegador pt-BR.
   stubNavigatorLanguages(["pt-BR"]);
@@ -228,6 +237,89 @@ describe("App (15.T8 — seleção de idioma)", () => {
       /Free online planning poker/,
     );
     expect(window.localStorage.getItem(LANG_STORAGE_KEY)).toBeNull();
+  });
+});
+
+describe("App (higiene GSC — redirect de locale e robots por rota)", () => {
+  beforeEach(() => {
+    window.scrollTo = (() => {}) as typeof window.scrollTo;
+    document.head.querySelector('meta[name="robots"]')?.remove();
+  });
+
+  afterEach(() => {
+    document.head.querySelector('meta[name="robots"]')?.remove();
+    stubUserAgent(JSDOM_USER_AGENT);
+  });
+
+  test("Googlebot em inglês fica na home pt (sem redirect client-side)", () => {
+    stubNavigatorLanguages(["en-US"]);
+    stubUserAgent(
+      "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+    );
+
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId("home-hero").textContent).toMatch(
+      /Planning poker online grátis/,
+    );
+    expect(window.localStorage.getItem(LANG_STORAGE_KEY)).toBeNull();
+  });
+
+  test("navegador EN comum segue indo para /en", () => {
+    stubNavigatorLanguages(["en-US"]);
+    stubUserAgent(
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    );
+
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId("home-hero").textContent).toMatch(
+      /Free online planning poker/,
+    );
+    expect(window.localStorage.getItem(LANG_STORAGE_KEY)).toBeNull();
+  });
+
+  test("/join e /s/* recebem noindex em runtime", () => {
+    const robots = () =>
+      document.head.querySelector('meta[name="robots"]')?.getAttribute("content");
+
+    const { unmount } = render(
+      <MemoryRouter initialEntries={["/join"]}>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(robots()).toBe("noindex");
+    unmount();
+
+    render(
+      <MemoryRouter initialEntries={["/s/ABCD"]}>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(robots()).toBe("noindex");
+  });
+
+  test("rota pública não herda noindex do shell/404", () => {
+    const stale = document.createElement("meta");
+    stale.setAttribute("name", "robots");
+    stale.setAttribute("content", "noindex");
+    document.head.appendChild(stale);
+
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(document.head.querySelector('meta[name="robots"]')).toBeNull();
   });
 });
 

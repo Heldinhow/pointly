@@ -2,13 +2,20 @@ import { afterEach, describe, expect, test } from "bun:test";
 import {
 	browserPrefersEnglish,
 	isPublicIndexablePath,
+	isSearchEngineBot,
 	LANG_STORAGE_KEY,
 	languageSwitchTarget,
 	readLanguagePreference,
 	rememberLanguage,
 	resolveInternalLang,
+	shouldRedirectRootToEnglish,
 	subscribeLanguage,
 } from "./language";
+
+const GOOGLEBOT_UA =
+	"Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
+const CHROME_UA =
+	"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
 
 function stubLanguages(
 	languages: readonly string[] | undefined,
@@ -115,5 +122,44 @@ describe("seleção de idioma (15.T8)", () => {
 		unsubscribe();
 		rememberLanguage("pt-BR");
 		expect(notifications).toBe(1);
+	});
+});
+
+describe("higiene GSC — crawler não segue o redirect de locale", () => {
+	test("UAs de buscadores são reconhecidos; navegador comum não", () => {
+		const bots = [
+			GOOGLEBOT_UA,
+			"Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
+			"Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)",
+			"Mozilla/5.0 (compatible; DuckDuckBot/1.0; +http://duckduckgo.com/duckduckbot.html)",
+			"Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/140.0.0.0 Safari/537.36",
+			"facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
+		];
+		for (const ua of bots) expect(isSearchEngineBot(ua)).toBe(true);
+
+		expect(isSearchEngineBot(CHROME_UA)).toBe(false);
+		expect(isSearchEngineBot("")).toBe(false);
+		expect(isSearchEngineBot(undefined)).toBe(false);
+	});
+
+	test("bot em inglês fica na raiz; usuário EN sem preferência ainda vai para /en", () => {
+		stubLanguages(["en-US"]);
+
+		expect(shouldRedirectRootToEnglish("/", GOOGLEBOT_UA)).toBe(false);
+		expect(shouldRedirectRootToEnglish("/", CHROME_UA)).toBe(true);
+	});
+
+	test("redirect exige raiz, sem preferência e navegador em inglês", () => {
+		stubLanguages(["en-US"]);
+		expect(shouldRedirectRootToEnglish("/en", CHROME_UA)).toBe(false);
+		expect(shouldRedirectRootToEnglish("/guias", CHROME_UA)).toBe(false);
+		expect(shouldRedirectRootToEnglish("/join", CHROME_UA)).toBe(false);
+
+		rememberLanguage("pt-BR");
+		expect(shouldRedirectRootToEnglish("/", CHROME_UA)).toBe(false);
+
+		window.localStorage.clear();
+		stubLanguages(["pt-BR"]);
+		expect(shouldRedirectRootToEnglish("/", CHROME_UA)).toBe(false);
 	});
 });
