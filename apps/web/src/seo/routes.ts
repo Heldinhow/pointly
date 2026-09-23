@@ -12,6 +12,11 @@
 import { GUIDE_CONTENT } from "../pages/guide-content";
 import { LANDING_CONTENT } from "../pages/landing-content";
 
+/**
+ * Apex canônico e único host de SEO: `www.` e `http` fazem 301 para cá
+ * (Traefik) e nunca podem aparecer em sitemap/canonical/hreflang — só URLs
+ * apex https. Teste em `routes.test.ts` garante o sitemap apex-only.
+ */
 export const SITE_URL = "https://pointly.space";
 
 /** Data de publicação dos guias (15.T6); revisões atualizam `dateModified`. */

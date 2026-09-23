@@ -48,6 +48,27 @@ describe("Registro SEO (15.T6 — hreflang, sitemap e schema)", () => {
     );
   });
 
+  test("sitemap é apex-only: nenhum www.pointly.space e todo loc sob SITE_URL", () => {
+    const sitemap = buildSitemap();
+
+    expect(SITE_URL).toBe("https://pointly.space");
+    // `www.` solto aparece no namespace do sitemaps.org; o host é o que importa.
+    expect(sitemap).not.toContain("www.pointly.space");
+    expect(sitemap).not.toContain("http://pointly.space");
+
+    const locs = sitemap.match(/<loc>[^<]+<\/loc>/g) ?? [];
+    expect(locs.length).toBe(INDEXABLE.length);
+    for (const loc of locs) {
+      expect(loc).toMatch(/^<loc>https:\/\/pointly\.space\//);
+    }
+
+    const hrefs = sitemap.match(/href="[^"]+"/g) ?? [];
+    expect(hrefs.length).toBeGreaterThan(0);
+    for (const href of hrefs) {
+      expect(href).toMatch(/^href="https:\/\/pointly\.space\//);
+    }
+  });
+
   test("FAQPage espelha o FAQ visível de landings e guias", () => {
     const cases: ReadonlyArray<{
       path: string;

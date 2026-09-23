@@ -75,3 +75,35 @@ export function browserPrefersEnglish(): boolean {
 	const primary = navigator.languages?.[0] ?? navigator.language;
 	return primary?.toLowerCase().startsWith("en") ?? false;
 }
+
+/**
+ * Crawlers de busca (GSC “Página com redirecionamento”): Googlebot e afins
+ * costumam se apresentar com locale inglês. Sem este guarda, o redirect
+ * client-side `/` → `/en` tira o bot do documento PT/x-default estável e
+ * gera exclusões de indexação com cara de redirect. Bots ficam em `/`.
+ */
+export function isSearchEngineBot(userAgent?: string): boolean {
+	const ua =
+		userAgent ??
+		(typeof navigator === "undefined" ? "" : (navigator.userAgent ?? ""));
+	if (!ua) return false;
+	return /bot|crawl|spider|slurp|mediapartners|adsbot|google-inspectiontool|facebookexternalhit|applebot|yandex|baidu|duckduck|sogou|exabot|semrush|ahrefs|mj12|dotbot|petal|embedly/i.test(
+		ua,
+	);
+}
+
+/**
+ * Guarda único do redirect automático da raiz (15.T8 + higiene GSC): só na
+ * raiz, sem preferência salva, navegador em inglês e NÃO crawler. Testável
+ * sem renderizar o App (bot UA → false; EN normal → true).
+ */
+export function shouldRedirectRootToEnglish(
+	pathname: string,
+	userAgent?: string,
+): boolean {
+	if (pathname !== "/") return false;
+	if (readLanguagePreference() !== null) return false;
+	if (!browserPrefersEnglish()) return false;
+	if (isSearchEngineBot(userAgent)) return false;
+	return true;
+}

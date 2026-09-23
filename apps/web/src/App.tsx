@@ -18,12 +18,12 @@ import { LanguageLink } from "@/components/language-link";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
-  browserPrefersEnglish,
   isPublicIndexablePath,
-  readLanguagePreference,
   resolveInternalLang,
+  shouldRedirectRootToEnglish,
   subscribeLanguage,
 } from "@/lib/language";
+import { syncRobotsMeta } from "@/seo/robots";
 import type { Lang } from "@/lib/i18n";
 import {
   initAnalytics,
@@ -98,13 +98,20 @@ export default function App(): React.ReactElement {
   }, [pathname]);
 
   // 1ª visita (15.T8): raiz, sem escolha registrada e navegador em inglês
-  // → home EN. Nunca o contrário, e nunca fora da raiz (SERP pt não sofre bounce).
+  // → home EN. Nunca o contrário, nunca fora da raiz (SERP pt não sofre bounce)
+  // e nunca para crawlers: bot em inglês fica na home PT/x-default, senão o
+  // redirect client-side vira “Página com redirecionamento” no GSC.
   useEffect(() => {
-    if (pathname !== "/") return;
-    if (readLanguagePreference() !== null) return;
-    if (!browserPrefersEnglish()) return;
+    if (!shouldRedirectRootToEnglish(pathname)) return;
     navigate("/en", { replace: true });
   }, [pathname, navigate]);
+
+  // `noindex` acompanha a rota no SPA: /join, /s/* e 404 carregam o meta
+  // (o serve-web também manda X-Robots-Tag no shell) e uma navegação
+  // client-side de volta a rota pública não pode herdar o noindex.
+  useEffect(() => {
+    syncRobotsMeta(isPublic);
+  }, [isPublic]);
 
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
