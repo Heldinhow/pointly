@@ -314,10 +314,26 @@
     font-size: 15px;
   }
   .join-ritual {
-    margin-top: 20px;
+    display: none;
   }
-  .join-ritual li {
-    padding: 8px 0;
+  .join-card {
+    margin-top: 0;
+  }
+  .join-intro-copy {
+    max-width: 46ch;
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .join-form,
+  .join-fields {
+    gap: 18px;
+  }
+  .join-card-header {
+    padding-top: 24px;
+  }
+  .join-card-footer {
+    padding-bottom: 24px;
   }
 }
 @media (max-width: 390px) {
@@ -335,5 +351,19 @@
   .join-mode-button {
     padding-inline: 8px;
     font-size: 14px;
+  }
+  .join-page {
+    gap: 16px;
+  }
+  .join-card-header,
+  .join-card-panel,
+  .join-card-footer {
+    padding-inline: 16px;
+  }
+  .join-card-header [data-slot="card-title"] {
+    font-size: 1.5rem;
+  }
+  .join-fields {
+    gap: 16px;
   }
 }

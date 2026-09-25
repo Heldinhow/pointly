@@ -178,9 +178,11 @@ function SpectatorAvatar({ player }: { player: Player }): React.ReactElement {
 }
 
 export function ArenaPage({
-  lang = "pt-BR",
+	lang = "pt-BR",
+	onOpenPrivacySettings,
 }: {
-  lang?: Lang;
+	lang?: Lang;
+	onOpenPrivacySettings?: () => void;
 }): React.ReactElement {
   const content = ARENA_CONTENT[lang];
   const errorCopy = SOCKET_ERROR_COPY[lang];
@@ -196,6 +198,9 @@ export function ArenaPage({
   const [inviteHidden, setInviteHidden] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
+  const [resultsCopied, setResultsCopied] = useState(false);
+  const [resultsCopyError, setResultsCopyError] = useState(false);
+  const [confirmingLeave, setConfirmingLeave] = useState(false);
   const [connectionLost, setConnectionLost] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const [reconnectAttempt, setReconnectAttempt] = useState(0);
@@ -230,6 +235,7 @@ export function ArenaPage({
   const [retryNonce, setRetryNonce] = useState(0);
   const rejoinKeyRef = useRef<string | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resultsCopyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const newRoundTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Espelho mutável do `confirmingNewRound` para os handlers de teclado
   // (o listener lê o valor fresco sem re-subscrever a cada render).
@@ -449,9 +455,14 @@ export function ArenaPage({
   useEffect(() => {
     return () => {
       if (copyTimer.current) clearTimeout(copyTimer.current);
+      if (resultsCopyTimer.current) clearTimeout(resultsCopyTimer.current);
       if (newRoundTimer.current) clearTimeout(newRoundTimer.current);
     };
   }, []);
+
+  useEffect(() => {
+    if ((sala?.players.length ?? 0) > 1) setConfirmingLeave(false);
+  }, [sala?.players.length]);
 
   // Ticket 09: sem sessão em memória, tenta recuperar via sessão
   // persistida (F5 no meio da votação mantém voto, assento e fase sem
@@ -631,6 +642,7 @@ export function ArenaPage({
   const solo = connected.length <= 1;
   const showInvite = !inviteHidden || !solo;
   const self = players.find((p) => p.id === playerId) ?? null;
+  const willEndRoom = players.length <= 1;
   const isSpectator = self?.role === "spectator";
   const host = players.find((p) => p.id === sala.hostId) ?? null;
   // Papel derivado do snapshot ao vivo (promoção de host chega via
@@ -824,7 +836,34 @@ export function ArenaPage({
     }
   }
 
-  function handleLeave(): void {
+  async function handleCopyResults(): Promise<void> {
+    if (!sala) return;
+    setResultsCopyError(false);
+    try {
+      const voteLines = players
+        .filter((player) => player.role !== "spectator")
+        .map((player) => {
+          const vote = sala.votes?.[player.id] ?? player.value;
+          return `${player.nick}: ${vote ?? content.results.noVote}`;
+        });
+      const resultText = [
+        `Pointly · ${content.toolbar.room} ${sala.code} · ${content.toolbar.round(sala.round, content.phase.revealed)}`,
+        `${content.results.median}: ${formatMedian(consensus.median)}`,
+        `${content.results.mean}: ${formatMean(consensus.mean)}`,
+        `${content.results.range}: ${formatRange(consensus.range)}`,
+        `${content.results.votesLabel}:`,
+        ...voteLines,
+      ].join("\n");
+      await copyText(resultText);
+      setResultsCopied(true);
+      if (resultsCopyTimer.current) clearTimeout(resultsCopyTimer.current);
+      resultsCopyTimer.current = setTimeout(() => setResultsCopied(false), 2500);
+    } catch {
+      setResultsCopyError(true);
+    }
+  }
+
+  function leaveRoomNow(): void {
     // Ticket 09: saída voluntária avisa o servidor primeiro para a
     // presença atualizar em tempo real nos demais (e promover novo
     // Host quando o Host sai). F5 NÃO passa por aqui.
@@ -836,6 +875,14 @@ export function ArenaPage({
     }
     disconnect();
     navigate("/join");
+  }
+
+  function handleLeaveRequest(): void {
+    if (willEndRoom) {
+      setConfirmingLeave(true);
+      return;
+    }
+    leaveRoomNow();
   }
 
   return (
@@ -865,12 +912,37 @@ export function ArenaPage({
                 )
               : content.toolbar.presence(connected.length, voted)}
           </span>
-          <Button variant="ghost" onClick={handleLeave}>
+          <Button type="button" variant="ghost" onClick={handleLeaveRequest}>
             <LogOutIcon aria-hidden="true" />
             {content.toolbar.leave}
           </Button>
         </div>
       </header>
+      {confirmingLeave && willEndRoom ? (
+        <Alert variant="warning" data-testid="leave-confirmation">
+          <AlertTitle>{content.toolbar.leaveConfirmTitle}</AlertTitle>
+          <AlertDescription className="flex flex-col items-start gap-3">
+            <span>{content.toolbar.leaveConfirmDescription}</span>
+            <span className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setConfirmingLeave(false)}
+              >
+                {content.toolbar.cancelLeave}
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                data-testid="confirm-leave-room"
+                onClick={leaveRoomNow}
+              >
+                {content.toolbar.confirmLeave}
+              </Button>
+            </span>
+          </AlertDescription>
+        </Alert>
+      ) : null}
       {reconnecting && !connectionLost && (
         <Alert variant="warning">
           <AlertTitle>{content.reconnecting.title}</AlertTitle>
@@ -1262,6 +1334,23 @@ export function ArenaPage({
                     </p>
                   ) : null}
                 </output>
+                <div className="arena-results__copy">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    data-testid="copy-results-button"
+                    onClick={() => void handleCopyResults()}
+                  >
+                    {resultsCopied ? content.results.copied : content.results.copy}
+                  </Button>
+                  <span aria-live="polite" data-testid="copy-results-feedback">
+                    {resultsCopied
+                      ? content.results.copyFeedback
+                      : resultsCopyError
+                        ? content.results.copyError
+                        : ""}
+                  </span>
+                </div>
                 {justifyPlayer ? (
                   <p
                     role="status"
@@ -1378,6 +1467,16 @@ export function ArenaPage({
               )}
             </div>
           )}
+          {onOpenPrivacySettings ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={onOpenPrivacySettings}
+            >
+              {content.sidebar.privacySettings}
+            </Button>
+          ) : null}
         </aside>
       </div>
     </div>

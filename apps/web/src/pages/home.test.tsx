@@ -16,6 +16,13 @@ function renderHome(): void {
 }
 
 describe("HomePage (ticket 10 — Inicial com demonstração)", () => {
+	test("H1 conserva separação textual entre as linhas visuais", () => {
+		renderHome();
+		expect(screen.getByRole("heading", { level: 1 }).textContent).toContain(
+			"grátis para o seu time.",
+		);
+	});
+
 	test("proposta de valor e CTAs visíveis no topo sem rolagem", () => {
 		renderHome();
 

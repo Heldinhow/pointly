@@ -3,11 +3,8 @@
  *
  * Vazio → todos os exports são no-op (zero request a googletagmanager).
  *
- * LGPD: manter VITE_GA_MEASUREMENT_ID VAZIO em produção até existir o
- * consent gate (banner de consentimento). Ligar o ID sem base/consentimento
- * documentado é risco jurídico — o banner é follow-up, não gatear aqui ainda.
- * Nota CSP: o gtag.js é carregado sem nonce/SRI (padrão do Google); se o
- * site adotar CSP estrita, este init precisa de ajuste junto com o banner.
+ * O script só é carregado após consentimento explícito. Sem Measurement ID,
+ * consentimento ou navegador, todos os exports continuam no-op.
  */
 
 export type AnalyticsParams = Record<string, string | number | boolean | undefined>;
@@ -45,6 +42,7 @@ export function sanitizePagePath(pathname: string): string {
 }
 
 let scriptInjected = false;
+let analyticsConsent = false;
 
 function measurementId(): string {
 	const raw = import.meta.env.VITE_GA_MEASUREMENT_ID;
@@ -55,12 +53,26 @@ function enabled(): boolean {
 	return measurementId().length > 0;
 }
 
+export function analyticsConfigured(): boolean {
+	return enabled();
+}
+
 /** Reseta estado interno — SÓ para testes unitários (nunca importar em código de app). */
 export function __resetAnalyticsForTests(): void {
 	if (import.meta.env.PROD) {
 		throw new Error("__resetAnalyticsForTests is test-only");
 	}
 	scriptInjected = false;
+	analyticsConsent = false;
+}
+
+/** Atualiza a escolha em memória e só inicializa GA após consentimento. */
+export function setAnalyticsConsent(granted: boolean): void {
+	analyticsConsent = granted;
+	if (granted) return;
+	if (scriptInjected && typeof window.gtag === "function") {
+		window.gtag("consent", "update", { analytics_storage: "denied" });
+	}
 }
 
 /**
@@ -68,7 +80,7 @@ export function __resetAnalyticsForTests(): void {
  * Idempotente; no-op sem ID.
  */
 export function initAnalytics(): void {
-	if (!enabled() || scriptInjected) return;
+	if (!analyticsConsent || !enabled() || scriptInjected) return;
 	if (typeof window === "undefined" || typeof document === "undefined") return;
 
 	const id = measurementId();
@@ -79,6 +91,7 @@ export function initAnalytics(): void {
 		};
 	}
 
+	window.gtag("consent", "update", { analytics_storage: "granted" });
 	window.gtag("js", new Date());
 	window.gtag("config", id, { send_page_view: false });
 
@@ -96,7 +109,7 @@ export function initAnalytics(): void {
 }
 
 export function trackPageView(path: string, title?: string): void {
-	if (!enabled()) return;
+	if (!analyticsConsent || !enabled()) return;
 	const gtag = window.gtag;
 	if (typeof gtag !== "function") return;
 	gtag("event", "page_view", {
@@ -117,7 +130,7 @@ export function trackEvent(
 	name: AnalyticsEventName | (string & {}),
 	params?: AnalyticsParams,
 ): void {
-	if (!enabled()) return;
+	if (!analyticsConsent || !enabled()) return;
 	const gtag = window.gtag;
 	if (typeof gtag !== "function") return;
 	gtag("event", name, params ?? {});

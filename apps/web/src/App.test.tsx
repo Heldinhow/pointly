@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import App from "./App";
 import { __resetAnalyticsForTests } from "./lib/analytics";
+import { ANALYTICS_CONSENT_KEY } from "./lib/consent";
 import { LANG_STORAGE_KEY } from "./lib/language";
 
 function stubNavigatorLanguages(languages: readonly string[]): void {
@@ -285,6 +286,7 @@ describe("App (GA4 — pageview nunca vaza código de sala)", () => {
   });
 
   test("/join?code=XXXX envia /join (query descartada)", () => {
+    window.localStorage.setItem(ANALYTICS_CONSENT_KEY, "granted");
     render(
       <MemoryRouter initialEntries={["/join?code=ABCD&mode=join"]}>
         <App />
@@ -296,6 +298,7 @@ describe("App (GA4 — pageview nunca vaza código de sala)", () => {
   });
 
   test("/s/XXXX envia /s/[room] (código mascarado)", () => {
+    window.localStorage.setItem(ANALYTICS_CONSENT_KEY, "granted");
     render(
       <MemoryRouter initialEntries={["/s/ABCD"]}>
         <App />
@@ -306,10 +309,116 @@ describe("App (GA4 — pageview nunca vaza código de sala)", () => {
     // devem sair sanitizados.
     const paths = pageViewPaths();
     expect(paths.length).toBeGreaterThan(0);
-    expect(paths[0]).toBe("/s/[room]");
+    expect(paths[0]).toBe("/join");
     for (const path of paths) {
       expect(["/s/[room]", "/join"]).toContain(path);
     }
     expect(JSON.stringify(calls)).not.toContain("ABCD");
   });
+
+  test("não envia analytics antes de consentimento", () => {
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(pageViewPaths()).toEqual([]);
+    expect(
+      document.querySelector('script[src*="googletagmanager.com/gtag/js"]'),
+    ).toBeNull();
+    expect(screen.getByRole("region", { name: "Analytics, só com sua escolha" })).toBeTruthy();
+  });
+
+  test("aceitar analytics habilita a medição e a escolha fica persistida", () => {
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Aceitar analytics" }));
+
+    expect(window.localStorage.getItem(ANALYTICS_CONSENT_KEY)).toBe("granted");
+    expect(pageViewPaths()).toEqual(["/"]);
+  });
+
+  test("configurações de privacidade devolvem foco às opções de consentimento", async () => {
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Aceitar analytics" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Configurações de privacidade" }),
+    );
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(
+        screen.getByRole("button", { name: "Recusar analytics" }),
+      );
+    });
+  });
+});
+
+describe("App (localização do título e navegação da entrada)", () => {
+	test("modo de criação não marca o link de entrada e usa título em português", () => {
+		render(
+			<MemoryRouter initialEntries={["/join"]}>
+				<App />
+			</MemoryRouter>,
+		);
+
+		const enterLink = screen.getByRole("link", { name: "Entrar com código" });
+		expect(enterLink.getAttribute("aria-current")).toBeNull();
+		expect(document.title).toBe("Criar sala | Pointly");
+	});
+
+	test("modo de entrada marca a navegação e usa título em inglês", () => {
+		stubNavigatorLanguages(["en-US"]);
+		render(
+			<MemoryRouter initialEntries={["/join?mode=join"]}>
+				<App />
+			</MemoryRouter>,
+		);
+
+		const enterLink = screen.getByRole("link", { name: "Enter with code" });
+		expect(enterLink.getAttribute("aria-current")).toBe("page");
+		expect(document.documentElement.lang).toBe("en");
+		expect(document.title).toBe("Join a room | Pointly");
+	});
+
+	test("alternar o formulário sincroniza query, título e aria-current", () => {
+		render(
+			<MemoryRouter initialEntries={["/join"]}>
+				<App />
+			</MemoryRouter>,
+		);
+
+		const enterLink = screen.getByRole("link", { name: "Entrar com código" });
+		expect(enterLink.getAttribute("aria-current")).toBeNull();
+		fireEvent.click(screen.getByRole("radio", { name: "Entrar com código" }));
+		expect(enterLink.getAttribute("aria-current")).toBe("page");
+		expect(document.title).toBe("Entrar na sala | Pointly");
+
+		fireEvent.click(screen.getByRole("radio", { name: "Criar sala" }));
+		expect(enterLink.getAttribute("aria-current")).toBeNull();
+		expect(document.title).toBe("Criar sala | Pointly");
+	});
+
+	test("página de privacidade está disponível nos dois idiomas", () => {
+		render(
+			<MemoryRouter initialEntries={["/en/privacy"]}>
+				<App />
+			</MemoryRouter>,
+		);
+
+		expect(screen.getByRole("heading", { name: "Privacy at Pointly" })).toBeTruthy();
+		expect(screen.getByRole("link", { name: "contato@pointly.com" }).getAttribute("href"))
+			.toBe("mailto:contato@pointly.com");
+		expect(document.title).toBe("Privacy | Pointly");
+		expect(document.documentElement.lang).toBe("en");
+	});
 });

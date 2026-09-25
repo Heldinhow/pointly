@@ -3,6 +3,7 @@ import {
 	__resetAnalyticsForTests,
 	initAnalytics,
 	sanitizePagePath,
+	setAnalyticsConsent,
 	trackEvent,
 	trackNewRound,
 	trackPageView,
@@ -32,6 +33,11 @@ function removeGtagScripts(): void {
 	)) {
 		node.remove();
 	}
+}
+
+function grantAndInitAnalytics(): void {
+	setAnalyticsConsent(true);
+	initAnalytics();
 }
 
 beforeEach(() => {
@@ -82,7 +88,7 @@ describe("analytics (com Measurement ID)", () => {
 	});
 
 	test("initAnalytics carrega gtag.js uma vez e configura", () => {
-		initAnalytics();
+		grantAndInitAnalytics();
 		initAnalytics();
 
 		const scripts = document.querySelectorAll<HTMLScriptElement>(
@@ -99,8 +105,19 @@ describe("analytics (com Measurement ID)", () => {
 		expect(serialized).toContain('"send_page_view":false');
 	});
 
-	test("trackPageView e trackEvent chamam gtag mockado", () => {
+	test("não carrega nem envia eventos enquanto não há escolha", () => {
 		initAnalytics();
+		trackPageView("/");
+		trackRoomCreated();
+
+		expect(window.gtag).toBeUndefined();
+		expect(
+			document.querySelector('script[src*="googletagmanager.com/gtag/js"]'),
+		).toBeNull();
+	});
+
+	test("trackPageView e trackEvent chamam gtag mockado", () => {
+		grantAndInitAnalytics();
 		const calls: unknown[][] = [];
 		window.gtag = (...args: unknown[]) => {
 			calls.push(args);
@@ -116,7 +133,7 @@ describe("analytics (com Measurement ID)", () => {
 	});
 
 	test("helpers de produto disparam os nomes canônicos", () => {
-		initAnalytics();
+		grantAndInitAnalytics();
 		const names: string[] = [];
 		window.gtag = (command: unknown, name: unknown) => {
 			if (command === "event" && typeof name === "string") names.push(name);
@@ -138,7 +155,7 @@ describe("analytics (com Measurement ID)", () => {
 	});
 
 	test("track* sem gtag após reset de window continuam seguros", () => {
-		initAnalytics();
+		grantAndInitAnalytics();
 		delete window.gtag;
 		expect(() => {
 			trackPageView("/");
@@ -148,7 +165,7 @@ describe("analytics (com Measurement ID)", () => {
 
 	test("ID com whitespace é aparado (trim)", () => {
 		setGaEnv("  G-TRIMMED  ");
-		initAnalytics();
+		grantAndInitAnalytics();
 		const scripts = document.querySelectorAll<HTMLScriptElement>(
 			'script[src*="googletagmanager.com/gtag/js"]',
 		);
@@ -159,7 +176,7 @@ describe("analytics (com Measurement ID)", () => {
 
 	test("ID é URL-encoded no src do script", () => {
 		setGaEnv("G-TE ST&X");
-		initAnalytics();
+		grantAndInitAnalytics();
 		const scripts = document.querySelectorAll<HTMLScriptElement>(
 			'script[src*="googletagmanager.com/gtag/js"]',
 		);
@@ -167,7 +184,7 @@ describe("analytics (com Measurement ID)", () => {
 	});
 
 	test("trackPageView sem title não envia page_title", () => {
-		initAnalytics();
+		grantAndInitAnalytics();
 		const calls: unknown[][] = [];
 		window.gtag = (...args: unknown[]) => {
 			calls.push(args);
@@ -181,7 +198,7 @@ describe("analytics (com Measurement ID)", () => {
 	});
 
 	test("trackPageView sanitiza o path antes de enviar", () => {
-		initAnalytics();
+		grantAndInitAnalytics();
 		const calls: unknown[][] = [];
 		window.gtag = (...args: unknown[]) => {
 			calls.push(args);
@@ -191,6 +208,19 @@ describe("analytics (com Measurement ID)", () => {
 
 		expect(calls).toEqual([
 			["event", "page_view", { page_path: "/s/[room]" }],
+		]);
+	});
+
+	test("retirar consentimento bloqueia eventos seguintes", () => {
+		grantAndInitAnalytics();
+		const calls: unknown[][] = [];
+		window.gtag = (...args: unknown[]) => calls.push(args);
+
+		setAnalyticsConsent(false);
+		trackPageView("/after-revoke");
+
+		expect(calls).toEqual([
+			["consent", "update", { analytics_storage: "denied" }],
 		]);
 	});
 });

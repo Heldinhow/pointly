@@ -412,4 +412,22 @@ button.poker-seat-target .poker-avatar {
   .poker-status {
     font-size: 12px;
   }
+  .poker-table:not(.poker-table--compact)
+    .poker-seat:nth-child(-n + 6)
+    .poker-justify {
+    align-self: flex-start;
+    max-width: min(92px, calc(100vw - 32px));
+    white-space: normal;
+    text-align: center;
+    letter-spacing: 0.03em;
+  }
+  .poker-table:not(.poker-table--compact)
+    .poker-seat:nth-child(n + 7)
+    .poker-justify {
+    align-self: flex-end;
+    max-width: min(92px, calc(100vw - 32px));
+    white-space: normal;
+    text-align: center;
+    letter-spacing: 0.03em;
+  }
 }

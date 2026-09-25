@@ -31,6 +31,10 @@ export type ArenaContent = {
 		) => string;
 		presence: (connected: number, voted: number) => string;
 		leave: string;
+		leaveConfirmTitle: string;
+		leaveConfirmDescription: string;
+		cancelLeave: string;
+		confirmLeave: string;
 	};
 	reconnecting: {
 		title: string;
@@ -100,6 +104,7 @@ export type ArenaContent = {
 		avatarErrorTitle: string;
 		avatarError: string;
 		spectators: (count: number) => string;
+		privacySettings: string;
 	};
 	invite: {
 		title: string;
@@ -124,6 +129,12 @@ export type ArenaContent = {
 		pipTitle: (count: number, value: string) => string;
 		noNumericsNote: string;
 		justifyLead: string;
+		copy: string;
+		copied: string;
+		copyFeedback: string;
+		copyError: string;
+		votesLabel: string;
+		noVote: string;
 	};
 	waiting: {
 		spectatorTitle: string;

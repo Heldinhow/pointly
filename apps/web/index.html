@@ -14,22 +14,7 @@
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 		<link rel="manifest" href="/site.webmanifest" />
 		<title>Pointly — Planning poker sem cadastro</title>
-		<script>
-			try {
-				var stored = localStorage.getItem("pointly-theme");
-				if (
-					stored === "light" ||
-					(stored !== "dark" &&
-						window.matchMedia("(prefers-color-scheme: light)").matches)
-				) {
-					document.documentElement.classList.remove("dark");
-				} else {
-					document.documentElement.classList.add("dark");
-				}
-			} catch (e) {
-				document.documentElement.classList.add("dark");
-			}
-		</script>
+		<script src="/theme-init.js"></script>
 	</head>
 	<body>
 		<div id="root"></div>

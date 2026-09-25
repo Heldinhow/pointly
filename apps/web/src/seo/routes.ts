@@ -153,6 +153,8 @@ const PATHS = {
 	whatIsEn: "/en/guides/what-is-planning-poker",
 	storyPointsPt: "/guias/story-points",
 	storyPointsEn: "/en/guides/story-points",
+	privacyPt: "/privacidade",
+	privacyEn: "/en/privacy",
 } as const;
 
 const HOW_TO_PLAY_DESCRIPTION_PT =
@@ -368,6 +370,24 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 			}),
 			faqPageJsonLd(EN_STORY_POINTS.faq.items),
 		],
+	},
+	{
+		path: PATHS.privacyPt,
+		lang: "pt-BR",
+		indexable: true,
+		title: "Privacidade | Pointly",
+		description:
+			"Saiba quais dados o Pointly usa para manter salas temporárias de planning poker e como controlar o armazenamento no navegador.",
+		alternates: alternateVersions(PATHS.privacyPt, PATHS.privacyEn, "pt-BR"),
+	},
+	{
+		path: PATHS.privacyEn,
+		lang: "en",
+		indexable: true,
+		title: "Privacy | Pointly",
+		description:
+			"Learn what data Pointly uses to run temporary planning poker rooms and how to control browser storage.",
+		alternates: alternateVersions(PATHS.privacyPt, PATHS.privacyEn, "en"),
 	},
 	{
 		path: "/404",

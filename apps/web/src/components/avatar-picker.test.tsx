@@ -164,6 +164,7 @@ describe("AvatarPicker (AV-05)", () => {
 
 	test("microcopy de privacidade acompanha o picker", () => {
 		render(<AvatarPicker value={null} onChange={() => {}} />);
+		expect(screen.getByLabelText("Foto de perfil (opcional)")).toBeTruthy();
 		expect(screen.getByText("Visível para todos na sala")).toBeTruthy();
 	});
 

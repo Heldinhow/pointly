@@ -38,7 +38,7 @@ const AVATAR_PICKER_LABELS: Record<
 	}
 > = {
 	"pt-BR": {
-		field: "Foto de perfil",
+		field: "Foto de perfil (opcional)",
 		previewAlt: "Prévia do avatar",
 		choose: "Escolher foto",
 		change: "Trocar foto",
@@ -48,7 +48,7 @@ const AVATAR_PICKER_LABELS: Record<
 		readError: "Não foi possível ler a imagem. Tente outra.",
 	},
 	en: {
-		field: "Profile picture",
+		field: "Profile picture (optional)",
 		previewAlt: "Avatar preview",
 		choose: "Choose photo",
 		change: "Change photo",
@@ -104,7 +104,7 @@ export function AvatarPicker({
 			className={cn("avatar-picker", compact && "avatar-picker--compact")}
 			invalid={error !== null}
 		>
-			<FieldLabel>{labels.field}</FieldLabel>
+			<FieldLabel htmlFor="profile-picture-input">{labels.field}</FieldLabel>
 			<div className="avatar-picker-row">
 				<span className="avatar-picker-preview" data-testid="avatar-preview">
 					{value ? (
@@ -116,6 +116,7 @@ export function AvatarPicker({
 				<div className="avatar-picker-actions">
 					<input
 						ref={inputRef}
+						id="profile-picture-input"
 						type="file"
 						accept="image/png,image/jpeg,image/webp"
 						hidden

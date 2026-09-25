@@ -48,15 +48,17 @@ export function JoinPage({
 }): React.ReactElement {
   const content = JOIN_CONTENT[lang];
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const uuid = useSession((state) => state.uuid);
   const sessionNick = useSession((state) => state.nick);
   const setConnected = useSession((state) => state.setConnected);
 
   const [mode, setMode] = useState<Mode>(() =>
-    searchParams.get("code") || searchParams.get("mode") === "join"
+    searchParams.get("mode") === "join"
       ? "join"
-      : "create",
+      : searchParams.get("mode") === "create" || !searchParams.get("code")
+        ? "create"
+        : "join",
   );
   const [nick, setNick] = useState(() => sessionNick || loadNickDraft());
   const [code, setCode] = useState(() =>
@@ -72,12 +74,17 @@ export function JoinPage({
   const navigatedRef = useRef(false);
 
   useEffect(() => {
+    const requestedMode = searchParams.get("mode");
     setMode(
-      searchParams.get("code") || searchParams.get("mode") === "join"
+      requestedMode === "join"
         ? "join"
-        : "create",
+        : requestedMode === "create" || !searchParams.get("code")
+          ? "create"
+          : "join",
     );
-    setCode(normalizeCode(searchParams.get("code") ?? ""));
+    if (searchParams.has("code")) {
+      setCode(normalizeCode(searchParams.get("code") ?? ""));
+    }
     setCodeError(null);
     setFormError(null);
   }, [searchParams]);
@@ -114,6 +121,16 @@ export function JoinPage({
     setFormError(null);
     setCodeError(null);
     setNickError(null);
+    setSearchParams((current) => {
+      const updated = new URLSearchParams(current);
+      if (next === "join") {
+        updated.set("mode", "join");
+      } else {
+        updated.delete("mode");
+        updated.delete("code");
+      }
+      return updated;
+    }, { replace: true });
   }
 
   async function handleSubmit(event: React.FormEvent): Promise<void> {

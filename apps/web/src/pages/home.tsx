@@ -134,7 +134,7 @@ export function HomePage({
         <section className="pt-home__hero" data-testid="home-hero">
           <div className="pt-home__hero-copy">
             <h1>
-              {content.hero.h1Lead}
+              {content.hero.h1Lead}{" "}
               <br />
               <em>{content.hero.h1Em}</em>
             </h1>

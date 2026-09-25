@@ -24,6 +24,11 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 			`${voters} playing · ${spectators} watching · ${voted} voted`,
 		presence: (connected, voted) => `${connected} in the room · ${voted} voted`,
 		leave: "Leave room",
+		leaveConfirmTitle: "End and delete this room?",
+		leaveConfirmDescription:
+			"You appear to be the last person here. Leaving removes this room and its current results. Copy anything you need before ending.",
+		cancelLeave: "Stay in the room",
+		confirmLeave: "End and delete room",
 	},
 	reconnecting: {
 		title: "Reconnecting…",
@@ -98,6 +103,7 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		avatarErrorTitle: "Couldn't change the photo",
 		avatarError: "Couldn't change the photo. Try again.",
 		spectators: (count) => `Watching (${count}):`,
+		privacySettings: "Privacy settings",
 	},
 	invite: {
 		title: "Invite the team",
@@ -125,6 +131,12 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		noNumericsNote:
 			"Only pause or nobody voted · no average, median or range.",
 		justifyLead: "Justifies first:",
+		copy: "Copy results",
+		copied: "Copied",
+		copyFeedback: "Round results copied. Save them with your backlog item.",
+		copyError: "Couldn't copy results. Select and copy them manually.",
+		votesLabel: "Votes",
+		noVote: "No vote",
 	},
 	waiting: {
 		spectatorTitle: "Follow the voting.",

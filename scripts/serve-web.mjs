@@ -10,6 +10,7 @@
  */
 import { createReadStream, statSync } from "node:fs";
 import { join, normalize } from "node:path";
+import { createGzip } from "node:zlib";
 
 const DIST = join(import.meta.dirname, "..", "apps", "web", "dist");
 const PORT = Number(process.env.PORT ?? 8080);
@@ -51,6 +52,28 @@ function mimeOf(p) {
 		: "application/octet-stream";
 }
 
+function isHashedAsset(p) {
+	return /(?:^|\/)assets\/[^/]+-[\w-]{8,}\.[^/.]+$/.test(p);
+}
+
+function isCompressible(p) {
+	return /\.(?:html|css|js|mjs|json|xml|svg|txt|webmanifest)$/i.test(p);
+}
+
+function acceptsGzip(req) {
+	const value = req.headers.get
+		? req.headers.get("accept-encoding") ?? ""
+		: req.headers["accept-encoding"] ?? "";
+	return value.split(",").some((entry) => {
+		const [encoding, ...parameters] = entry.trim().split(";");
+		if (encoding?.trim().toLowerCase() !== "gzip") return false;
+		const quality = parameters
+			.map((parameter) => /^\s*q\s*=\s*([\d.]+)\s*$/i.exec(parameter)?.[1])
+			.find((parameter) => parameter !== undefined);
+		return quality === undefined || Number(quality) > 0;
+	});
+}
+
 function isFile(p) {
 	if (!p) return false;
 	try {
@@ -82,6 +105,18 @@ function decide(rawUrl) {
 		return { status: 400, text: "Bad Request" };
 	}
 
+	const aliases = {
+		"/privacy": "/en/privacy",
+		"/privacy-policy": "/en/privacy",
+		"/lgpd": "/privacidade",
+	};
+	if (aliases[pathname]) {
+		return {
+			status: 301,
+			location: `${aliases[pathname]}${url.search}`,
+		};
+	}
+
 	if (pathname !== "/" && pathname.endsWith("/")) {
 		return {
 			status: 301,
@@ -104,11 +139,34 @@ function decide(rawUrl) {
 	return { status: 404, text: "Not Found" };
 }
 
-function headersFor(decision, file) {
-	const headers = { "Cache-Control": "no-cache" };
+function headersFor(decision, file, compressed = false) {
+	const headers = {
+		"Cache-Control": file && isHashedAsset(file)
+			? "public, max-age=31536000, immutable"
+			: "no-cache",
+		"X-Content-Type-Options": "nosniff",
+		"X-Frame-Options": "DENY",
+		"Referrer-Policy": "strict-origin-when-cross-origin",
+		"Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+		"Strict-Transport-Security": "max-age=31536000",
+		"Content-Security-Policy": [
+			"default-src 'self'",
+			"base-uri 'self'",
+			"object-src 'none'",
+			"frame-ancestors 'none'",
+			"form-action 'self'",
+			"script-src 'self' https://www.googletagmanager.com",
+			"style-src 'self' 'unsafe-inline'",
+			"img-src 'self' data: blob: https://www.google-analytics.com",
+			"font-src 'self' data:",
+			"connect-src 'self' ws: wss: https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com",
+		].join("; "),
+	};
 	if (decision.location) headers.Location = decision.location;
 	if (file) headers["Content-Type"] = mimeOf(file);
 	if (decision.noindex) headers["X-Robots-Tag"] = "noindex";
+	if (file && isCompressible(file)) headers.Vary = "Accept-Encoding";
+	if (compressed) headers["Content-Encoding"] = "gzip";
 	return headers;
 }
 
@@ -120,6 +178,11 @@ if (server) {
 		hostname: HOST,
 		fetch(req) {
 			const decision = decide(req.url);
+			const compressed =
+				Boolean(decision.file) &&
+				isCompressible(decision.file) &&
+				acceptsGzip(req) &&
+				typeof CompressionStream === "function";
 			if (decision.text) {
 				return new Response(decision.text, {
 					status: decision.status,
@@ -129,9 +192,14 @@ if (server) {
 					},
 				});
 			}
-			return new Response(decision.file ? Bun.file(decision.file) : null, {
+			const file = decision.file ? Bun.file(decision.file) : null;
+			const body =
+				file && compressed
+					? file.stream().pipeThrough(new CompressionStream("gzip"))
+					: file;
+			return new Response(body, {
 				status: decision.status,
-				headers: headersFor(decision, decision.file),
+				headers: headersFor(decision, decision.file, compressed),
 			});
 		},
 	});
@@ -143,10 +211,18 @@ if (server) {
 	http
 		.createServer((req, res) => {
 			const decision = decide(req.url ?? "/");
-			res.writeHead(decision.status, headersFor(decision, decision.file));
+			const compressed = Boolean(
+				decision.file && isCompressible(decision.file) && acceptsGzip(req),
+			);
+			res.writeHead(
+				decision.status,
+				headersFor(decision, decision.file, compressed),
+			);
 			if (decision.text) return res.end(decision.text);
 			if (!decision.file) return res.end();
-			createReadStream(decision.file).pipe(res);
+			const stream = createReadStream(decision.file);
+			if (compressed) stream.pipe(createGzip()).pipe(res);
+			else stream.pipe(res);
 		})
 		.listen(PORT, HOST, () =>
 			console.log(`[pointly-web] serving ${DIST} on http://${HOST}:${PORT}`),

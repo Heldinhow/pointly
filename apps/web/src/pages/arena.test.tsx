@@ -1375,10 +1375,61 @@ describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {
 		renderArena();
 
 		fireEvent.click(screen.getByRole("button", { name: /Sair da sala/ }));
+		expect(socket.sentLeaves).toBe(0);
+		expect(screen.getByTestId("leave-confirmation")).toBeTruthy();
+		fireEvent.click(screen.getByRole("button", { name: "Encerrar e apagar sala" }));
 		expect(socket.sentLeaves).toBe(1);
 		expect(socket.closed).toBe(true);
 		expect(window.localStorage.getItem("pointly-session")).toBeNull();
 		expect(await screen.findByText("JOIN")).toBeTruthy();
+	});
+
+	test("cancelar encerramento mantém a última pessoa na sala", () => {
+		const socket = new FakeSocket();
+		const host = player({ id: "p_host", nick: "Ana", role: "host" }, 0);
+		seed({ sala: sala({ players: [host] }), playerId: host.id, socket });
+		persistSession("AB12", "Ana");
+		renderArena();
+
+		fireEvent.click(screen.getByRole("button", { name: "Sair da sala" }));
+		fireEvent.click(screen.getByRole("button", { name: "Continuar na sala" }));
+
+		expect(screen.queryByTestId("leave-confirmation")).toBeNull();
+		expect(screen.getByTestId("sala-code").textContent).toContain("AB12");
+		expect(window.localStorage.getItem("pointly-session")).not.toBeNull();
+	});
+
+	test("copiar resultados inclui votos e resumo da rodada", async () => {
+		const ana = player(
+			{ id: "p_ana", nick: "Ana", role: "host", hasVoted: true, value: "5" },
+			0,
+		);
+		const beto = player(
+			{ id: "p_beto", nick: "Beto", hasVoted: true, value: "8" },
+			1,
+		);
+		seed({
+			sala: sala({
+				players: [ana, beto],
+				hostId: ana.id,
+				phase: "revealed",
+				votes: { [ana.id]: "5", [beto.id]: "8" },
+			}),
+			playerId: ana.id,
+			socket: new FakeSocket(),
+		});
+		const copied = stubClipboard();
+		renderArena();
+
+		fireEvent.click(screen.getByTestId("copy-results-button"));
+		await waitFor(() => expect(copied).toHaveLength(1));
+
+		expect(copied[0]).toContain("Ana: 5");
+		expect(copied[0]).toContain("Beto: 8");
+		expect(copied[0]).toContain("Mediana: 6.5");
+		expect(screen.getByTestId("copy-results-feedback").textContent).toContain(
+			"Resultados da rodada copiados",
+		);
 	});
 
 	test("saída do Host promove o mais antigo sem travar a rodada", async () => {

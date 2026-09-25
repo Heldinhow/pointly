@@ -27,6 +27,11 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		presence: (connected, voted) =>
 			`${connected} na sala · ${voted} ${voted === 1 ? "votou" : "votaram"}`,
 		leave: "Sair da sala",
+		leaveConfirmTitle: "Encerrar e apagar esta sala?",
+		leaveConfirmDescription:
+			"Você parece ser a última pessoa aqui. Ao sair, a sala e os resultados atuais serão removidos. Copie o que precisar antes de encerrar.",
+		cancelLeave: "Continuar na sala",
+		confirmLeave: "Encerrar e apagar sala",
 	},
 	reconnecting: {
 		title: "Reconectando…",
@@ -105,6 +110,7 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		avatarErrorTitle: "Não foi possível trocar a foto",
 		avatarError: "Não foi possível trocar a foto. Tente de novo.",
 		spectators: (count) => `Assistindo (${count}):`,
+		privacySettings: "Configurações de privacidade",
 	},
 	invite: {
 		title: "Convidar o time",
@@ -133,6 +139,13 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		noNumericsNote:
 			"Só pausa ou ninguém votou · sem média, mediana nem intervalo.",
 		justifyLead: "Justifica primeiro:",
+		copy: "Copiar resultados",
+		copied: "Copiados",
+		copyFeedback: "Resultados da rodada copiados. Salve-os junto da história.",
+		copyError:
+			"Não foi possível copiar os resultados. Selecione e copie manualmente.",
+		votesLabel: "Votos",
+		noVote: "Sem voto",
 	},
 	waiting: {
 		spectatorTitle: "Acompanhe a votação.",

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { GUIDE_CONTENT } from "../pages/guide-content";
 import { LANDING_CONTENT } from "../pages/landing-content";
-import { buildSitemap, SEO_ROUTES, SITE_URL } from "./routes";
+import { buildSitemap, headForRoute, SEO_ROUTES, SITE_URL } from "./routes";
 
 const INDEXABLE = SEO_ROUTES.filter((route) => route.indexable);
 
@@ -35,7 +35,7 @@ describe("Registro SEO (15.T6 — hreflang, sitemap e schema)", () => {
     }
   });
 
-  test("sitemap lista as rotas indexáveis com alternates", () => {
+	test("sitemap lista as rotas indexáveis com alternates", () => {
     const sitemap = buildSitemap();
     for (const route of INDEXABLE) {
       expect(sitemap).toContain(`<loc>${SITE_URL}${route.path}</loc>`);
@@ -46,7 +46,19 @@ describe("Registro SEO (15.T6 — hreflang, sitemap e schema)", () => {
     expect(sitemap).toContain(
       '<xhtml:link rel="alternate" hreflang="x-default"',
     );
-  });
+	});
+
+	test("política de privacidade tem par de idioma e preview social", () => {
+		const pt = SEO_ROUTES.find((route) => route.path === "/privacidade");
+		const en = SEO_ROUTES.find((route) => route.path === "/en/privacy");
+		expect(pt?.alternates?.some((alternate) => alternate.path === "/en/privacy")).toBe(true);
+		expect(en?.alternates?.some((alternate) => alternate.path === "/privacidade")).toBe(true);
+		const head = headForRoute(pt!);
+		expect(head.elements).toContainEqual({
+			type: "meta",
+			props: { property: "og:image", content: `${SITE_URL}/images/planning-cards.webp` },
+		});
+	});
 
   test("FAQPage espelha o FAQ visível de landings e guias", () => {
     const cases: ReadonlyArray<{

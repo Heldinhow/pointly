@@ -18,7 +18,12 @@ if (!root) throw new Error("Elemento #root não encontrado.");
 
 const app = (
 	<StrictMode>
-		<BrowserRouter>
+		<BrowserRouter
+			future={{
+				v7_startTransition: true,
+				v7_relativeSplatPath: true,
+			}}
+		>
 			<App />
 		</BrowserRouter>
 	</StrictMode>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   Link,
   NavLink,
@@ -16,6 +16,7 @@ import {
 } from "@/components/shell";
 import { LanguageLink } from "@/components/language-link";
 import { LanguageToggle } from "@/components/language-toggle";
+import { AnalyticsConsent } from "@/components/analytics-consent";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
   browserPrefersEnglish,
@@ -26,10 +27,17 @@ import {
 } from "@/lib/language";
 import type { Lang } from "@/lib/i18n";
 import {
-  initAnalytics,
-  sanitizePagePath,
-  trackPageView,
+	analyticsConfigured,
+	initAnalytics,
+	sanitizePagePath,
+	setAnalyticsConsent,
+	trackPageView,
 } from "@/lib/analytics";
+import {
+	readAnalyticsConsent,
+	saveAnalyticsConsent,
+	type AnalyticsConsent as AnalyticsConsentChoice,
+} from "@/lib/consent";
 import { useTheme } from "@/lib/theme";
 import { ArenaPage } from "@/pages/arena";
 import {
@@ -51,10 +59,12 @@ import {
   ScrumPokerLandingPage,
 } from "@/pages/landing";
 import { NotFoundPage } from "@/pages/not-found";
+import { PrivacyPage } from "@/pages/privacy";
+import { SEO_ROUTES } from "@/seo/routes";
 
 export default function App(): React.ReactElement {
   const { theme, toggle } = useTheme();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const inArena = pathname.startsWith("/s/");
   const isEnPath = pathname === "/en" || pathname.startsWith("/en/");
@@ -70,6 +80,16 @@ export default function App(): React.ReactElement {
   const lang: Lang = pathLang ?? internalLang;
   const isEn = lang === "en";
   const showLanguageSwitch = !inArena && isPublic;
+  const joinSearchParams = new URLSearchParams(search);
+  const joinIsActive =
+    pathname === "/join" &&
+    (joinSearchParams.get("mode") === "join" ||
+      (joinSearchParams.get("mode") !== "create" &&
+        joinSearchParams.has("code")));
+  const [analyticsChoice, setAnalyticsChoice] = useState<AnalyticsConsentChoice>(null);
+  const [consentReady, setConsentReady] = useState(false);
+  const [showConsent, setShowConsent] = useState(false);
+  const focusConsentOnOpen = useRef(false);
   const scrolled = useHeaderScrolled();
   const previousPath = useRef(pathname);
 
@@ -77,18 +97,75 @@ export default function App(): React.ReactElement {
     document.documentElement.lang = isEn ? "en" : "pt-BR";
   }, [isEn]);
 
-  // GA4: init uma vez; pageviews em mudanças de rota (SPA).
   useEffect(() => {
-    initAnalytics();
+    const savedChoice = readAnalyticsConsent();
+    setAnalyticsChoice(savedChoice);
+    setShowConsent(analyticsConfigured() && savedChoice === null);
+    setConsentReady(true);
   }, []);
 
   useEffect(() => {
-    // page_path sanitizado: `/s/:code` → `/s/[room]` e query nunca é
-    // enviada (`/join?code=` vira `/join`). Sem page_title: títulos SEO
-    // vivem no prerender/HTML estático; `document.title` no momento da
-    // troca de rota seria stale na maioria das rotas.
-    trackPageView(sanitizePagePath(pathname));
-  }, [pathname]);
+	const granted = analyticsChoice === "granted";
+	setAnalyticsConsent(granted);
+	if (granted) initAnalytics();
+	}, [analyticsChoice]);
+
+  useEffect(() => {
+    // page_path sanitizado: `/s/:code` → `/s/[room]`; query nunca é enviada.
+    if (analyticsChoice === "granted") {
+      trackPageView(sanitizePagePath(pathname));
+    }
+  }, [analyticsChoice, pathname]);
+
+  useEffect(() => {
+    const seoRoute = SEO_ROUTES.find((route) => route.path === pathname);
+    if (seoRoute) {
+      document.title = seoRoute.title;
+      return;
+    }
+    if (pathname === "/join") {
+      const params = new URLSearchParams(search);
+      const joining =
+			params.get("mode") === "join" ||
+			(params.get("mode") !== "create" && params.has("code"));
+      document.title = joining
+        ? isEn
+          ? "Join a room | Pointly"
+          : "Entrar na sala | Pointly"
+        : isEn
+          ? "Create a room | Pointly"
+          : "Criar sala | Pointly";
+      return;
+    }
+    if (pathname.startsWith("/s/")) {
+      document.title = isEn
+        ? "Planning poker room | Pointly"
+        : "Sala de planning poker | Pointly";
+    }
+  }, [isEn, pathname, search]);
+
+  useEffect(() => {
+    if (!showConsent || !focusConsentOnOpen.current) return;
+    const frame = window.requestAnimationFrame(() => {
+      document
+        .querySelector<HTMLButtonElement>(".analytics-consent button")
+        ?.focus();
+      focusConsentOnOpen.current = false;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [showConsent]);
+
+  function chooseAnalytics(granted: boolean): void {
+    const choice = granted ? "granted" : "denied";
+    saveAnalyticsConsent(choice);
+    setAnalyticsChoice(choice);
+    setShowConsent(false);
+  }
+
+  function openPrivacySettings(): void {
+    focusConsentOnOpen.current = true;
+    setShowConsent(true);
+  }
 
   useEffect(() => {
     if (previousPath.current === pathname) return;
@@ -123,9 +200,12 @@ export default function App(): React.ReactElement {
               <NavLink to={isEn ? "/en" : "/"} end>
                 {isEn ? "Home" : "Início"}
               </NavLink>
-              <NavLink to="/join?mode=join">
+              <Link
+                to="/join?mode=join"
+                aria-current={joinIsActive ? "page" : undefined}
+              >
                 {isEn ? "Enter with code" : "Entrar com código"}
-              </NavLink>
+              </Link>
             </nav>
           )}
           {showLanguageSwitch ? (
@@ -162,11 +242,26 @@ export default function App(): React.ReactElement {
             element={<WhatIsEnPage />}
           />
           <Route path="/en/guides/story-points" element={<StoryPointsEnPage />} />
+          <Route path="/privacidade" element={<PrivacyPage lang="pt-BR" />} />
+          <Route path="/en/privacy" element={<PrivacyPage lang="en" />} />
           <Route path="/join" element={<JoinPage lang={lang} />} />
-          <Route path="/s/:code" element={<ArenaPage lang={lang} />} />
+          <Route
+            path="/s/:code"
+            element={
+              <ArenaPage
+                lang={lang}
+                onOpenPrivacySettings={
+                  analyticsConfigured() ? openPrivacySettings : undefined
+                }
+              />
+            }
+          />
           <Route path="*" element={<NotFoundPage lang={lang} />} />
         </Routes>
       </ShellMain>
+      {consentReady && showConsent ? (
+        <AnalyticsConsent lang={lang} onChoose={chooseAnalytics} />
+      ) : null}
       {!inArena && (
         <footer className="site-footer">
           <span>
@@ -185,6 +280,18 @@ export default function App(): React.ReactElement {
             <NavLink to={isEn ? "/en/guides" : "/guias"}>
               {isEn ? "Guides" : "Guias"}
             </NavLink>
+            <Link to={isEn ? "/en/privacy" : "/privacidade"}>
+              {isEn ? "Privacy" : "Privacidade"}
+            </Link>
+            {analyticsConfigured() ? (
+              <button
+                className="site-footer__privacy-settings"
+                type="button"
+                onClick={openPrivacySettings}
+              >
+                {isEn ? "Privacy settings" : "Configurações de privacidade"}
+              </button>
+            ) : null}
             {showLanguageSwitch ? (
               <LanguageLink pathname={pathname} lang={lang} />
             ) : (
