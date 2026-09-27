@@ -333,6 +333,7 @@ summary:focus-visible {
   align-items: center;
   gap: 9px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .brand-mark {
   display: inline-flex;
@@ -426,6 +427,13 @@ a:hover .brand-mark__spin {
   [data-testid="deck"] button::after {
     bottom: 5px;
     right: 5px;
+  }
+}
+@media (max-width: 520px) {
+  /* Cabeçalho estreito: a marca + idioma + tema não convivem com o link de
+     entrar com código. O CTA segue no hero da home, nas landings e nos guias. */
+  .site-nav nav {
+    display: none;
   }
 }
 @media (max-width: 380px) {

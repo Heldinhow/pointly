@@ -681,18 +681,35 @@ img.arena-spectator-avatar {
   }
 }
 @media (max-width: 700px) {
+  /* Header da arena em duas linhas limpas: título + sair na primeira,
+     presença ocupando a segunda — o botão não cai solto sob a pílula. */
   .arena-toolbar {
-    align-items: flex-start;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px 12px;
     padding-bottom: 18px;
+  }
+  .arena-room-heading {
+    min-width: 0;
   }
   .arena-room-symbol {
     display: none;
   }
   .arena-live-status {
-    gap: 8px;
+    display: contents;
+  }
+  .arena-live-status > span {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: start;
+    min-width: 0;
+    white-space: normal;
   }
   .arena-live-status > button {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
     font-size: 0;
     min-width: 44px;
     min-height: 44px;
@@ -716,6 +733,20 @@ img.arena-spectator-avatar {
   }
   .arena-workspace {
     gap: 20px;
+  }
+  /* Sozinho no mobile: o convite sobe para cima da mesa (CTA visível sem
+     rolagem); no desktop a ordem do documento continua a mesma. */
+  .arena-play-area {
+    display: flex;
+    flex-direction: column;
+  }
+  .arena-solo {
+    order: -1;
+    margin: 0 0 14px;
+  }
+  .arena-solo-cta,
+  .arena-solo-cta [data-slot="button"] {
+    width: 100%;
   }
   .arena-reveal [data-slot="card-title"] {
     font-size: 17px;
