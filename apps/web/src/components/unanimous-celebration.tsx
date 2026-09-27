@@ -7,20 +7,20 @@ import "./unanimous-celebration.css";
  * desenho e o teste é estável. Só `transform`/`opacity`.
  */
 const PIECES = [
-	{ dx: -140, dy: -72, rot: -170, color: "#a9d6ad" },
+	{ dx: -140, dy: -72, rot: -170, color: "#a99bff" },
 	{ dx: -96, dy: -98, rot: 140, color: "#f2c94c" },
-	{ dx: -52, dy: -112, rot: -90, color: "#e8f5e9" },
-	{ dx: -14, dy: -122, rot: 210, color: "#7ec8a3" },
-	{ dx: 26, dy: -116, rot: -150, color: "#a9d6ad" },
+	{ dx: -52, dy: -112, rot: -90, color: "#f2f3ff" },
+	{ dx: -14, dy: -122, rot: 210, color: "#5eead4" },
+	{ dx: 26, dy: -116, rot: -150, color: "#a99bff" },
 	{ dx: 64, dy: -100, rot: 70, color: "#f2c94c" },
-	{ dx: 104, dy: -78, rot: -210, color: "#e8f5e9" },
-	{ dx: 146, dy: -40, rot: 90, color: "#7ec8a3" },
+	{ dx: 104, dy: -78, rot: -210, color: "#f2f3ff" },
+	{ dx: 146, dy: -40, rot: 90, color: "#5eead4" },
 	{ dx: -158, dy: -24, rot: 60, color: "#f2c94c" },
-	{ dx: 158, dy: -16, rot: -80, color: "#a9d6ad" },
-	{ dx: -118, dy: -46, rot: 250, color: "#7ec8a3" },
+	{ dx: 158, dy: -16, rot: -80, color: "#a99bff" },
+	{ dx: -118, dy: -46, rot: 250, color: "#5eead4" },
 	{ dx: 112, dy: -52, rot: 160, color: "#f2c94c" },
-	{ dx: -30, dy: -84, rot: -300, color: "#e8f5e9" },
-	{ dx: 40, dy: -90, rot: 300, color: "#a9d6ad" },
+	{ dx: -30, dy: -84, rot: -300, color: "#f2f3ff" },
+	{ dx: 40, dy: -90, rot: 300, color: "#a99bff" },
 ] as const;
 
 /**

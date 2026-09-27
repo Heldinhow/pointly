@@ -121,7 +121,7 @@
   width: 18px;
   height: 8px;
   border-radius: 9999px;
-  border: 2px solid #bcd9c5;
+  border: 2px solid #b6aaff;
   filter: drop-shadow(0 1px 1px rgb(10 30 20 / 35%));
   animation: projectile-ripple calc(var(--impact-duration) * 0.7) ease-out both;
   animation-delay: var(--contact-delay, 800ms);
