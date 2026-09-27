@@ -19,10 +19,10 @@
   margin: 0;
   color: var(--foreground);
   font-family: Geist, sans-serif;
-  font-size: 2.5rem;
+  font-size: 2.6rem;
   font-weight: 650;
-  letter-spacing: -0.04em;
-  line-height: 1.15;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
   text-wrap: balance;
 }
 .join-intro-copy {
@@ -46,12 +46,21 @@
   padding: 12px 0;
   border-bottom: 1px solid var(--border);
 }
+/* Índice do ritual vira chip em gradiente. */
 .join-ritual-index {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 26%, transparent);
   font-family: "Geist Mono", monospace;
   font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  color: var(--muted-foreground);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--primary);
   font-variant-numeric: tabular-nums;
 }
 .join-ritual-text {
@@ -70,14 +79,67 @@
   line-height: 1.55;
   color: var(--muted-foreground);
 }
+/* Cartão em vidro com halo violeta atrás e entrada orquestrada. */
 .join-card,
 .not-found-card {
+  position: relative;
   min-width: 0;
   width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: var(--card);
-  box-shadow: 0 20px 60px rgb(28 57 45 / 8%);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  backdrop-filter: blur(22px) saturate(1.4);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 10%) inset,
+    0 40px 90px -50px color-mix(in srgb, var(--primary) 65%, transparent);
+}
+.join-card::after,
+.not-found-card::after {
+  content: "";
+  position: absolute;
+  inset: -14% -8%;
+  z-index: -1;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--primary) 22%, transparent),
+    transparent 80%
+  );
+}
+@media (prefers-reduced-motion: no-preference) {
+  .join-intro {
+    animation: join-rise 620ms var(--ease-out-quint, ease-out) backwards;
+  }
+  .join-card,
+  .not-found-card {
+    animation: join-rise 700ms var(--ease-out-quint, ease-out) 110ms backwards;
+  }
+  .join-ritual li,
+  .not-found-card .not-found-header,
+  .not-found-card .not-found-footer {
+    animation: join-rise 560ms var(--ease-out-quint, ease-out) backwards;
+  }
+  .join-ritual li:nth-child(1) {
+    animation-delay: 180ms;
+  }
+  .join-ritual li:nth-child(2) {
+    animation-delay: 250ms;
+  }
+  .join-ritual li:nth-child(3) {
+    animation-delay: 320ms;
+  }
+}
+@keyframes join-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 .join-card-header,
 .join-card-panel,
@@ -118,33 +180,44 @@
   padding: 0;
   border: 0;
 }
+/* Alternador de modo: trilho em vidro, ativo com gradiente do acento. */
 .join-mode-switch {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
   padding: 5px;
-  border-radius: 13px;
-  background: var(--muted);
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--muted) 75%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
 }
 .join-mode-button {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 44px;
   border: 1px solid transparent;
-  border-radius: 9px;
+  border-radius: 10px;
   font-size: 14px;
   cursor: pointer;
   transition:
-    background-color 180ms ease-out,
-    border-color 180ms ease-out,
-    box-shadow 180ms ease-out;
+    background-color 180ms var(--ease-out-quart),
+    border-color 180ms var(--ease-out-quart),
+    color 180ms var(--ease-out-quart),
+    box-shadow 180ms var(--ease-out-quart),
+    transform 180ms var(--ease-out-quart);
 }
 .join-mode-button:has(input:checked) {
-  background: var(--card);
-  color: var(--foreground);
-  border-color: var(--border);
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--foreground) 8%, transparent);
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--primary) 92%, #ffffff),
+    var(--primary)
+  );
+  color: var(--primary-foreground);
+  border-color: color-mix(in srgb, var(--primary) 70%, transparent);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 22%) inset,
+    0 12px 24px -14px color-mix(in srgb, var(--primary) 75%, transparent);
   font-weight: 600;
 }
 .join-mode-button:has(input:not(:checked)) {
@@ -154,6 +227,9 @@
 }
 .join-mode-button:hover {
   color: var(--foreground);
+}
+.join-mode-button:has(input:checked):hover {
+  color: var(--primary-foreground);
 }
 .join-mode-button:has(input:focus-visible) {
   outline: 2px solid var(--ring);
@@ -166,13 +242,21 @@
 .join-input {
   min-height: 50px;
   align-items: center;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 16px;
 }
 .join-input [data-slot="input"] {
   min-height: 48px;
   font-size: 16px;
   line-height: 1.5;
+}
+/* Foco/validação: anel violeta + borda destrutiva quando inválido. */
+.join-form [data-slot="input"]:focus-visible,
+.join-form [data-slot="input"][data-focused] {
+  border-color: color-mix(in srgb, var(--ring) 70%, var(--border));
+}
+.join-form input[aria-invalid="true"] {
+  border-color: color-mix(in srgb, var(--destructive) 62%, var(--border));
 }
 .join-otp {
   margin-top: 2px;
@@ -221,7 +305,7 @@
 .join-otp input {
   width: 50px;
   min-height: 50px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-family: "Geist Mono", monospace;
   font-size: 20px;
 }
@@ -242,15 +326,32 @@
 .join-busy-note:empty {
   display: none;
 }
+/* CTA de criar/entrar: gradiente, halo e press tátil. */
 .join-submit {
   width: 100%;
   min-height: 52px;
   font-size: 15px;
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--primary) 88%, #ffffff),
+    var(--primary) 55%,
+    color-mix(in srgb, var(--primary) 86%, #0a0d1d)
+  );
+  border-color: color-mix(in srgb, var(--primary) 75%, transparent);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 20%) inset,
+    0 16px 32px -18px color-mix(in srgb, var(--primary) 80%, transparent);
   transition:
     background-color 180ms ease-out,
     border-color 180ms ease-out,
     box-shadow 180ms ease-out,
     transform 180ms ease-out;
+}
+.join-submit:hover {
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 20%) inset,
+    0 20px 38px -16px color-mix(in srgb, var(--primary) 85%, transparent);
+  transform: translateY(-1px);
 }
 .join-mode-button:focus-visible,
 .join-submit:focus-visible {
@@ -272,6 +373,18 @@
 .not-found-header {
   padding-top: 42px;
 }
+.not-found-code {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 .not-found-header [data-slot="card-title"] {
   color: var(--card-foreground);
   font-family: Geist, sans-serif;
@@ -289,11 +402,6 @@
   padding-bottom: 42px;
   flex-wrap: wrap;
   gap: 12px;
-}
-.not-found-code {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: var(--muted-foreground);
 }
 @media (max-width: 1000px) {
   .join-page {
