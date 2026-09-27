@@ -1,5 +1,6 @@
 /* Tokens de cor vivem em index.css (:root/.dark = SSOT). Este arquivo mantém
-   só layout/estrutura da marca para não duplicar :root. */
+   só layout/estrutura da marca + chrome global (aurora, header, deck) para
+   não duplicar :root. */
 :root {
   /* Curvas de easing do sistema (saída exponencial, sem bounce/elastic). */
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
@@ -25,6 +26,122 @@ summary:focus-visible {
   outline-offset: 5px;
   border-radius: 4px;
 }
+
+/* === Fundo animado "Aurora" (v2) ======================================
+   Três blobs de gradiente radial em deriva lenta + véu de grade estático
+   com máscara radial. Só `transform/opacity`; as cores/força são tokens
+   (`--aurora-*`) em index.css. A rede global de `prefers-reduced-motion`
+   colapsa as derivações. */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.aurora__blob {
+  position: absolute;
+  width: 58vmax;
+  height: 58vmax;
+  border-radius: 50%;
+  opacity: var(--aurora-strength);
+  will-change: transform;
+}
+.aurora__blob--1 {
+  top: -20%;
+  left: -14%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    var(--aurora-1),
+    transparent 62%
+  );
+  animation: aurora-drift-1 54s ease-in-out infinite alternate;
+}
+.aurora__blob--2 {
+  right: -16%;
+  top: 6%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    var(--aurora-2),
+    transparent 60%
+  );
+  animation: aurora-drift-2 68s ease-in-out infinite alternate;
+}
+.aurora__blob--3 {
+  bottom: -26%;
+  left: 22%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    var(--aurora-3),
+    transparent 62%
+  );
+  animation: aurora-drift-3 76s ease-in-out infinite alternate;
+}
+@keyframes aurora-drift-1 {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(9vw, 7vh, 0) scale(1.14);
+  }
+}
+@keyframes aurora-drift-2 {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.08);
+  }
+  to {
+    transform: translate3d(-8vw, 9vh, 0) scale(0.94);
+  }
+}
+@keyframes aurora-drift-3 {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.96);
+  }
+  to {
+    transform: translate3d(7vw, -6vh, 0) scale(1.12);
+  }
+}
+/* Véu de grade: estático, some nas bordas via máscara radial. */
+.aurora::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--foreground) 5%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--foreground) 5%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 46px 46px;
+  mask-image: radial-gradient(ellipse 95% 72% at 50% 0%, black, transparent 72%);
+  -webkit-mask-image: radial-gradient(
+    ellipse 95% 72% at 50% 0%,
+    black,
+    transparent 72%
+  );
+}
+
+/* === Utilitários de superfície da direção v2 ========================== */
+/* Vidro do sistema: hero demo, cartão de entrada, cards da arena. */
+.glass-card {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+  backdrop-filter: blur(18px) saturate(1.35);
+  border: 1px solid var(--glass-border);
+}
+/* Texto em gradiente (paradas AA por tema em `--gradient-text`). */
+.text-gradient {
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* === Chrome global ==================================================== */
 .site-header,
 .site-main,
 .site-footer {
@@ -33,20 +150,20 @@ summary:focus-visible {
 .site-header {
   flex-shrink: 0;
   height: var(--header-h);
-  border-bottom: 1px solid var(--border);
-  /* Navbar Origin do Coss, adaptado: header fixo com blur funcional no scroll. */
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  /* Vidro sempre ativo: a aurora corre por trás do chrome. */
   position: sticky;
   top: 0;
   z-index: 30;
-  background-color: var(--background);
+  background-color: color-mix(in srgb, var(--background) 68%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
   transition:
     background-color 200ms var(--ease-out-quart),
     border-color 200ms var(--ease-out-quart);
 }
 .site-header[data-scrolled="true"] {
   background-color: color-mix(in srgb, var(--background) 86%, transparent);
-  -webkit-backdrop-filter: blur(12px) saturate(1.25);
-  backdrop-filter: blur(12px) saturate(1.25);
 }
 .site-nav {
   display: flex;
@@ -60,7 +177,7 @@ summary:focus-visible {
   font-weight: 500;
   color: var(--muted-foreground);
 }
-/* Underline deslizante (só transform): hover, foco e rota ativa. */
+/* Underline deslizante em gradiente (só transform): hover, foco e ativa. */
 .site-nav nav a {
   position: relative;
   display: inline-flex;
@@ -75,7 +192,7 @@ summary:focus-visible {
   bottom: 0;
   height: 2px;
   border-radius: 2px;
-  background-color: var(--primary);
+  background-image: linear-gradient(90deg, var(--primary), var(--aurora-2));
   transform: scaleX(0);
   transform-origin: left center;
   transition: transform 200ms var(--ease-out-quint);
@@ -149,6 +266,8 @@ summary:focus-visible {
   text-decoration: underline;
   text-underline-offset: 4px;
 }
+
+/* === Deck (assinatura) ================================================ */
 [data-testid="deck"] {
   padding-top: 14px;
 }
@@ -166,6 +285,11 @@ summary:focus-visible {
   border-radius: 9px;
   font-size: 24px;
   box-shadow: 0 3px 0 var(--border);
+  transition:
+    transform 160ms var(--ease-out-quart),
+    box-shadow 160ms var(--ease-out-quart),
+    border-color 160ms var(--ease-out-quart),
+    background-color 160ms var(--ease-out-quart);
 }
 [data-testid="deck"] button::before,
 [data-testid="deck"] button::after {
@@ -185,8 +309,16 @@ summary:focus-visible {
   bottom: 7px;
   right: 7px;
 }
+/* Hover: levanta (transform no componente) + halo violeta difuso. */
+[data-testid="deck"] button:hover:not(:disabled):not([aria-pressed="true"]) {
+  box-shadow:
+    0 3px 0 var(--border),
+    0 16px 28px -18px color-mix(in srgb, var(--primary) 55%, transparent);
+}
 [data-testid="deck"] button[aria-pressed="true"] {
-  box-shadow: 0 5px 0 color-mix(in srgb, var(--primary) 65%, var(--background));
+  box-shadow:
+    0 5px 0 color-mix(in srgb, var(--primary) 65%, var(--background)),
+    0 20px 36px -16px color-mix(in srgb, var(--primary) 62%, transparent);
 }
 [data-testid="deck-hint"] {
   margin-top: 9px;

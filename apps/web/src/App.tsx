@@ -14,6 +14,7 @@ import {
   SkipLink,
   useHeaderScrolled,
 } from "@/components/shell";
+import { AuroraBackground } from "@/components/aurora-background";
 import { LanguageLink } from "@/components/language-link";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -114,7 +115,8 @@ export default function App(): React.ReactElement {
   }, [isPublic]);
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background text-foreground">
+    <div className="flex min-h-dvh flex-col text-foreground">
+      <AuroraBackground />
       <SkipLink label={isEn ? "Skip to content" : undefined} />
       <ShellHeader data-scrolled={scrolled ? "true" : "false"}>
         {inArena ? (

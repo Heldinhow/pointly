@@ -6,40 +6,57 @@
 	color-scheme: light;
 	--font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
 	--font-mono: "Geist Mono", ui-monospace, monospace;
-	/* SSOT de cor (ex-brand.css): paleta verde produto. Não duplicar em outro arquivo. */
-	--radius: 0.75rem;
-	--accent: #e4ece4;
-	--accent-foreground: #202b27;
-	--background: #f4f6f3;
-	--border: #dce3db;
+	/* SSOT de cor — direção "Mesa Aurora": papel frio + violeta elétrico no
+	light; tinta meia-noite + aurora de vidro no dark. Não duplicar em outro
+	arquivo. */
+	--radius: 1rem;
+	--accent: #e9ebf9;
+	--accent-foreground: #191c38;
+	--background: #f4f5fc;
+	--border: #dde0f2;
 	--card: #ffffff;
-	--card-foreground: #202b27;
+	--card-foreground: #191c38;
 	--destructive: var(--color-red-500);
 	--destructive-foreground: var(--color-red-700);
-	--foreground: #202b27;
+	--foreground: #191c38;
 	--info: var(--color-blue-500);
 	--info-foreground: var(--color-blue-700);
-	--input: #b7c4b9;
-	--muted: #e9eee8;
-	--muted-foreground: #606e65;
+	--input: #b9beda;
+	--muted: #e9ebf9;
+	--muted-foreground: #565c80;
 	--popover: #ffffff;
-	--popover-foreground: #202b27;
-	--primary: #17634f;
+	--popover-foreground: #191c38;
+	--primary: #5b3de0;
 	--primary-foreground: #ffffff;
-	--ring: #38856c;
-	--secondary: #e5ece4;
-	--secondary-foreground: #304d3b;
-	--success: var(--color-emerald-500);
-	--success-foreground: #17634f;
-	--table-rail: #d6e1d4;
-	--table-wordmark: #c4dbcd;
+	--ring: #7c6bff;
+	--secondary: #e9ebf9;
+	--secondary-foreground: #3a3f6b;
+	--success: var(--color-emerald-600);
+	--success-foreground: #0f7a52;
+	--table-rail: #d4d8f0;
+	--table-wordmark: #8e96cc;
 	--warning: var(--color-amber-500);
 	--warning-foreground: var(--color-amber-700);
-	--chart-1: var(--color-orange-600);
+	--chart-1: var(--color-violet-600);
 	--chart-2: var(--color-teal-600);
-	--chart-3: var(--color-cyan-900);
-	--chart-4: var(--color-amber-400);
+	--chart-3: var(--color-indigo-800);
+	--chart-4: var(--color-fuchsia-400);
 	--chart-5: var(--color-amber-500);
+	/* Superfícies de vidro (join/arena/home demo): blur + tinta translúcida. */
+	--glass: rgb(255 255 255 / 72%);
+	--glass-border: rgb(91 61 224 / 14%);
+	/* Aurora do fundo (só cor; geometria/animação em brand.css). */
+	--aurora-1: #7c6bff;
+	--aurora-2: #2fd4c4;
+	--aurora-3: #5b8cff;
+	--aurora-strength: 0.2;
+	/* Texto-gradiente do hero (paradas escuras o bastante para AA no papel). */
+	--gradient-text: linear-gradient(
+		100deg,
+		#5b3de0,
+		#7c3aed 48%,
+		#0f766e 92%
+	);
 	--code: var(--color-white);
 	--code-foreground: var(--foreground);
 	--code-highlight: --alpha(var(--color-black) / 4%);
@@ -58,44 +75,56 @@
 }
 
 .dark {
-	/* SSOT escuro (ex-brand.css). Não duplicar em outro arquivo. */
+	/* SSOT escuro. Não duplicar em outro arquivo. */
 	color-scheme: dark;
-	--accent: #2a3c30;
-	--accent-foreground: #ebf0e9;
-	--background: #141d19;
-	--border: #334439;
-	--card: #1b2721;
-	--card-foreground: #ebf0e9;
+	--accent: #232a58;
+	--accent-foreground: #ededf7;
+	--background: #0a0d1d;
+	--border: #2b3158;
+	--card: #131731;
+	--card-foreground: #ededf7;
 	--destructive: color-mix(
 		in srgb,
 		var(--color-red-500) 90%,
 		var(--color-white)
 	);
 	--destructive-foreground: var(--color-red-400);
-	--foreground: #ebf0e9;
+	--foreground: #ededf7;
 	--info: var(--color-blue-500);
 	--info-foreground: var(--color-blue-400);
-	--input: #556b5c;
-	--muted: #24332a;
-	--muted-foreground: #a8b6aa;
-	--popover: #1b2721;
-	--popover-foreground: #ebf0e9;
-	--primary: #a9d6ad;
-	--primary-foreground: #183523;
-	--ring: #8abb91;
-	--secondary: #2b3d30;
-	--secondary-foreground: #c8dfc8;
+	--input: #3d4478;
+	--muted: #1b2044;
+	--muted-foreground: #a2a8cf;
+	--popover: #131731;
+	--popover-foreground: #ededf7;
+	--primary: #6c5ce7;
+	--primary-foreground: #ffffff;
+	--ring: #a99bff;
+	--secondary: #1e2450;
+	--secondary-foreground: #c7ccf0;
 	--success: var(--color-emerald-500);
-	--success-foreground: #a9d6ad;
-	--table-rail: #394d3e;
-	--table-wordmark: #c4dbcd;
+	--success-foreground: #6ee7b7;
+	--table-rail: #262c55;
+	--table-wordmark: #8e96cc;
 	--warning: var(--color-amber-500);
 	--warning-foreground: var(--color-amber-400);
-	--chart-1: var(--color-blue-700);
-	--chart-2: var(--color-emerald-500);
+	--chart-1: var(--color-violet-500);
+	--chart-2: var(--color-teal-400);
 	--chart-3: var(--color-amber-500);
-	--chart-4: var(--color-purple-500);
-	--chart-5: var(--color-rose-500);
+	--chart-4: var(--color-fuchsia-400);
+	--chart-5: var(--color-rose-400);
+	--glass: rgb(19 23 49 / 66%);
+	--glass-border: rgb(169 155 255 / 18%);
+	--aurora-1: #6c5ce7;
+	--aurora-2: #2fd4c4;
+	--aurora-3: #4f6df5;
+	--aurora-strength: 0.5;
+	--gradient-text: linear-gradient(
+		100deg,
+		#c7bfff,
+		#8b7cff 48%,
+		#5eead4 92%
+	);
 	--code: color-mix(in srgb, var(--background) 98%, var(--color-white));
 	--code-foreground: var(--foreground);
 	--code-highlight: --alpha(var(--color-white) / 4%);
@@ -218,6 +247,9 @@
 	samp,
 	pre {
 		font-family: var(--font-mono);
+	}
+	::selection {
+		background: color-mix(in srgb, var(--primary) 28%, transparent);
 	}
 	#root {
 		isolation: isolate;
