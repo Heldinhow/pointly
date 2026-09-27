@@ -1238,6 +1238,58 @@ export function ArenaPage({
               </CardPanel>
             </Card>
           </PokerTable>
+          {/*
+            Sala vazia (solo): empty state do play area — ilustração animada,
+            orientação e CTA de convite antes do deck. O texto acessível segue
+            em `solo-hint` (mesmo testid de antes).
+          */}
+          {solo && !isRevealed ? (
+            <section
+              className="arena-solo"
+              data-testid="arena-solo"
+              aria-labelledby="arena-solo-title"
+            >
+              <div className="arena-solo-anim" aria-hidden="true">
+                <span className="arena-solo-anim__pulse" />
+                <span className="arena-solo-anim__card">5</span>
+                <span className="arena-solo-anim__card arena-solo-anim__card--b">
+                  <i className="arena-solo-anim__pattern" />
+                </span>
+                <span className="arena-solo-anim__card arena-solo-anim__card--c">
+                  8
+                </span>
+              </div>
+              <div className="arena-solo__copy">
+                <h2 id="arena-solo-title">{content.waiting.title}</h2>
+                <p data-testid="solo-hint" className="arena-solo-hint">
+                  <UsersIcon aria-hidden="true" />
+                  <span>
+                    {isSpectator
+                      ? content.waiting.soloSpectator
+                      : content.waiting.solo}
+                  </span>
+                </p>
+              </div>
+              <div className="arena-solo-cta">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  data-testid="solo-copy"
+                  onClick={() => {
+                    void handleCopy();
+                  }}
+                >
+                  {copied ? (
+                    <CheckIcon aria-hidden="true" />
+                  ) : (
+                    <CopyIcon aria-hidden="true" />
+                  )}
+                  {copied ? content.invite.copied : content.waiting.soloCopy}
+                </Button>
+              </div>
+            </section>
+          ) : null}
           <p className="arena-projectile-hint" data-testid="projectile-hint">
             {content.projectile.hint}
           </p>
@@ -1598,50 +1650,6 @@ export function ArenaPage({
                   ? content.waiting.spectatorBody
                   : content.waiting.body}
               </p>
-              {solo && (
-                <>
-                  {/* Sala vazia (solo): ilustração animada + CTA de convite.
-                      O hint acessível continua no texto abaixo (solo-hint). */}
-                  <div className="arena-solo-anim" aria-hidden="true">
-                    <span className="arena-solo-anim__pulse" />
-                    <span className="arena-solo-anim__card">5</span>
-                    <span className="arena-solo-anim__card arena-solo-anim__card--b">
-                      <i className="arena-solo-anim__pattern" />
-                    </span>
-                    <span className="arena-solo-anim__card arena-solo-anim__card--c">
-                      8
-                    </span>
-                  </div>
-                  <p data-testid="solo-hint" className="arena-solo-hint">
-                    <UsersIcon aria-hidden="true" />
-                    <span>
-                      {isSpectator
-                        ? content.waiting.soloSpectator
-                        : content.waiting.solo}
-                    </span>
-                  </p>
-                  <div className="arena-solo-cta">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      data-testid="solo-copy"
-                      onClick={() => {
-                        void handleCopy();
-                      }}
-                    >
-                      {copied ? (
-                        <CheckIcon aria-hidden="true" />
-                      ) : (
-                        <CopyIcon aria-hidden="true" />
-                      )}
-                      {copied
-                        ? content.invite.copied
-                        : content.waiting.soloCopy}
-                    </Button>
-                  </div>
-                </>
-              )}
             </div>
           )}
         </aside>

@@ -412,11 +412,49 @@
 .arena-waiting p + p {
   margin-top: 12px;
 }
-/* === Sala vazia (solo): ilustração animada + CTA de convite ========== */
+/* === Sala vazia (solo): empty state do play area com convite ========= */
+.arena-solo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  margin: 8px 0 14px;
+  padding: 18px 22px;
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+  backdrop-filter: blur(18px) saturate(1.35);
+  box-shadow: 0 30px 70px -50px color-mix(in srgb, var(--primary) 65%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .arena-solo {
+    animation: arena-solo-in 640ms var(--ease-out-quint, ease-out) 260ms backwards;
+  }
+}
+@keyframes arena-solo-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.arena-solo__copy h2 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.arena-solo__copy .arena-solo-hint {
+  margin: 0;
+}
 .arena-solo-anim {
   position: relative;
-  height: 104px;
-  margin: 4px 0 16px;
+  width: 118px;
+  height: 92px;
 }
 .arena-solo-anim__card {
   position: absolute;
@@ -424,20 +462,20 @@
   top: 14px;
   display: grid;
   place-items: center;
-  width: 52px;
-  height: 74px;
-  margin-left: -26px;
-  border-radius: 9px;
+  width: 44px;
+  height: 62px;
+  margin-left: -22px;
+  border-radius: 8px;
   border: 1px solid rgb(255 255 255 / 70%);
   background: linear-gradient(160deg, #ffffff, #e9ebf9);
   color: #191c38;
   font-family: var(--font-mono), monospace;
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   box-shadow:
     0 1px 0 rgb(255 255 255 / 80%) inset,
-    0 18px 30px -20px rgb(10 8 40 / 60%);
+    0 16px 26px -18px rgb(10 8 40 / 60%);
   animation: arena-solo-card 5.4s ease-in-out infinite;
 }
 .arena-solo-anim__card--b {
@@ -465,10 +503,10 @@
 .arena-solo-anim__pulse {
   position: absolute;
   left: 50%;
-  top: 52px;
-  width: 92px;
-  height: 92px;
-  margin: -46px 0 0 -46px;
+  top: 46px;
+  width: 80px;
+  height: 80px;
+  margin: -40px 0 0 -40px;
   border-radius: 50%;
   border: 1px dashed color-mix(in srgb, var(--primary) 45%, transparent);
   animation: arena-solo-pulse 5.4s ease-in-out infinite;
@@ -477,15 +515,15 @@
   0%,
   100% {
     rotate: -10deg;
-    translate: -24px 6px;
+    translate: -20px 6px;
   }
   33% {
     rotate: 3deg;
-    translate: 22px -4px;
+    translate: 18px -4px;
   }
   66% {
     rotate: 10deg;
-    translate: -4px 12px;
+    translate: -4px 10px;
   }
 }
 @keyframes arena-solo-pulse {
@@ -504,7 +542,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-  margin-top: 12px;
 }
 /* Janela de confirmação da nova rodada: barra de 2px que encolhe no ritmo
    exato de NEW_ROUND_CONFIRM_TIMEOUT_MS (duração via inline style, sem
@@ -530,7 +567,7 @@
 }
 /* Convite solo como orientação, não parágrafo solto: borda cheia + fill
    muted (sem side-stripe), ícone do sistema, texto em cor de frente. */
-.arena-waiting p.arena-solo-hint {
+p.arena-solo-hint {
   display: flex;
   gap: 10px;
   align-items: flex-start;
@@ -696,6 +733,14 @@ img.arena-spectator-avatar {
   }
   .arena-deck [data-slot="card-panel"] {
     padding-inline: 16px;
+  }
+  .arena-solo {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 16px;
+  }
+  .arena-solo-anim {
+    margin-inline: auto;
   }
   .arena-deck [data-slot="card-description"] {
     font-size: 14px;

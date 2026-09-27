@@ -46,7 +46,10 @@
     color-mix(in srgb, var(--primary) 30%, transparent),
     transparent 78%
   );
-  opacity: 0.7;
+  opacity: 0.5;
+}
+.dark .pt-home__hero-visual::before {
+  opacity: 0.75;
 }
 /* Cartas soltas flutuando ao redor da mesa (decorativas). */
 .pt-home__float-card {
@@ -88,9 +91,9 @@
   right: 7px;
 }
 .pt-home__float-card--a {
-  top: 2%;
-  right: 1%;
-  rotate: 9deg;
+  top: -2%;
+  left: 30%;
+  rotate: 8deg;
 }
 .pt-home__float-card--b {
   left: 1%;
@@ -950,18 +953,9 @@
     width: 33px;
     height: 33px;
   }
+  /* Cartas soltas competem com assentos no mobile: só desktop. */
   .pt-home__float-card {
-    width: 42px;
-    height: 62px;
-    font-size: 17px;
-  }
-  .pt-home__float-card--a {
-    top: 0;
-    right: 0;
-  }
-  .pt-home__float-card--b {
-    left: 0;
-    bottom: 2%;
+    display: none;
   }
   .pt-home h1 {
     font-size: clamp(32px, 7vw, 48px);
