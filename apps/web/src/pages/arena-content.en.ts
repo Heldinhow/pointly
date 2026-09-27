@@ -177,6 +177,7 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		body: "Cards stay hidden until the reveal. Pick with no influence from the team.",
 		solo: "You're alone. Copy the invite to bring the team in. You can vote alone to test the flow.",
 		soloSpectator: "You're alone. Copy the invite to bring the team in.",
+		soloCopy: "Copy invite link",
 	},
 	errors: {
 		genericAction: "Couldn't complete the action.",

@@ -4,23 +4,28 @@
   min-width: 0;
   height: 365px;
 }
+/* Feltro meia-noite (direção v2): gradiente violeta profundo com rail
+   escuro e profundidade interna; sem glow neon. */
 .poker-felt {
   position: absolute;
   z-index: 0;
   inset: 64px 45px;
   border: 10px solid var(--table-rail);
   border-radius: 180px;
-  background: radial-gradient(ellipse at 50% 35%, #246951, #154634);
+  background:
+    radial-gradient(ellipse at 50% 26%, rgb(255 255 255 / 9%), transparent 55%),
+    radial-gradient(ellipse at 50% 35%, #2b3069, #141838);
   box-shadow:
-    0 15px 30px -18px #143c3259,
-    inset 0 0 0 2px #ffffff13,
-    inset 0 5px 22px #08271d66;
+    0 26px 60px -30px rgb(76 61 214 / 38%),
+    inset 0 0 0 2px rgb(255 255 255 / 8%),
+    inset 0 5px 22px rgb(6 8 24 / 50%),
+    inset 0 -26px 48px rgb(0 0 0 / 26%);
 }
 .poker-felt::before {
   content: "";
   position: absolute;
   inset: 15px;
-  border: 1px dashed #ffffff29;
+  border: 1px dashed rgb(255 255 255 / 20%);
   border-radius: inherit;
   pointer-events: none;
 }
@@ -34,7 +39,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: #f2f7f3;
+  color: #eceefc;
 }
 .poker-seats {
   position: absolute;
@@ -56,6 +61,57 @@
   align-items: center;
   line-height: 1.3;
   color: var(--foreground);
+  /* Perspectiva local: o flip 3D da carta votada acontece aqui. */
+  perspective: 460px;
+}
+/* Cascata de entrada dos assentos (só transform/opacity). */
+.poker-seat:nth-child(1) {
+  --seat-i: 0;
+}
+.poker-seat:nth-child(2) {
+  --seat-i: 1;
+}
+.poker-seat:nth-child(3) {
+  --seat-i: 2;
+}
+.poker-seat:nth-child(4) {
+  --seat-i: 3;
+}
+.poker-seat:nth-child(5) {
+  --seat-i: 4;
+}
+.poker-seat:nth-child(6) {
+  --seat-i: 5;
+}
+.poker-seat:nth-child(7) {
+  --seat-i: 6;
+}
+.poker-seat:nth-child(8) {
+  --seat-i: 7;
+}
+.poker-seat:nth-child(9) {
+  --seat-i: 8;
+}
+.poker-seat:nth-child(10) {
+  --seat-i: 9;
+}
+.poker-seat:nth-child(11) {
+  --seat-i: 10;
+}
+.poker-seat:nth-child(12) {
+  --seat-i: 11;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .poker-seat {
+    animation: poker-seat-in 520ms var(--ease-out-quint, ease-out) backwards;
+    animation-delay: calc(var(--seat-i, 0) * 55ms + 120ms);
+  }
+}
+@keyframes poker-seat-in {
+  from {
+    opacity: 0;
+    scale: 0.72;
+  }
 }
 .poker-avatar {
   display: grid;
@@ -71,6 +127,9 @@
   box-shadow: 0 0 0 1px var(--border);
   font-size: 13px;
   font-weight: 650;
+  transition:
+    box-shadow 180ms var(--ease-out-quart, ease-out),
+    translate 180ms var(--ease-out-quart, ease-out);
 }
 /* Foto no mesmo círculo 44px: cover preenche sem deformar; o raio vai no
    img (overflow no pai cortaria a coroa do host, filha do círculo). */
@@ -109,7 +168,13 @@ button.poker-seat-target:focus-visible {
 }
 button.poker-seat-target:hover .poker-avatar,
 button.poker-seat-target[aria-expanded="true"] .poker-avatar {
-  box-shadow: 0 0 0 2px var(--primary);
+  box-shadow:
+    0 0 0 2px var(--primary),
+    0 14px 26px -14px color-mix(in srgb, var(--primary) 70%, transparent);
+}
+/* Lift sutil do avatar no hover do alvo interativo. */
+button.poker-seat-target:hover .poker-avatar {
+  translate: 0 -3px;
 }
 /* Affordance persistente: assentos interativos mostram anel primário sutil. */
 button.poker-seat-target .poker-avatar {
@@ -120,8 +185,8 @@ button.poker-seat-target .poker-avatar {
   z-index: 6;
 }
 .poker-seat--self .poker-avatar {
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: linear-gradient(160deg, #7c6bff, #5b3de0);
+  color: #ffffff;
   box-shadow: 0 0 0 2px var(--primary);
 }
 .poker-crown {
@@ -137,7 +202,7 @@ button.poker-seat-target .poker-avatar {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 5px;
-  box-shadow: 0 1px 3px rgb(20 40 30 / 25%);
+  box-shadow: 0 1px 3px rgb(6 8 24 / 35%);
 }
 .poker-name {
   position: relative;
@@ -148,7 +213,7 @@ button.poker-seat-target .poker-avatar {
   line-height: 1.5;
   max-width: 82px;
   padding: 0 8px;
-  background: var(--card);
+  background: color-mix(in srgb, var(--card) 88%, transparent);
   border: 1px solid var(--border);
   border-radius: 999px;
   white-space: nowrap;
@@ -164,7 +229,7 @@ button.poker-seat-target .poker-avatar {
   color: var(--muted-foreground);
   margin-top: 4px;
   white-space: nowrap;
-  background: var(--card);
+  background: color-mix(in srgb, var(--card) 88%, transparent);
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 1px 7px;
@@ -204,7 +269,7 @@ button.poker-seat-target .poker-avatar {
 .poker-seat--empty .poker-avatar {
   width: 35px;
   height: 35px;
-  background: var(--background);
+  background: color-mix(in srgb, var(--card) 30%, transparent);
   border: 1px dashed var(--input);
   box-shadow: none;
 }
@@ -228,12 +293,23 @@ button.poker-seat-target .poker-avatar {
   place-items: center;
   width: 27px;
   height: 38px;
-  border: 2px solid #e7eee8;
+  border: 2px solid rgb(255 255 255 / 34%);
   border-radius: 5px;
-  background: #286451;
-  box-shadow: 0 2px 4px #16392a30;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 2px,
+      rgb(255 255 255 / 14%) 2px,
+      rgb(255 255 255 / 14%) 3px
+    ),
+    #4b3fc4;
+  box-shadow:
+    0 3px 6px rgb(6 8 24 / 40%),
+    0 10px 18px -12px color-mix(in srgb, var(--primary) 70%, transparent);
   transform: rotate(12deg);
-  color: #1c4939;
+  transform-style: preserve-3d;
+  color: #191c38;
   font: 600 14px var(--font-mono);
 }
 /* Carta votada à frente do avatar, voltada ao centro da mesa: fileiras de
@@ -272,22 +348,44 @@ button.poker-seat-target .poker-avatar {
 .poker-card-pattern {
   position: absolute;
   inset: 3px;
-  border: 1px solid #ffffff55;
+  border: 1px solid rgb(255 255 255 / 55%);
   border-radius: 2px;
   background: repeating-linear-gradient(
     45deg,
     transparent,
     transparent 3px,
-    #ffffff18 3px,
-    #ffffff18 4px
+    rgb(255 255 255 / 18%) 3px,
+    rgb(255 255 255 / 18%) 4px
   );
 }
 .poker-played-card--dealt {
-  animation: card-flip 0.35s ease-out;
+  animation: card-flip 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 .poker-played-card--face {
-  background: #f3f5eb;
-  animation: card-reveal 0.35s ease-out;
+  background: #f4f5fc;
+  animation: card-reveal 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+@keyframes card-flip {
+  0% {
+    transform: rotateY(180deg) rotate(12deg) scale(0.86);
+  }
+  60% {
+    transform: rotateY(24deg) rotate(12deg) scale(1.08);
+  }
+  100% {
+    transform: rotateY(0) rotate(12deg) scale(1);
+  }
+}
+@keyframes card-reveal {
+  0% {
+    transform: rotateY(90deg) rotate(12deg) scale(0.9);
+  }
+  65% {
+    transform: rotateY(-14deg) rotate(12deg) scale(1.06);
+  }
+  100% {
+    transform: rotateY(0) rotate(12deg) scale(1);
+  }
 }
 .poker-table--compact {
   height: 330px;
@@ -298,22 +396,6 @@ button.poker-seat-target .poker-avatar {
 }
 .poker-table--compact .poker-center {
   inset: 24px;
-}
-@keyframes card-flip {
-  from {
-    transform: rotateY(180deg) rotate(12deg);
-  }
-  to {
-    transform: rotateY(0) rotate(12deg);
-  }
-}
-@keyframes card-reveal {
-  from {
-    transform: rotateY(90deg) rotate(12deg);
-  }
-  to {
-    transform: rotateY(0) rotate(12deg);
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .poker-played-card--dealt,

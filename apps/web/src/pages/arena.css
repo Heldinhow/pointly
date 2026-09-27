@@ -3,9 +3,16 @@
   flex-direction: column;
   gap: 24px;
 }
+/* Conexão/reconexão: vidro centrado com entrada sutil. */
 .arena-connection {
+  position: relative;
   width: min(100%, 560px);
   margin: clamp(32px, 8vh, 80px) auto;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  backdrop-filter: blur(22px) saturate(1.4);
+  box-shadow: 0 34px 80px -50px color-mix(in srgb, var(--primary) 65%, transparent);
 }
 .arena-connection [data-slot="card-title"] {
   font-size: 20px;
@@ -24,14 +31,22 @@
   align-items: center;
   gap: 15px;
 }
+/* Símbolo da sala em tile de gradiente (assinatura do topo). */
 .arena-room-symbol {
   display: grid;
   place-items: center;
   width: 44px;
   height: 44px;
-  border-radius: 12px;
-  color: var(--primary);
-  background: var(--secondary);
+  border-radius: 14px;
+  color: var(--primary-foreground);
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--primary) 78%, #ffffff),
+    var(--primary)
+  );
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 22%) inset,
+    0 16px 30px -18px color-mix(in srgb, var(--primary) 80%, transparent);
 }
 .arena-room-symbol svg {
   width: 21px;
@@ -50,6 +65,10 @@
 .arena-room-heading h1 span {
   font-family: var(--font-mono);
   letter-spacing: 0.02em;
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .arena-room-heading p {
   font-size: 12px;
@@ -60,11 +79,18 @@
   font-size: 12px;
   color: var(--muted-foreground);
 }
+/* Presença vira pílula de vidro. */
 .arena-live-status > span {
   display: flex;
   align-items: center;
   gap: 7px;
   white-space: nowrap;
+  padding: 5px 11px;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card) 55%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 .arena-live-status svg {
   width: 15px;
@@ -88,13 +114,14 @@
   color: var(--muted-foreground);
   padding: 0 8px 18px;
 }
+/* Centro da mesa: tokens locais para o feltro meia-noite. */
 .arena-reveal {
-  --foreground: #f2f7f3;
-  --muted-foreground: #c3dbce;
-  --card-foreground: #f2f7f3;
-  --primary: #eff4e9;
-  --primary-foreground: #164b36;
-  --border: #ffffff25;
+  --foreground: #eceefc;
+  --muted-foreground: #b9bee8;
+  --card-foreground: #eceefc;
+  --primary: #ffffff;
+  --primary-foreground: #4c32c8;
+  --border: rgb(255 255 255 / 24%);
   --ring: #ffffff;
   background: transparent;
   border: 0;
@@ -132,13 +159,13 @@
 .arena-reveal [data-slot="button"]:disabled {
   opacity: 1;
   background: transparent;
-  color: #c3dbce;
-  border: 1px dashed #ffffff40;
+  color: #b9bee8;
+  border: 1px dashed rgb(255 255 255 / 40%);
   box-shadow: none;
 }
 .arena-reveal [data-slot="card-panel"] > div > span {
   font-size: 12px;
-  color: #c3dbce;
+  color: #b9bee8;
 }
 /* História ativa no centro da mesa (#211): contexto persistente e compacto
    acima da pergunta. Título clampado em 2 linhas; critério em disclosure
@@ -238,10 +265,13 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+/* Deck em vidro: flutua sobre a aurora com borda luminosa. */
 .arena-deck {
-  border: 1px solid var(--border);
-  background: var(--card);
-  box-shadow: 0 8px 20px -16px #163c2d44;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+  backdrop-filter: blur(18px) saturate(1.35);
+  box-shadow: 0 30px 70px -48px color-mix(in srgb, var(--primary) 65%, transparent);
   gap: 0;
   margin-top: 10px;
 }
@@ -317,9 +347,14 @@
 .arena-sidebar [data-slot="card-header"] {
   padding: 5px 0 15px;
 }
+/* Títulos da sidebar em kicker mono (ritmo editorial moderno). */
 .arena-sidebar [data-slot="card-title"] {
-  font-size: 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
 }
 .arena-sidebar [data-slot="card-description"] {
   font-size: 14px;
@@ -377,6 +412,100 @@
 .arena-waiting p + p {
   margin-top: 12px;
 }
+/* === Sala vazia (solo): ilustração animada + CTA de convite ========== */
+.arena-solo-anim {
+  position: relative;
+  height: 104px;
+  margin: 4px 0 16px;
+}
+.arena-solo-anim__card {
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 74px;
+  margin-left: -26px;
+  border-radius: 9px;
+  border: 1px solid rgb(255 255 255 / 70%);
+  background: linear-gradient(160deg, #ffffff, #e9ebf9);
+  color: #191c38;
+  font-family: var(--font-mono), monospace;
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 80%) inset,
+    0 18px 30px -20px rgb(10 8 40 / 60%);
+  animation: arena-solo-card 5.4s ease-in-out infinite;
+}
+.arena-solo-anim__card--b {
+  border-color: rgb(255 255 255 / 30%);
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 3px,
+      rgb(255 255 255 / 14%) 3px,
+      rgb(255 255 255 / 14%) 4px
+    ),
+    linear-gradient(160deg, #7c6bff, #4436b8);
+  animation-delay: -1.8s;
+}
+.arena-solo-anim__card--c {
+  animation-delay: -3.6s;
+}
+.arena-solo-anim__pattern {
+  width: 58%;
+  height: 68%;
+  border: 1px solid rgb(255 255 255 / 55%);
+  border-radius: 4px;
+}
+.arena-solo-anim__pulse {
+  position: absolute;
+  left: 50%;
+  top: 52px;
+  width: 92px;
+  height: 92px;
+  margin: -46px 0 0 -46px;
+  border-radius: 50%;
+  border: 1px dashed color-mix(in srgb, var(--primary) 45%, transparent);
+  animation: arena-solo-pulse 5.4s ease-in-out infinite;
+}
+@keyframes arena-solo-card {
+  0%,
+  100% {
+    rotate: -10deg;
+    translate: -24px 6px;
+  }
+  33% {
+    rotate: 3deg;
+    translate: 22px -4px;
+  }
+  66% {
+    rotate: 10deg;
+    translate: -4px 12px;
+  }
+}
+@keyframes arena-solo-pulse {
+  0%,
+  100% {
+    scale: 0.92;
+    opacity: 0.55;
+  }
+  50% {
+    scale: 1.08;
+    opacity: 0.95;
+  }
+}
+.arena-solo-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
 /* Janela de confirmação da nova rodada: barra de 2px que encolhe no ritmo
    exato de NEW_ROUND_CONFIRM_TIMEOUT_MS (duração via inline style, sem
    duplicar o valor). Só transform; global reduced-motion já colapsa. */
@@ -408,7 +537,7 @@
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--secondary);
+  background: color-mix(in srgb, var(--secondary) 70%, transparent);
   color: var(--foreground);
   font-size: 14px;
   line-height: 1.6;
@@ -480,6 +609,13 @@ img.arena-spectator-avatar {
 }
 .arena-results [data-testid="stats-no-numerics"] {
   font-size: 14px;
+}
+/* Valor principal do resultado em texto-gradiente. */
+.arena-results [data-testid="stats-result-value"] {
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 @media (max-width: 1050px) {
   .arena-workspace {

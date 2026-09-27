@@ -187,6 +187,7 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		body: "As cartas ficam escondidas até a revelação. Escolha sem influência do time.",
 		solo: "Você está sozinho. Copie o convite para chamar o time. Dá para votar sozinho para testar o fluxo.",
 		soloSpectator: "Você está sozinho. Copie o convite para chamar o time.",
+		soloCopy: "Copiar link do convite",
 	},
 	errors: {
 		genericAction: "Não foi possível completar a ação.",

@@ -173,6 +173,7 @@ export type ArenaContent = {
 		body: string;
 		solo: string;
 		soloSpectator: string;
+		soloCopy: string;
 	};
 	errors: {
 		genericAction: string;
