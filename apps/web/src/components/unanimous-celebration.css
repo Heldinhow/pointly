@@ -1,4 +1,4 @@
-/* Celebração de Unânime (14.3): anel claro no contorno do feltro + confete
+/* Celebração de Unânime (14.3): anel cromático no contorno do tapete + confete
    CSS-only. Anima só `transform`/`opacity`; nada de glow/neon. */
 .unanimous-celebration {
   position: absolute;
@@ -10,7 +10,7 @@
   content: "";
   position: absolute;
   inset: -6px;
-  border: 2px solid #a9d6adb3;
+  border: 2px solid color-mix(in srgb, var(--chroma-violet) 42%, transparent);
   border-radius: inherit;
   animation: unanimous-ring 0.9s ease-out both;
 }

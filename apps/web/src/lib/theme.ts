@@ -7,20 +7,20 @@ const STORAGE_KEY = "pointly-theme";
 
 /**
  * Preferência real do navegador. Só pode rodar no cliente:
- * o primeiro render (pré-render/hidratação) é sempre "dark", determinístico;
+ * o primeiro render (pré-render/hidratação) é sempre "light", determinístico;
  * a preferência entra no efeito de mount. O script inline do index.html já
  * aplica a classe antes do paint, então não há flash de tema.
  */
 function preferredTheme(): Theme {
 	const stored = safeGet(STORAGE_KEY);
 	if (stored === "light" || stored === "dark") return stored;
-	return window.matchMedia("(prefers-color-scheme: light)").matches
-		? "light"
-		: "dark";
+	return window.matchMedia("(prefers-color-scheme: dark)").matches
+		? "dark"
+		: "light";
 }
 
 export function useTheme(): { theme: Theme; toggle: () => void } {
-	const [theme, setTheme] = useState<Theme>("dark");
+	const [theme, setTheme] = useState<Theme>("light");
 
 	useEffect(() => {
 		setTheme(preferredTheme());

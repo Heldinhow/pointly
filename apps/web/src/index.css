@@ -2,37 +2,55 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Fontes self-hosted (OFL; licenças em public/fonts/): Bricolage Grotesque
+   para display/corpo e Spline Sans Mono para códigos, votos e estimativas. */
+@font-face {
+	font-family: "Bricolage Grotesque";
+	src: url("/fonts/bricolage-grotesque-latin-wght.woff2") format("woff2");
+	font-weight: 200 800;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Spline Sans Mono";
+	src: url("/fonts/spline-sans-mono-latin-wght.woff2") format("woff2");
+	font-weight: 300 700;
+	font-style: normal;
+	font-display: swap;
+}
+
 :root {
 	color-scheme: light;
-	--font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
-	--font-mono: "Geist Mono", ui-monospace, monospace;
-	/* SSOT de cor (ex-brand.css): paleta verde produto. Não duplicar em outro arquivo. */
-	--radius: 0.75rem;
-	--accent: #e4ece4;
-	--accent-foreground: #202b27;
-	--background: #f4f6f3;
-	--border: #dce3db;
+	--font-sans: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+	--font-mono: "Spline Sans Mono", ui-monospace, monospace;
+	/* SSOT de cor (ex-brand.css): paleta Chromatic Playroom (claro-first).
+	   Não duplicar em outro arquivo. */
+	--radius: 0.875rem;
+	--accent: #eceae1;
+	--accent-foreground: #17171d;
+	--background: #f6f5f0;
+	--border: #e3e0d6;
 	--card: #ffffff;
-	--card-foreground: #202b27;
-	--destructive: var(--color-red-500);
+	--card-foreground: #17171d;
+	--destructive: var(--color-red-600);
 	--destructive-foreground: var(--color-red-700);
-	--foreground: #202b27;
-	--info: var(--color-blue-500);
+	--foreground: #17171d;
+	--info: var(--color-blue-600);
 	--info-foreground: var(--color-blue-700);
-	--input: #b7c4b9;
-	--muted: #e9eee8;
-	--muted-foreground: #606e65;
+	--input: #9c998c;
+	--muted: #edebe3;
+	--muted-foreground: #5f5e68;
 	--popover: #ffffff;
-	--popover-foreground: #202b27;
-	--primary: #17634f;
+	--popover-foreground: #17171d;
+	--primary: #2f3be0;
 	--primary-foreground: #ffffff;
-	--ring: #38856c;
-	--secondary: #e5ece4;
-	--secondary-foreground: #304d3b;
-	--success: var(--color-emerald-500);
-	--success-foreground: #17634f;
-	--table-rail: #d6e1d4;
-	--table-wordmark: #c4dbcd;
+	--ring: #3a43e8;
+	--secondary: #ece9e0;
+	--secondary-foreground: #2e2d36;
+	--success: var(--color-emerald-600);
+	--success-foreground: var(--color-emerald-700);
+	--table-rail: #dfdcd0;
+	--table-wordmark: #8f8d82;
 	--warning: var(--color-amber-500);
 	--warning-foreground: var(--color-amber-700);
 	--chart-1: var(--color-orange-600);
@@ -55,40 +73,57 @@
 	--sidebar-primary: var(--color-neutral-800);
 	--sidebar-primary-foreground: var(--color-neutral-50);
 	--sidebar-ring: var(--color-neutral-400);
+	/* Camada cromática: coral-violeta-ciano, reservada a momentos narrativos
+	   do produto (mesa, reveal, destaques de marca). Não vira fundo de página. */
+	--chroma-coral: #e8482f;
+	--chroma-violet: #6b46e5;
+	--chroma-cyan: #0e7f97;
+	/* Material das cartas jogadas (objeto de domínio, não tematiza com a página). */
+	--card-back: #1e1e28;
+	--card-face: #efece3;
+	--card-face-ink: #17171d;
+	--card-back-border: #3c3c46;
+	--card-ink: #f4f3ee;
+	--grad-spectral: linear-gradient(
+		100deg,
+		var(--chroma-coral) 0%,
+		var(--chroma-violet) 52%,
+		var(--chroma-cyan) 100%
+	);
 }
 
 .dark {
 	/* SSOT escuro (ex-brand.css). Não duplicar em outro arquivo. */
 	color-scheme: dark;
-	--accent: #2a3c30;
-	--accent-foreground: #ebf0e9;
-	--background: #141d19;
-	--border: #334439;
-	--card: #1b2721;
-	--card-foreground: #ebf0e9;
+	--accent: #23232b;
+	--accent-foreground: #efeee9;
+	--background: #101015;
+	--border: #2c2c36;
+	--card: #18181f;
+	--card-foreground: #efeee9;
 	--destructive: color-mix(
 		in srgb,
 		var(--color-red-500) 90%,
 		var(--color-white)
 	);
 	--destructive-foreground: var(--color-red-400);
-	--foreground: #ebf0e9;
+	--foreground: #efeee9;
 	--info: var(--color-blue-500);
 	--info-foreground: var(--color-blue-400);
-	--input: #556b5c;
-	--muted: #24332a;
-	--muted-foreground: #a8b6aa;
-	--popover: #1b2721;
-	--popover-foreground: #ebf0e9;
-	--primary: #a9d6ad;
-	--primary-foreground: #183523;
-	--ring: #8abb91;
-	--secondary: #2b3d30;
-	--secondary-foreground: #c8dfc8;
+	--input: #4a4a58;
+	--muted: #1f1f27;
+	--muted-foreground: #a6a5b0;
+	--popover: #18181f;
+	--popover-foreground: #efeee9;
+	--primary: #98a0ff;
+	--primary-foreground: #12122a;
+	--ring: #8b93ff;
+	--secondary: #26262f;
+	--secondary-foreground: #d5d4de;
 	--success: var(--color-emerald-500);
-	--success-foreground: #a9d6ad;
-	--table-rail: #394d3e;
-	--table-wordmark: #c4dbcd;
+	--success-foreground: var(--color-emerald-400);
+	--table-rail: #2e2e38;
+	--table-wordmark: #6c6a60;
 	--warning: var(--color-amber-500);
 	--warning-foreground: var(--color-amber-400);
 	--chart-1: var(--color-blue-700);
@@ -115,6 +150,13 @@
 	--sidebar-primary: var(--color-neutral-100);
 	--sidebar-primary-foreground: var(--color-neutral-800);
 	--sidebar-ring: var(--color-neutral-400);
+	--chroma-coral: #ff8570;
+	--chroma-violet: #a78bff;
+	--chroma-cyan: #4fc9de;
+	--card-back: #2a2a34;
+	--card-face: #f4f3ee;
+	--card-face-ink: #17171d;
+	--card-back-border: #4a4a58;
 }
 
 @theme inline {
@@ -124,6 +166,9 @@
 	--color-border: var(--border);
 	--color-card: var(--card);
 	--color-card-foreground: var(--card-foreground);
+	--color-chroma-coral: var(--chroma-coral);
+	--color-chroma-cyan: var(--chroma-cyan);
+	--color-chroma-violet: var(--chroma-violet);
 	--color-destructive: var(--destructive);
 	--color-destructive-foreground: var(--destructive-foreground);
 	--color-foreground: var(--foreground);

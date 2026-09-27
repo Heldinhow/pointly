@@ -1,42 +1,17 @@
-import { ArrowRightIcon, CoffeeIcon } from "lucide-react";
+import { ArrowRightIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import { RoundDemo } from "@/components/round-demo";
 import { Button } from "@/components/ui/button";
-import {
-  DECK_FACES,
-  LANDING_CONTENT,
-  type LandingContent,
-} from "@/pages/landing-content";
+import { LANDING_CONTENT, type LandingContent } from "@/pages/landing-content";
+import type { Lang } from "@/lib/i18n";
 import "./landing.css";
-
-function DeckStrip(): React.ReactElement {
-  return (
-    <div className="pt-landing__deck-stage" aria-hidden="true">
-      <ul className="pt-landing__deck" role="presentation">
-        {DECK_FACES.map((face) => (
-          <li
-            key={face}
-            className={
-              face === "☕"
-                ? "pt-landing__deck-card pt-landing__deck-card--pause"
-                : "pt-landing__deck-card"
-            }
-          >
-            {face === "☕" ? (
-              <CoffeeIcon aria-hidden="true" className="pt-landing__deck-icon" />
-            ) : (
-              face
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
 
 export function LandingPage({
   content,
+  lang = "pt-BR",
 }: {
   content: LandingContent;
+  lang?: Lang;
 }): React.ReactElement {
   return (
     <div className="pt-landing">
@@ -56,7 +31,9 @@ export function LandingPage({
             </div>
           </div>
           <div className="pt-landing__hero-visual">
-            <DeckStrip />
+            {/* Preview real: mesma rodada local da home, sem criar um segundo
+                caminho de conversão (CTA pós-reveal desligado). */}
+            <RoundDemo lang={lang} showCreate={false} />
             <p className="pt-landing__deck-note">{content.deckNote}</p>
           </div>
         </section>
@@ -171,9 +148,11 @@ export function ScrumPokerLandingPage(): React.ReactElement {
 }
 
 export function PlanningPokerEnPage(): React.ReactElement {
-  return <LandingPage content={LANDING_CONTENT.en["planning-poker"]} />;
+  return (
+    <LandingPage content={LANDING_CONTENT.en["planning-poker"]} lang="en" />
+  );
 }
 
 export function ScrumPokerEnPage(): React.ReactElement {
-  return <LandingPage content={LANDING_CONTENT.en["scrum-poker"]} />;
+  return <LandingPage content={LANDING_CONTENT.en["scrum-poker"]} lang="en" />;
 }

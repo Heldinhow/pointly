@@ -12,7 +12,7 @@
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--popover);
-  box-shadow: 0 12px 32px -12px rgb(20 40 30 / 35%);
+  box-shadow: 0 16px 36px -18px color-mix(in srgb, var(--foreground) 40%, transparent);
 }
 
 .projectile-menu > div {
@@ -111,7 +111,9 @@
 }
 
 .projectile-menu-item--epic .projectile-icon {
-  filter: drop-shadow(0 0 4px rgb(37 99 235 / 55%));
+  filter: drop-shadow(
+    0 0 4px color-mix(in srgb, var(--chroma-violet) 60%, transparent)
+  );
 }
 
 .projectile-menu-item .projectile-icon svg {

@@ -13,15 +13,15 @@ export function ProjectileIcon({ type }: { type: ProjectileType }): React.ReactE
     <span className="projectile-icon" aria-hidden="true">
       {type === "paper_ball" ? (
         <svg viewBox="0 0 40 40" fill="none">
-          <path d="m11 4 14-1 10 9 2 13-10 12-14-1L3 26 4 13Z" fill="#f3f5eb" stroke="#87968b" strokeWidth="1.5" />
-          <path d="m11 4 5 10-9 5 9 7-3 10m12-33-3 12 13-3M16 14l6 1-6 11 12-2 9 1m-9-1-1 13M7 19l-4 7m19-11 6 9" stroke="#b0baac" strokeWidth="1.5" strokeLinejoin="round" />
-          <path d="m16 14 6 1-6 11-9-7Zm12 10 9 1-10 12Z" fill="#d4dbce" fillOpacity=".65" />
+          <path d="m11 4 14-1 10 9 2 13-10 12-14-1L3 26 4 13Z" fill="#fbfaf6" stroke="#8e8b80" strokeWidth="1.5" />
+          <path d="m11 4 5 10-9 5 9 7-3 10m12-33-3 12 13-3M16 14l6 1-6 11 12-2 9 1m-9-1-1 13M7 19l-4 7m19-11 6 9" stroke="#b3b0a5" strokeWidth="1.5" strokeLinejoin="round" />
+          <path d="m16 14 6 1-6 11-9-7Zm12 10 9 1-10 12Z" fill="#d9d6cb" fillOpacity=".65" />
         </svg>
       ) : type === "paper_plane" ? (
         <svg viewBox="0 0 40 40" fill="none">
-          <path d="M3 4 38 20 3 36l7-16Z" fill="#f3f5eb" stroke="#87968b" strokeWidth="1.5" strokeLinejoin="round" />
-          <path d="m10 20 28 0L6 29Z" fill="#bac6b8" />
-          <path d="M3 4 10 20 38 20M10 20 3 36" stroke="#9caa98" strokeWidth="1.5" strokeLinejoin="round" />
+          <path d="M3 4 38 20 3 36l7-16Z" fill="#fbfaf6" stroke="#8e8b80" strokeWidth="1.5" strokeLinejoin="round" />
+          <path d="m10 20 28 0L6 29Z" fill="#c3c0b5" />
+          <path d="M3 4 10 20 38 20M10 20 3 36" stroke="#a29f94" strokeWidth="1.5" strokeLinejoin="round" />
         </svg>
       ) : type === "rock" ? (
         <svg viewBox="0 0 40 40" fill="none">
@@ -55,7 +55,7 @@ export function ProjectileIcon({ type }: { type: ProjectileType }): React.ReactE
           <path d="m18 13 5 32-8 30M46 8l4 29-2 29" stroke="#b7c3ca" strokeWidth="3" />
           <path d="m23 45 26-8 17 14M19 61l20 14m11-26 20 15" stroke="#46535c" strokeWidth="4" />
           <path d="m23 45 26-8 17 14M19 61l20 14m11-26 20 15" stroke="#a0afb9" strokeWidth="2" />
-          {/* Encosto estofado com espessura e contorno legíveis sobre o feltro. */}
+          {/* Encosto estofado com espessura e contorno legíveis sobre o tapete. */}
           <path d="M17 9 43 3q5-1 6 4l3 23q.5 4-3 5l-25 7q-5 1-6-4l-4-24q-1-4 3-5Z" fill="#171e24" stroke="#b8c5ce" strokeWidth="1.6" />
           <path d="m20 12 23-6q2-.5 2.5 2l3 21q.5 2-2 2.5l-23 6q-2 .5-2.5-2l-3-21q-.5-2 2-2.5Z" fill="#343e48" />
           <path d="m21 14 21-5M23 34l21-5" stroke="#64717d" strokeWidth="1" />

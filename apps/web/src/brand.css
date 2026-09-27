@@ -1,5 +1,5 @@
 /* Tokens de cor vivem em index.css (:root/.dark = SSOT). Este arquivo mantém
-   só layout/estrutura da marca para não duplicar :root. */
+   só layout/estrutura da marca: chrome do shell, geometria do Deck e motion. */
 :root {
   /* Curvas de easing do sistema (saída exponencial, sem bounce/elastic). */
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
@@ -10,6 +10,7 @@
 body {
   margin: 0;
   font-family: var(--font-sans);
+  font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
 }
 button,
@@ -23,7 +24,17 @@ a:focus-visible,
 summary:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 5px;
-  border-radius: 4px;
+  border-radius: 6px;
+}
+/* Foco visível também em controles (cartas do deck, botões, campos). Sem
+   border-radius aqui: o anel acompanha o raio do próprio elemento. */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
 }
 .site-header,
 .site-main,
@@ -34,7 +45,7 @@ summary:focus-visible {
   flex-shrink: 0;
   height: var(--header-h);
   border-bottom: 1px solid var(--border);
-  /* Navbar Origin do Coss, adaptado: header fixo com blur funcional no scroll. */
+  /* Navbar fixa com blur funcional no scroll (padrão adaptado do Coss). */
   position: sticky;
   top: 0;
   z-index: 30;
@@ -44,7 +55,7 @@ summary:focus-visible {
     border-color 200ms var(--ease-out-quart);
 }
 .site-header[data-scrolled="true"] {
-  background-color: color-mix(in srgb, var(--background) 86%, transparent);
+  background-color: color-mix(in srgb, var(--background) 84%, transparent);
   -webkit-backdrop-filter: blur(12px) saturate(1.25);
   backdrop-filter: blur(12px) saturate(1.25);
 }
@@ -60,7 +71,7 @@ summary:focus-visible {
   font-weight: 500;
   color: var(--muted-foreground);
 }
-/* Underline deslizante (só transform): hover, foco e rota ativa. */
+/* Underline espectral deslizante (só transform): hover, foco e rota ativa. */
 .site-nav nav a {
   position: relative;
   display: inline-flex;
@@ -75,7 +86,7 @@ summary:focus-visible {
   bottom: 0;
   height: 2px;
   border-radius: 2px;
-  background-color: var(--primary);
+  background: var(--grad-spectral);
   transform: scaleX(0);
   transform-origin: left center;
   transition: transform 200ms var(--ease-out-quint);
@@ -119,13 +130,14 @@ summary:focus-visible {
   }
 }
 .site-main {
-  padding-top: 32px;
+  padding-top: 28px;
   min-width: 0;
 }
 .site-footer {
+  position: relative;
   width: 100%;
   margin: 0 auto;
-  padding: 22px 32px;
+  padding: 26px 32px;
   border-top: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -133,6 +145,16 @@ summary:focus-visible {
   gap: 18px;
   font-size: 14px;
   color: var(--muted-foreground);
+}
+/* Fio espectral sobre a borda do rodapé: assinatura cromática discreta. */
+.site-footer::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: -1px;
+  height: 1px;
+  background: var(--grad-spectral);
+  opacity: 0.9;
 }
 .site-footer__nav {
   display: flex;
@@ -142,6 +164,8 @@ summary:focus-visible {
 .site-footer__nav a {
   color: var(--muted-foreground);
   text-decoration: none;
+  /* Alvo de toque ≥24px (WCAG 2.5.8) sem mexer no ritmo do rodapé. */
+  padding-block: 2px;
 }
 .site-footer__nav a:hover,
 .site-footer__nav a[aria-current="page"] {
@@ -149,52 +173,73 @@ summary:focus-visible {
   text-decoration: underline;
   text-underline-offset: 4px;
 }
+/* Deck assinatura: fichas de esmalte com pip cromático por faixa
+   (baixas coral, altas violeta, pausa ciano). */
 [data-testid="deck"] {
-  padding-top: 14px;
+  width: 100%;
+  padding-top: 16px;
 }
+/* A fileira compartilha a largura do container — sem min-content travando a
+   coluna do hero em telas médias. Grupos e cartas crescem juntos (piso 40px
+   de toque, teto 58px). */
 [data-testid="deck"] > div {
+  display: flex;
+  width: 100%;
+  justify-content: center;
   gap: 12px;
   flex-wrap: nowrap;
 }
 [data-testid="deck"] [role="group"] {
-  gap: 7px;
+  flex: 1 1 0;
+  min-width: 0;
+  justify-content: center;
+  gap: 8px;
 }
 [data-testid="deck"] button {
   position: relative;
-  width: clamp(44px, 4.8vw, 58px);
-  height: 80px;
-  border-radius: 9px;
-  font-size: 24px;
-  box-shadow: 0 3px 0 var(--border);
+  flex: 1 1 0;
+  width: auto;
+  min-width: 40px;
+  max-width: 58px;
+  height: 82px;
+  border-radius: 12px;
+  font-size: 25px;
+  font-weight: 500;
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--foreground) 10%, transparent);
 }
-[data-testid="deck"] button::before,
+[data-testid="deck"] [role="group"]:nth-child(1) button {
+  --pip: var(--chroma-coral);
+}
+[data-testid="deck"] [role="group"]:nth-child(2) button {
+  --pip: var(--chroma-violet);
+}
+[data-testid="deck"] [role="group"]:nth-child(3) button {
+  --pip: var(--chroma-cyan);
+}
 [data-testid="deck"] button::after {
   content: "";
   position: absolute;
+  top: 9px;
+  right: 9px;
   width: 5px;
   height: 5px;
-  border: 1px solid currentColor;
-  border-radius: 1px;
-  opacity: 0.5;
-}
-[data-testid="deck"] button::before {
-  top: 7px;
-  left: 7px;
-}
-[data-testid="deck"] button::after {
-  bottom: 7px;
-  right: 7px;
+  border-radius: 50%;
+  background: var(--pip, var(--muted-foreground));
 }
 [data-testid="deck"] button[aria-pressed="true"] {
-  box-shadow: 0 5px 0 color-mix(in srgb, var(--primary) 65%, var(--background));
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--primary) 55%, transparent);
+}
+[data-testid="deck"] button[aria-pressed="true"]::after {
+  background: var(--primary-foreground);
+  opacity: 0.85;
 }
 [data-testid="deck-hint"] {
-  margin-top: 9px;
-  font-size: 14px;
+  margin-top: 10px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
-/* Marca Pointly: pinwheel em swirl + wordmark em cascata (estilo Factory).
+/* Marca Pointly: pinwheel em swirl + wordmark em cascata.
    Só transform/opacity. `prefers-reduced-motion` colapsa via index.css (rede global). */
 .brand-lockup {
   display: inline-flex;
@@ -242,8 +287,8 @@ a:hover .brand-mark__spin {
   }
 }
 @media (max-width: 700px) {
-.site-main {
-    padding-top: 24px;
+  .site-main {
+    padding-top: 20px;
   }
   .site-nav {
     gap: 12px;
@@ -278,22 +323,17 @@ a:hover .brand-mark__spin {
   }
   [data-testid="deck"] button {
     width: 100%;
+    max-width: none;
+    min-width: 44px;
     height: 61px;
     font-size: 20px;
-    border-radius: 7px;
-  }
-  [data-testid="deck"] button::before,
-  [data-testid="deck"] button::after {
-    width: 3px;
-    height: 3px;
-  }
-  [data-testid="deck"] button::before {
-    top: 5px;
-    left: 5px;
+    border-radius: 9px;
   }
   [data-testid="deck"] button::after {
-    bottom: 5px;
-    right: 5px;
+    top: 6px;
+    right: 6px;
+    width: 4px;
+    height: 4px;
   }
 }
 @media (max-width: 380px) {

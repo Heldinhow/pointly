@@ -89,13 +89,6 @@
   padding: 0 8px 18px;
 }
 .arena-reveal {
-  --foreground: #f2f7f3;
-  --muted-foreground: #c3dbce;
-  --card-foreground: #f2f7f3;
-  --primary: #eff4e9;
-  --primary-foreground: #164b36;
-  --border: #ffffff25;
-  --ring: #ffffff;
   background: transparent;
   border: 0;
   border-radius: 0;
@@ -132,13 +125,13 @@
 .arena-reveal [data-slot="button"]:disabled {
   opacity: 1;
   background: transparent;
-  color: #c3dbce;
-  border: 1px dashed #ffffff40;
+  color: var(--muted-foreground);
+  border: 1px dashed color-mix(in srgb, var(--foreground) 24%, transparent);
   box-shadow: none;
 }
 .arena-reveal [data-slot="card-panel"] > div > span {
   font-size: 12px;
-  color: #c3dbce;
+  color: var(--muted-foreground);
 }
 /* História ativa no centro da mesa (#211): contexto persistente e compacto
    acima da pergunta. Título clampado em 2 linhas; critério em disclosure
@@ -241,7 +234,7 @@
 .arena-deck {
   border: 1px solid var(--border);
   background: var(--card);
-  box-shadow: 0 8px 20px -16px #163c2d44;
+  box-shadow: 0 18px 40px -30px color-mix(in srgb, var(--foreground) 30%, transparent);
   gap: 0;
   margin-top: 10px;
 }

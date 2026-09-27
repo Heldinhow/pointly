@@ -1,6 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#286451"/>
-  <g fill="#F3F5EB">
+  <title>Pointly</title>
+  <rect width="64" height="64" rx="14" fill="#2f3be0"/>
+  <g fill="#f6f5f0">
     <rect x="30.5" y="8" width="7" height="18" rx="3.5"/>
     <rect x="30.5" y="8" width="7" height="18" rx="3.5" transform="rotate(45 32 32)"/>
     <rect x="30.5" y="8" width="7" height="18" rx="3.5" transform="rotate(90 32 32)"/>

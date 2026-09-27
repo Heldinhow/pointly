@@ -7,12 +7,13 @@
   padding: 0 0 48px;
 }
 
-/* Hero: copy à esquerda, deck estático à direita (assimétrico, nunca centrado). */
+/* Hero: copy à esquerda, rodada real do produto à direita (assimétrico,
+   nunca centrado). */
 .pt-landing__hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
   align-items: center;
-  gap: 48px;
+  gap: clamp(32px, 4.5vw, 56px);
   padding: 40px 0 44px;
   border-bottom: 1px solid var(--border);
 }
@@ -77,52 +78,14 @@
   border-radius: 2px;
 }
 
-/* Deck estático: o baralho inteiro como assinatura visual do hero. */
+/* Preview real: o visual do hero é a própria rodada local (RoundDemo). */
 .pt-landing__hero-visual {
   min-width: 0;
 }
-.pt-landing__deck-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-.pt-landing__deck {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.pt-landing__deck-card {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: clamp(34px, 3vw, 42px);
-  height: clamp(48px, 4.2vw, 58px);
-  border: 1px solid #e7eee8;
-  border-radius: 9px;
-  background: #f3f5eb;
-  color: #202b27;
-  font-family: var(--font-mono), monospace;
-  font-size: clamp(15px, 1.4vw, 18px);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  box-shadow:
-    0 1px 0 rgb(255 255 255 / 70%) inset,
-    0 3px 0 rgb(0 0 0 / 22%),
-    0 14px 24px -18px rgb(0 0 0 / 55%);
-}
-.pt-landing__deck-icon {
-  width: 18px;
-  height: 18px;
-}
 .pt-landing__deck-note {
-  margin: 0;
+  margin: 14px 0 0;
   color: var(--muted-foreground);
-  font-size: 14px;
+  font-size: 13.5px;
   text-align: center;
 }
 
@@ -175,9 +138,19 @@
   border-top: 1px solid var(--border);
 }
 .pt-landing__steps li > span {
-  color: var(--primary);
+  color: var(--muted-foreground);
   font-family: var(--font-mono), monospace;
   font-size: 12px;
+  font-weight: 600;
+}
+.pt-landing__steps li:nth-child(1) > span {
+  color: var(--chroma-coral);
+}
+.pt-landing__steps li:nth-child(2) > span {
+  color: var(--chroma-violet);
+}
+.pt-landing__steps li:nth-child(3) > span {
+  color: var(--chroma-cyan);
 }
 .pt-landing__steps h3 {
   margin-top: 12px;
@@ -308,7 +281,9 @@
   }
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1150px) {
+  /* Duas colunas só quando a rodada real cabe na coluna; abaixo disso o hero
+     empilha (mesmo critério da home). */
   .pt-landing__hero {
     grid-template-columns: 1fr;
     gap: 28px;
@@ -366,19 +341,6 @@
   }
   .pt-landing__points {
     grid-template-columns: 1fr;
-  }
-  /* Baralho em uma linha só: 9 cartas × 32px + gaps cabem em 375px. */
-  .pt-landing__deck {
-    gap: 4px;
-  }
-  .pt-landing__deck-card {
-    width: 32px;
-    height: 46px;
-    font-size: 14px;
-  }
-  .pt-landing__deck-icon {
-    width: 15px;
-    height: 15px;
   }
   .pt-landing__prose {
     grid-template-columns: 1fr;

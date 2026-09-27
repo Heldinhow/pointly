@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { HomePage } from "./home";
 
@@ -19,31 +19,35 @@ describe("HomePage (ticket 10 — Inicial com demonstração)", () => {
 	test("proposta de valor e CTAs visíveis no topo sem rolagem", () => {
 		renderHome();
 
-		expect(screen.getByTestId("home-hero")).toBeTruthy();
-		expect(screen.getByTestId("home-hero").textContent).toMatch(
-			/Planning poker sem cadastro/,
-		);
+		const hero = screen.getByTestId("home-hero");
+		expect(hero.textContent).toMatch(/Planning poker sem cadastro/);
 		const create = screen.getByTestId("home-cta-create");
 		const join = screen.getByTestId("home-cta-join");
 		expect(create.closest("a")?.getAttribute("href")).toBe("/join");
 		expect(join.closest("a")?.getAttribute("href")).toBe("/join?mode=join");
-		// Hero vem antes da demo na ordem do documento (acima da dobra).
-		const hero = screen.getByTestId("home-hero");
-		const demo = screen.getByTestId("demo");
-		expect(
-			hero.compareDocumentPosition(demo) &
-				Node.DOCUMENT_POSITION_FOLLOWING,
-		).toBeTruthy();
+		// A rodada real compõe o primeiro fold: o alvo #demo vive no hero.
+		expect(within(hero).getByTestId("demo")).toBeTruthy();
 	});
 
-	test("hero tem copy + visual estático, sem rodada interativa duplicada", () => {
+	test("demo real compõe o hero; palco estático e tilt foram aposentados", () => {
 		renderHome();
 
-		expect(screen.getByTestId("home-hero")).toBeTruthy();
-		expect(screen.queryByTestId("hero-round")).toBeNull();
-		const visual = screen.getByTestId("home-hero-visual");
-		expect(visual.getAttribute("aria-hidden")).toBe("true");
-		expect(visual.querySelector("button")).toBeNull();
+		const hero = screen.getByTestId("home-hero");
+
+		// Existe apenas uma rodada local, e ela está no hero.
+		expect(screen.getAllByTestId("deck")).toHaveLength(1);
+		expect(within(hero).getByTestId("deck")).toBeTruthy();
+		expect(within(hero).getByTestId("deck-card-5")).toBeTruthy();
+
+		// O alvo #demo continua existindo e aponta para a rodada real.
+		const demo = screen.getByTestId("demo");
+		expect(demo.getAttribute("id")).toBe("demo");
+		expect(within(demo).getByTestId("deck")).toBeTruthy();
+
+		// Sem a antiga ilustração CSS de feltro/fan nem tilt pointer-driven.
+		expect(screen.queryByTestId("home-hero-visual")).toBeNull();
+		expect(hero.querySelector(".pt-home__felt")).toBeNull();
+		expect(hero.querySelector("[data-tilt-stage]")).toBeNull();
 	});
 
 	test("estado inicial: deck presente, reveal bloqueado, sem stats", () => {

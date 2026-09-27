@@ -291,9 +291,20 @@
 }
 
 .pt-guide__closing {
+  position: relative;
   margin-top: 48px;
   padding-top: 40px;
   border-top: 1px solid var(--border);
+}
+.pt-guide__closing::before,
+.pt-guides-hub__closing::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: -1px;
+  height: 1px;
+  background: var(--grad-spectral);
+  opacity: 0.8;
 }
 .pt-guide__closing > p {
   max-width: 52ch;
@@ -394,6 +405,7 @@
   letter-spacing: 0.02em;
 }
 .pt-guides-hub__closing {
+  position: relative;
   margin-top: 48px;
   padding-top: 40px;
   border-top: 1px solid var(--border);

@@ -1,33 +1,47 @@
 <!doctype html>
-<html lang="pt-BR" class="dark">
+<html lang="pt-BR">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<!-- description/OG/Twitter/canonical por rota são injetados no build
 		     (vite-prerender-plugin + src/seo/routes.ts). Esta é a base do shell. -->
-		<meta name="theme-color" content="#F4F6F3" media="(prefers-color-scheme: light)" />
-		<meta name="theme-color" content="#141D19" media="(prefers-color-scheme: dark)" />
+		<meta name="theme-color" content="#F6F5F0" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#101015" media="(prefers-color-scheme: dark)" />
 		<link rel="icon" href="/favicon.ico" sizes="any" />
 		<link rel="icon" type="image/svg+xml" href="/icon.svg" />
 		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
 		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 		<link rel="manifest" href="/site.webmanifest" />
+		<link
+			rel="preload"
+			href="/fonts/bricolage-grotesque-latin-wght.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
+		<link
+			rel="preload"
+			href="/fonts/spline-sans-mono-latin-wght.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
 		<title>Pointly — Planning poker sem cadastro</title>
 		<script>
 			try {
 				var stored = localStorage.getItem("pointly-theme");
 				if (
-					stored === "light" ||
-					(stored !== "dark" &&
-						window.matchMedia("(prefers-color-scheme: light)").matches)
+					stored === "dark" ||
+					(stored !== "light" &&
+						window.matchMedia("(prefers-color-scheme: dark)").matches)
 				) {
-					document.documentElement.classList.remove("dark");
-				} else {
 					document.documentElement.classList.add("dark");
+				} else {
+					document.documentElement.classList.remove("dark");
 				}
 			} catch (e) {
-				document.documentElement.classList.add("dark");
+				document.documentElement.classList.remove("dark");
 			}
 		</script>
 	</head>

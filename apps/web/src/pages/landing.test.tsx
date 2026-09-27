@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import type { LandingId, Lang } from "./landing-content";
 import { LANDING_CONTENT } from "./landing-content";
@@ -96,6 +96,18 @@ describe("Landings de aquisição (15.T5/T6 — pt + EN)", () => {
         .map((link) => link.getAttribute("href"));
       expect(createLinks.length).toBeGreaterThanOrEqual(3);
       expect(new Set(createLinks)).toEqual(new Set(["/join"]));
+
+      // Preview real (rodada local do Pointly) já no primeiro fold, sem mock:
+      // dá para votar e revelar dentro do hero.
+      const hero = screen.getByTestId("landing-hero");
+      expect(within(hero).getByTestId("deck")).toBeTruthy();
+      fireEvent.click(within(hero).getByTestId("deck-card-5"));
+      const reveal = within(hero).getByTestId("demo-reveal") as HTMLButtonElement;
+      expect(reveal.disabled).toBe(false);
+      fireEvent.click(reveal);
+      expect(within(hero).getByTestId("stats-pill")).toBeTruthy();
+      // O preview não adiciona um segundo caminho de conversão.
+      expect(within(hero).queryAllByTestId("demo-create")).toHaveLength(0);
 
       // Link interno para a landing irmã e para o hub de guias.
       expect(

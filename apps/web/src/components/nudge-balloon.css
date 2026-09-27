@@ -17,7 +17,7 @@
   border-radius: 9999px;
   background: var(--popover);
   color: var(--popover-foreground);
-  box-shadow: 0 8px 20px -8px rgb(20 40 30 / 35%);
+  box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--foreground) 40%, transparent);
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
