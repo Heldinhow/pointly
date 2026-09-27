@@ -134,9 +134,13 @@ export function HomePage({
         <section className="pt-home__hero" data-testid="home-hero">
           <div className="pt-home__hero-copy">
             <h1>
-              {content.hero.h1Lead}
+              <span className="pt-home__hero-line">
+                {content.hero.h1Lead}
+              </span>
               <br />
-              <em>{content.hero.h1Em}</em>
+              <span className="pt-home__hero-line pt-home__hero-line--em">
+                <em className="text-gradient">{content.hero.h1Em}</em>
+              </span>
             </h1>
             <p className="pt-home__hero-lede">{content.hero.lede}</p>
             <div className="pt-home__hero-actions">
@@ -165,6 +169,12 @@ export function HomePage({
             aria-hidden="true"
             ref={visualRef}
           >
+            <span className="pt-home__float-card pt-home__float-card--a">
+              13
+            </span>
+            <span className="pt-home__float-card pt-home__float-card--b">
+              <i className="pt-home__float-pattern" />
+            </span>
             <div className="pt-home__table-stage" data-tilt-stage>
               <div className="pt-home__felt">
                 <span className="pt-home__felt-kicker">
