@@ -1289,7 +1289,7 @@ export function ArenaPage({
                           )}
                           <span
                             data-testid="stats-result-value"
-                            className="font-mono text-4xl font-semibold tabular-nums"
+                            className="arena-verdict-value font-mono text-4xl font-semibold tabular-nums"
                           >
                             {formatMedian(consensus.median)}
                           </span>

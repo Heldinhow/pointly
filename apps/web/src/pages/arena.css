@@ -139,7 +139,15 @@
   .arena-play-area
     .poker-table:not(.poker-table--compact)
     .poker-center:has(.arena-reveal[data-revealed="true"]) {
-    inset: 48px 14px;
+    inset: 36px 12px;
+  }
+  /* O centro do feltro tem ~224px de largura no mobile: o veredito e as
+     ações empilham, então o conjunto afina (gap e mediana). */
+  .arena-reveal {
+    gap: 6px;
+  }
+  .arena-verdict-value {
+    font-size: 1.875rem;
   }
 }
 .arena-avatar-toggle {
