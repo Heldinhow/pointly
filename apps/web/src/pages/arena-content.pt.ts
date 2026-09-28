@@ -50,7 +50,6 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		announce: (titulo) => `História ativa: ${titulo}`,
 	},
 	reveal: {
-		titleRevealed: "Cartas na mesa",
 		titleReady: "Vamos revelar?",
 		titleVoting: "Qual é a sua estimativa?",
 		descRevealed: "Votos revelados. Discutam as diferenças.",
@@ -58,6 +57,10 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		descCanReveal: "Já temos votos. Qualquer pessoa pode revelar.",
 		descWaiting:
 			"Aguardando o primeiro voto. Escolha uma carta para começar.",
+		titleAwaitingStory: "Comece pela pauta",
+		descAwaitingStory:
+			"Adicione ou selecione uma história na Pauta para liberar as cartas.",
+		awaitingStoryCta: "Adicionar história",
 		reveal: "Revelar votos",
 		revealAria: "Revelar votos (atalho R)",
 		revealAriaWaiting: "Aguardando votos para revelar",
@@ -105,6 +108,7 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		addLabel: "Nova história",
 		tituloLabel: "Título",
 		tituloPlaceholder: "Ex.: Checkout PIX",
+		starterTitle: "História 1",
 		criterioToggle: "Adicionar critério",
 		criterioToggleOpen: "Ocultar critério",
 		criterioLabel: "Critério",
@@ -141,6 +145,7 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		watching: " · Assistindo",
 		selfHost: " · Host da sala",
 		hostLead: " · Host: ",
+		avatarToggle: "Trocar foto",
 		avatarErrorTitle: "Não foi possível trocar a foto",
 		avatarError: "Não foi possível trocar a foto. Tente de novo.",
 		spectators: (count) => `Assistindo (${count}):`,
@@ -158,9 +163,6 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		show: "Mostrar convite",
 	},
 	results: {
-		title: "Resultados",
-		description:
-			"Média, mediana, menor e maior estimativa · pausa e ausência ficam fora dos cálculos.",
 		unanimous: "Unânime",
 		noNumerics: "Sem votos numéricos",
 		single: "Voto único",

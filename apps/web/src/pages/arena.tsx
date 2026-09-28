@@ -1,4 +1,5 @@
 import {
+  CameraIcon,
   CheckIcon,
   ChevronDownIcon,
   CopyIcon,
@@ -6,6 +7,7 @@ import {
   EyeIcon,
   EyeOffIcon,
   LogOutIcon,
+  PlusIcon,
   RotateCcwIcon,
   UsersIcon,
 } from "lucide-react";
@@ -248,6 +250,8 @@ export function ArenaPage({
   const [rejoinError, setRejoinError] = useState<string | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
   const rejoinKeyRef = useRef<string | null>(null);
+  /** Critique P0: sala nova nasce jogável — semente consumida 1× por sala. */
+  const seededRef = useRef<string | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resultsCopyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const newRoundTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -579,6 +583,14 @@ export function ArenaPage({
     return `${window.location.origin}/join?code=${sala.code}`;
   }, [sala]);
 
+  // Critique P0: consome a marca da sala recém-criada quando o primeiro
+  // estado chega — a história-semente destrava o deck antes de qualquer
+  // digitação. Roda a cada estado; o ref garante uma vez por sala.
+  useEffect(() => {
+    seedStarterStory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sala]);
+
   // Celebração de Unânime (14.3): dispara só na transição ao vivo para
   // `revealed` com sinal unânime (14.1). O sinal é estado; a celebração é o
   // evento do reveal — edição pós-reveal, reload e join não re-disparam.
@@ -818,6 +830,56 @@ export function ArenaPage({
     const sent = sendPauta((live) => live.addHistoria(input));
     if (sent) setHistoriaError(null);
     return sent;
+  }
+
+  /**
+   * Critique P0: o `/join` marca a criação da sala em `sessionStorage`;
+   * a primeira conexão da arena cria a história-semente — uma vez por
+   * sala, só para quem criou, nunca re-semeada depois de apagada.
+   */
+  function seedStarterStory(): boolean {
+    if (!sala || isSpectator || seededRef.current === sala.code) return false;
+    const key = `pointly-seed:${sala.code}`;
+    let pending = false;
+    try {
+      pending = window.sessionStorage.getItem(key) === "1";
+    } catch {
+      pending = false;
+    }
+    if (!pending) return false;
+    const clear = (): void => {
+      try {
+        window.sessionStorage.removeItem(key);
+      } catch {
+        // sessionStorage indisponível: a semente é só um atalho.
+      }
+    };
+    if ((sala.pauta?.length ?? 0) > 0) {
+      seededRef.current = sala.code;
+      clear();
+      return false;
+    }
+    const sent = handleHistoriaAdd({ titulo: content.pauta.starterTitle });
+    if (sent) {
+      seededRef.current = sala.code;
+      clear();
+    }
+    return sent;
+  }
+
+  /** Critique P0: leva foco e scroll ao formulário da pauta. */
+  function handleGoToPauta(): void {
+    const input = document.querySelector<HTMLInputElement>(
+      '[data-testid="pauta-novo-titulo"]',
+    );
+    if (!input) return;
+    const reduce =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    input.scrollIntoView({
+      block: "center",
+      behavior: reduce ? "auto" : "smooth",
+    });
+    input.focus();
   }
 
   function handleHistoriaUpdate(
@@ -1131,26 +1193,45 @@ export function ArenaPage({
                   ) : null}
                 </div>
               ) : null}
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {isRevealed
-                    ? content.reveal.titleRevealed
-                    : isReadyToReveal
-                      ? content.reveal.titleReady
-                      : content.reveal.titleVoting}
-                </CardTitle>
-                <CardDescription data-testid="reveal-hint" aria-live="polite">
-                  {isRevealed
-                    ? content.reveal.descRevealed
-                    : isReadyToReveal
-                      ? content.reveal.descReady
-                      : canReveal
-                        ? content.reveal.descCanReveal
-                        : content.reveal.descWaiting}
-                </CardDescription>
-              </CardHeader>
+              {/* No revelado o veredito ocupa o lugar do header: o centro do
+                  feltro tem 199px úteis e as três camadas não convivem. */}
+              {!isRevealed ? (
+                <CardHeader>
+                  <CardTitle className="text-base">
+                    {awaitingStory
+                      ? content.reveal.titleAwaitingStory
+                      : isReadyToReveal
+                        ? content.reveal.titleReady
+                        : content.reveal.titleVoting}
+                  </CardTitle>
+                  <CardDescription
+                    data-testid="reveal-hint"
+                    aria-live="polite"
+                  >
+                    {awaitingStory
+                      ? content.reveal.descAwaitingStory
+                      : isReadyToReveal
+                        ? content.reveal.descReady
+                        : canReveal
+                          ? content.reveal.descCanReveal
+                          : content.reveal.descWaiting}
+                  </CardDescription>
+                </CardHeader>
+              ) : null}
               <CardPanel className="flex flex-col gap-3">
-                {!isRevealed && (
+                {awaitingStory && !isSpectator ? (
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <Button
+                      type="button"
+                      data-testid="felt-add-story"
+                      onClick={handleGoToPauta}
+                    >
+                      <PlusIcon aria-hidden="true" />
+                      {content.reveal.awaitingStoryCta}
+                    </Button>
+                  </div>
+                ) : null}
+                {!isRevealed && !awaitingStory && (
                   <div className="flex flex-wrap items-center gap-2">
                     <Button
                       type="button"
@@ -1177,47 +1258,201 @@ export function ArenaPage({
                   </div>
                 )}
                 {isRevealed && (
-                  <div className="flex flex-col items-center gap-2">
-                    <Button
-                      type="button"
-                      data-testid="new-round-button"
-                      data-confirming={confirmingNewRound ? "true" : "false"}
-                      variant={
-                        confirmingNewRound ? "destructive-outline" : "default"
-                      }
-                      onClick={handleNewRoundRequest}
-                      aria-keyshortcuts="n"
-                      aria-label={
-                        confirmingNewRound
-                          ? content.reveal.newRoundAriaConfirm
-                          : content.reveal.newRoundAria
-                      }
-                    >
-                      <RotateCcwIcon aria-hidden="true" />
-                      {confirmingNewRound
-                        ? content.reveal.newRoundConfirm
-                        : content.reveal.newRound}
-                    </Button>
-                    <span
-                      data-testid="new-round-hint"
+                  <>
+                    <output
                       aria-live="polite"
-                      className="text-xs text-muted-foreground"
+                      aria-label={resultsAriaLabel}
+                      data-testid="stats-pill"
+                      data-stats-unanimous={isUnanimousSignal ? "true" : "false"}
+                      className="arena-reveal-verdict flex w-full flex-col items-center gap-2"
                     >
-                      {confirmingNewRound
-                        ? content.reveal.newRoundHintConfirm
-                        : content.reveal.newRoundHint}
-                    </span>
-                    {confirmingNewRound ? (
-                      <span
-                        data-testid="new-round-countdown"
-                        aria-hidden="true"
-                        className="arena-confirm-countdown"
-                        style={{
-                          animationDuration: `${NEW_ROUND_CONFIRM_TIMEOUT_MS}ms`,
-                        }}
-                      />
-                    ) : null}
-                  </div>
+                      <div className="flex flex-wrap items-center justify-center gap-5">
+                        <div className="flex flex-col items-center gap-1">
+                          {isUnanimousSignal ? (
+                            <span
+                              data-testid="stats-unanimous-badge"
+                              className="rounded-full bg-success/12 px-2.5 py-0.5 font-mono text-xs tracking-widest text-success-foreground uppercase"
+                            >
+                              {content.results.unanimous}
+                            </span>
+                          ) : (
+                            <span
+                              data-testid="stats-eyebrow"
+                              className="text-xs text-muted-foreground"
+                            >
+                              {noNumerics
+                                ? content.results.noNumerics
+                                : isSingleNumeric
+                                  ? content.results.single
+                                  : content.results.median}
+                            </span>
+                          )}
+                          <span
+                            data-testid="stats-result-value"
+                            className="font-mono text-4xl font-semibold tabular-nums"
+                          >
+                            {formatMedian(consensus.median)}
+                          </span>
+                        </div>
+                        <span
+                          aria-hidden="true"
+                          className="h-12 w-px shrink-0 bg-border"
+                        />
+                        <div className="flex min-w-0 flex-col items-start gap-1.5">
+                          <span
+                            data-testid="stats-caption"
+                            className="text-sm text-muted-foreground"
+                          >
+                            {content.results.mean}{" "}
+                            <span
+                              data-testid="stats-mean-value"
+                              className="font-mono text-foreground tabular-nums"
+                            >
+                              {formatMean(consensus.mean)}
+                            </span>{" "}
+                            · {content.results.range}{" "}
+                            <span
+                              data-testid="stats-range-value"
+                              className="font-mono text-foreground tabular-nums"
+                            >
+                              {formatRange(consensus.range)}
+                            </span>
+                          </span>
+                          {voteGroups.length > 0 ? (
+                            <span
+                              data-testid="stats-distribution"
+                              className="flex flex-wrap gap-1.5"
+                            >
+                              {voteGroups.map((group) => (
+                                <span
+                                  key={group.value}
+                                  data-testid={`stats-pip-${group.value}`}
+                                  title={content.results.pipTitle(
+                                    group.count,
+                                    group.value,
+                                  )}
+                                  className="rounded-full bg-muted px-2 py-0.5 font-mono text-xs tabular-nums"
+                                >
+                                  {group.count}×{group.value}
+                                </span>
+                              ))}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                      {noNumerics ? (
+                        <p
+                          data-testid="stats-no-numerics"
+                          className="text-sm text-muted-foreground"
+                        >
+                          {content.results.noNumericsNote}
+                        </p>
+                      ) : null}
+                      {justifyPlayer ? (
+                        <p
+                          role="status"
+                          data-testid="justify-line"
+                          className="flex items-center gap-1.5 text-sm text-muted-foreground"
+                        >
+                          <DicesIcon
+                            aria-hidden="true"
+                            className="size-4 shrink-0"
+                          />
+                          {content.results.justifyLead}
+                          <strong className="font-semibold text-foreground">
+                            {justifyPlayer.nick}
+                          </strong>
+                        </p>
+                      ) : null}
+                    </output>
+                    <p
+                      data-testid="reveal-hint"
+                      aria-live="polite"
+                      className="arena-reveal-caption"
+                    >
+                      {content.reveal.descRevealed}
+                    </p>
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                          <Button
+                            type="button"
+                            data-testid="new-round-button"
+                            data-confirming={confirmingNewRound ? "true" : "false"}
+                            variant={
+                              confirmingNewRound
+                                ? "destructive-outline"
+                                : "default"
+                            }
+                            onClick={handleNewRoundRequest}
+                            aria-keyshortcuts="n"
+                            aria-label={
+                              confirmingNewRound
+                                ? content.reveal.newRoundAriaConfirm
+                                : content.reveal.newRoundAria
+                            }
+                          >
+                            <RotateCcwIcon aria-hidden="true" />
+                            {confirmingNewRound
+                              ? content.reveal.newRoundConfirm
+                              : content.reveal.newRound}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            data-testid="copy-results-button"
+                            disabled={noNumerics}
+                            onClick={() => {
+                              void handleCopyResults();
+                            }}
+                          >
+                            {resultsCopied ? (
+                              <CheckIcon aria-hidden="true" />
+                            ) : (
+                              <CopyIcon aria-hidden="true" />
+                            )}
+                            {resultsCopied
+                              ? content.results.copied
+                              : content.results.copy}
+                          </Button>
+                        </div>
+                        <span
+                          data-testid="new-round-hint"
+                          aria-live="polite"
+                          className="text-xs text-muted-foreground"
+                        >
+                          {confirmingNewRound
+                            ? content.reveal.newRoundHintConfirm
+                            : content.reveal.newRoundHint}
+                        </span>
+                      </div>
+                      <div aria-live="polite" className="min-h-5 text-sm">
+                        {resultsCopied ? (
+                          <span
+                            className="text-success-foreground"
+                            data-testid="copy-results-feedback"
+                          >
+                            {content.results.copyFeedback}
+                          </span>
+                        ) : null}
+                        {resultsCopyError ? (
+                          <span className="text-destructive-foreground">
+                            {content.results.copyError}
+                          </span>
+                        ) : null}
+                      </div>
+                      {confirmingNewRound ? (
+                        <span
+                          data-testid="new-round-countdown"
+                          aria-hidden="true"
+                          className="arena-confirm-countdown"
+                          style={{
+                            animationDuration: `${NEW_ROUND_CONFIRM_TIMEOUT_MS}ms`,
+                          }}
+                        />
+                      ) : null}
+                    </div>
+                  </>
                 )}
                 {revealError ? (
                   <Alert variant="error">
@@ -1319,12 +1554,23 @@ export function ArenaPage({
               </>
             ) : null}
           </div>
-          <AvatarPicker
-            value={self?.avatar ?? null}
-            onChange={handleAvatarChange}
-            compact
-            lang={lang}
-          />
+          <Collapsible>
+            <CollapsibleTrigger
+              className="arena-avatar-toggle"
+              data-testid="avatar-toggle"
+            >
+              <CameraIcon aria-hidden="true" />
+              {content.sidebar.avatarToggle}
+            </CollapsibleTrigger>
+            <CollapsiblePanel>
+              <AvatarPicker
+                value={self?.avatar ?? null}
+                onChange={handleAvatarChange}
+                compact
+                lang={lang}
+              />
+            </CollapsiblePanel>
+          </Collapsible>
           {avatarError ? (
             <Alert variant="error">
               <AlertTitle>{content.sidebar.avatarErrorTitle}</AlertTitle>
@@ -1356,159 +1602,6 @@ export function ArenaPage({
                 </strong>
               </span>
             </div>
-          ) : null}
-          {isRevealed ? (
-            <Card className="arena-results">
-              <CardHeader>
-                <CardTitle className="text-base">{content.results.title}</CardTitle>
-                <CardDescription>
-                  {content.results.description}
-                </CardDescription>
-              </CardHeader>
-              <CardPanel>
-                <output
-                  aria-live="polite"
-                  aria-label={resultsAriaLabel}
-                  data-testid="stats-pill"
-                  data-stats-unanimous={isUnanimousSignal ? "true" : "false"}
-                  className="flex w-full flex-col gap-3"
-                >
-                  <div className="flex items-center gap-5">
-                    <div className="flex flex-col items-center gap-1">
-                      {isUnanimousSignal ? (
-                        <span
-                          data-testid="stats-unanimous-badge"
-                          className="rounded-full bg-success/12 px-2.5 py-0.5 font-mono text-xs tracking-widest text-success-foreground uppercase"
-                        >
-                          {content.results.unanimous}
-                        </span>
-                      ) : (
-                        <span
-                          data-testid="stats-eyebrow"
-                          className="text-xs text-muted-foreground"
-                        >
-                          {noNumerics
-                            ? content.results.noNumerics
-                            : isSingleNumeric
-                              ? content.results.single
-                              : content.results.median}
-                        </span>
-                      )}
-                      <span
-                        data-testid="stats-result-value"
-                        className="font-mono text-4xl font-semibold tabular-nums"
-                      >
-                        {formatMedian(consensus.median)}
-                      </span>
-                    </div>
-                    <span
-                      aria-hidden="true"
-                      className="h-12 w-px shrink-0 bg-border"
-                    />
-                    <div className="flex min-w-0 flex-col items-start gap-1.5">
-                      <span
-                        data-testid="stats-caption"
-                        className="text-sm text-muted-foreground"
-                      >
-                        {content.results.mean}{" "}
-                        <span
-                          data-testid="stats-mean-value"
-                          className="font-mono text-foreground tabular-nums"
-                        >
-                          {formatMean(consensus.mean)}
-                        </span>{" "}
-                        · {content.results.range}{" "}
-                        <span
-                          data-testid="stats-range-value"
-                          className="font-mono text-foreground tabular-nums"
-                        >
-                          {formatRange(consensus.range)}
-                        </span>
-                      </span>
-                      {voteGroups.length > 0 ? (
-                        <span
-                          data-testid="stats-distribution"
-                          className="flex flex-wrap gap-1.5"
-                        >
-                          {voteGroups.map((group) => (
-                            <span
-                              key={group.value}
-                              data-testid={`stats-pip-${group.value}`}
-                              title={content.results.pipTitle(
-                                group.count,
-                                group.value,
-                              )}
-                              className="rounded-full bg-muted px-2 py-0.5 font-mono text-xs tabular-nums"
-                            >
-                              {group.count}×{group.value}
-                            </span>
-                          ))}
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                  {noNumerics ? (
-                    <p
-                      data-testid="stats-no-numerics"
-                      className="text-sm text-muted-foreground"
-                    >
-                      {content.results.noNumericsNote}
-                    </p>
-                  ) : null}
-                </output>
-                <div className="flex flex-col gap-1.5">
-                  <div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      data-testid="copy-results-button"
-                      disabled={noNumerics}
-                      onClick={() => {
-                        void handleCopyResults();
-                      }}
-                    >
-                      {resultsCopied ? (
-                        <CheckIcon aria-hidden="true" />
-                      ) : (
-                        <CopyIcon aria-hidden="true" />
-                      )}
-                      {resultsCopied
-                        ? content.results.copied
-                        : content.results.copy}
-                    </Button>
-                  </div>
-                  <div aria-live="polite" className="min-h-5 text-sm">
-                    {resultsCopied ? (
-                      <span
-                        className="text-success-foreground"
-                        data-testid="copy-results-feedback"
-                      >
-                        {content.results.copyFeedback}
-                      </span>
-                    ) : null}
-                    {resultsCopyError ? (
-                      <span className="text-destructive-foreground">
-                        {content.results.copyError}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-                {justifyPlayer ? (
-                  <p
-                    role="status"
-                    data-testid="justify-line"
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground"
-                  >
-                    <DicesIcon aria-hidden="true" className="size-4 shrink-0" />
-                    {content.results.justifyLead}
-                    <strong className="font-semibold text-foreground">
-                      {justifyPlayer.nick}
-                    </strong>
-                  </p>
-                ) : null}
-              </CardPanel>
-            </Card>
           ) : null}
 
           {showInvite ? (

@@ -118,6 +118,54 @@
 .arena-reveal [data-slot="card-panel"] > div {
   justify-content: center;
 }
+/* Critique P0/P1: o veredito mora no centro do feltro, e o estado sem
+   história ativa instrui a pauta em vez de pedir uma carta impossível. */
+.arena-reveal-verdict {
+  max-width: 430px;
+}
+/* P1: no revelado o centro carrega veredito + legenda + ações — o tapete
+   cede alguns pixels de inset para o conjunto caber sem tocar a costura. */
+.arena-play-area .poker-center:has(.arena-reveal[data-revealed="true"]) {
+  inset: 8px 44px;
+}
+.arena-reveal-caption {
+  margin: 0;
+  max-width: 460px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+@media (max-width: 700px) {
+  .arena-play-area
+    .poker-table:not(.poker-table--compact)
+    .poker-center:has(.arena-reveal[data-revealed="true"]) {
+    inset: 48px 14px;
+  }
+}
+.arena-avatar-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 3px;
+}
+.arena-avatar-toggle:hover {
+  color: var(--foreground);
+  text-decoration-color: currentColor;
+}
+.arena-avatar-toggle svg {
+  width: 15px;
+  height: 15px;
+}
 .arena-reveal [data-slot="button"] {
   height: 44px;
   padding-inline: 20px;

@@ -187,8 +187,19 @@ export function JoinPage({
         socket,
         spectate: welcome.role === "spectator",
       });
-      if (mode === "create") trackRoomCreated();
-      else trackRoomJoined();
+      if (mode === "create") {
+        trackRoomCreated();
+        // Critique P0: sala nova nasce jogável — a arena consome esta
+        // marca uma única vez, só para quem criou a sala.
+        try {
+          window.sessionStorage.setItem(
+            `pointly-seed:${welcome.sala.code}`,
+            "1",
+          );
+        } catch {
+          // sessionStorage indisponível: a sala nasce sem a semente.
+        }
+      } else trackRoomJoined();
       navigatedRef.current = true;
       navigate(`/s/${welcome.sala.code}`);
     } catch (error) {

@@ -1357,6 +1357,17 @@ describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 			stats.compareDocumentPosition(invite) & Node.DOCUMENT_POSITION_FOLLOWING,
 		).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 	});
+
+	test("critique P1: o veredito mora no centro do feltro, não na sidebar", () => {
+		revealedTwoPlayer();
+		const stats = screen.getByTestId("stats-pill");
+		expect(document.querySelector(".poker-center")?.contains(stats)).toBe(true);
+		expect(
+			document.querySelector(".arena-sidebar")?.contains(stats),
+		).toBe(false);
+		expect(document.querySelector(".arena-results")).toBeNull();
+		expect(screen.getByTestId("copy-results-button")).toBeTruthy();
+	});
 });
 
 describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {
@@ -2304,6 +2315,8 @@ describe("ArenaPage (espectador)", () => {
 		seed({ sala: sala({ players: [host, me] }), playerId: me.id, socket });
 		renderArena();
 
+		// Critique P1: o picker vive num disclosure na linha "Você é".
+		fireEvent.click(screen.getByTestId("avatar-toggle"));
 		const input = screen.getByLabelText("Escolher foto") as HTMLInputElement;
 		fireEvent.change(input, {
 			target: {
@@ -2333,6 +2346,8 @@ describe("ArenaPage (espectador)", () => {
 		seed({ sala: sala({ players: [host, me] }), playerId: me.id, socket });
 		renderArena();
 
+		// Critique P1: o picker vive num disclosure na linha "Você é".
+		fireEvent.click(screen.getByTestId("avatar-toggle"));
 		expect(
 			screen.getByAltText("Prévia do avatar") as HTMLImageElement,
 		).toBeTruthy();
@@ -3218,7 +3233,7 @@ describe("História ativa no centro da mesa (#211)", () => {
 		);
 	});
 
-	test("pauta sem ativa mantém a copy atual e o deck bloqueado", () => {
+	test("critique P0: pauta sem ativa instrui a pauta no centro, sem pedir carta", () => {
 		const socket = new FakeSocket();
 		const host = hostOnly();
 		seed({
@@ -3232,12 +3247,50 @@ describe("História ativa no centro da mesa (#211)", () => {
 		renderArena();
 
 		expect(screen.queryByTestId("arena-story")).toBeNull();
+		// O centro não pede mais uma carta que o deck bloqueado não aceita.
 		expect(document.querySelector(".poker-center")?.textContent).toMatch(
-			/Qual é a sua estimativa\?/,
+			/Adicione ou selecione uma história na Pauta para liberar as cartas\./,
 		);
 		expect(screen.getByTestId("deck-selection").textContent).toMatch(
 			/liberar as cartas/,
 		);
+		expect(screen.queryByTestId("reveal-button")).toBeNull();
+
+		// A CTA do feltro leva o foco ao formulário da pauta.
+		fireEvent.click(screen.getByTestId("felt-add-story"));
+		expect(document.activeElement).toBe(
+			screen.getByTestId("pauta-novo-titulo"),
+		);
+	});
+
+	test("critique P0: sala recém-criada ganha a história-semente uma vez", async () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		const room = sala({ players: [host] });
+		window.sessionStorage.setItem(`pointly-seed:${room.code}`, "1");
+		seed({ sala: room, playerId: host.id, socket });
+		renderArena();
+
+		await waitFor(() => expect(socket.sentHistoriasAdd).toHaveLength(1));
+		expect(socket.sentHistoriasAdd[0]?.titulo).toBe("História 1");
+		expect(
+			window.sessionStorage.getItem(`pointly-seed:${room.code}`),
+		).toBeNull();
+
+		// Marca consumida: um novo estado da sala não re-semeia.
+		await act(async () => {
+			socket.emitRoomState(sala({ players: [host] }));
+		});
+		expect(socket.sentHistoriasAdd).toHaveLength(1);
+	});
+
+	test("critique P0: entrar por link não semeia história", () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		seed({ sala: sala({ players: [host] }), playerId: host.id, socket });
+		renderArena();
+
+		expect(socket.sentHistoriasAdd).toHaveLength(0);
 	});
 
 	test("EN: rótulos e anúncio da história ativa", async () => {

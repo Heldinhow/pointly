@@ -40,6 +40,11 @@ if (typeof globalThis.requestAnimationFrame !== "function") {
 	}
 }
 
+// jsdom não implementa scrollIntoView; a arena rola até a pauta (P0).
+if (typeof Element.prototype.scrollIntoView !== "function") {
+	Element.prototype.scrollIntoView = () => {};
+}
+
 if (typeof globalThis.window.matchMedia !== "function") {
 	globalThis.window.matchMedia = ((query: string) => ({
 		matches: false,

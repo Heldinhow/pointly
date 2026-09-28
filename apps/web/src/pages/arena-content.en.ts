@@ -47,13 +47,16 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		announce: (titulo) => `Active story: ${titulo}`,
 	},
 	reveal: {
-		titleRevealed: "Cards on the table",
 		titleReady: "Ready to reveal?",
 		titleVoting: "What's your estimate?",
 		descRevealed: "Votes revealed. Talk through the differences.",
 		descReady: "Everyone voted.",
 		descCanReveal: "We already have votes. Anyone can reveal.",
 		descWaiting: "Waiting for the first vote. Pick a card to start.",
+		titleAwaitingStory: "Start with the agenda",
+		descAwaitingStory:
+			"Add or select a story in the agenda to unlock the cards.",
+		awaitingStoryCta: "Add story",
 		reveal: "Reveal votes",
 		revealAria: "Reveal votes (shortcut R)",
 		revealAriaWaiting: "Waiting for votes to reveal",
@@ -98,6 +101,7 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		addLabel: "New story",
 		tituloLabel: "Title",
 		tituloPlaceholder: "e.g. PIX checkout",
+		starterTitle: "Story 1",
 		criterioToggle: "Add acceptance criteria",
 		criterioToggleOpen: "Hide acceptance criteria",
 		criterioLabel: "Acceptance criteria",
@@ -134,6 +138,7 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		watching: " · Watching",
 		selfHost: " · Room host",
 		hostLead: " · Host: ",
+		avatarToggle: "Change photo",
 		avatarErrorTitle: "Couldn't change the photo",
 		avatarError: "Couldn't change the photo. Try again.",
 		spectators: (count) => `Watching (${count}):`,
@@ -150,9 +155,6 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		show: "Show invite",
 	},
 	results: {
-		title: "Results",
-		description:
-			"Average, median, lowest and highest estimate · pause and absence stay out of the math.",
 		unanimous: "Unanimous",
 		noNumerics: "No numeric votes",
 		single: "Single vote",

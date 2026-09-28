@@ -53,13 +53,15 @@ export type ArenaContent = {
 		announce: (titulo: string) => string;
 	};
 	reveal: {
-		titleRevealed: string;
 		titleReady: string;
 		titleVoting: string;
 		descRevealed: string;
 		descReady: string;
 		descCanReveal: string;
 		descWaiting: string;
+		titleAwaitingStory: string;
+		descAwaitingStory: string;
+		awaitingStoryCta: string;
 		reveal: string;
 		revealAria: string;
 		revealAriaWaiting: string;
@@ -98,6 +100,7 @@ export type ArenaContent = {
 		addLabel: string;
 		tituloLabel: string;
 		tituloPlaceholder: string;
+		starterTitle: string;
 		criterioToggle: string;
 		criterioToggleOpen: string;
 		criterioLabel: string;
@@ -133,6 +136,7 @@ export type ArenaContent = {
 		watching: string;
 		selfHost: string;
 		hostLead: string;
+		avatarToggle: string;
 		avatarErrorTitle: string;
 		avatarError: string;
 		spectators: (count: number) => string;
@@ -149,8 +153,6 @@ export type ArenaContent = {
 		show: string;
 	};
 	results: {
-		title: string;
-		description: string;
 		unanimous: string;
 		noNumerics: string;
 		single: string;
