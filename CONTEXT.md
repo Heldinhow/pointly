@@ -25,7 +25,7 @@ Identificador único de uma sala, 4 caracteres alfanuméricos (A–Z, 0–9), ge
 _Avoid_: ID, token, PIN
 
 **Assento**:
-Posição fixa de um jogador ao redor da mesa em formato de elipse. Cada assento é vinculado a exatamente um jogador; sem entrar, sem assento.
+Posição fixa de um jogador na mesa. Cada assento é vinculado a exatamente um jogador; sem entrar, sem assento.
 _Avoid_: cadeira, seat, slot
 
 **Rodada**:
@@ -41,11 +41,11 @@ Ato de expor todos os votos simultaneamente. Disparado por qualquer player manua
 _Avoid_: mostrar, expor, abrir
 
 **Mediana**:
-Valor do meio do conjunto de votos numéricos da rodada. Jogadores com voto igual à mediana recebem destaque gold (mustard).
+Valor do meio do conjunto de votos numéricos da rodada. Jogadores com voto igual à mediana recebem destaque na mesa.
 _Avoid_: média, average, mean
 
 **Unânime**:
-Rodada revelada em que todos os votos numéricos são iguais — pausa (☕) fica de fora — com pelo menos dois votantes numéricos. Voto único não é unanimidade.
+Rodada revelada em que todos os votos numéricos são iguais — cartas não-numéricas (Não sei, Pausa) ficam de fora — com pelo menos dois votantes numéricos. Voto único não é unanimidade.
 _Avoid_: consenso, acordo total, todos de acordo
 
 **Divergente**:
@@ -57,8 +57,16 @@ Sorteio determinístico, local e sem servidor que aponta, após um Reveal diverg
 _Avoid_: roleta, dice, aleatório
 
 **Deck**:
-Conjunto fixo de 9 cartas usadas para votar: `0, ½, 1, 2, 3, 5, 8, 13, ☕`. Sequência Fibonacci + pausa explícita.
+Conjunto de cartas usadas para votar. Padrão com 11 cartas: Fibonacci completo `0, ½, 1, 2, 3, 5, 8, 13, 21`, carta `?` (Não sei) e Pausa. Personalizável pelo criador da Sala (2–12 cartas, ao menos duas numéricas); o Host pode trocar até o primeiro Voto.
 _Avoid_: baralho, cards, conjunto
+
+**Não sei**:
+Carta `?` do Deck: o jogador ainda não sabe estimar. Conta presença, mas fica fora de Mediana, média e amplitude.
+_Avoid_: dúvida, unknown, interrogação
+
+**Pausa**:
+Carta do Deck para interromper a rodada (café, intervalo). Conta presença, mas fica fora de Mediana, média e amplitude.
+_Avoid_: café, ☕, break
 
 **Projétil**:
 Objeto virtual arremessável (ex: tomate, café, patinho de borracha) que possui animação e efeitos visuais próprios.
@@ -85,5 +93,5 @@ Imagem do Player exibida no círculo do Assento na mesa, normalizada para 128x12
 _Avoid_: foto, profile pic, thumbnail
 
 **Perfil**:
-Ponto onde o dono troca Apelido + Avatar (picker no join + "Você é" na arena). Global do dispositivo, sem rota própria, visível para toda a sala.
+Ponto onde o dono troca Apelido + Avatar (no join e na sala). Global do dispositivo, sem rota própria, visível para toda a sala.
 _Avoid_: conta, profile page, settings
