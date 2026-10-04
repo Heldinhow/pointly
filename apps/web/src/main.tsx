@@ -12,6 +12,8 @@ import "@fontsource/geist-mono/700.css";
 import App from "./App";
 import "./index.css";
 import "./brand.css";
+import "./prensa/fonts.css";
+import "./prensa/tokens.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Elemento #root não encontrado.");

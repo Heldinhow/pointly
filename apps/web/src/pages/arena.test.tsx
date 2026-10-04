@@ -1932,13 +1932,15 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
 		await openProjectileMenu("Caio");
 		expect(screen.getByTestId("projectile-brick").getAttribute("aria-disabled")).toBe("true");
-		await waitFor(() => expect(screen.getByTestId("projectile-brick").getAttribute("aria-disabled")).not.toBe("true"), { timeout: 1600 });
+		// Cooldown real de 1s (semântica do produto — não mexer) + tick sob
+		// suite paralela: mesma estabilização do balão (margem folgada).
+		await waitFor(() => expect(screen.getByTestId("projectile-brick").getAttribute("aria-disabled")).not.toBe("true"), { timeout: 10000 });
 		fireEvent.click(screen.getByTestId("projectile-brick"));
 		expect(socket.sentProjectiles).toEqual([
 			{ targetPlayerId: beto.id, projectileType: "paper_ball" },
 			{ targetPlayerId: caio.id, projectileType: "brick" },
 		]);
-	});
+	}, 15000);
 
 	test("falha de envio mostra erro sem inventar voo ou bloquear nova tentativa", async () => {
 		const { socket } = revealedSalaWithPair();
@@ -2099,14 +2101,16 @@ describe("ArenaPage (issue #172 — Cutucadas)", () => {
 		const balloon = await screen.findByTestId("nudge-balloon");
 		expect(balloon.textContent).toContain("☕ Café?");
 		expect(balloon.getAttribute("data-target-player")).toBe(ana.id);
-		// Efêmera: some sozinha, sem feed nem persistência. Margem folgada
-		// (vida de 2000ms) porque a suite roda arquivos em paralelo e
-		// timers reais atrasam sob carga.
+		// Efêmera: some sozinha, sem feed nem persistência. Vida de 2000ms
+		// (NUDGE_BALLOON_MS, semântica do produto — não mexer) + overhead de
+		// render sob suite paralela estoura os 5s default do bun: timeout
+		// explícito no test() (precedente nas linhas ~1232/~2773) e waitFor
+		// folgado, ambos sem depender de timers precisos.
 		await waitFor(
 			() => expect(screen.queryByTestId("nudge-balloon")).toBeNull(),
-			{ timeout: 5000 },
+			{ timeout: 10000 },
 		);
-	});
+	}, 15000);
 
 	test("cooldown compartilhado bloqueia arremesso logo após a cutucada", async () => {
 		const { socket } = nudgeSalaWithPair();

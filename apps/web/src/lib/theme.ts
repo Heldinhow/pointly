@@ -11,12 +11,28 @@ const STORAGE_KEY = "pointly-theme";
  * a preferência entra no efeito de mount. O script inline do index.html já
  * aplica a classe antes do paint, então não há flash de tema.
  */
-function preferredTheme(): Theme {
-	const stored = safeGet(STORAGE_KEY);
+export function resolveTheme(
+	stored: string | null,
+	prefersLight: boolean,
+): Theme {
 	if (stored === "light" || stored === "dark") return stored;
-	return window.matchMedia("(prefers-color-scheme: light)").matches
-		? "light"
-		: "dark";
+	return prefersLight ? "light" : "dark";
+}
+
+function preferredTheme(): Theme {
+	return resolveTheme(
+		safeGet(STORAGE_KEY),
+		window.matchMedia("(prefers-color-scheme: light)").matches,
+	);
+}
+
+/**
+ * Espelha o tema resolvido nos dois contratos: `.dark` (telas antigas +
+ * Tailwind) e `data-theme` (camada Prensa, F0.2 — fonte única dos tokens).
+ */
+export function applyTheme(theme: Theme): void {
+	document.documentElement.classList.toggle("dark", theme === "dark");
+	document.documentElement.dataset.theme = theme;
 }
 
 export function useTheme(): { theme: Theme; toggle: () => void } {
@@ -27,7 +43,7 @@ export function useTheme(): { theme: Theme; toggle: () => void } {
 	}, []);
 
 	useEffect(() => {
-		document.documentElement.classList.toggle("dark", theme === "dark");
+		applyTheme(theme);
 	}, [theme]);
 
 	const toggle = useCallback(() => {

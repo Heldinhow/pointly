@@ -1,0 +1,164 @@
+/* Prensa — F0.2: tokens & temas (SSOT executável; valores EXATOS do DESIGN.md).
+ * Claro "papel" no :root; escuro "breu" via [data-theme="dark"] (toggle manual,
+ * escrito por lib/theme.ts + script inline do index.html) ou via
+ * prefers-color-scheme quando não há escolha manual (padrão = sistema).
+ * A classe .dark legada continua existindo para as telas antigas (F2/F3
+ * substituem); a camada Prensa lê SOMENTE data-theme/mídia — fonte única.
+ * Base aplicada (body, títulos, links, seleção, foco, .tnum) fica sob
+ * `html.prensa`, ATIVADA pelo shell Prensa (F0.5). Sem a classe, as telas
+ * antigas seguem intocadas. Helpers de movimento: F0.6. */
+
+/* ——— Cor ——— */
+:root {
+	color-scheme: light;
+	--bg: #f6f2e9;
+	--surface: #fdfaf3;
+	--ink: #171512;
+	--ink-muted: #6b6357;
+	--line: #dad2c2;
+	--accent: #c43a00;
+	--on-accent: #ffffff;
+	--accent-soft: #f3e2d8;
+	--focus: var(--accent);
+
+	/* ——— Tipografia ——— */
+	--font-display: "Archivo", "Archivo-fallback", Arial, sans-serif;
+	--font-ui: "Instrument Sans", "Instrument Sans-fallback", Arial, sans-serif;
+	/* Escala 12/13/16/20/24/32/44/64. */
+	--fs-1: 12px;
+	--fs-2: 13px;
+	--fs-3: 16px;
+	--fs-4: 20px;
+	--fs-5: 24px;
+	--fs-6: 32px;
+	--fs-7: 44px;
+	--fs-8: 64px;
+
+	/* ——— Espaçamento (base 4; grid de 8) ——— */
+	--space-1: 4px;
+	--space-2: 8px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-5: 24px;
+	--space-6: 32px;
+	--space-7: 48px;
+	--space-8: 64px;
+	--space-9: 96px;
+
+	/* ——— Forma e elevação (papel cortado; recorte duro de 2px, sem blur) ——— */
+	--radius-sm: 2px;
+	--radius-md: 4px;
+	--shadow-cut: 0 2px 0 rgb(23 21 18 / 0.14);
+
+	/* ——— Movimento (durações + easings; helpers no F0.6) ——— */
+	--dur-1: 120ms;
+	--dur-2: 160ms;
+	--dur-3: 200ms;
+	--dur-4: 280ms;
+	--ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+	--ease-snap: cubic-bezier(0.3, 1.4, 0.4, 1);
+}
+
+/* Escolha manual tem precedência sobre o sistema. */
+:root[data-theme="light"] {
+	color-scheme: light;
+	--bg: #f6f2e9;
+	--surface: #fdfaf3;
+	--ink: #171512;
+	--ink-muted: #6b6357;
+	--line: #dad2c2;
+	--accent: #c43a00;
+	--on-accent: #ffffff;
+	--accent-soft: #f3e2d8;
+	--focus: var(--accent);
+	--shadow-cut: 0 2px 0 rgb(23 21 18 / 0.14);
+}
+
+:root[data-theme="dark"] {
+	color-scheme: dark;
+	--bg: #141210;
+	--surface: #1c1916;
+	--ink: #f3eee3;
+	--ink-muted: #a79d8c;
+	--line: #34302a;
+	--accent: #ff5a1f;
+	--on-accent: #201008;
+	--accent-soft: #3a2114;
+	--focus: var(--accent);
+	--shadow-cut: 0 2px 0 rgb(0 0 0 / 0.5);
+}
+
+/* Padrão = sistema: sem escolha manual, o breu segue o SO. */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		color-scheme: dark;
+		--bg: #141210;
+		--surface: #1c1916;
+		--ink: #f3eee3;
+		--ink-muted: #a79d8c;
+		--line: #34302a;
+		--accent: #ff5a1f;
+		--on-accent: #201008;
+		--accent-soft: #3a2114;
+		--focus: var(--accent);
+		--shadow-cut: 0 2px 0 rgb(0 0 0 / 0.5);
+	}
+}
+
+/* ——— Base (inativa até o shell Prensa ligar `html.prensa` — F0.5) ——— */
+html.prensa body {
+	background: var(--bg);
+	color: var(--ink);
+	font-family: var(--font-ui);
+	font-size: var(--fs-3);
+	line-height: 1.5;
+}
+
+html.prensa :is(h1, h2, h3) {
+	font-family: var(--font-display);
+	line-height: 1.1;
+	letter-spacing: -0.01em;
+	text-wrap: balance;
+}
+/* Mapeamento inicial da escala (superfícies compõem a partir daqui). */
+html.prensa h1 {
+	font-size: var(--fs-7);
+	font-weight: 800;
+}
+html.prensa h2 {
+	font-size: var(--fs-6);
+	font-weight: 700;
+}
+html.prensa h3 {
+	font-size: var(--fs-5);
+	font-weight: 600;
+}
+
+html.prensa a {
+	color: var(--accent);
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 2px;
+}
+html.prensa a:hover {
+	text-decoration-thickness: 2px;
+}
+
+/* O vermelhão marca a seleção. */
+html.prensa ::selection {
+	background: var(--accent);
+	color: var(--on-accent);
+}
+
+/* Foco visível sempre: anel 2px + offset 2px. Sobre accent, o anel é --ink
+ * (regra do componente que pinta o fundo — ex. botão-carimbo, F0.4). */
+html.prensa :focus-visible {
+	outline: 2px solid var(--focus);
+	outline-offset: 2px;
+	border-radius: var(--radius-sm);
+}
+
+/* Números de mesa/estatísticas: numerais tabulares. */
+html.prensa .tnum {
+	font-variant-numeric: tabular-nums;
+}
