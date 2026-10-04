@@ -5,8 +5,8 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<!-- description/OG/Twitter/canonical por rota são injetados no build
 		     (vite-prerender-plugin + src/seo/routes.ts). Esta é a base do shell. -->
-		<meta name="theme-color" content="#F4F6F3" media="(prefers-color-scheme: light)" />
-		<meta name="theme-color" content="#141D19" media="(prefers-color-scheme: dark)" />
+		<meta name="theme-color" content="#F6F2E9" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#141210" media="(prefers-color-scheme: dark)" />
 		<link rel="icon" href="/favicon.ico" sizes="any" />
 		<link rel="icon" type="image/svg+xml" href="/icon.svg" />
 		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
@@ -30,19 +30,21 @@
 		/>
 		<title>Pointly — Planning poker sem cadastro</title>
 		<script>
+			/* Espelha lib/theme.ts: resolve (manual > sistema) e escreve os dois
+			   contratos — .dark (telas antigas) e data-theme (tokens Prensa). */
 			try {
 				var stored = localStorage.getItem("pointly-theme");
-				if (
-					stored === "light" ||
-					(stored !== "dark" &&
-						window.matchMedia("(prefers-color-scheme: light)").matches)
-				) {
-					document.documentElement.classList.remove("dark");
-				} else {
-					document.documentElement.classList.add("dark");
-				}
+				var theme =
+					stored === "light" || stored === "dark"
+						? stored
+						: window.matchMedia("(prefers-color-scheme: light)").matches
+							? "light"
+							: "dark";
+				document.documentElement.classList.toggle("dark", theme === "dark");
+				document.documentElement.dataset.theme = theme;
 			} catch (e) {
 				document.documentElement.classList.add("dark");
+				document.documentElement.dataset.theme = "dark";
 			}
 		</script>
 	</head>
