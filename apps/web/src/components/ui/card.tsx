@@ -5,6 +5,13 @@ import { useRender } from "@base-ui/react/use-render";
 import type React from "react";
 import { cn } from "@/lib/utils";
 
+/**
+ * Prensa — F0.4: cartão (folha de papel).
+ *
+ * API estável (mesmos exports, `render`, `data-slot`). Superfície
+ * `--surface`, tinta `--ink`, régua `--line`, raio `--radius-md`, recorte duro
+ * `--shadow-cut`. Sem blur/gradiente/pílula/glow; títulos em Archivo.
+ */
 export function Card({
 	className,
 	render,
@@ -12,7 +19,7 @@ export function Card({
 }: useRender.ComponentProps<"div">): React.ReactElement {
 	const defaultProps = {
 		className: cn(
-			"relative flex flex-col rounded-2xl border bg-card not-dark:bg-clip-padding text-card-foreground shadow-xs/5 before:pointer-events-none before:absolute before:inset-0 before:rounded-[calc(var(--radius-2xl)-1px)] before:shadow-[0_1px_--theme(--color-black/4%)] dark:before:shadow-[0_-1px_--theme(--color-white/6%)]",
+			"relative flex flex-col rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] shadow-[var(--shadow-cut)]",
 			className,
 		),
 		"data-slot": "card",
@@ -32,7 +39,7 @@ export function CardFrame({
 }: useRender.ComponentProps<"div">): React.ReactElement {
 	const defaultProps = {
 		className: cn(
-			"relative flex flex-col rounded-2xl border bg-card not-dark:bg-clip-padding text-card-foreground shadow-xs/5 [--clip-bottom:-1rem] [--clip-top:-1rem] before:pointer-events-none before:absolute before:inset-0 before:rounded-[calc(var(--radius-2xl)-1px)] before:bg-muted/72 before:shadow-[0_1px_--theme(--color-black/4%)] has-data-[slot=table-container]:overflow-hidden *:data-[slot=card]:-m-px *:data-[slot=table-container]:-m-px *:data-[slot=table-container]:w-[calc(100%+2px)] *:not-first:data-[slot=card]:rounded-t-xl *:not-last:data-[slot=card]:rounded-b-xl *:data-[slot=card]:bg-clip-padding *:data-[slot=card]:shadow-none *:data-[slot=card]:before:hidden *:not-first:data-[slot=card]:before:rounded-t-[calc(var(--radius-xl)-1px)] *:not-last:data-[slot=card]:before:rounded-b-[calc(var(--radius-xl)-1px)] dark:before:shadow-[0_-1px_--theme(--color-white/6%)] *:data-[slot=card]:[clip-path:inset(var(--clip-top)_1px_var(--clip-bottom)_1px_round_calc(var(--radius-2xl)-1px))] *:data-[slot=card]:last:[--clip-bottom:1px] *:data-[slot=card]:first:[--clip-top:1px]",
+			"relative flex flex-col rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] shadow-[var(--shadow-cut)] [--clip-bottom:-1rem] [--clip-top:-1rem] has-data-[slot=table-container]:overflow-hidden *:data-[slot=table-container]:-m-px *:data-[slot=table-container]:w-[calc(100%+2px)] *:data-[slot=card]:-m-px *:data-[slot=card]:rounded-none *:data-[slot=card]:border-[var(--line)] *:data-[slot=card]:shadow-none *:data-[slot=card]:[clip-path:inset(var(--clip-top)_1px_var(--clip-bottom)_1px)] *:data-[slot=card]:last:[--clip-bottom:1px] *:data-[slot=card]:first:[--clip-top:1px]",
 			className,
 		),
 		"data-slot": "card-frame",
@@ -52,7 +59,7 @@ export function CardFrameHeader({
 }: useRender.ComponentProps<"div">): React.ReactElement {
 	const defaultProps = {
 		className: cn(
-			"relative flex grid auto-rows-min grid-rows-[auto_auto] flex-col items-start gap-x-4 px-6 py-4 has-data-[slot=card-frame-action]:grid-cols-[1fr_auto]",
+			"relative flex grid auto-rows-min grid-rows-[auto_auto] flex-col items-start gap-x-4 border-b border-[var(--line)] px-6 py-4 has-data-[slot=card-frame-action]:grid-cols-[1fr_auto]",
 			className,
 		),
 		"data-slot": "card-frame-header",
@@ -71,7 +78,10 @@ export function CardFrameTitle({
 	...props
 }: useRender.ComponentProps<"div">): React.ReactElement {
 	const defaultProps = {
-		className: cn("self-center font-semibold text-sm", className),
+		className: cn(
+			"font-[var(--font-display)] self-center font-semibold text-sm text-[var(--ink)]",
+			className,
+		),
 		"data-slot": "card-frame-title",
 	};
 
@@ -88,7 +98,10 @@ export function CardFrameDescription({
 	...props
 }: useRender.ComponentProps<"div">): React.ReactElement {
 	const defaultProps = {
-		className: cn("self-center text-muted-foreground text-sm", className),
+		className: cn(
+			"self-center text-[var(--ink-muted)] text-sm",
+			className,
+		),
 		"data-slot": "card-frame-description",
 	};
 
@@ -125,7 +138,10 @@ export function CardFrameFooter({
 	...props
 }: useRender.ComponentProps<"div">): React.ReactElement {
 	const defaultProps = {
-		className: cn("px-6 py-4", className),
+		className: cn(
+			"border-t border-[var(--line)] px-6 py-4",
+			className,
+		),
 		"data-slot": "card-frame-footer",
 	};
 
@@ -162,7 +178,10 @@ export function CardTitle({
 	...props
 }: useRender.ComponentProps<"div">): React.ReactElement {
 	const defaultProps = {
-		className: cn("font-heading font-semibold text-lg leading-none", className),
+		className: cn(
+			"font-[var(--font-display)] font-semibold text-lg leading-none tracking-[-0.01em] text-[var(--ink)]",
+			className,
+		),
 		"data-slot": "card-title",
 	};
 
@@ -179,7 +198,7 @@ export function CardDescription({
 	...props
 }: useRender.ComponentProps<"div">): React.ReactElement {
 	const defaultProps = {
-		className: cn("text-muted-foreground text-sm", className),
+		className: cn("text-[var(--ink-muted)] text-sm", className),
 		"data-slot": "card-description",
 	};
 
@@ -237,7 +256,7 @@ export function CardFooter({
 }: useRender.ComponentProps<"div">): React.ReactElement {
 	const defaultProps = {
 		className: cn(
-			"flex items-center p-6 in-[[data-slot=card]:has(>[data-slot=card-panel])]:pt-4",
+			"flex items-center border-t border-[var(--line)] p-6 in-[[data-slot=card]:has(>[data-slot=card-panel])]:pt-4",
 			className,
 		),
 		"data-slot": "card-footer",
