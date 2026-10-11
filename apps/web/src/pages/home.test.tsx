@@ -36,6 +36,30 @@ describe("HomePage (ticket 10 — Inicial com demonstração)", () => {
 		).toBeTruthy();
 	});
 
+	test("bloco de leitura liga landings e guias no corpo", () => {
+		renderHome();
+
+		const learn = screen.getByTestId("home-learn");
+		const hrefs = Array.from(learn.querySelectorAll("a")).map((link) =>
+			link.getAttribute("href"),
+		);
+		expect(hrefs).toEqual(
+			expect.arrayContaining(["/planning-poker", "/scrum-poker", "/guias"]),
+		);
+		// Ordem no documento: demo antes de "como funciona", que vem antes do bloco de leitura.
+		const demo = screen.getByTestId("demo");
+		const how = document.getElementById("como-funciona");
+		if (!how) throw new Error("seção como funciona ausente");
+		expect(
+			demo.compareDocumentPosition(learn) &
+				Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+		expect(
+			how.compareDocumentPosition(learn) &
+				Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+	});
+
 	test("hero tem copy + visual estático, sem rodada interativa duplicada", () => {
 		renderHome();
 
@@ -236,6 +260,26 @@ describe("HomePage EN (15.T7 — /en)", () => {
 		).toMatch(/Coffee break/);
 		expect(screen.getByTestId("home-cta-create-bottom").textContent).toMatch(
 			/Create room/,
+		);
+	});
+
+	test("bloco de leitura em inglês aponta para as rotas /en", () => {
+		render(
+			<MemoryRouter>
+				<HomePage lang="en" />
+			</MemoryRouter>,
+		);
+
+		const learn = screen.getByTestId("home-learn");
+		const hrefs = Array.from(learn.querySelectorAll("a")).map((link) =>
+			link.getAttribute("href"),
+		);
+		expect(hrefs).toEqual(
+			expect.arrayContaining([
+				"/en/planning-poker",
+				"/en/scrum-poker",
+				"/en/guides",
+			]),
 		);
 	});
 

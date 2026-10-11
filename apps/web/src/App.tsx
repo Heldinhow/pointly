@@ -1,4 +1,4 @@
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { Suspense, lazy, useEffect, useRef, useSyncExternalStore } from "react";
 import {
   Link,
   NavLink,
@@ -17,6 +17,7 @@ import {
 import { LanguageLink } from "@/components/language-link";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Spinner } from "@/components/ui/spinner";
 import {
   isPublicIndexablePath,
   resolveInternalLang,
@@ -31,7 +32,6 @@ import {
   trackPageView,
 } from "@/lib/analytics";
 import { useTheme } from "@/lib/theme";
-import { ArenaPage } from "@/pages/arena";
 import {
   GuidesHubEnPage,
   GuidesHubPtPage,
@@ -43,7 +43,6 @@ import {
   WhatIsPtPage,
 } from "@/pages/guide";
 import { HomePage } from "@/pages/home";
-import { JoinPage } from "@/pages/join";
 import {
   PlanningPokerEnPage,
   PlanningPokerLandingPage,
@@ -51,6 +50,14 @@ import {
   ScrumPokerLandingPage,
 } from "@/pages/landing";
 import { NotFoundPage } from "@/pages/not-found";
+
+// Rotas do app, fora do prerender: chunk separado, fora do HTML inicial.
+const JoinPage = lazy(() =>
+  import("@/pages/join").then((module) => ({ default: module.JoinPage })),
+);
+const ArenaPage = lazy(() =>
+  import("@/pages/arena").then((module) => ({ default: module.ArenaPage })),
+);
 
 export default function App(): React.ReactElement {
   const { theme, toggle } = useTheme();
@@ -148,31 +155,39 @@ export default function App(): React.ReactElement {
         </div>
       </ShellHeader>
       <ShellMain id="conteudo" tabIndex={-1}>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/en" element={<HomePage lang="en" />} />
-          <Route path="/planning-poker" element={<PlanningPokerLandingPage />} />
-          <Route path="/scrum-poker" element={<ScrumPokerLandingPage />} />
-          <Route path="/guias" element={<GuidesHubPtPage />} />
-          <Route path="/guias/como-jogar-planning-poker" element={<HowToPlayPtPage />} />
-          <Route path="/guias/o-que-e-planning-poker" element={<WhatIsPtPage />} />
-          <Route path="/guias/story-points" element={<StoryPointsPtPage />} />
-          <Route path="/en/planning-poker" element={<PlanningPokerEnPage />} />
-          <Route path="/en/scrum-poker" element={<ScrumPokerEnPage />} />
-          <Route path="/en/guides" element={<GuidesHubEnPage />} />
-          <Route
-            path="/en/guides/how-to-play-planning-poker"
-            element={<HowToPlayEnPage />}
-          />
-          <Route
-            path="/en/guides/what-is-planning-poker"
-            element={<WhatIsEnPage />}
-          />
-          <Route path="/en/guides/story-points" element={<StoryPointsEnPage />} />
-          <Route path="/join" element={<JoinPage lang={lang} />} />
-          <Route path="/s/:code" element={<ArenaPage lang={lang} />} />
-          <Route path="*" element={<NotFoundPage lang={lang} />} />
-        </Routes>
+        <Suspense
+          fallback={
+            <div className="site-loading">
+              <Spinner aria-label={isEn ? "Loading" : "Carregando"} />
+            </div>
+          }
+        >
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/en" element={<HomePage lang="en" />} />
+            <Route path="/planning-poker" element={<PlanningPokerLandingPage />} />
+            <Route path="/scrum-poker" element={<ScrumPokerLandingPage />} />
+            <Route path="/guias" element={<GuidesHubPtPage />} />
+            <Route path="/guias/como-jogar-planning-poker" element={<HowToPlayPtPage />} />
+            <Route path="/guias/o-que-e-planning-poker" element={<WhatIsPtPage />} />
+            <Route path="/guias/story-points" element={<StoryPointsPtPage />} />
+            <Route path="/en/planning-poker" element={<PlanningPokerEnPage />} />
+            <Route path="/en/scrum-poker" element={<ScrumPokerEnPage />} />
+            <Route path="/en/guides" element={<GuidesHubEnPage />} />
+            <Route
+              path="/en/guides/how-to-play-planning-poker"
+              element={<HowToPlayEnPage />}
+            />
+            <Route
+              path="/en/guides/what-is-planning-poker"
+              element={<WhatIsEnPage />}
+            />
+            <Route path="/en/guides/story-points" element={<StoryPointsEnPage />} />
+            <Route path="/join" element={<JoinPage lang={lang} />} />
+            <Route path="/s/:code" element={<ArenaPage lang={lang} />} />
+            <Route path="*" element={<NotFoundPage lang={lang} />} />
+          </Routes>
+        </Suspense>
       </ShellMain>
       {!inArena && (
         <footer className="site-footer">

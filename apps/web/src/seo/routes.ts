@@ -11,6 +11,11 @@
 
 import { GUIDE_CONTENT } from "../pages/guide-content";
 import { LANDING_CONTENT } from "../pages/landing-content";
+import {
+	alternateVersions,
+	PATHS,
+	type SeoAlternate,
+} from "./paths";
 
 /**
  * Apex canônico e único host de SEO: `www.` e `http` fazem 301 para cá
@@ -19,15 +24,56 @@ import { LANDING_CONTENT } from "../pages/landing-content";
  */
 export const SITE_URL = "https://pointly.space";
 
-/** Data de publicação dos guias (15.T6); revisões atualizam `dateModified`. */
+/** Data de publicação dos guias (15.T6); revisões atualizam `GUIDES_MODIFIED`. */
 export const GUIDES_PUBLISHED = "2026-09-19";
+export const GUIDES_MODIFIED = "2026-09-19";
 
-export type SeoAlternate = {
-	/** Código do idioma no padrão hreflang (`pt-BR`, `en`…). */
-	lang: string;
-	/** Caminho absoluto dentro do site (`/en/…`). */
-	path: string;
+const OG_IMAGE = `${SITE_URL}/images/pointly-og.jpg`;
+const OG_IMAGE_WIDTH = 1200;
+const OG_IMAGE_HEIGHT = 630;
+const SITE_NAME = "Pointly";
+
+function ogLocale(lang: string): string {
+	return lang === "en" ? "en_US" : "pt_BR";
+}
+
+function ogAlternateLocale(lang: string): string {
+	return lang === "en" ? "pt_BR" : "en_US";
+}
+
+function ogImageAlt(lang: string): string {
+	return lang === "en"
+		? "Pointly planning poker table with Fibonacci cards"
+		: "Mesa de planning poker Pointly com cartas Fibonacci";
+}
+
+const ORGANIZATION = {
+	"@type": "Organization",
+	name: "Pointly",
+	url: `${SITE_URL}/`,
+	logo: {
+		"@type": "ImageObject",
+		url: `${SITE_URL}/icon-512.png`,
+		width: 512,
+		height: 512,
+	},
 };
+
+/** WebSite nas homes: nome do site + editora para a SERP. */
+export function websiteJsonLd(website: { lang: string; path: string }): Readonly<
+	Record<string, unknown>
+> {
+	const url = `${SITE_URL}${website.path}`;
+	return {
+		"@context": "https://schema.org",
+		"@type": "WebSite",
+		"@id": `${SITE_URL}/#website`,
+		url,
+		name: SITE_NAME,
+		inLanguage: website.lang,
+		publisher: ORGANIZATION,
+	};
+}
 
 export type SeoRoute = {
 	path: string;
@@ -36,6 +82,10 @@ export type SeoRoute = {
 	indexable: boolean;
 	title: string;
 	description: string;
+	/** Guias usam `article`; o padrão é `website`. */
+	ogType?: "website" | "article";
+	/** Data real de revisão; só entra no sitemap quando existe. */
+	lastmod?: string;
 	/** Versões em outros idiomas (hreflang recíproco). */
 	alternates?: readonly SeoAlternate[];
 	/** JSON-LD injetado no `<head>` (um `<script>` por entrada). */
@@ -106,29 +156,20 @@ export function articleJsonLd(article: {
 		"@type": "Article",
 		headline: article.headline,
 		description: article.description,
+		image: {
+			"@type": "ImageObject",
+			url: OG_IMAGE,
+			width: OG_IMAGE_WIDTH,
+			height: OG_IMAGE_HEIGHT,
+		},
 		inLanguage: article.lang,
 		url,
 		mainEntityOfPage: url,
 		author: organization,
 		publisher: organization,
 		datePublished: GUIDES_PUBLISHED,
-		dateModified: GUIDES_PUBLISHED,
+		dateModified: GUIDES_MODIFIED,
 	};
-}
-
-/**
- * hreflang recíproco pt-BR ↔ en + `x-default` → pt (G2), sempre apontando
- * para o caminho pt da mesma página.
- */
-function alternateVersions(
-	ptPath: string,
-	enPath: string,
-	lang: string,
-): readonly SeoAlternate[] {
-	const xDefault: SeoAlternate = { lang: "x-default", path: ptPath };
-	return lang === "en"
-		? [{ lang: "pt-BR", path: ptPath }, xDefault]
-		: [{ lang: "en", path: enPath }, xDefault];
 }
 
 const PT_PLANNING_POKER = LANDING_CONTENT["pt-BR"]["planning-poker"];
@@ -142,23 +183,6 @@ const PT_STORY_POINTS = GUIDE_CONTENT["pt-BR"]["story-points"];
 const EN_HOW_TO_PLAY = GUIDE_CONTENT.en["how-to-play"];
 const EN_WHAT_IS = GUIDE_CONTENT.en["what-is"];
 const EN_STORY_POINTS = GUIDE_CONTENT.en["story-points"];
-
-const PATHS = {
-	homePt: "/",
-	homeEn: "/en",
-	planningPokerPt: "/planning-poker",
-	planningPokerEn: "/en/planning-poker",
-	scrumPokerPt: "/scrum-poker",
-	scrumPokerEn: "/en/scrum-poker",
-	guidesPt: "/guias",
-	guidesEn: "/en/guides",
-	howToPlayPt: "/guias/como-jogar-planning-poker",
-	howToPlayEn: "/en/guides/how-to-play-planning-poker",
-	whatIsPt: "/guias/o-que-e-planning-poker",
-	whatIsEn: "/en/guides/what-is-planning-poker",
-	storyPointsPt: "/guias/story-points",
-	storyPointsEn: "/en/guides/story-points",
-} as const;
 
 const HOW_TO_PLAY_DESCRIPTION_PT =
 	"O roteiro completo de uma sessão de planning poker: papéis, rodadas, como lidar com divergência e o que fazer depois do reveal.";
@@ -182,7 +206,10 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		description:
 			"Planning poker sem cadastro para times ágeis: crie a sala em segundos, compartilhe o link e estime story points em tempo real.",
 		alternates: alternateVersions(PATHS.homePt, PATHS.homeEn, "pt-BR"),
-		jsonLd: [JSON_LD_SOFTWARE_APPLICATION],
+		jsonLd: [
+			JSON_LD_SOFTWARE_APPLICATION,
+			websiteJsonLd({ lang: "pt-BR", path: PATHS.homePt }),
+		],
 	},
 	{
 		path: PATHS.homeEn,
@@ -192,7 +219,10 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		description:
 			"Planning poker with no signup for agile teams: create a room in seconds, share the link and estimate story points in real time.",
 		alternates: alternateVersions(PATHS.homePt, PATHS.homeEn, "en"),
-		jsonLd: [JSON_LD_SOFTWARE_APPLICATION_EN],
+		jsonLd: [
+			JSON_LD_SOFTWARE_APPLICATION_EN,
+			websiteJsonLd({ lang: "en", path: PATHS.homeEn }),
+		],
 	},
 	{
 		path: PATHS.planningPokerPt,
@@ -239,6 +269,8 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		indexable: true,
 		title: "Como Jogar Planning Poker: Guia Passo a Passo | Pointly",
 		description: HOW_TO_PLAY_DESCRIPTION_PT,
+		ogType: "article",
+		lastmod: GUIDES_MODIFIED,
 		alternates: alternateVersions(PATHS.howToPlayPt, PATHS.howToPlayEn, "pt-BR"),
 		jsonLd: [
 			articleJsonLd({
@@ -256,6 +288,8 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		indexable: true,
 		title: "O que é Planning Poker? Guia Completo | Pointly",
 		description: WHAT_IS_DESCRIPTION_PT,
+		ogType: "article",
+		lastmod: GUIDES_MODIFIED,
 		alternates: alternateVersions(PATHS.whatIsPt, PATHS.whatIsEn, "pt-BR"),
 		jsonLd: [
 			articleJsonLd({
@@ -273,6 +307,8 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		indexable: true,
 		title: "Story Points: o que são e como estimar | Pointly",
 		description: STORY_POINTS_DESCRIPTION_PT,
+		ogType: "article",
+		lastmod: GUIDES_MODIFIED,
 		alternates: alternateVersions(PATHS.storyPointsPt, PATHS.storyPointsEn, "pt-BR"),
 		jsonLd: [
 			articleJsonLd({
@@ -329,6 +365,8 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		indexable: true,
 		title: "How to Play Planning Poker: Step-by-Step Guide | Pointly",
 		description: HOW_TO_PLAY_DESCRIPTION_EN,
+		ogType: "article",
+		lastmod: GUIDES_MODIFIED,
 		alternates: alternateVersions(PATHS.howToPlayPt, PATHS.howToPlayEn, "en"),
 		jsonLd: [
 			articleJsonLd({
@@ -346,6 +384,8 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		indexable: true,
 		title: "What Is Planning Poker? A Complete Guide | Pointly",
 		description: WHAT_IS_DESCRIPTION_EN,
+		ogType: "article",
+		lastmod: GUIDES_MODIFIED,
 		alternates: alternateVersions(PATHS.whatIsPt, PATHS.whatIsEn, "en"),
 		jsonLd: [
 			articleJsonLd({
@@ -363,6 +403,8 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		indexable: true,
 		title: "Story Points: What They Are and How to Estimate | Pointly",
 		description: STORY_POINTS_DESCRIPTION_EN,
+		ogType: "article",
+		lastmod: GUIDES_MODIFIED,
 		alternates: alternateVersions(PATHS.storyPointsPt, PATHS.storyPointsEn, "en"),
 		jsonLd: [
 			articleJsonLd({
@@ -390,8 +432,6 @@ export const FALLBACK_ROUTE = SEO_ROUTES.find(
 export function canonicalFor(route: SeoRoute): string | undefined {
 	return route.indexable ? `${SITE_URL}${route.path}` : undefined;
 }
-
-const OG_IMAGE = `${SITE_URL}/images/planning-cards.webp`;
 
 export function headForRoute(route: SeoRoute): {
 	lang: string;
@@ -421,14 +461,35 @@ export function headForRoute(route: SeoRoute): {
 		});
 	}
 
+	const ogType = route.ogType ?? "website";
+	const imageAlt = ogImageAlt(route.lang);
+
 	elements.push(
-		{ type: "meta", props: { property: "og:type", content: "website" } },
+		{ type: "meta", props: { property: "og:type", content: ogType } },
+		{ type: "meta", props: { property: "og:site_name", content: SITE_NAME } },
+		{ type: "meta", props: { property: "og:locale", content: ogLocale(route.lang) } },
+		{
+			type: "meta",
+			props: {
+				property: "og:locale:alternate",
+				content: ogAlternateLocale(route.lang),
+			},
+		},
 		{ type: "meta", props: { property: "og:title", content: route.title } },
 		{
 			type: "meta",
 			props: { property: "og:description", content: route.description },
 		},
 		{ type: "meta", props: { property: "og:image", content: OG_IMAGE } },
+		{
+			type: "meta",
+			props: { property: "og:image:width", content: String(OG_IMAGE_WIDTH) },
+		},
+		{
+			type: "meta",
+			props: { property: "og:image:height", content: String(OG_IMAGE_HEIGHT) },
+		},
+		{ type: "meta", props: { property: "og:image:alt", content: imageAlt } },
 		{
 			type: "meta",
 			props: { name: "twitter:card", content: "summary_large_image" },
@@ -439,7 +500,24 @@ export function headForRoute(route: SeoRoute): {
 			props: { name: "twitter:description", content: route.description },
 		},
 		{ type: "meta", props: { name: "twitter:image", content: OG_IMAGE } },
+		{ type: "meta", props: { name: "twitter:image:alt", content: imageAlt } },
 	);
+
+	if (ogType === "article") {
+		elements.push(
+			{
+				type: "meta",
+				props: { property: "article:published_time", content: GUIDES_PUBLISHED },
+			},
+			{
+				type: "meta",
+				props: {
+					property: "article:modified_time",
+					content: route.lastmod ?? GUIDES_MODIFIED,
+				},
+			},
+		);
+	}
 
 	if (canonical) {
 		elements.push({
@@ -466,7 +544,7 @@ export function headForRoute(route: SeoRoute): {
 	return { lang: route.lang, title: route.title, elements };
 }
 
-/** Sitemap gerado no build a partir do registro (sem lastmod falso). */
+/** Sitemap gerado no build a partir do registro (`lastmod` só com data real). */
 export function buildSitemap(): string {
 	const routes = SEO_ROUTES.filter((route) => route.indexable);
 	const hasAlternates = routes.some(
@@ -486,6 +564,7 @@ export function buildSitemap(): string {
 			return [
 				"  <url>",
 				`    <loc>${canonicalFor(route)}</loc>`,
+				route.lastmod ? `    <lastmod>${route.lastmod}</lastmod>` : "",
 				alternates,
 				"  </url>",
 			]

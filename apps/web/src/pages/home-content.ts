@@ -10,6 +10,8 @@ import { HOME_CONTENT_PT } from "./home-content.pt";
 
 export type HomeStep = { title: string; body: string };
 
+export type HomeLearnLink = { to: string; title: string; body: string };
+
 export type HomeContent = {
 	lang: Lang;
 	hero: {
@@ -59,6 +61,11 @@ export type HomeContent = {
 		title: string;
 		steps: readonly HomeStep[];
 		cta: string;
+	};
+	learn: {
+		title: string;
+		intro: string;
+		links: readonly HomeLearnLink[];
 	};
 };
 

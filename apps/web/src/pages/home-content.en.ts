@@ -64,4 +64,25 @@ export const HOME_CONTENT_EN: HomeContent = {
 		],
 		cta: "Create room",
 	},
+	learn: {
+		title: "Understand the ritual before voting",
+		intro: "Three short reads to start the first round with your team aligned.",
+		links: [
+			{
+				to: "/en/planning-poker",
+				title: "Planning poker",
+				body: "The full table: room, secret votes and real-time reveal.",
+			},
+			{
+				to: "/en/scrum-poker",
+				title: "Scrum poker",
+				body: "The same ritual in sprint planning, backlog item by item.",
+			},
+			{
+				to: "/en/guides",
+				title: "Guides",
+				body: "How to play, what it is and how to estimate story points.",
+			},
+		],
+	},
 };

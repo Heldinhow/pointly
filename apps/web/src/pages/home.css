@@ -655,6 +655,21 @@
 .pt-home__closing-action {
   margin-top: 28px;
 }
+.pt-home__learn {
+  padding: 8px 0 40px;
+  border-top: 1px solid var(--home-line);
+}
+.pt-home__learn-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.pt-home__learn-card {
+  height: 100%;
+}
 /* Âncora #demo com smooth só na home e só sem reduced-motion. */
 @media (prefers-reduced-motion: no-preference) {
   html:has(.pt-home) {
@@ -757,7 +772,8 @@
     gap: 20px;
   }
   .pt-home__demo-wrap,
-  .pt-home__how {
+  .pt-home__how,
+  .pt-home__learn {
     padding-top: 32px;
   }
   .pt-home__demo-panel {
@@ -770,7 +786,8 @@
   .pt-home__stats {
     gap: 18px;
   }
-  .pt-home__steps {
+  .pt-home__steps,
+  .pt-home__learn-list {
     grid-template-columns: 1fr;
   }
   .pt-home__steps li,

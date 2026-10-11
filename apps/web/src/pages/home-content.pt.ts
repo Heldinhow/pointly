@@ -65,4 +65,26 @@ export const HOME_CONTENT_PT: HomeContent = {
 		],
 		cta: "Criar sala",
 	},
+	learn: {
+		title: "Entenda o ritual antes de votar",
+		intro:
+			"Três leituras curtas para chegar na primeira rodada com o time alinhado.",
+		links: [
+			{
+				to: "/planning-poker",
+				title: "Planning poker",
+				body: "A mesa completa: sala, votos secretos e reveal em tempo real.",
+			},
+			{
+				to: "/scrum-poker",
+				title: "Scrum poker",
+				body: "O mesmo ritual no sprint planning, item a item do backlog.",
+			},
+			{
+				to: "/guias",
+				title: "Guias",
+				body: "Como jogar, o que é e como estimar story points.",
+			},
+		],
+	},
 };

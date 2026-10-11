@@ -36,7 +36,8 @@ afterEach(() => {
 });
 
 describe("App (issue #158 — polimento e auditoria)", () => {
-  test("uma nova tela começa no topo e recebe o foco no conteúdo", () => {
+  // `/join` e `/s/*` são lazy: a primeira leitura do conteúdo espera o chunk.
+  test("uma nova tela começa no topo e recebe o foco no conteúdo", async () => {
     const originalScrollTo = window.scrollTo;
     const calls: ScrollToOptions[] = [];
     window.scrollTo = ((options: ScrollToOptions) => calls.push(options)) as typeof window.scrollTo;
@@ -49,12 +50,12 @@ describe("App (issue #158 — polimento e auditoria)", () => {
       fireEvent.click(screen.getByTestId("home-cta-create"));
       expect(calls).toEqual([{ top: 0, behavior: "instant" }]);
       expect(document.activeElement).toBe(screen.getByRole("main"));
-      expect(screen.getByLabelText("Apelido")).toBeTruthy();
+      expect(await screen.findByLabelText("Apelido")).toBeTruthy();
     } finally {
       window.scrollTo = originalScrollTo;
     }
   });
-  test("navegação para entrar com código atualiza o formulário já aberto", () => {
+  test("navegação para entrar com código atualiza o formulário já aberto", async () => {
     render(
       <MemoryRouter initialEntries={["/join"]}>
         <App />
@@ -62,7 +63,9 @@ describe("App (issue #158 — polimento e auditoria)", () => {
     );
     expect(screen.queryByRole("group", { name: "Código da sala" })).toBeNull();
     fireEvent.click(screen.getByRole("link", { name: "Entrar com código" }));
-    expect(screen.getByRole("group", { name: "Código da sala" })).toBeTruthy();
+    expect(
+      await screen.findByRole("group", { name: "Código da sala" }),
+    ).toBeTruthy();
   });
   test("skip link leva ao conteúdo principal", () => {
     render(
@@ -139,7 +142,7 @@ describe("App (15.T8 — seleção de idioma)", () => {
     );
   });
 
-  test("seletor em rota do app (/join) alterna EN/PT na hora", () => {
+  test("seletor em rota do app (/join) alterna EN/PT na hora", async () => {
     render(
       <MemoryRouter initialEntries={["/join"]}>
         <App />
@@ -149,7 +152,7 @@ describe("App (15.T8 — seleção de idioma)", () => {
     const [toggle] = screen.getAllByTestId("language-switch");
     fireEvent.click(toggle!);
     expect(window.localStorage.getItem(LANG_STORAGE_KEY)).toBe("en");
-    expect(screen.getByLabelText("Nickname")).toBeTruthy();
+    expect(await screen.findByLabelText("Nickname")).toBeTruthy();
 
     const [backToPt] = screen.getAllByTestId("language-switch");
     fireEvent.click(backToPt!);
@@ -157,7 +160,7 @@ describe("App (15.T8 — seleção de idioma)", () => {
     expect(screen.getByLabelText("Apelido")).toBeTruthy();
   });
 
-  test("preferência EN leva /join para inglês", () => {
+  test("preferência EN leva /join para inglês", async () => {
     window.localStorage.setItem(LANG_STORAGE_KEY, "en");
     render(
       <MemoryRouter initialEntries={["/join"]}>
@@ -165,7 +168,7 @@ describe("App (15.T8 — seleção de idioma)", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByLabelText("Nickname")).toBeTruthy();
+    expect(await screen.findByLabelText("Nickname")).toBeTruthy();
     expect(
       screen.getByRole("radiogroup", {
         name: "Create a room or join with a code",
@@ -173,7 +176,7 @@ describe("App (15.T8 — seleção de idioma)", () => {
     ).toBeTruthy();
   });
 
-  test("navegador EN sem preferência vê /join em inglês", () => {
+  test("navegador EN sem preferência vê /join em inglês", async () => {
     stubNavigatorLanguages(["en-US"]);
     render(
       <MemoryRouter initialEntries={["/join"]}>
@@ -181,7 +184,7 @@ describe("App (15.T8 — seleção de idioma)", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByLabelText("Nickname")).toBeTruthy();
+    expect(await screen.findByLabelText("Nickname")).toBeTruthy();
     expect(window.localStorage.getItem(LANG_STORAGE_KEY)).toBeNull();
   });
 

@@ -1,12 +1,12 @@
 /**
  * Seleção de idioma (15.T8): preferência explícita, detecção do navegador e
- * destino de troca a partir do registro canônico (`src/seo/routes.ts`).
+ * destino de troca a partir do índice leve (`src/seo/paths.ts`).
  *
  * Regras: só o clique no seletor grava preferência; redirect automático só
  * na raiz e só sem preferência (browser em inglês → `/en`), nunca de EN para PT.
  */
 
-import { SEO_ROUTES } from "@/seo/routes";
+import { PUBLIC_PATHS } from "@/seo/paths";
 import type { Lang } from "./i18n";
 import { safeGet, safeSet } from "./storage";
 
@@ -27,14 +27,14 @@ function normalizePath(pathname: string): string {
 /** Rotas públicas indexáveis: onde o seletor aparece (fora de `/join`, `/s/*`, 404). */
 export function isPublicIndexablePath(pathname: string): boolean {
 	const path = normalizePath(pathname);
-	return SEO_ROUTES.some((route) => route.indexable && route.path === path);
+	return PUBLIC_PATHS.some((route) => route.indexable && route.path === path);
 }
 
 /** Alternate da mesma página no outro idioma; sem alternate, cai na home do idioma. */
 export function languageSwitchTarget(pathname: string, lang: Lang): string {
 	const path = normalizePath(pathname);
 	const target = otherLang(lang);
-	const route = SEO_ROUTES.find((candidate) => candidate.path === path);
+	const route = PUBLIC_PATHS.find((candidate) => candidate.path === path);
 	const alternate = route?.alternates?.find((alt) => alt.lang === target);
 	return alternate?.path ?? (target === "en" ? "/en" : "/");
 }

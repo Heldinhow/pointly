@@ -1,7 +1,15 @@
 import { describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
 import { GUIDE_CONTENT } from "../pages/guide-content";
 import { LANDING_CONTENT } from "../pages/landing-content";
-import { buildSitemap, SEO_ROUTES, SITE_URL } from "./routes";
+import { PUBLIC_PATHS } from "./paths";
+import {
+	buildSitemap,
+	GUIDES_MODIFIED,
+	headForRoute,
+	SEO_ROUTES,
+	SITE_URL,
+} from "./routes";
 
 const INDEXABLE = SEO_ROUTES.filter((route) => route.indexable);
 
@@ -10,6 +18,11 @@ describe("Registro SEO (15.T6 — hreflang, sitemap e schema)", () => {
     for (const route of INDEXABLE) {
       const alternates = route.alternates ?? [];
       if (alternates.length === 0) continue;
+
+      // Auto-referência exigida pelo Google: a página lista a si mesma.
+      expect(alternates.find((alt) => alt.lang === route.lang)?.path).toBe(
+        route.path,
+      );
 
       const xDefault = alternates.find((alt) => alt.lang === "x-default");
       expect(xDefault).toBeTruthy();
@@ -39,6 +52,9 @@ describe("Registro SEO (15.T6 — hreflang, sitemap e schema)", () => {
     const sitemap = buildSitemap();
     for (const route of INDEXABLE) {
       expect(sitemap).toContain(`<loc>${SITE_URL}${route.path}</loc>`);
+      expect(sitemap).toContain(
+        `<xhtml:link rel="alternate" hreflang="${route.lang}" href="${SITE_URL}${route.path}" />`,
+      );
     }
     expect(sitemap).toContain('xmlns:xhtml="http://www.w3.org/1999/xhtml"');
     expect(sitemap).toContain('<xhtml:link rel="alternate" hreflang="en"');
@@ -171,6 +187,104 @@ describe("Registro SEO (15.T6 — hreflang, sitemap e schema)", () => {
       expect(article?.author.name).toBe("Pointly");
       expect(article?.datePublished).toBeTruthy();
       expect(article?.dateModified).toBeTruthy();
+    }
+  });
+
+  test("guias levam lastmod real; demais rotas não inventam data", () => {
+    const sitemap = buildSitemap();
+    const guides = SEO_ROUTES.filter((route) => route.ogType === "article");
+    expect(guides.length).toBe(6);
+    for (const route of guides) {
+      expect(route.lastmod).toBe(GUIDES_MODIFIED);
+      expect(sitemap).toContain(
+        `<loc>${SITE_URL}${route.path}</loc>\n    <lastmod>${GUIDES_MODIFIED}</lastmod>`,
+      );
+    }
+    const withoutDate = SEO_ROUTES.filter(
+      (route) => route.indexable && route.ogType !== "article",
+    );
+    expect(withoutDate.length).toBeGreaterThan(0);
+    for (const route of withoutDate) {
+      expect(route.lastmod).toBeUndefined();
+    }
+    expect(sitemap.match(/<lastmod>[^<]+<\/lastmod>/g)?.length).toBe(6);
+  });
+
+  test("head tem OG completo, locale e datas de artigo", () => {
+    const home = SEO_ROUTES.find((route) => route.path === "/");
+    const guide = SEO_ROUTES.find(
+      (route) => route.path === "/guias/como-jogar-planning-poker",
+    );
+    if (!home || !guide) throw new Error("rotas SEO ausentes");
+
+    const homeHead = headForRoute(home);
+    const byProp = (elements: typeof homeHead.elements, property: string) =>
+      elements.find((element) => element.props.property === property)?.props
+        .content;
+    const byName = (elements: typeof homeHead.elements, name: string) =>
+      elements.find((element) => element.props.name === name)?.props.content;
+
+    expect(byProp(homeHead.elements, "og:type")).toBe("website");
+    expect(byProp(homeHead.elements, "og:site_name")).toBe("Pointly");
+    expect(byProp(homeHead.elements, "og:locale")).toBe("pt_BR");
+    expect(byProp(homeHead.elements, "og:locale:alternate")).toBe("en_US");
+    expect(byProp(homeHead.elements, "og:image")).toBe(
+      `${SITE_URL}/images/pointly-og.jpg`,
+    );
+    expect(byProp(homeHead.elements, "og:image:width")).toBe("1200");
+    expect(byProp(homeHead.elements, "og:image:height")).toBe("630");
+    expect(byProp(homeHead.elements, "og:image:alt")).toBeTruthy();
+    expect(byName(homeHead.elements, "twitter:image:alt")).toBeTruthy();
+    const website = home.jsonLd?.find((entry) => entry["@type"] === "WebSite");
+    expect(website).toBeTruthy();
+
+    const guideHead = headForRoute(guide);
+    expect(byProp(guideHead.elements, "og:type")).toBe("article");
+    expect(byProp(guideHead.elements, "og:locale")).toBe("pt_BR");
+    expect(
+      byProp(guideHead.elements, "article:published_time"),
+    ).toBeTruthy();
+    expect(byProp(guideHead.elements, "article:modified_time")).toBe(
+      GUIDES_MODIFIED,
+    );
+    const article = guide.jsonLd?.find(
+      (entry) => entry["@type"] === "Article",
+    ) as { image?: { url?: string; width?: number; height?: number } };
+    expect(article?.image?.url).toBe(`${SITE_URL}/images/pointly-og.jpg`);
+    expect(article?.image?.width).toBe(1200);
+    expect(article?.image?.height).toBe(630);
+  });
+
+  test("titles e descriptions ficam em faixas de SERP", () => {
+    for (const route of INDEXABLE) {
+      expect(route.title.length).toBeGreaterThanOrEqual(20);
+      expect(route.title.length).toBeLessThanOrEqual(60);
+      expect(route.description.length).toBeGreaterThanOrEqual(100);
+      expect(route.description.length).toBeLessThanOrEqual(160);
+    }
+  });
+
+  test("toda rota indexável aparece no llms.txt", () => {
+    const llms = readFileSync(
+      new URL("../../public/llms.txt", import.meta.url),
+      "utf8",
+    );
+    for (const route of INDEXABLE) {
+      expect(llms).toContain(`${SITE_URL}${route.path}`);
+    }
+  });
+
+  test("PUBLIC_PATHS reflete o registro indexável (mesmo path, lang e alternates)", () => {
+    for (const entry of PUBLIC_PATHS) {
+      const route = SEO_ROUTES.find((candidate) => candidate.path === entry.path);
+      expect(route).toBeTruthy();
+      expect(route?.indexable).toBe(true);
+      expect(route?.lang).toBe(entry.lang);
+      expect(route?.alternates).toEqual(entry.alternates);
+    }
+    // Toda rota indexável está no índice leve, exceto comparações triviais.
+    for (const route of INDEXABLE) {
+      expect(PUBLIC_PATHS.some((entry) => entry.path === route.path)).toBe(true);
     }
   });
 });

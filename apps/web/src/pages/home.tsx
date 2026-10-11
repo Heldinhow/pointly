@@ -8,7 +8,13 @@ import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardPanel } from "@/components/ui/card";
+import {
+	Card,
+	CardDescription,
+	CardHeader,
+	CardPanel,
+	CardTitle,
+} from "@/components/ui/card";
 import { Deck } from "@/components/deck";
 import { PokerTable } from "@/components/poker-table";
 import {
@@ -448,6 +454,33 @@ export function HomePage({
           >
             {content.how.cta} <ArrowRightIcon aria-hidden="true" />
           </Button>
+        </section>
+        <section
+          className="pt-home__learn"
+          aria-labelledby="learn-title"
+          data-testid="home-learn"
+        >
+          <div className="pt-home__section-intro">
+            <div>
+              <h2 id="learn-title">{content.learn.title}</h2>
+            </div>
+            <p>{content.learn.intro}</p>
+          </div>
+          <ul className="pt-home__learn-list" role="list">
+            {content.learn.links.map((link) => (
+              <li key={link.to}>
+                <Card
+                  className="pt-home__learn-card"
+                  render={<Link to={link.to} />}
+                >
+                  <CardHeader>
+                    <CardTitle render={<h3 />}>{link.title}</CardTitle>
+                    <CardDescription>{link.body}</CardDescription>
+                  </CardHeader>
+                </Card>
+              </li>
+            ))}
+          </ul>
         </section>
       </div>
     </div>

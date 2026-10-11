@@ -122,6 +122,12 @@ summary:focus-visible {
   padding-top: 32px;
   min-width: 0;
 }
+.site-loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+  color: var(--muted-foreground);
+}
 .site-footer {
   width: 100%;
   margin: 0 auto;

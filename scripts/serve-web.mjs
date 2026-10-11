@@ -7,13 +7,52 @@
  * - /join e /s/*: shell SPA (shell.html) com `X-Robots-Tag: noindex`;
  * - rota desconhecida: 404 real com dist/404/index.html (fim do soft-404);
  * - /caminho/ → 301 para /caminho (forma canônica sem barra final).
+ * - cache: `/assets/*` imutável por 1 ano; estáticos públicos por 1 dia; HTML
+ *   e erros sem cache. `ETag` fraco + 304; Brotli/gzip só para texto, com
+ *   `Vary` implícito pela negociação de `Accept-Encoding`. HSTS curto apenas
+ *   quando `X-Forwarded-Proto: https`.
  */
-import { createReadStream, statSync } from "node:fs";
+import { createReadStream, readFileSync, statSync } from "node:fs";
 import { join, normalize } from "node:path";
+import { brotliCompressSync, gzipSync } from "node:zlib";
 
 const DIST = join(import.meta.dirname, "..", "apps", "web", "dist");
 const PORT = Number(process.env.PORT ?? 8080);
 const HOST = process.env.HOST ?? "0.0.0.0";
+
+const CACHE_IMMUTABLE = "public, max-age=31536000, immutable";
+const CACHE_SHORT = "public, max-age=86400";
+const CACHE_NONE = "no-cache";
+const HSTS_MAX_AGE = 86400;
+// Só texto comprime bem; imagens/fontes já são comprimidas.
+const COMPRESSIBLE = new Set([
+	".html",
+	".js",
+	".mjs",
+	".css",
+	".json",
+	".xml",
+	".txt",
+	".svg",
+	".webmanifest",
+	".map",
+]);
+// Estáticos públicos sem hash mudam entre deploys; ficam com cache curto.
+const SHORT_LIVED = new Set([
+	".png",
+	".jpg",
+	".jpeg",
+	".gif",
+	".webp",
+	".ico",
+	".svg",
+	".woff",
+	".woff2",
+	".ttf",
+	".webmanifest",
+]);
+const MAX_COMPRESSED_BYTES = 2 * 1024 * 1024;
+const compressedCache = new Map();
 
 const MIME = {
 	".html": "text/html; charset=utf-8",
@@ -104,48 +143,256 @@ function decide(rawUrl) {
 	return { status: 404, text: "Not Found" };
 }
 
-function headersFor(decision, file) {
-	const headers = { "Cache-Control": "no-cache" };
+function headersFor(decision, file, request) {
+	const headers = {
+		"Cache-Control": file ? cacheControlFor(file) : CACHE_NONE,
+	};
 	if (decision.location) headers.Location = decision.location;
-	if (file) headers["Content-Type"] = mimeOf(file);
+	if (file) {
+		headers["Content-Type"] = mimeOf(file);
+		const etag = etagFor(file);
+		if (etag) headers.ETag = etag;
+	}
 	if (decision.noindex) headers["X-Robots-Tag"] = "noindex";
+	Object.assign(headers, hstsHeader(request));
 	return headers;
 }
 
-const server = globalThis.Bun?.serve ?? null;
+function hstsHeader(request) {
+	// HSTS só faz sentido sobre HTTPS; o protocolo chega no X-Forwarded-Proto
+	// setado pelo Traefik (único caminho até este servidor). Rampa: 1 dia.
+	if (requestProto(request) !== "https") return {};
+	return { "Strict-Transport-Security": `max-age=${HSTS_MAX_AGE}` };
+}
 
-if (server) {
+function extOf(pathname) {
+	const index = pathname.lastIndexOf(".");
+	return index >= 0 ? pathname.slice(index).toLowerCase() : "";
+}
+
+/** Assets do Vite têm hash no nome e nunca mudam; o resto varia por tipo. */
+function cacheControlFor(file, distDir = DIST) {
+	const assetsPrefix = join(distDir, "assets") + "/";
+	if (file.startsWith(assetsPrefix)) return CACHE_IMMUTABLE;
+	if (SHORT_LIVED.has(extOf(file))) return CACHE_SHORT;
+	return CACHE_NONE;
+}
+
+/** Validador fraco a partir de tamanho + mtime; barato e suficiente aqui. */
+function etagFor(file) {
+	try {
+		const stat = statSync(file);
+		if (!stat.isFile()) return undefined;
+		return `W/"${stat.size.toString(16)}-${Math.floor(stat.mtimeMs).toString(16)}"`;
+	} catch {
+		return undefined;
+	}
+}
+
+function isNotModified(file, ifNoneMatch) {
+	if (!ifNoneMatch) return false;
+	const etag = etagFor(file);
+	if (!etag) return false;
+	return String(ifNoneMatch)
+		.split(",")
+		.map((value) => value.trim())
+		.some((value) => value === "*" || value === etag);
+}
+
+/**
+ * Decide a resposta HTTP completa (status, headers e corpo) para uma
+ * requisição. Compartilhada pelo caminho Bun e pelo caminho Node.
+ * @returns {{status:number, headers:Record<string,string>, body?:string|Uint8Array}}
+ */
+function respond(decision, request, ifNoneMatch, acceptEncoding) {
+	if (decision.text) {
+		return {
+			status: decision.status,
+			headers: {
+				...headersFor(decision, undefined, request),
+				"Content-Type": "text/plain; charset=utf-8",
+			},
+			body: decision.text,
+		};
+	}
+	if (!decision.file) {
+		return {
+			status: decision.status,
+			headers: headersFor(decision, undefined, request),
+		};
+	}
+
+	const base = {
+		...headersFor(decision, decision.file, request),
+		...hstsHeader(request),
+	};
+	// Só 200 revalida (o 404 também tem ETag, mas nunca vira 304).
+	if (decision.status === 200 && isNotModified(decision.file, ifNoneMatch)) {
+		return { status: 304, headers: base };
+	}
+
+	if (!COMPRESSIBLE.has(extOf(decision.file))) {
+		return { status: decision.status, headers: base };
+	}
+	// A resposta varia por Accept-Encoding; sem o Vary um cache pode
+	// entregar br a quem não aceita.
+	const headers = { ...base, Vary: "Accept-Encoding" };
+	const compressed = compressedFor(decision.file, acceptEncoding);
+	if (!compressed) return { status: decision.status, headers };
+	return {
+		status: decision.status,
+		headers: {
+			...headers,
+			"Content-Encoding": compressed.encoding,
+			"Content-Length": String(compressed.bytes.length),
+		},
+		body: compressed.bytes,
+	};
+}
+
+/** Prefere Brotli; aceita token com parâmetros (`br;q=1.0`). */
+function pickEncoding(acceptEncoding) {
+	const parts = String(acceptEncoding ?? "")
+		.toLowerCase()
+		.split(",")
+		.map((part) => part.trim().split(";")[0]?.trim());
+	if (parts.includes("br")) return "br";
+	if (parts.includes("gzip")) return "gzip";
+	return null;
+}
+
+/**
+ * Comprime uma vez e reaproveita: arquivos são imutáveis por deploy.
+ * Retorna null quando não vale a pena (binário, sem Accept-Encoding ou
+ * compressão maior que o original).
+ */
+function compressedFor(file, acceptEncoding) {
+	if (!COMPRESSIBLE.has(extOf(file))) return null;
+	const encoding = pickEncoding(acceptEncoding);
+	if (!encoding) return null;
+	let stat;
+	try {
+		stat = statSync(file);
+		if (!stat.isFile() || stat.size > MAX_COMPRESSED_BYTES) return null;
+	} catch {
+		return null;
+	}
+	// mtime+size no valor: se o dist mudar com o processo vivo, re-comprime.
+	const key = `${file}:${encoding}`;
+	const cached = compressedCache.get(key);
+	if (cached && cached.mtimeMs === stat.mtimeMs && cached.size === stat.size) {
+		return cached;
+	}
+	let bytes;
+	try {
+		bytes = readFileSync(file);
+	} catch {
+		return null;
+	}
+
+	let compressed;
+	try {
+		compressed =
+			encoding === "br" ? brotliCompressSync(bytes) : gzipSync(bytes);
+	} catch {
+		return null;
+	}
+	if (!compressed || compressed.length >= bytes.length) return null;
+	const result = {
+		bytes: compressed,
+		encoding,
+		mtimeMs: stat.mtimeMs,
+		size: stat.size,
+	};
+	if (compressedCache.size < 200) compressedCache.set(key, result);
+	return result;
+}
+
+function requestProto(request) {
+	const headers = request?.headers;
+	if (!headers) return undefined;
+	const value =
+		typeof headers.get === "function"
+			? headers.get("x-forwarded-proto")
+			: headers["x-forwarded-proto"];
+	const first = Array.isArray(value) ? value[0] : value;
+	return first?.split(",")[0]?.trim().toLowerCase();
+}
+
+export {
+	cacheControlFor,
+	compressedFor,
+	decide,
+	etagFor,
+	headersFor,
+	isNotModified,
+	pickEncoding,
+	respond,
+};
+
+const server = globalThis.Bun?.serve ?? null;
+const listenEnabled = process.env.SERVE_WEB_NO_LISTEN !== "1";
+
+if (listenEnabled && server) {
 	const srv = server({
 		port: PORT,
 		hostname: HOST,
 		fetch(req) {
 			const decision = decide(req.url);
-			if (decision.text) {
-				return new Response(decision.text, {
-					status: decision.status,
-					headers: {
-						...headersFor(decision),
-						"Content-Type": "text/plain; charset=utf-8",
-					},
+			const result = respond(
+				decision,
+				req,
+				req.headers.get("if-none-match"),
+				req.headers.get("accept-encoding") ?? "",
+			);
+			if (result.status === 304) {
+				return new Response(null, {
+					status: result.status,
+					headers: result.headers,
 				});
 			}
-			return new Response(decision.file ? Bun.file(decision.file) : null, {
-				status: decision.status,
-				headers: headersFor(decision, decision.file),
+			if (result.body !== undefined) {
+				return new Response(result.body, {
+					status: result.status,
+					headers: result.headers,
+				});
+			}
+			if (!decision.file) {
+				return new Response(null, {
+					status: result.status,
+					headers: result.headers,
+				});
+			}
+			return new Response(Bun.file(decision.file), {
+				status: result.status,
+				headers: result.headers,
 			});
 		},
 	});
 	console.log(
 		`[pointly-web] serving ${DIST} on http://${srv.hostname}:${srv.port}`,
 	);
-} else {
+} else if (listenEnabled) {
 	const http = await import("node:http");
 	http
 		.createServer((req, res) => {
 			const decision = decide(req.url ?? "/");
-			res.writeHead(decision.status, headersFor(decision, decision.file));
-			if (decision.text) return res.end(decision.text);
-			if (!decision.file) return res.end();
+			const result = respond(
+				decision,
+				req,
+				req.headers["if-none-match"],
+				req.headers["accept-encoding"] ?? "",
+			);
+			if (result.status === 304 || result.body !== undefined) {
+				res.writeHead(result.status, result.headers);
+				return res.end(result.body);
+			}
+			if (!decision.file) {
+				res.writeHead(result.status, result.headers);
+				return res.end();
+			}
+			res.writeHead(result.status, result.headers);
+			if (req.method === "HEAD") return res.end();
 			createReadStream(decision.file).pipe(res);
 		})
 		.listen(PORT, HOST, () =>

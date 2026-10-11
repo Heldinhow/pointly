@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "programmatic-seo": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "skillPath": "skills/programmatic-seo/SKILL.md",
+      "computedHash": "e40eee11a367397e56e304fd646d582e276751ffd6f7275c64ea74b046cf5c22"
+    },
     "wayfinder": {
       "source": "mattpocock/skills",
       "sourceType": "github",
