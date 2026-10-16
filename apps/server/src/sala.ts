@@ -900,14 +900,25 @@ export class Sala {
 	/**
 	 * Snapshot serializável para broadcast `room_state` (F sala_state_event).
 	 */
-	toState(): SalaState {
+	toState(viewerId?: string): SalaState {
+		const revealed = this.phase === "revealed";
+		const players = Array.from(this.players.values(), (player) => {
+			const { uuid: _uuid, ...publicPlayer } = player;
+			return {
+				...publicPlayer,
+				value: revealed || player.id === viewerId ? player.value : null,
+			};
+		});
+		const votes = Object.fromEntries(
+			Array.from(this.votes).filter(([playerId]) => revealed || playerId === viewerId),
+		);
 		return {
 			code: this.code,
 			hostId: this.hostId,
-			players: Array.from(this.players.values()),
+			players,
 			phase: this.phase,
 			round: this.round,
-			votes: Object.fromEntries(this.votes),
+			votes,
 			createdAt: this.createdAt,
 			pauta: this.pauta.map((h) => ({ ...h })),
 			historiaAtualId: this.historiaAtualId,

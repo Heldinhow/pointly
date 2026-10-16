@@ -32,6 +32,7 @@ import {
  * faz join se com code. Reconnect: uuid conhecida reidrata player existente (T13a).
  */
 export const HelloPayloadSchema = z.object({
+	protocolVersion: z.literal(2),
 	uuid: UuidSchema,
 	nick: NickSchema,
 	code: RoomCodeSchema.optional(),

@@ -14,13 +14,13 @@ beforeEach(() => {
 });
 
 function addHost(uuid: string, nick: string) {
-	const r = handleHello(hub, { uuid, nick });
+	const r = handleHello(hub, { protocolVersion: 2, uuid, nick });
 	if (!r.ok) throw new Error("expected host ok");
 	return { id: r.playerId, code: hub.activeCodes()[0]! };
 }
 
 function addJoin(uuid: string, nick: string, code: string) {
-	const r = handleHello(hub, { uuid, nick, code });
+	const r = handleHello(hub, { protocolVersion: 2, uuid, nick, code });
 	if (!r.ok) throw new Error(`expected join ok, got ${r.code}`);
 	return r.playerId;
 }

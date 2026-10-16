@@ -84,6 +84,18 @@ describe("NickSchema", () => {
 });
 
 describe("getOrCreateUuid", () => {
+	test("não reutiliza identidade legada e preserva sessão e preferências", () => {
+		const legacy = "00000000-0000-4000-8000-000000000099";
+		window.localStorage.setItem("pointly-uuid", legacy);
+		window.localStorage.setItem("avatar", "foto");
+		saveSession("AB12", "Ana");
+		const fresh = getOrCreateUuid();
+		expect(fresh).not.toBe(legacy);
+		expect(getOrCreateUuid()).toBe(fresh);
+		expect(window.localStorage.getItem("pointly-uuid-v2")).toBe(fresh);
+		expect(window.localStorage.getItem("avatar")).toBe("foto");
+		expect(loadSession()).toEqual({ code: "AB12", nick: "Ana" });
+	});
 	test("é estável entre chamadas e tem formato UUID", () => {
 		const first = getOrCreateUuid();
 		const second = getOrCreateUuid();

@@ -7,7 +7,7 @@ import { safeGet, safeRemove, safeSet } from "./storage";
  * (sobrevive ao reload na entrada) e normalização/validação do código.
  */
 
-const UUID_KEY = "pointly-uuid";
+const UUID_KEY = "pointly-uuid-v2";
 const NICK_DRAFT_KEY = "pointly-nick-draft";
 const SESSION_KEY = "pointly-session";
 

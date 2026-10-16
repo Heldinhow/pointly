@@ -93,12 +93,13 @@ function send(
 
 function hello(
 	ws: MockBunWS,
-	payload: { uuid: string; nick: string; code?: string; spectate?: boolean },
+	payload: { protocolVersion: 2, uuid: string; nick: string; code?: string; spectate?: boolean },
 ): void {
 	send(ws, "hello", payload);
 }
 
 function connect(ip: string, payload: {
+	protocolVersion: 2,
 	uuid: string;
 	nick: string;
 	code?: string;
@@ -146,8 +147,8 @@ beforeEach(() => {
 	bob = new MockBunWS("127.0.0.2");
 	service.onOpen(ana);
 	service.onOpen(bob);
-	hello(ana, { uuid: UUID_ANA, nick: "Ana" });
-	hello(bob, { uuid: UUID_BOB, nick: "Bob", code: ana.data.code! });
+	hello(ana, { protocolVersion: 2, uuid: UUID_ANA, nick: "Ana" });
+	hello(bob, { protocolVersion: 2, uuid: UUID_BOB, nick: "Bob", code: ana.data.code! });
 	ana.messages.length = 0;
 	bob.messages.length = 0;
 });
@@ -237,6 +238,7 @@ describe("WS Pauta #166 — entrada tardia e F5", () => {
 		const statesBefore = bob.eventsOfType("room_state").length;
 
 		const carol = connect("127.0.0.3", {
+			protocolVersion: 2,
 			uuid: UUID_CAROL,
 			nick: "Carol",
 			code: ana.data.code!,
@@ -264,6 +266,7 @@ describe("WS Pauta #166 — entrada tardia e F5", () => {
 		pontuarAtiva();
 
 		const bobF5 = connect("127.0.0.4", {
+			protocolVersion: 2,
 			uuid: UUID_BOB,
 			nick: "Bob",
 			code: ana.data.code!,
@@ -304,6 +307,7 @@ describe("WS Pauta #166 — pós-reveal, espectador e efêmero", () => {
 	test("espectador tentando editar recebe role_denied sem efeito", () => {
 		criar3();
 		const olho = connect("127.0.0.5", {
+			protocolVersion: 2,
 			uuid: UUID_OLHO,
 			nick: "Olho",
 			code: ana.data.code!,
@@ -332,11 +336,13 @@ describe("WS Pauta #166 — pós-reveal, espectador e efêmero", () => {
 	test("último a sair apaga a pauta e a sala (efêmero natural)", () => {
 		criar3();
 		const carol = connect("127.0.0.6", {
+			protocolVersion: 2,
 			uuid: UUID_CAROL,
 			nick: "Carol",
 			code: ana.data.code!,
 		});
 		const dora = connect("127.0.0.7", {
+			protocolVersion: 2,
 			uuid: UUID_DORA,
 			nick: "Dora",
 			code: ana.data.code!,
@@ -360,6 +366,7 @@ describe("WS Pauta #166 — pós-reveal, espectador e efêmero", () => {
 
 		// Quem tentar entrar depois cai em sala_nao_encontrada.
 		const zed = connect("127.0.0.8", {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000008",
 			nick: "Zed",
 			code,

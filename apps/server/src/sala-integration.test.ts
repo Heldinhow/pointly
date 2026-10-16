@@ -38,7 +38,7 @@ function bootSalaWithPlayers(count: number): {
 	}
 	const players: Record<string, string> = {};
 	const hostUuid = "00000000-0000-4000-8000-000000000001";
-	const hostResult = handleHello(hub, { uuid: hostUuid, nick: "Host" });
+	const hostResult = handleHello(hub, { protocolVersion: 2, uuid: hostUuid, nick: "Host" });
 	if (!hostResult.ok) throw new Error(`host falhou: ${hostResult.code}`);
 	players.Host = hostResult.playerId;
 	const code = hub.activeCodes()[0]!;
@@ -46,7 +46,7 @@ function bootSalaWithPlayers(count: number): {
 	for (let i = 2; i <= count; i++) {
 		const uuid = `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`;
 		const nick = `P${i}`;
-		const join = handleHello(hub, { uuid, nick, code });
+		const join = handleHello(hub, { protocolVersion: 2, uuid, nick, code });
 		if (!join.ok) throw new Error(`join ${nick} falhou: ${join.code}`);
 		players[nick] = join.playerId;
 	}
@@ -62,6 +62,7 @@ describe("T19 — happy path: criar → join → vote → reveal", () => {
 	test("criar sala → 2 players entram → 1º vota → 2º vota → reveal → todos veem stats", () => {
 		// 1. Host cria sala
 		const hostResult = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000001",
 			nick: "Ana",
 		});
@@ -74,6 +75,7 @@ describe("T19 — happy path: criar → join → vote → reveal", () => {
 
 		// 2. Bob entra
 		const bobResult = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000002",
 			nick: "Bob",
 			code,
@@ -158,7 +160,7 @@ describe("T19 — votação parcial aguarda reveal manual", () => {
 		expect(sala.votes.get(anaId)).toBe("5");
 		expect(sala.votes.has(bobId)).toBe(false); // Bob nunca votou
 
-		const state = sala.toState();
+		const state = sala.toState(anaId);
 		expect(state.votes[anaId]).toBe("5");
 		expect(state.votes[bobId]).toBeUndefined();
 
@@ -314,7 +316,8 @@ describe("T19 — invariantes do state machine", () => {
 		// Snapshot sem timer
 		const state = sala.toState();
 		expect(state.phase).toBe("revealable");
-		expect(state.votes).toEqual({
+		expect(state.votes).toEqual({});
+		expect(Object.fromEntries(sala.votes)).toEqual({
 			[anaId]: "5",
 			[bobId]: "5",
 			[carolId]: "5",

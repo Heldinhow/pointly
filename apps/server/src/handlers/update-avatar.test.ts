@@ -24,7 +24,7 @@ beforeEach(() => {
 });
 
 function createSalaWithPlayer(uuid: string, nick: string): string {
-	const result = handleHello(hub, { uuid, nick });
+	const result = handleHello(hub, { protocolVersion: 2, uuid, nick });
 	expect(result.ok).toBe(true);
 	if (!result.ok) throw new Error("setup falhou");
 	return result.playerId;
@@ -90,10 +90,11 @@ describe("handleUpdateAvatar", () => {
 	});
 
 	test("mesmo apelido não mistura avatar entre players (edge E2)", () => {
-		const first = handleHello(hub, { uuid: UUID_P1, nick: "Beto" });
+		const first = handleHello(hub, { protocolVersion: 2, uuid: UUID_P1, nick: "Beto" });
 		expect(first.ok).toBe(true);
 		if (!first.ok) throw new Error("setup falhou");
 		const second = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: UUID_P3,
 			nick: "Beto",
 			code: first.sala.code,
@@ -158,7 +159,7 @@ function authedWs(
 	nick: string,
 	code?: string,
 ): { ws: MockBunWS; playerId: string; roomCode: string } {
-	const result = handleHello(hub, code ? { uuid, nick, code } : { uuid, nick });
+	const result = handleHello(hub, code ? { protocolVersion: 2, uuid, nick, code } : { protocolVersion: 2, uuid, nick });
 	expect(result.ok).toBe(true);
 	if (!result.ok) throw new Error("setup falhou");
 	const ws = new MockBunWS();

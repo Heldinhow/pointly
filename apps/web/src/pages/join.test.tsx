@@ -10,6 +10,7 @@ import {
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { useSession } from "../store/session";
 import { JoinPage } from "./join";
+import { ClientToServerEventSchema } from "@planning-poker/shared";
 import type { Lang } from "@/lib/i18n";
 
 class MockSocket {
@@ -233,11 +234,12 @@ describe("JoinPage", () => {
 			socket.receive(welcomeMessage("QWER"));
 		});
 		expect(await screen.findByText("ARENA")).toBeTruthy();
-		const hello = JSON.parse(socket.sent[0] as string) as {
-			type: string;
-			payload: { uuid: string; nick: string; code: string };
-		};
+		const rawHello = socket.sent[0];
+		if (!rawHello) throw new Error("hello ausente");
+		const hello = ClientToServerEventSchema.parse(JSON.parse(rawHello));
 		expect(hello.type).toBe("hello");
+		if (hello.type !== "hello") throw new Error("evento não é hello");
+		expect(hello.payload.protocolVersion).toBe(2);
 		expect(hello.payload.nick).toBe("Ana");
 		expect(hello.payload.code).toBe("ZZ99");
 		expect(hello.payload.uuid).toMatch(/^[0-9a-f-]{36}$/i);

@@ -29,7 +29,7 @@ beforeEach(() => {
 });
 
 function createHost(nick = "Ana"): { playerId: string; code: string } {
-	const result = handleHello(hub, { uuid: UUID_P1, nick });
+	const result = handleHello(hub, { protocolVersion: 2, uuid: UUID_P1, nick });
 	expect(result.ok).toBe(true);
 	if (!result.ok) throw new Error("setup falhou");
 	return { playerId: result.playerId, code: result.sala.code };
@@ -37,6 +37,7 @@ function createHost(nick = "Ana"): { playerId: string; code: string } {
 
 function addSpectator(code: string): string {
 	const result = handleHello(hub, {
+		protocolVersion: 2,
 		uuid: UUID_SPEC,
 		nick: "Olho",
 		code,
@@ -188,6 +189,7 @@ describe("handleHistoriaMove", () => {
 		const { playerId } = createHost();
 		// segundo votante para phase ficar em voting (não revealable)
 		const bob = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: UUID_P2,
 			nick: "Bob",
 			code: hub.activeCodes()[0]!,
@@ -270,6 +272,7 @@ describe("handleHistoriaRemove", () => {
 
 	test("apagar a ativa em voting recebe invalid_phase", () => {		const { playerId } = createHost();
 		const bob = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: UUID_P2,
 			nick: "Bob",
 			code: hub.activeCodes()[0]!,
@@ -319,6 +322,7 @@ describe("handleHistoriaSelect", () => {
 	test("troca em voting recebe invalid_phase", () => {
 		const { playerId } = createHost();
 		const bob = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: UUID_P2,
 			nick: "Bob",
 			code: hub.activeCodes()[0]!,

@@ -154,7 +154,7 @@ describe("WSService — onMessage (hello + cast_vote + reveal + new_round)", () 
 			ws,
 			JSON.stringify({
 				type: "hello",
-				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+				payload: { protocolVersion: 2, uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
 			}),
 		);
 
@@ -174,7 +174,7 @@ describe("WSService — onMessage (hello + cast_vote + reveal + new_round)", () 
 			ws,
 			JSON.stringify({
 				type: "hello",
-				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "A" },
+				payload: { protocolVersion: 2, uuid: "00000000-0000-4000-8000-000000000001", nick: "A" },
 			}),
 		);
 
@@ -190,7 +190,7 @@ describe("WSService — onMessage (hello + cast_vote + reveal + new_round)", () 
 			ws,
 			JSON.stringify({
 				type: "hello",
-				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+				payload: { protocolVersion: 2, uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
 			}),
 		);
 		// Ana vota
@@ -213,7 +213,7 @@ describe("WSService — onMessage (hello + cast_vote + reveal + new_round)", () 
 			ws,
 			JSON.stringify({
 				type: "hello",
-				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+				payload: { protocolVersion: 2, uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
 			}),
 		);
 		const guest = new MockBunWS();
@@ -223,6 +223,7 @@ describe("WSService — onMessage (hello + cast_vote + reveal + new_round)", () 
 			JSON.stringify({
 				type: "hello",
 				payload: {
+					protocolVersion: 2,
 					uuid: "00000000-0000-4000-8000-000000000002",
 					nick: "Beto",
 					code: ws.data.code,
@@ -256,7 +257,7 @@ describe("WSService — onMessage (hello + cast_vote + reveal + new_round)", () 
 			ws,
 			JSON.stringify({
 				type: "hello",
-				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+				payload: { protocolVersion: 2, uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
 			}),
 		);
 		service.onMessage(
@@ -302,6 +303,7 @@ describe("WSService — onMessage (hello + cast_vote + reveal + new_round)", () 
 	test("reveal e nova rodada enviam o estado atualizado também a quem acionou", () => {
 		service.onOpen(ws);
 		service.onMessage(ws, JSON.stringify({ type: "hello", payload: {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana",
 		} }));
 		service.onMessage(ws, JSON.stringify({ type: "cast_vote", payload: { value: "5" } }));
@@ -322,7 +324,7 @@ describe("WSService — onMessage (hello + cast_vote + reveal + new_round)", () 
 			ws,
 			JSON.stringify({
 				type: "hello",
-				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+				payload: { protocolVersion: 2, uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
 			}),
 		);
 		const ws2 = new MockBunWS("127.0.0.2");
@@ -332,6 +334,7 @@ describe("WSService — onMessage (hello + cast_vote + reveal + new_round)", () 
 			JSON.stringify({
 				type: "hello",
 				payload: {
+					protocolVersion: 2,
 					uuid: "00000000-0000-4000-8000-000000000002",
 					nick: "Bob",
 					code: ws.data.code,
@@ -382,7 +385,7 @@ describe("WSService — gracefulShutdown", () => {
 			ws,
 			JSON.stringify({
 				type: "hello",
-				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+				payload: { protocolVersion: 2, uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
 			}),
 		);
 
@@ -407,7 +410,7 @@ describe("WSService — wire format validation", () => {
 			ws,
 			JSON.stringify({
 				type: "hello",
-				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+				payload: { protocolVersion: 2, uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
 			}),
 		);
 		for (const msg of ws.messages) {
@@ -447,7 +450,7 @@ describe("WSService — tick heartbeat + grace period", () => {
 			ws,
 			JSON.stringify({
 				type: "hello",
-				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+				payload: { protocolVersion: 2, uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
 			}),
 		);
 		const t = Date.now();
@@ -470,7 +473,7 @@ describe("WSService — tick heartbeat + grace period", () => {
 			ws,
 			JSON.stringify({
 				type: "hello",
-				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+				payload: { protocolVersion: 2, uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
 			}),
 		);
 		const ws2 = new MockBunWS("127.0.0.2");
@@ -480,6 +483,7 @@ describe("WSService — tick heartbeat + grace period", () => {
 			JSON.stringify({
 				type: "hello",
 				payload: {
+					protocolVersion: 2,
 					uuid: "00000000-0000-4000-8000-000000000002",
 					nick: "Bob",
 					code: ws.data.code,
@@ -508,7 +512,7 @@ describe("WSService — tick heartbeat + grace period", () => {
 			ws,
 			JSON.stringify({
 				type: "hello",
-				payload: { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
+				payload: { protocolVersion: 2, uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" },
 			}),
 		);
 		// sem cast_vote — sala em idle; hello não broadcasta room_state pro sender

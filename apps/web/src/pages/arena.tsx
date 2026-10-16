@@ -51,7 +51,7 @@ import {
 import type {
 	NudgeId,
 	Phase,
-	Player,
+	PublicPlayer as Player,
 	ProjectileType,
 	Vote,
 } from "@planning-poker/shared";

@@ -52,7 +52,6 @@ describe("Barrel `@planning-poker/shared` smoke test", () => {
 			players: [
 				{
 					id: "p1",
-					uuid: "550e8400-e29b-41d4-a716-446655440000",
 					nick: "Ana",
 					role: "host" as const,
 					seatIndex: 0,

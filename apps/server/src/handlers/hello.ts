@@ -81,7 +81,7 @@ export function handleHello(hub: Hub, payload: HelloPayload): HelloOutcome {
 				ok: true,
 				playerId,
 				role: player.role,
-				sala: sala.toState(),
+				sala: sala.toState(playerId),
 				reconnected: true,
 			};
 		}
@@ -116,7 +116,7 @@ export function handleHello(hub: Hub, payload: HelloPayload): HelloOutcome {
 				ok: true,
 				playerId,
 				role: finalRole,
-				sala: newSala.toState(),
+				sala: newSala.toState(playerId),
 				reconnected: false,
 			};
 		}
@@ -129,7 +129,7 @@ export function handleHello(hub: Hub, payload: HelloPayload): HelloOutcome {
 			ok: true,
 			playerId,
 			role: finalRole,
-			sala: sala.toState(),
+			sala: sala.toState(playerId),
 			reconnected: false,
 		};
 	} catch (e) {

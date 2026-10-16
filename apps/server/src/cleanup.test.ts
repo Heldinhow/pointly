@@ -11,12 +11,14 @@ import { SALA_DISCONNECT_GRACE_MS } from "./sala";
 function create2Players() {
 	const hub = new Hub();
 	const r1 = handleHello(hub, {
+		protocolVersion: 2,
 		uuid: "00000000-0000-4000-8000-000000000001",
 		nick: "Ana",
 	});
 	if (!r1.ok) throw new Error("ana failed");
 	const code = hub.activeCodes()[0]!;
 	const r2 = handleHello(hub, {
+		protocolVersion: 2,
 		uuid: "00000000-0000-4000-8000-000000000002",
 		nick: "Bob",
 		code,
