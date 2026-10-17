@@ -36,6 +36,16 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		hint: "The score may be out of date. Try connecting again.",
 		retry: "Try again",
 	},
+	roomEnded: {
+		title: "Room ended",
+		reasons: {
+			server_restart: "The server restarted. This room cannot be resumed.",
+			last_left: "The room ended after the participants left.",
+			replaced: "Your session was opened in another tab. Continue there.",
+			missing: "This room is no longer available.",
+		},
+		backToJoin: "Back to entry",
+	},
 	playArea: {
 		aria: "Planning poker table",
 		caption: "Planning poker table",

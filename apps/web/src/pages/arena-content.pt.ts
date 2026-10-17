@@ -39,6 +39,16 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		hint: "O placar pode estar desatualizado. Tente se conectar de novo.",
 		retry: "Tentar de novo",
 	},
+	roomEnded: {
+		title: "Sala encerrada",
+		reasons: {
+			server_restart: "O servidor reiniciou. Esta sala não pode ser retomada.",
+			last_left: "A sala foi encerrada após a saída dos participantes.",
+			replaced: "Sua sessão foi aberta em outra aba. Continue por lá.",
+			missing: "Esta sala não está mais disponível.",
+		},
+		backToJoin: "Voltar à entrada",
+	},
 	playArea: {
 		aria: "Mesa de planning poker",
 		caption: "Mesa de planning poker",

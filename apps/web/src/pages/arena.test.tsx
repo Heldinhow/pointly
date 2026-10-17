@@ -7,8 +7,9 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useSearchParams } from "react-router-dom";
 import type { Lang } from "../lib/i18n";
+import type { RoomEndReason } from "../lib/ws-client";
 import { ClientToServerEventSchema, type HelloPayload, type Historia, type PublicPlayer as Player, type SalaState, type Vote } from "@planning-poker/shared";
 import { useSession } from "../store/session";
 import { CONFIRM_TIMEOUT_MS } from "../lib/confirm";
@@ -24,6 +25,7 @@ class FakeSocket {
 		onReconnecting?: (attempt: number, nextInMs: number) => void;
 		onReconnected?: (welcome: unknown) => void;
 		onReconnectFailed?: () => void;
+		onSalaEnded?: (reason: RoomEndReason) => void;
 		onProjectileThrown?: (event: {
 			senderPlayerId: string;
 			targetPlayerId: string;
@@ -60,6 +62,7 @@ class FakeSocket {
 		onReconnecting?: (attempt: number, nextInMs: number) => void;
 		onReconnected?: (welcome: unknown) => void;
 		onReconnectFailed?: () => void;
+		onSalaEnded?: (reason: RoomEndReason) => void;
 		onProjectileThrown?: (event: {
 			senderPlayerId: string;
 			targetPlayerId: string;
@@ -239,6 +242,11 @@ function seed(session: {
 		>["socket"],
 	});
 	return session.socket;
+}
+
+function JoinTargetProbe() {
+	const [params] = useSearchParams();
+	return <div>JOIN:{params.get("code") ?? "sem-codigo"}</div>;
 }
 
 function renderArena(route = "/s/AB12", lang: Lang = "pt-BR"): void {
@@ -1592,13 +1600,32 @@ describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {
 		}
 	});
 
-	test("sala inexistente no rejoin limpa a sessão e volta para a entrada", async () => {
+	test("sala encerrada substitui a arena e retorna à entrada", () => {
+		const fake = new FakeSocket();
+		seed({ sala: sala(), playerId: "p_host", socket: fake });
+		renderArena();
+		act(() => fake.handlers.onSalaEnded?.("server_restart"));
+		expect(screen.getByTestId("room-ended").textContent).toContain("O servidor reiniciou");
+		expect(screen.queryByTestId("reveal-button")).toBeNull();
+		fireEvent.click(screen.getByRole("button", { name: "Voltar à entrada" }));
+		expect(screen.getByText("JOIN")).toBeTruthy();
+		expect(useSession.getState().socket).toBeNull();
+	});
+
+	test("sala inexistente no rejoin mostra encerramento e volta à entrada sem código morto", async () => {
 		installRejoinMock();
 		try {
 			const uuid = "00000000-0000-4000-8000-000000000099";
 			resetStoreForRejoin(uuid);
 			persistSession("AB12", "Ana");
-			renderArena("/s/AB12");
+			render(
+				<MemoryRouter initialEntries={["/s/AB12"]}>
+					<Routes>
+						<Route path="/s/:code" element={<ArenaPage lang="pt-BR" />} />
+						<Route path="/join" element={<JoinTargetProbe />} />
+					</Routes>
+				</MemoryRouter>,
+			);
 
 			await waitFor(() => expect(RejoinMockWS.instances).toHaveLength(1));
 			const ws = RejoinMockWS.instances[0]!;
@@ -1619,8 +1646,13 @@ describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {
 				);
 			});
 
-			expect(await screen.findByText("JOIN")).toBeTruthy();
+			expect(await screen.findByTestId("room-ended")).toBeTruthy();
+			expect(screen.getByTestId("room-ended").textContent).toContain(
+				"Esta sala não está mais disponível.",
+			);
 			expect(window.localStorage.getItem("pointly-session")).toBeNull();
+			fireEvent.click(screen.getByRole("button", { name: "Voltar à entrada" }));
+			expect(await screen.findByText("JOIN:sem-codigo")).toBeTruthy();
 		} finally {
 			restoreWs();
 		}
