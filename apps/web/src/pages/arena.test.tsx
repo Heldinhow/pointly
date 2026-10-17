@@ -1658,6 +1658,56 @@ describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {
 		}
 	});
 
+	test("término do rejoin antes do welcome mostra o motivo terminal", async () => {
+		installRejoinMock();
+		try {
+			resetStoreForRejoin(crypto.randomUUID());
+			persistSession("AB12", "Ana");
+			renderArena();
+			await waitFor(() => expect(RejoinMockWS.instances).toHaveLength(1));
+			const ws = RejoinMockWS.instances.at(0);
+			if (!ws) throw new Error("socket de rejoin ausente");
+			await act(async () => {
+				ws.open();
+				ws.receive(JSON.stringify({ type: "sala_ended", payload: { reason: "replaced" } }));
+			});
+			expect((await screen.findByTestId("room-ended")).textContent).toContain("Sua sessão foi aberta em outra aba.");
+			expect(screen.queryByTestId("rejoin-error")).toBeNull();
+			expect(window.localStorage.getItem("pointly-session")).toBeNull();
+		} finally {
+			restoreWs();
+		}
+	});
+
+	test("término atrasado do rejoin desmontado preserva a sessão seguinte", async () => {
+		installRejoinMock();
+		try {
+			resetStoreForRejoin(crypto.randomUUID());
+			persistSession("AB12", "Ana");
+			const view = render(
+				<MemoryRouter initialEntries={["/s/AB12"]}>
+					<Routes>
+						<Route path="/s/:code" element={<ArenaPage lang="pt-BR" />} />
+					</Routes>
+				</MemoryRouter>,
+			);
+			await waitFor(() => expect(RejoinMockWS.instances).toHaveLength(1));
+			const ws = RejoinMockWS.instances.at(0);
+			if (!ws) throw new Error("socket de rejoin ausente");
+			await act(async () => ws.open());
+			view.unmount();
+			persistSession("ZX90", "Beto");
+			const nextSession = window.localStorage.getItem("pointly-session");
+			expect(nextSession).not.toBeNull();
+			await act(async () => {
+				ws.receive(JSON.stringify({ type: "sala_ended", payload: { reason: "server_restart" } }));
+			});
+			expect(window.localStorage.getItem("pointly-session")).toBe(nextSession);
+		} finally {
+			restoreWs();
+		}
+	});
+
 	test("saída voluntária envia leave_room e limpa a sessão", async () => {
 		class LeavingSocket extends FakeSocket {
 			sentLeaves = 0;

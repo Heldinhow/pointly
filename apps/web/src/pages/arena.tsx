@@ -523,6 +523,7 @@ export function ArenaPage({
           useSession.getState().updateSala(next);
         },
         onSalaEnded: (reason) => {
+          if (cancelled) return;
           rejoinEnded = true;
           safeClear(clearSession);
           setRoomEndReason(reason);
