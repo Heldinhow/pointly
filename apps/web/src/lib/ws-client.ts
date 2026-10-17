@@ -25,6 +25,7 @@ import {
 	type ProjectileThrownPayload,
 	type ProjectileType,
 	type SalaState,
+	type SalaEndedReason,
 	type Vote,
 	type WelcomePayload,
 } from "@planning-poker/shared";
@@ -32,6 +33,8 @@ import {
 export type { Historia, HistoriaAtualId, Pauta };
 
 export type SocketStatus = "idle" | "connecting" | "ready" | "closed";
+
+export type RoomEndReason = SalaEndedReason | "missing";
 
 export interface PointlySocketEvents {
 	onRoomState?: (sala: SalaState) => void;
@@ -42,6 +45,7 @@ export interface PointlySocketEvents {
 	onReconnecting?: (attempt: number, nextInMs: number) => void;
 	onReconnected?: (welcome: WelcomePayload) => void;
 	onReconnectFailed?: () => void;
+	onSalaEnded?: (reason: RoomEndReason) => void;
 }
 
 interface PointlySocketOptions {
@@ -99,6 +103,7 @@ export class PointlySocket {
 	private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 	private reconnectAttempt = 0;
 	private reconnectStartedAt = 0;
+	private ended = false;
 
 	constructor(
 		events: PointlySocketEvents = {},
@@ -327,6 +332,7 @@ export class PointlySocket {
 
 	connect(url: string, hello: Omit<HelloPayload, "protocolVersion">): Promise<WelcomePayload> {
 		this.clearReconnect();
+		this.ended = false;
 		this.lastUrl = url;
 		const payload: HelloPayload = { ...hello, protocolVersion: 2 };
 		this.lastHello = payload;
@@ -386,6 +392,15 @@ export class PointlySocket {
 				}
 			};
 		});
+	}
+
+	private endRoom(reason: RoomEndReason): void {
+		if (this.ended) return;
+		this.ended = true;
+		this.close({ silent: true });
+		this.lastUrl = null;
+		this.lastHello = null;
+		this.events.onSalaEnded?.(reason);
 	}
 
 	close(options: { silent?: boolean; keepReconnect?: boolean } = {}): void {
@@ -477,10 +492,11 @@ export class PointlySocket {
 				// o heartbeat é o frame de protocolo do servidor). Ignora.
 				return;
 			}
+			case "sala_ended": {
+				this.endRoom(event.payload.reason);
+				return;
+			}
 			default: {
-				// Eventos S→C que a web não consome (player_joined, player_left,
-				// vote_cast, votes_revealed, round_started, sala_ended): o
-				// room_state subsequente hidrata o store. Ignora em silêncio.
 				return;
 			}
 		}
@@ -534,6 +550,11 @@ export class PointlySocket {
 			this.clearReconnect();
 			if (wasReconnect) this.events.onReconnected?.(welcome);
 		} catch (error) {
+			if (this.ended) return;
+			if (error instanceof JoinError && error.code === "sala_nao_encontrada") {
+				this.endRoom("missing");
+				return;
+			}
 			if (!this.isRetryable(error)) {
 				this.failReconnect();
 				return;

@@ -278,6 +278,7 @@ describe("JoinPage", () => {
 				{ status: 200 },
 			)) as unknown as typeof fetch);
 		renderJoin("/join?mode=join");
+		fireEvent.click(screen.getByTestId("join-options-toggle"));
 		const toggle = screen.getByLabelText(/Entrar como espectador/) as HTMLInputElement;
 		expect(toggle.checked).toBe(false);
 		fireEvent.click(toggle);
@@ -313,6 +314,7 @@ describe("JoinPage", () => {
 		mockAvatarPipeline();
 		installMocks(jsonFetch(200, {}));
 		renderJoin("/join");
+		fireEvent.click(screen.getByTestId("join-options-toggle"));
 		fireEvent.change(screen.getByLabelText("Apelido"), {
 			target: { value: "Ana" },
 		});
@@ -350,6 +352,7 @@ describe("JoinPage", () => {
 	test("erro de arquivo não bloqueia o join", async () => {
 		installMocks(jsonFetch(200, {}));
 		renderJoin("/join");
+		fireEvent.click(screen.getByTestId("join-options-toggle"));
 		fireEvent.change(screen.getByLabelText("Apelido"), {
 			target: { value: "Ana" },
 		});
@@ -373,5 +376,40 @@ describe("JoinPage", () => {
 			payload: Record<string, string>;
 		};
 		expect("avatar" in hello.payload).toBe(false);
+	});
+
+	test("convite válido mostra resumo e permite editar o código", () => {
+		installMocks(jsonFetch(200, {}));
+		renderJoin("/join?code=ab12");
+		expect(screen.getByTestId("invite-code").textContent).toBe("AB12");
+		expect(screen.queryByRole("group", { name: "Código da sala" })).toBeNull();
+		fireEvent.click(screen.getByRole("button", { name: "Editar código" }));
+		expect(screen.getByRole("group", { name: "Código da sala" })).toBeTruthy();
+		expect(screen.getByRole("radio", { name: "Criar sala" })).toBeTruthy();
+	});
+
+	test("convite inválido não é truncado para um código válido", () => {
+		installMocks(jsonFetch(200, {}));
+		renderJoin("/join?code=AB12X");
+		expect(screen.queryByTestId("invite-code")).toBeNull();
+		expect(screen.getByRole("group", { name: "Código da sala" })).toBeTruthy();
+		const group = screen.getByRole("group", { name: "Código da sala" });
+		const slots = [...group.querySelectorAll("input")].filter((input) => input.dataset.slot === "otp-field-input");
+		expect(slots.length).toBe(4);
+		for (const slot of slots) {
+			expect(slot.value).toBe("");
+		}
+		expect(MockSocket.instances).toHaveLength(0);
+	});
+
+	test("preferências começam fechadas e preservam a opção espectador", () => {
+		installMocks(jsonFetch(200, {}));
+		renderJoin("/join?mode=join");
+		const toggle = screen.getByRole("button", { name: "Foto e preferências" });
+		expect(toggle.getAttribute("aria-expanded")).toBe("false");
+		fireEvent.click(toggle);
+		expect(toggle.getAttribute("aria-expanded")).toBe("true");
+		fireEvent.click(screen.getByLabelText(/Entrar como espectador/));
+		expect(screen.getByRole("checkbox", { name: /Entrar como espectador/, checked: true })).toBeTruthy();
 	});
 });

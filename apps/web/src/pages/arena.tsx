@@ -75,7 +75,7 @@ import {
   PROJECTILE_CHAIR_COOLDOWN_MS,
   PROJECTILE_COOLDOWN_MS,
 } from "@/lib/projectiles";
-import { PointlySocket } from "@/lib/ws-client";
+import { PointlySocket, type RoomEndReason } from "@/lib/ws-client";
 import { ARENA_CONTENT } from "./arena-content";
 
 /** Limite duro do domínio: 12 assentos por sala. */
@@ -214,6 +214,7 @@ export function ArenaPage({
   const [resultsCopyError, setResultsCopyError] = useState(false);
   const [connectionLost, setConnectionLost] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
+  const [roomEndReason, setRoomEndReason] = useState<RoomEndReason | null>(null);
   const [reconnectAttempt, setReconnectAttempt] = useState(0);
   const [voteError, setVoteError] = useState<string | null>(null);
   const [revealError, setRevealError] = useState<string | null>(null);
@@ -291,6 +292,11 @@ export function ArenaPage({
         setConnectionLost(false);
         setReconnecting(true);
         setReconnectAttempt(attempt);
+      },
+      onSalaEnded: (reason) => {
+        setReconnecting(false);
+        setConnectionLost(false);
+        setRoomEndReason(reason);
       },
       onReconnected: (welcome) => {
         setReconnecting(false);
@@ -494,7 +500,7 @@ export function ArenaPage({
   // entrada com o código já preenchido (convite entra direto na sala).
   // Sala inexistente (restart do servidor) limpa a sessão e volta.
   useEffect(() => {
-    if (hasSession) return;
+    if (hasSession || roomEndReason !== null) return;
     const target = routeCode ? `/join?code=${routeCode}` : "/join";
     const persisted = loadSession();
     if (!persisted || persisted.code !== routeCode) {
@@ -506,6 +512,7 @@ export function ArenaPage({
     rejoinKeyRef.current = key;
     let cancelled = false;
     let liveSocket: PointlySocket | null = null;
+    let rejoinEnded = false;
     setRejoining(true);
     setRejoinError(null);
     const storedAvatar = loadAvatar();
@@ -514,6 +521,12 @@ export function ArenaPage({
       const socket = new PointlySocket({
         onRoomState: (next) => {
           useSession.getState().updateSala(next);
+        },
+        onSalaEnded: (reason) => {
+          if (cancelled) return;
+          rejoinEnded = true;
+          safeClear(clearSession);
+          setRoomEndReason(reason);
         },
       });
       liveSocket = socket;
@@ -538,12 +551,13 @@ export function ArenaPage({
         });
       } catch (error) {
         if (cancelled) return;
+        if (rejoinEnded) return;
         if (
           error instanceof JoinError &&
           error.code === "sala_nao_encontrada"
         ) {
           safeClear(clearSession);
-          navigate(target, { replace: true });
+          setRoomEndReason("missing");
           return;
         }
         const message =
@@ -572,7 +586,7 @@ export function ArenaPage({
         // Socket já morto · nada a fazer.
       }
     };
-  }, [hasSession, lang, navigate, routeCode, retryNonce]);
+  }, [hasSession, roomEndReason, lang, navigate, routeCode, retryNonce]);
 
   const inviteUrl = useMemo(() => {
     if (!sala) return "";
@@ -598,6 +612,25 @@ export function ArenaPage({
       setUnanimousCelebrationKey((key) => key + 1);
     }
   }, [sala]);
+
+  if (roomEndReason !== null) {
+    return (
+      <Card className="arena-connection" data-testid="room-ended" role="status">
+        <CardHeader>
+          <CardTitle>{content.roomEnded.title}</CardTitle>
+          <CardDescription>{content.roomEnded.reasons[roomEndReason]}</CardDescription>
+        </CardHeader>
+        <CardPanel>
+          <Button type="button" onClick={() => {
+            disconnect();
+            navigate("/join", { replace: true });
+          }}>
+            {content.roomEnded.backToJoin}
+          </Button>
+        </CardPanel>
+      </Card>
+    );
+  }
 
   if (!hasSession || !sala) {
     if (rejoinError) {
@@ -687,6 +720,14 @@ export function ArenaPage({
   const hasPauta = sala.pauta !== undefined;
   const awaitingStory = hasPauta && historiaAtiva === null;
   const deckDisabled = isSpectator || awaitingStory;
+  const showFirstStoryAction = !isSpectator && awaitingStory && sala.pauta?.length === 0;
+
+  function focusFirstStory(): void {
+    const input = document.getElementById("pauta-novo-titulo");
+    if (!(input instanceof HTMLInputElement)) return;
+    input.focus({ preventScroll: true });
+    input.scrollIntoView({ block: "center", behavior: "instant" });
+  }
 
   // Resultados (issue 07): espelho client-side do consenso do servidor,
   // calculado do `room_state` (source of truth). Pausa e ausência ficam
@@ -1000,6 +1041,17 @@ export function ArenaPage({
           </Button>
         </div>
       </header>
+      {showFirstStoryAction && !connectionLost && !reconnecting ? (
+        <Alert>
+          <AlertTitle>{content.deck.firstStoryTitle}</AlertTitle>
+          <AlertDescription>
+            <p>{content.deck.awaitingStory}</p>
+            <Button type="button" data-testid="first-story-action" onClick={focusFirstStory}>
+              {content.deck.addFirstStory}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : null}
       {reconnecting && !connectionLost && (
         <Alert variant="warning">
           <AlertTitle>{content.reconnecting.title}</AlertTitle>

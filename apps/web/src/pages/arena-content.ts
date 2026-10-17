@@ -5,6 +5,7 @@
  */
 
 import type { Lang } from "@/lib/i18n";
+import type { RoomEndReason } from "@/lib/ws-client";
 import type { Phase } from "@planning-poker/shared";
 import { ARENA_CONTENT_EN } from "./arena-content.en";
 import { ARENA_CONTENT_PT } from "./arena-content.pt";
@@ -41,6 +42,11 @@ export type ArenaContent = {
 		title: string;
 		hint: string;
 		retry: string;
+	};
+	roomEnded: {
+		title: string;
+		reasons: Record<RoomEndReason, string>;
+		backToJoin: string;
 	};
 	playArea: {
 		aria: string;
@@ -91,6 +97,8 @@ export type ArenaContent = {
 		spectatorVoteError: string;
 		errorTitle: string;
 		awaitingStory: string;
+		firstStoryTitle: string;
+		addFirstStory: string;
 	};
 	pauta: {
 		title: string;

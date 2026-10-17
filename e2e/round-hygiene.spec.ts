@@ -18,7 +18,15 @@ test("pauta destrava deck e nova rodada exige confirmação dupla", async ({
 
 		await expect(solo.page.locator('[data-testid="reveal-button"]')).toBeDisabled();
 
+		const firstStoryAction = solo.page.getByTestId("first-story-action");
+		await expect(firstStoryAction).toBeVisible();
+		await expect(firstStoryAction).toBeInViewport({ ratio: 1 });
+		await firstStoryAction.click();
+		await expect(solo.page.locator("#pauta-novo-titulo")).toBeFocused();
+		await expect(solo.page.locator("#pauta-novo-titulo")).toBeInViewport();
+
 		await addStory(solo, "Onboarding");
+		await expect(firstStoryAction).toHaveCount(0);
 		for (const value of ["0", "1", "5"]) {
 			await expect(solo.page.locator(`button[data-testid="deck-card-${value}"]`)).toBeEnabled();
 		}

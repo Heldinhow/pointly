@@ -76,122 +76,30 @@ describe("analytics (sem Measurement ID)", () => {
 	});
 });
 
-describe("analytics (com Measurement ID)", () => {
-	beforeEach(() => {
-		setGaEnv(GA_ID);
+describe("analytics desativado por política de privacidade", () => {
+	beforeEach(() => setGaEnv(GA_ID));
+
+	test("ID preenchido não permite carregar o SDK", () => {
+		initAnalytics();
+		initAnalytics();
+		expect(document.querySelectorAll('script[src*="googletagmanager.com"]')).toHaveLength(0);
+		expect(window.dataLayer).toBeUndefined();
+		expect(window.gtag).toBeUndefined();
 	});
 
-	test("initAnalytics carrega gtag.js uma vez e configura", () => {
-		initAnalytics();
-		initAnalytics();
-
-		const scripts = document.querySelectorAll<HTMLScriptElement>(
-			'script[src*="googletagmanager.com/gtag/js"]',
-		);
-		expect(scripts.length).toBe(1);
-		expect(scripts[0]?.src).toContain(`id=${GA_ID}`);
-		expect(typeof window.gtag).toBe("function");
-		expect(Array.isArray(window.dataLayer)).toBe(true);
-
-		const serialized = JSON.stringify(window.dataLayer);
-		expect(serialized).toContain('"config"');
-		expect(serialized).toContain(GA_ID);
-		expect(serialized).toContain('"send_page_view":false');
-	});
-
-	test("trackPageView e trackEvent chamam gtag mockado", () => {
-		initAnalytics();
+	test("nenhum evento usa um gtag preexistente", () => {
 		const calls: unknown[][] = [];
-		window.gtag = (...args: unknown[]) => {
-			calls.push(args);
-		};
-
-		trackPageView("/en/guides", "Guides");
-		trackEvent("room_created", { source: "join" });
-
-		expect(calls).toEqual([
-			["event", "page_view", { page_path: "/en/guides", page_title: "Guides" }],
-			["event", "room_created", { source: "join" }],
-		]);
-	});
-
-	test("helpers de produto disparam os nomes canônicos", () => {
+		window.gtag = (...args: unknown[]) => { calls.push(args); };
 		initAnalytics();
-		const names: string[] = [];
-		window.gtag = (command: unknown, name: unknown) => {
-			if (command === "event" && typeof name === "string") names.push(name);
-		};
-
+		trackPageView("/join?code=ABCD");
+		trackEvent("custom", { source: "test" });
 		trackRoomCreated();
 		trackRoomJoined();
 		trackVoteCast();
 		trackVotesRevealed();
 		trackNewRound();
-
-		expect(names).toEqual([
-			"room_created",
-			"room_joined",
-			"vote_cast",
-			"votes_revealed",
-			"new_round",
-		]);
-	});
-
-	test("track* sem gtag após reset de window continuam seguros", () => {
-		initAnalytics();
-		delete window.gtag;
-		expect(() => {
-			trackPageView("/");
-			trackRoomCreated();
-		}).not.toThrow();
-	});
-
-	test("ID com whitespace é aparado (trim)", () => {
-		setGaEnv("  G-TRIMMED  ");
-		initAnalytics();
-		const scripts = document.querySelectorAll<HTMLScriptElement>(
-			'script[src*="googletagmanager.com/gtag/js"]',
-		);
-		expect(scripts.length).toBe(1);
-		expect(scripts[0]?.src).toContain("id=G-TRIMMED");
-		expect(scripts[0]?.src).not.toContain("%20");
-	});
-
-	test("ID é URL-encoded no src do script", () => {
-		setGaEnv("G-TE ST&X");
-		initAnalytics();
-		const scripts = document.querySelectorAll<HTMLScriptElement>(
-			'script[src*="googletagmanager.com/gtag/js"]',
-		);
-		expect(scripts[0]?.src).toContain("id=G-TE%20ST%26X");
-	});
-
-	test("trackPageView sem title não envia page_title", () => {
-		initAnalytics();
-		const calls: unknown[][] = [];
-		window.gtag = (...args: unknown[]) => {
-			calls.push(args);
-		};
-
-		trackPageView("/planejamento");
-
-		expect(calls).toEqual([
-			["event", "page_view", { page_path: "/planejamento" }],
-		]);
-	});
-
-	test("trackPageView sanitiza o path antes de enviar", () => {
-		initAnalytics();
-		const calls: unknown[][] = [];
-		window.gtag = (...args: unknown[]) => {
-			calls.push(args);
-		};
-
-		trackPageView("/s/ABCD");
-
-		expect(calls).toEqual([
-			["event", "page_view", { page_path: "/s/[room]" }],
-		]);
+		expect(calls).toEqual([]);
+		expect(window.dataLayer).toBeUndefined();
 	});
 });
 

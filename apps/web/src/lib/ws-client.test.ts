@@ -695,6 +695,7 @@ describe("PointlySocket — auto-reconnect (morte real)", () => {
 		const reconnected: unknown[] = [];
 		let failed = 0;
 		let closed = 0;
+		const ended: unknown[] = [];
 		const socket = new PointlySocket(
 			{
 				onReconnected: (welcome) => {
@@ -705,6 +706,9 @@ describe("PointlySocket — auto-reconnect (morte real)", () => {
 				},
 				onClose: () => {
 					closed += 1;
+				},
+				onSalaEnded: (reason) => {
+					ended.push(reason);
 				},
 			},
 			{
@@ -720,10 +724,12 @@ describe("PointlySocket — auto-reconnect (morte real)", () => {
 				code: "AB12",
 			});
 			killAll();
-			await waitFor(() => failed === 1);
+			await waitFor(() => ended.length === 1);
 			expect(hellos()).toBe(2);
+			expect(ended).toEqual(["missing"]);
 			expect(reconnected).toEqual([]);
-			expect(closed).toBe(1);
+			expect(failed).toBe(0);
+			expect(closed).toBe(0);
 		} finally {
 			socket.close({ silent: true });
 			server.stop(true);

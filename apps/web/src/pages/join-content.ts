@@ -32,6 +32,8 @@ export type JoinContent = {
 		codeLabel: string;
 		codeHint: string;
 		codeCharAria: (index: number) => string;
+		optionsSummary: string;
+		editCode: string;
 		spectatorTitle: string;
 		spectatorHint: string;
 		errorTitle: string;
