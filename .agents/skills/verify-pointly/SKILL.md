@@ -85,4 +85,28 @@ Kill only the recorded sessions/PIDs from Launch (never by port or process name)
 - **The deck is locked until an agenda story exists.** With `pauta` present and no active story, every `deck-card-*` is `disabled` and shows "Add or select a story in the agenda to unlock the cards." Add a story first. A legacy room without `pauta` keeps the old always-on deck.
 - Spectators (`spectate: true`) cannot vote: the deck cards render `disabled` for them, so no vote request is ever sent and no error surfaces on click.
 - Signup-free but stateful: nick draft/avatar live on the device (localStorage) and are re-sent on reload; a reload rejoins the same seat via the persisted UUID.
-- Joining a code that no longer exists (server restarted) shows "sala não encontrada" and clears the session.
+- Joining a code that no longer exists from the entry form shows the
+  inline "sala não encontrada" error without opening a socket; a reload
+  into a vanished room (arena rejoin) clears the session and shows the
+  terminal "Esta sala não está mais disponível." card, with a return to
+  `/join` (no dead code reuse).
+- **Invite vs manual:** a valid `/join?code=XXXX` shows a compact summary
+  (`invite-code`) with `Edit code` to reopen the OTP + mode switch; an
+  invalid code is never truncated into a valid one — the manual OTP
+  stays empty with an error.
+- **Photo/spectator live in a closed disclosure** (`Foto e preferências`,
+  `join-options-toggle`): open it before checking `#spectate` — never
+  bypass-click a hidden control.
+- **First story:** an empty agenda shows `Adicionar primeira história`
+  (`first-story-action`) for non-spectators; it focuses the real
+  `#pauta-novo-titulo` input and never creates a story by itself.
+  Spectators never get this action.
+- **Ended vs dropped:** `sala_ended` (`server_restart`, `replaced`,
+  `last_left`) and `missing` render the terminal `room-ended` card (no
+  more votes, back to `/join` without recreating). A reason-less drop
+  keeps the 5min backoff — don't disable reconnect for every failure.
+- **Analytics is policy-disabled:** even with a non-empty
+  `VITE_GA_MEASUREMENT_ID` (E2E uses synthetic `G-POINTLY-E2E-DISABLED`)
+  no GA/GTM request may fire.
+- Don't claim iPhone-real, Safari, Docker, or server-restart E2E evidence
+  that was never executed.

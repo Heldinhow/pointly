@@ -60,12 +60,17 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser bunx playwright te
    `players.value` de todos os demais `null`, espectadora fora dos dois
    canais, sem uuid), reveal por jogador normal (mediana 6.5), edição
    pós-reveal recalcula, nova rodada com confirmação dupla limpa e
-   avança a pauta.
+   avança a pauta. A espectadora não recebe o CTA de primeira história.
 2. `e2e/reload-rejoin.spec.ts` — reload espera um NOVO `welcome`
    pós-rejoin e afirma playerId/assento/papel/voto nele (nunca em
    snapshot velho); voto alheio segue oculto; sem uuid S2C.
+   Reload de sala sumida cai no estado terminal `missing`
+   ("Esta sala não está mais disponível."), com volta à `/join` sem
+   reaproveitar o código morto — encerramento, não erro genérico de rede.
 3. `e2e/round-hygiene.spec.ts` — higiene solo: deck travado sem pauta,
-   reveal exige voto, 1ª ativação da nova rodada só arma, 2ª confirma.
+   CTA `Adicionar primeira história` visível no viewport foca o input
+   real `#pauta-novo-titulo` e some após `addStory`; reveal exige voto,
+   1ª ativação da nova rodada só arma, 2ª confirma.
 4. `e2e/late-join.spec.ts` — late-join após o host votar: o `welcome` do
    jogador e o da espectadora chegam com `votes` vazio e todos os
    `players.value` nulos.
@@ -73,6 +78,13 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser bunx playwright te
    credencial de reconexão. Este cenário permite comparar a versão
    corrigida com o backend anterior sem depender da hidratação dos
    snapshots no helper.
+6. `e2e/analytics-privacy.spec.ts` — navegar (home → entrada → convite)
+   não tenta carregar GA/GTM mesmo com `VITE_GA_MEASUREMENT_ID`
+   sintético **não vazio** (`G-POINTLY-E2E-DISABLED`): zero requests
+   aos hosts de analytics, sem `script` injetado e sem `gtag`.
+7. `e2e/join-usability.spec.ts` — `/join`, `/join?mode=join` e
+   `/join?code=AB12`: apelido + submit cabem no primeiro viewport
+   390×844, sem scroll horizontal e com `Foto e preferências` fechado.
 
 Projetos: `chromium-desktop` (1280×800) e `chromium-mobile`
 (390×844 com touch — Chromium com viewport de telefone, **não** iOS real).
@@ -98,4 +110,14 @@ e o touch (`maxTouchPoints`) antes do cenário.
   como `vote_cast` e `player_joined`.
 - Convite: lido do campo real da arena (`readInviteUrl`, com validação de
   origem/path/code, sem fallback); o join navega no link lido.
+- Espectador/foto ficam no disclosure `Foto e preferências` (fechado por
+  padrão): o harness abre `join-options-toggle` antes de marcar
+  `#spectate` — nunca clique por bypass em controle oculto.
+- Encerramento × desconexão: `sala_ended` (`server_restart`, `replaced`,
+  `last_left`) e `sala_nao_encontrada` no retry são terminais
+  (`room-ended`, sem novos votos, volta à entrada sem recriar sala);
+  queda sem motivo mantém backoff/reconexão de 5min.
+- CI: `scripts/ci-workflow.test.ts` valida a declaração do workflow
+  (gates `verify` → `e2e`, sem escrita/deploy) — prova de execução real
+  só existe com jobs verdes no GitHub.
 - Locale `pt-BR` nos contextos.
