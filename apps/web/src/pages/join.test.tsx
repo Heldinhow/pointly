@@ -393,10 +393,11 @@ describe("JoinPage", () => {
 		renderJoin("/join?code=AB12X");
 		expect(screen.queryByTestId("invite-code")).toBeNull();
 		expect(screen.getByRole("group", { name: "Código da sala" })).toBeTruthy();
-		const slots = document.querySelectorAll('[data-slot="otp-field-input"]');
+		const group = screen.getByRole("group", { name: "Código da sala" });
+		const slots = [...group.querySelectorAll("input")].filter((input) => input.dataset.slot === "otp-field-input");
 		expect(slots.length).toBe(4);
 		for (const slot of slots) {
-			expect((slot as HTMLInputElement).value).toBe("");
+			expect(slot.value).toBe("");
 		}
 		expect(MockSocket.instances).toHaveLength(0);
 	});
@@ -409,7 +410,6 @@ describe("JoinPage", () => {
 		fireEvent.click(toggle);
 		expect(toggle.getAttribute("aria-expanded")).toBe("true");
 		fireEvent.click(screen.getByLabelText(/Entrar como espectador/));
-		const checkbox = screen.getByLabelText(/Entrar como espectador/) as HTMLInputElement;
-		expect(checkbox.checked).toBe(true);
+		expect(screen.getByRole("checkbox", { name: /Entrar como espectador/, checked: true })).toBeTruthy();
 	});
 });

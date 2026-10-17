@@ -394,12 +394,6 @@ export class PointlySocket {
 		});
 	}
 
-	/**
-	 * Encerra a sala por motivo terminal (sala_ended do servidor ou
-	 * sala_nao_encontrada numa reconexão): fecha sem retry, invalida as
-	 * credenciais guardadas para retryNow/poke não reanimarem e entrega o
-	 * motivo uma vez. Queda sem motivo mantém o backoff existente.
-	 */
 	private endRoom(reason: RoomEndReason): void {
 		if (this.ended) return;
 		this.ended = true;
@@ -503,9 +497,6 @@ export class PointlySocket {
 				return;
 			}
 			default: {
-				// Eventos S→C que a web não consome (player_joined, player_left,
-				// vote_cast, votes_revealed, round_started): o
-				// room_state subsequente hidrata o store. Ignora em silêncio.
 				return;
 			}
 		}
@@ -559,8 +550,6 @@ export class PointlySocket {
 			this.clearReconnect();
 			if (wasReconnect) this.events.onReconnected?.(welcome);
 		} catch (error) {
-			// Terminal já entregue durante a tentativa pendente: não dispara
-			// retry nem callbacks genéricos que o contradigam.
 			if (this.ended) return;
 			if (error instanceof JoinError && error.code === "sala_nao_encontrada") {
 				this.endRoom("missing");

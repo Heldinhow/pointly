@@ -1,12 +1,3 @@
-/**
- * GA4 thin wrapper (VITE_GA_MEASUREMENT_ID).
- *
- * DESATIVADO por política de privacidade: sem controle de consentimento,
- * nenhum ID de build autoriza coleta — todos os exports são no-op
- * (zero request a googletagmanager), mesmo com ID preenchido.
- * Quarentena intencional até uma política de analytics aprovada; a
- * reativação é trabalho separado, com política e testes próprios.
- */
 
 export type AnalyticsParams = Record<string, string | number | boolean | undefined>;
 
@@ -50,7 +41,6 @@ function measurementId(): string {
 }
 
 function enabled(): boolean {
-	// Não existe controle de consentimento; um ID de build não autoriza coleta.
 	return false;
 }
 
