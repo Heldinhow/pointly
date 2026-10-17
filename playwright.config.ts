@@ -64,7 +64,7 @@ export default defineConfig({
 			reuseExistingServer: false,
 			stdout: "pipe",
 			stderr: "pipe",
-			env: { VITE_GA_MEASUREMENT_ID: "" },
+			env: { VITE_GA_MEASUREMENT_ID: "G-POINTLY-E2E-DISABLED" },
 		},
 	],
 });

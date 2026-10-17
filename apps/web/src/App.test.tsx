@@ -326,7 +326,7 @@ describe("App (higiene GSC — redirect de locale e robots por rota)", () => {
   });
 });
 
-describe("App (GA4 — pageview nunca vaza código de sala)", () => {
+describe("App com analytics desativado", () => {
   const GA_ID = "G-TESTAPP";
   let calls: unknown[][];
 
@@ -348,13 +348,6 @@ describe("App (GA4 — pageview nunca vaza código de sala)", () => {
     )) {
       node.remove();
     }
-  }
-
-  function pageViewPaths(): string[] {
-    return calls
-      .filter((args) => args[0] === "event" && args[1] === "page_view")
-      .map((args) => (args[2] as Record<string, unknown> | undefined)?.page_path)
-      .filter((path): path is string => typeof path === "string");
   }
 
   beforeEach(() => {
@@ -379,32 +372,16 @@ describe("App (GA4 — pageview nunca vaza código de sala)", () => {
     delete window.dataLayer;
   });
 
-  test("/join?code=XXXX envia /join (query descartada)", () => {
-    render(
-      <MemoryRouter initialEntries={["/join?code=ABCD&mode=join"]}>
-        <App />
-      </MemoryRouter>,
-    );
-
-    expect(pageViewPaths()).toEqual(["/join"]);
-    expect(JSON.stringify(calls)).not.toContain("ABCD");
-  });
-
-  test("/s/XXXX envia /s/[room] (código mascarado)", () => {
-    render(
-      <MemoryRouter initialEntries={["/s/ABCD"]}>
-        <App />
-      </MemoryRouter>,
-    );
-
-    // Sem sessão, a arena redireciona para /join — ambos os pageviews
-    // devem sair sanitizados.
-    const paths = pageViewPaths();
-    expect(paths.length).toBeGreaterThan(0);
-    expect(paths[0]).toBe("/s/[room]");
-    for (const path of paths) {
-      expect(["/s/[room]", "/join"]).toContain(path);
-    }
-    expect(JSON.stringify(calls)).not.toContain("ABCD");
-  });
+  for (const route of ["/join?code=ABCD&mode=join", "/s/ABCD"]) {
+    test(`${route} não inicializa analytics nem envia eventos`, () => {
+      render(
+        <MemoryRouter initialEntries={[route]}>
+          <App />
+        </MemoryRouter>,
+      );
+      expect(calls).toEqual([]);
+      expect(window.dataLayer).toBeUndefined();
+      expect(document.querySelectorAll('script[src*="googletagmanager.com"]')).toHaveLength(0);
+    });
+  }
 });

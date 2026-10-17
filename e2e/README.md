@@ -31,7 +31,7 @@ bun run test:e2e        # typecheck + executa a suíte (2 projetos × cenários)
 | `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | bundle Playwright | Chromium do SO neste ambiente |
 | `PLAYWRIGHT_OUTPUT_DIR` | `test-results/` (gitignored) | logs/traces/`report.json` |
 | `PLAYWRIGHT_HTML_REPORT` | `playwright-report/` (gitignored) | report HTML |
-| `VITE_GA_MEASUREMENT_ID` | `""` (forçado no webServer) | analytics desligado nos testes |
+| `VITE_GA_MEASUREMENT_ID` | `"G-POINTLY-E2E-DISABLED"` (forçado no webServer, sintético e não vazio) | analytics bloqueado por política nos testes — a proteção não depende de configuração vazia |
 
 A configuração retém screenshots e traces de falhas e não grava vídeo.
 O cenário de votação também anexa uma screenshot da rodada revelada

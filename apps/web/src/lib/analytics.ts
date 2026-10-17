@@ -1,13 +1,11 @@
 /**
  * GA4 thin wrapper (VITE_GA_MEASUREMENT_ID).
  *
- * Vazio → todos os exports são no-op (zero request a googletagmanager).
- *
- * LGPD: manter VITE_GA_MEASUREMENT_ID VAZIO em produção até existir o
- * consent gate (banner de consentimento). Ligar o ID sem base/consentimento
- * documentado é risco jurídico — o banner é follow-up, não gatear aqui ainda.
- * Nota CSP: o gtag.js é carregado sem nonce/SRI (padrão do Google); se o
- * site adotar CSP estrita, este init precisa de ajuste junto com o banner.
+ * DESATIVADO por política de privacidade: sem controle de consentimento,
+ * nenhum ID de build autoriza coleta — todos os exports são no-op
+ * (zero request a googletagmanager), mesmo com ID preenchido.
+ * Quarentena intencional até uma política de analytics aprovada; a
+ * reativação é trabalho separado, com política e testes próprios.
  */
 
 export type AnalyticsParams = Record<string, string | number | boolean | undefined>;
@@ -52,7 +50,8 @@ function measurementId(): string {
 }
 
 function enabled(): boolean {
-	return measurementId().length > 0;
+	// Não existe controle de consentimento; um ID de build não autoriza coleta.
+	return false;
 }
 
 /** Reseta estado interno — SÓ para testes unitários (nunca importar em código de app). */
