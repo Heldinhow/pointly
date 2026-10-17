@@ -29,6 +29,8 @@ export const JOIN_CONTENT_PT: JoinContent = {
 		codeLabel: "Código da sala",
 		codeHint: "4 letras ou números. Cole o código do convite.",
 		codeCharAria: (index) => `Caractere ${index + 1} de 4`,
+		optionsSummary: "Foto e preferências",
+		editCode: "Editar código",
 		spectatorTitle: "Entrar como espectador",
 		spectatorHint: "Assiste e reage, mas não vota nem ocupa assento.",
 		errorTitle: "Não foi possível entrar",

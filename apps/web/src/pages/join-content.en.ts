@@ -29,6 +29,8 @@ export const JOIN_CONTENT_EN: JoinContent = {
 		codeLabel: "Room code",
 		codeHint: "4 letters or digits. Paste the code from the invite.",
 		codeCharAria: (index) => `Character ${index + 1} of 4`,
+		optionsSummary: "Photo and preferences",
+		editCode: "Edit code",
 		spectatorTitle: "Join as a spectator",
 		spectatorHint: "Watch and react, but don't vote or take a seat.",
 		errorTitle: "Couldn't join",

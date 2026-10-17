@@ -19,6 +19,11 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { OTPField, OTPFieldInput } from "@/components/ui/otp-field";
+import {
+  Collapsible,
+  CollapsiblePanel,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { AvatarPicker } from "@/components/avatar-picker";
 import {
   trackRoomCreated,
@@ -49,19 +54,22 @@ export function JoinPage({
   const content = JOIN_CONTENT[lang];
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const rawInviteCode = searchParams.get("code");
+  const inviteResult = codeSchema(lang).safeParse(rawInviteCode?.toUpperCase() ?? "");
+  const invitedCode = inviteResult.success ? inviteResult.data : null;
   const uuid = useSession((state) => state.uuid);
   const sessionNick = useSession((state) => state.nick);
   const setConnected = useSession((state) => state.setConnected);
 
   const [mode, setMode] = useState<Mode>(() =>
-    searchParams.get("code") || searchParams.get("mode") === "join"
+    searchParams.has("code") || searchParams.get("mode") === "join"
       ? "join"
       : "create",
   );
   const [nick, setNick] = useState(() => sessionNick || loadNickDraft());
-  const [code, setCode] = useState(() =>
-    normalizeCode(searchParams.get("code") ?? ""),
-  );
+  const [code, setCode] = useState(() => invitedCode ?? "");
+  const [editingCode, setEditingCode] = useState(false);
+  const compactInvite = mode === "join" && invitedCode !== null && !editingCode;
   const [spectate, setSpectate] = useState(false);
   const [avatar, setAvatar] = useState<string | null>(() => loadAvatar());
   const [nickError, setNickError] = useState<string | null>(null);
@@ -72,15 +80,14 @@ export function JoinPage({
   const navigatedRef = useRef(false);
 
   useEffect(() => {
-    setMode(
-      searchParams.get("code") || searchParams.get("mode") === "join"
-        ? "join"
-        : "create",
-    );
-    setCode(normalizeCode(searchParams.get("code") ?? ""));
-    setCodeError(null);
+    setMode(searchParams.has("code") || searchParams.get("mode") === "join" ? "join" : "create");
+    setCode(invitedCode ?? "");
+    setEditingCode(false);
+    setCodeError(rawInviteCode !== null && invitedCode === null
+      ? friendlyJoinMessage("invalid_code", undefined, lang)
+      : null);
     setFormError(null);
-  }, [searchParams]);
+  }, [searchParams, invitedCode, rawInviteCode, lang]);
 
   useEffect(() => {
     return () => {
@@ -242,6 +249,7 @@ export function JoinPage({
             }}
           >
             <fieldset className="join-fields" disabled={busy}>
+              {compactInvite ? null : (
               <div
                 className="join-mode-switch"
                 role="radiogroup"
@@ -270,6 +278,7 @@ export function JoinPage({
                   <span>{content.card.joinWithCode}</span>
                 </label>
               </div>
+              )}
 
               <Field invalid={nickError !== null}>
                 <FieldLabel htmlFor="nick">{content.card.nickLabel}</FieldLabel>
@@ -301,7 +310,16 @@ export function JoinPage({
                 ) : null}
               </Field>
 
-              {mode === "join" ? (
+              {compactInvite ? (
+                <div className="join-invite-summary">
+                  <p>{content.card.codeLabel} <code data-testid="invite-code">{code}</code></p>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setEditingCode(true)}>
+                    {content.card.editCode}
+                  </Button>
+                </div>
+              ) : null}
+
+              {mode === "join" && !compactInvite ? (
                 <Field invalid={codeError !== null}>
                   <FieldLabel htmlFor="code">{content.card.codeLabel}</FieldLabel>
                   <OTPField
@@ -339,33 +357,26 @@ export function JoinPage({
                 </Field>
               ) : null}
 
-              <AvatarPicker
-                value={avatar}
-                onChange={handleAvatarChange}
-                lang={lang}
-              />
-
-              {mode === "join" ? (
-                <label className="join-spectate" htmlFor="spectate">
-                  <input
-                    id="spectate"
-                    name="spectate"
-                    type="checkbox"
-                    checked={spectate}
-                    disabled={busy}
-                    onChange={(event) => setSpectate(event.target.checked)}
-                  />
-                  <span className="join-spectate-text">
-                    <span className="join-spectate-title">
-                      <EyeIcon aria-hidden="true" />
-                      {content.card.spectatorTitle}
-                    </span>
-                    <span className="join-spectate-hint">
-                      {content.card.spectatorHint}
-                    </span>
-                  </span>
-                </label>
-              ) : null}
+              <Collapsible className="join-options">
+                <CollapsibleTrigger type="button" className="join-options-toggle" data-testid="join-options-toggle" disabled={busy}>
+                  {content.card.optionsSummary}
+                </CollapsibleTrigger>
+                <CollapsiblePanel>
+                  <div className="join-options-body">
+                    <AvatarPicker value={avatar} onChange={handleAvatarChange} lang={lang} />
+                    {mode === "join" ? (
+                      <label className="join-spectate" htmlFor="spectate">
+                        <input id="spectate" name="spectate" type="checkbox" checked={spectate} disabled={busy}
+                          onChange={(event) => setSpectate(event.target.checked)} />
+                        <span className="join-spectate-text">
+                          <span className="join-spectate-title"><EyeIcon aria-hidden="true" />{content.card.spectatorTitle}</span>
+                          <span className="join-spectate-hint">{content.card.spectatorHint}</span>
+                        </span>
+                      </label>
+                    ) : null}
+                  </div>
+                </CollapsiblePanel>
+              </Collapsible>
 
               {formError ? (
                 <Alert variant="error">
