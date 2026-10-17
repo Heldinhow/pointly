@@ -13,6 +13,13 @@
 		"typecheck": "bun --filter pointly-web typecheck && bun --filter server typecheck && bun --filter @planning-poker/shared typecheck",
 		"test": "node --test scripts/serve-web.test.mjs && bun --filter pointly-web test && bun --filter server test && bun --filter @planning-poker/shared test",
 		"build": "bun --filter pointly-web build && bun --filter server build",
-		"verify": "bun run typecheck && bun run test && bun run build:web"
+		"verify": "bun run typecheck && bun run test && bun run build:web",
+		"test:e2e": "bun run typecheck:e2e && playwright test",
+		"typecheck:e2e": "tsc --noEmit -p tsconfig.e2e.json",
+		"test:e2e:list": "playwright test --list"
+	},
+	"devDependencies": {
+		"@playwright/test": "1.64.1",
+		"@types/node": "22.20.0"
 	}
 }
