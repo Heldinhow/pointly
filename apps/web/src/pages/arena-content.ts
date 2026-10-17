@@ -91,6 +91,8 @@ export type ArenaContent = {
 		spectatorVoteError: string;
 		errorTitle: string;
 		awaitingStory: string;
+		firstStoryTitle: string;
+		addFirstStory: string;
 	};
 	pauta: {
 		title: string;

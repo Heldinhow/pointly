@@ -687,6 +687,14 @@ export function ArenaPage({
   const hasPauta = sala.pauta !== undefined;
   const awaitingStory = hasPauta && historiaAtiva === null;
   const deckDisabled = isSpectator || awaitingStory;
+  const showFirstStoryAction = !isSpectator && awaitingStory && sala.pauta?.length === 0;
+
+  function focusFirstStory(): void {
+    const input = document.getElementById("pauta-novo-titulo");
+    if (!(input instanceof HTMLInputElement)) return;
+    input.focus({ preventScroll: true });
+    input.scrollIntoView({ block: "center", behavior: "instant" });
+  }
 
   // Resultados (issue 07): espelho client-side do consenso do servidor,
   // calculado do `room_state` (source of truth). Pausa e ausência ficam
@@ -1000,6 +1008,17 @@ export function ArenaPage({
           </Button>
         </div>
       </header>
+      {showFirstStoryAction && !connectionLost && !reconnecting ? (
+        <Alert>
+          <AlertTitle>{content.deck.firstStoryTitle}</AlertTitle>
+          <AlertDescription>
+            <p>{content.deck.awaitingStory}</p>
+            <Button type="button" data-testid="first-story-action" onClick={focusFirstStory}>
+              {content.deck.addFirstStory}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : null}
       {reconnecting && !connectionLost && (
         <Alert variant="warning">
           <AlertTitle>{content.reconnecting.title}</AlertTitle>

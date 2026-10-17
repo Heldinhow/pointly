@@ -45,6 +45,7 @@ test("fluxo completo com sigilo pré-reveal e nova rodada", async ({ browser }, 
 		await joinWithManualCode(beto, code, "BetoSeguro");
 		await joinWithInviteLink(carol, inviteUrl, "CarolEspect", { spectate: true });
 		await expect(carol.page.locator('[data-testid="spectators-line"]')).toBeVisible();
+		await expect(carol.page.locator('[data-testid="first-story-action"]')).toHaveCount(0);
 
 		for (const value of ["0", "5", "8"]) {
 			await expect(carol.page.locator(`button[data-testid="deck-card-${value}"]`)).toBeDisabled();

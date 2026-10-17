@@ -90,6 +90,8 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		errorTitle: "Couldn't vote",
 		awaitingStory:
 			"Add or select a story in the agenda to unlock the cards.",
+		firstStoryTitle: "Start with the first story",
+		addFirstStory: "Add the first story",
 	},
 	pauta: {
 		title: "Agenda",
