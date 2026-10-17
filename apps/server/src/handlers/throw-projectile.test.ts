@@ -11,7 +11,7 @@ beforeEach(() => {
 });
 
 function addPlayer(uuid: string, nick: string): { id: string; code: string } {
-	const create = handleHello(hub, { uuid, nick });
+	const create = handleHello(hub, { protocolVersion: 2, uuid, nick });
 	if (!create.ok) throw new Error("expected create ok");
 	const code = hub.activeCodes()[0]!;
 	return { id: create.playerId, code };
@@ -21,6 +21,7 @@ describe("handleThrowProjectile", () => {
 	test("arremesso com sucesso e sorteia desfecho válido", () => {
 		const player1 = addPlayer("00000000-0000-4000-8000-000000000001", "Ana");
 		const player2 = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000002",
 			nick: "Beto",
 			code: player1.code,
@@ -42,6 +43,7 @@ describe("handleThrowProjectile", () => {
 	test("cooldown é compartilhado entre tipos e libera exatamente em 1s", () => {
 		const player1 = addPlayer("00000000-0000-4000-8000-000000000001", "Ana");
 		const player2 = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000002",
 			nick: "Beto",
 			code: player1.code,
@@ -73,6 +75,7 @@ describe("handleThrowProjectile", () => {
 	test("os seis tipos funcionam em qualquer fase, incluindo espectadores", () => {
 		const host = addPlayer("00000000-0000-4000-8000-000000000001", "Ana");
 		const spectator = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000002", nick: "Beto", code: host.code, spectate: true,
 		});
 		if (!spectator.ok) throw new Error("expected spectator ok");
@@ -94,7 +97,7 @@ describe("handleThrowProjectile", () => {
 	test("recusa autoarremesso, alvo de outra sala e desconectado sem consumir cooldown", () => {
 		const host = addPlayer("00000000-0000-4000-8000-000000000001", "Ana");
 		const other = addPlayer("00000000-0000-4000-8000-000000000003", "Caio");
-		const guest = handleHello(hub, { uuid: "00000000-0000-4000-8000-000000000002", nick: "Beto", code: host.code });
+		const guest = handleHello(hub, { protocolVersion: 2, uuid: "00000000-0000-4000-8000-000000000002", nick: "Beto", code: host.code });
 		if (!guest.ok) throw new Error("expected guest ok");
 		const throwAt = (id: string) => handleThrowProjectile(hub, host.id, { targetPlayerId: id, projectileType: "rock" }, 10000);
 		expect(throwAt(host.id).ok).toBe(false);
@@ -109,6 +112,7 @@ describe("handleThrowProjectile", () => {
 	test("cadeirada épica sempre acerta e tem cooldown longo", () => {
 		const player1 = addPlayer("00000000-0000-4000-8000-000000000001", "Ana");
 		const player2 = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000002",
 			nick: "Beto",
 			code: player1.code,

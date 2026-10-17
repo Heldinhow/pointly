@@ -15,7 +15,7 @@ beforeEach(() => {
 
 // Helper para criar jogador
 function addPlayer(uuid: string, nick: string): { id: string; code: string } {
-	const create = handleHello(hub, { uuid, nick });
+	const create = handleHello(hub, { protocolVersion: 2, uuid, nick });
 	if (!create.ok) throw new Error("expected create ok");
 	const code = hub.activeCodes()[0]!;
 	return { id: create.playerId, code };
@@ -127,10 +127,11 @@ describe("handleCastVote — rejeições", () => {
 	});
 
 	test("rejeita voto de espectador com role_denied", () => {
-		const create = handleHello(hub, { uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" });
+		const create = handleHello(hub, { protocolVersion: 2, uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana" });
 		if (!create.ok) throw new Error("expected create ok");
 		const code = hub.activeCodes()[0]!;
 		const spec = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000002",
 			nick: "Olho",
 			code,

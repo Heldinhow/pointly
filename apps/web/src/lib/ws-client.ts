@@ -325,11 +325,12 @@ export class PointlySocket {
 		void this.attemptReconnect();
 	}
 
-	connect(url: string, hello: HelloPayload): Promise<WelcomePayload> {
+	connect(url: string, hello: Omit<HelloPayload, "protocolVersion">): Promise<WelcomePayload> {
 		this.clearReconnect();
 		this.lastUrl = url;
-		this.lastHello = { ...hello };
-		return this.connectRaw(url, hello);
+		const payload: HelloPayload = { ...hello, protocolVersion: 2 };
+		this.lastHello = payload;
+		return this.connectRaw(url, payload);
 	}
 
 	private connectRaw(url: string, hello: HelloPayload): Promise<WelcomePayload> {

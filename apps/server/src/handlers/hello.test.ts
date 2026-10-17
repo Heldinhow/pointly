@@ -18,6 +18,7 @@ beforeEach(() => {
 
 function hello(uuid: string, nick: string, code?: string): HelloPayload {
 	return {
+		protocolVersion: 2,
 		uuid,
 		nick,
 		...(code ? { code } : {}),
@@ -153,7 +154,9 @@ describe("handleHello — reconnect (T13a, F-037/F-038)", () => {
 		if (!bob.ok) return;
 		const bobId = bob.playerId;
 
-		// Bob desconecta (simulando ws close)
+		const before = hub.getSalaForPlayer(bobId);
+		if (!before) throw new Error("sala ausente");
+		before.castVote(bobId, "8");
 		hub.markDisconnected(bobId);
 		const sala = hub.getSalaForPlayer(bobId)!;
 		const bobAfterDisconnect = sala.getPlayer(bobId)!;
@@ -168,6 +171,9 @@ describe("handleHello — reconnect (T13a, F-037/F-038)", () => {
 			expect(reconnect.role).toBe("player");
 			const reconnectedBob = reconnect.sala.players.find((p) => p.id === bobId);
 			expect(reconnectedBob?.status).toBe("connected");
+			expect(reconnectedBob?.value).toBe("8");
+			expect(reconnect.sala.votes).toEqual({ [bobId]: "8" });
+			expect(Object.hasOwn(reconnectedBob ?? {}, "uuid")).toBe(false);
 			expect(reconnectedBob?.seatIndex).toBe(bobAfterDisconnect.seatIndex); // seat preservado
 		}
 	});
@@ -266,6 +272,7 @@ describe("handleHello — espectador", () => {
 		expect(create.ok).toBe(true);
 		const code = hub.activeCodes()[0]!;
 		const join = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: UUID_P2,
 			nick: "Beto",
 			code,
@@ -289,6 +296,7 @@ describe("handleHello — espectador", () => {
 			expect(r.ok).toBe(true);
 		}
 		const spec = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-999999999999",
 			nick: "Olho",
 			code,
@@ -299,6 +307,7 @@ describe("handleHello — espectador", () => {
 
 	test("spectate sem code cria a sala como espectador sem host", () => {
 		const result = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: UUID_P1,
 			nick: "Ana",
 			spectate: true,
@@ -313,6 +322,7 @@ describe("handleHello — espectador", () => {
 
 	test("primeiro votante assume o host em sala criada por espectador", () => {
 		const spec = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: UUID_P1,
 			nick: "Olho",
 			spectate: true,
@@ -336,6 +346,7 @@ describe("handleHello — espectador", () => {
 describe("handleHello — avatar", () => {
 	test("hello com avatar válido persiste no Player e aparece no toState", () => {
 		const result = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: UUID_P1,
 			nick: "Ana",
 			avatar: JPEG_AVATAR,
@@ -349,6 +360,7 @@ describe("handleHello — avatar", () => {
 	test("hello com avatar acima do teto aceita o join com avatar ignorado", () => {
 		const oversized = `data:image/jpeg;base64,${"A".repeat(40000)}`;
 		const result = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: UUID_P1,
 			nick: "Ana",
 			avatar: oversized,
@@ -361,6 +373,7 @@ describe("handleHello — avatar", () => {
 
 	test("hello com avatar de formato inválido aceita o join com avatar ignorado", () => {
 		const result = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: UUID_P1,
 			nick: "Ana",
 			avatar: "data:image/gif;base64,R0lGODlh",
@@ -381,6 +394,7 @@ describe("handleHello — avatar", () => {
 
 	test("reconnect reidrata avatar junto com assento e voto", () => {
 		const first = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: UUID_P1,
 			nick: "Ana",
 			avatar: JPEG_AVATAR,

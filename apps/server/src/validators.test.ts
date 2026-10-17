@@ -112,6 +112,7 @@ describe("NickSchema — boundary conditions (F-001, F-002)", () => {
 describe("handleHello — nick validation end-to-end", () => {
 	test("hello com nick vazio retorna invalid_nick", () => {
 		const result = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000001",
 			nick: "",
 		});
@@ -121,6 +122,7 @@ describe("handleHello — nick validation end-to-end", () => {
 
 	test("hello com nick de 1 char retorna invalid_nick", () => {
 		const result = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000001",
 			nick: "X",
 		});
@@ -130,6 +132,7 @@ describe("handleHello — nick validation end-to-end", () => {
 
 	test("hello com nick de 21 chars retorna invalid_nick", () => {
 		const result = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000001",
 			nick: "a".repeat(21),
 		});
@@ -139,6 +142,7 @@ describe("handleHello — nick validation end-to-end", () => {
 
 	test("hello com nick de espaço duplo retorna invalid_nick", () => {
 		const result = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000001",
 			nick: "AB  CD",
 		});
@@ -148,6 +152,7 @@ describe("handleHello — nick validation end-to-end", () => {
 
 	test("hello com nick de espaço na ponta retorna invalid_nick", () => {
 		const result = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000001",
 			nick: " ana",
 		});
@@ -190,6 +195,7 @@ describe("handleHello — código de sala (F-004, F-005, F-006)", () => {
 	test("join com código válido em sala existente retorna ok", () => {
 		// cria sala com host
 		const host = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000001",
 			nick: "Host",
 		});
@@ -198,6 +204,7 @@ describe("handleHello — código de sala (F-004, F-005, F-006)", () => {
 
 		// join com code correto
 		const join = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000002",
 			nick: "Bob",
 			code,
@@ -212,6 +219,7 @@ describe("handleHello — código de sala (F-004, F-005, F-006)", () => {
 
 	test("join com código inexistente retorna sala_nao_encontrada (F-006)", () => {
 		const result = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000001",
 			nick: "Ghost",
 			code: "ZZZZ",
@@ -226,6 +234,7 @@ describe("handleHello — código de sala (F-004, F-005, F-006)", () => {
 	test("join em sala cheia (12/12) retorna sala_cheia (F-005)", () => {
 		// cria sala
 		const host = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000001",
 			nick: "Host",
 		});
@@ -235,7 +244,7 @@ describe("handleHello — código de sala (F-004, F-005, F-006)", () => {
 		// preenche 11 players adicionais (sala aceita 12 = 1 host + 11 players)
 		for (let i = 2; i <= SALA_SEAT_COUNT; i++) {
 			const uuid = `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`;
-			const join = handleHello(hub, { uuid, nick: `P${i}`, code });
+			const join = handleHello(hub, { protocolVersion: 2, uuid, nick: `P${i}`, code });
 			expect(join.ok).toBe(true);
 		}
 
@@ -243,6 +252,7 @@ describe("handleHello — código de sala (F-004, F-005, F-006)", () => {
 
 		// 13º player rejeitado
 		const overflow = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-999999999999",
 			nick: "Late",
 			code,
@@ -257,6 +267,7 @@ describe("handleHello — código de sala (F-004, F-005, F-006)", () => {
 		// Hello não usa RoomCodeSchema direto; passa pelo sala.get(code) que
 		// é undefined → sala_nao_encontrada. 5 chars também.
 		const r3 = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000001",
 			nick: "X",
 			code: "ABC",
@@ -268,6 +279,7 @@ describe("handleHello — código de sala (F-004, F-005, F-006)", () => {
 
 	test("join com código malformado (chars inválidos) retorna sala_nao_encontrada", () => {
 		const r = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000001",
 			nick: "Ana",
 			code: "ab-d", // lowercase + dash
@@ -284,6 +296,7 @@ describe("handleHello — código de sala (F-004, F-005, F-006)", () => {
 describe("handleHello — UUID", () => {
 	test("aceita UUID v4 válido", () => {
 		const r = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "550e8400-e29b-41d4-a716-446655440000",
 			nick: "Ana",
 		});
@@ -292,11 +305,13 @@ describe("handleHello — UUID", () => {
 
 	test("UUID é propagado ao player criado", () => {
 		const uuid = "550e8400-e29b-41d4-a716-446655440000";
-		const r = handleHello(hub, { uuid, nick: "Ana" });
+		const r = handleHello(hub, { protocolVersion: 2, uuid, nick: "Ana" });
 		expect(r.ok).toBe(true);
 		if (r.ok) {
-			const created = r.sala.players.find((p) => p.uuid === uuid);
+			const created = hub.getSala(r.sala.code)?.findByUUID(uuid);
 			expect(created).toBeDefined();
+			expect(r.sala.players.find((p) => p.id === created?.id)).toBeDefined();
+			expect(r.sala.players.every((p) => !Object.hasOwn(p, "uuid"))).toBe(true);
 		}
 	});
 

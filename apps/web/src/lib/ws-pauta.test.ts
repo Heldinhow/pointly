@@ -34,7 +34,6 @@ function salaFor(code: string, playerId: string): SalaState {
 		players: [
 			{
 				id: playerId,
-				uuid: UUID,
 				nick: "Ana",
 				role: "player",
 				seatIndex: 0,

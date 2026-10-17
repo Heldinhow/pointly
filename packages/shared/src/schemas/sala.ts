@@ -142,6 +142,8 @@ export const PlayerSchema = z.object({
 });
 
 export type Player = z.infer<typeof PlayerSchema>;
+export const PublicPlayerSchema = PlayerSchema.omit({ uuid: true }).strict();
+export type PublicPlayer = z.infer<typeof PublicPlayerSchema>;
 
 // ---------------------------------------------------------------------------
 // SalaState
@@ -160,7 +162,7 @@ export const SalaStateSchema = z.object({
 	code: RoomCodeSchema,
 	/** ID do player host (criador). Pode ser null brevemente durante cleanup (T18). */
 	hostId: z.string().nullable(),
-	players: z.array(PlayerSchema).max(24),
+	players: z.array(PublicPlayerSchema).max(24),
 	phase: PhaseSchema,
 	/** contador da rodada (1-based). Incrementa em start_new_round (T16). */
 	round: z.number().int().min(0),

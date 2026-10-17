@@ -9,6 +9,7 @@ import {
 	NickSchema,
 	PhaseSchema,
 	PlayerSchema,
+	PublicPlayerSchema,
 	RoomCodeSchema,
 	SalaStateSchema,
 	VoteSchema,
@@ -114,6 +115,13 @@ describe("PlayerSchema", () => {
 		joinedAt: 1700000000000,
 	};
 
+	test("contrato público omite uuid e rejeita credencial extra", () => {
+		const { uuid, ...publicPlayer } = validPlayer;
+		expect(PublicPlayerSchema.parse(publicPlayer)).toEqual(publicPlayer);
+		expect(PublicPlayerSchema.safeParse({ ...publicPlayer, uuid }).success).toBe(false);
+		expect(PlayerSchema.safeParse(publicPlayer).success).toBe(false);
+	});
+
 	test("aceita player válido completo", () => {
 		expect(PlayerSchema.parse(validPlayer)).toEqual(validPlayer);
 	});
@@ -153,7 +161,6 @@ describe("PlayerSchema", () => {
 describe("SalaStateSchema", () => {
 	const basePlayer = {
 		id: "p1",
-		uuid: "550e8400-e29b-41d4-a716-446655440000",
 		nick: "Ana",
 		role: "host" as const,
 		seatIndex: 0,
@@ -181,7 +188,6 @@ describe("SalaStateSchema", () => {
 		const overflow = Array.from({ length: 13 }, (_, i) => ({
 			...basePlayer,
 			id: `p${i}`,
-			uuid: `550e8400-e29b-41d4-a716-44665544000${i}`,
 			seatIndex: i,
 		}));
 		const r = SalaStateSchema.safeParse({ ...validSala, players: overflow });

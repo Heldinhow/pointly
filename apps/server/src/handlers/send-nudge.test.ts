@@ -11,7 +11,7 @@ beforeEach(() => {
 });
 
 function addPlayer(uuid: string, nick: string): { id: string; code: string } {
-	const create = handleHello(hub, { uuid, nick });
+	const create = handleHello(hub, { protocolVersion: 2, uuid, nick });
 	if (!create.ok) throw new Error("expected create ok");
 	const code = hub.activeCodes()[0]!;
 	return { id: create.playerId, code };
@@ -21,6 +21,7 @@ describe("handleSendNudge", () => {
 	test("cutucada com sucesso entre player e espectador", () => {
 		const host = addPlayer("00000000-0000-4000-8000-000000000001", "Ana");
 		const spectator = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000002",
 			nick: "Beto",
 			code: host.code,
@@ -46,6 +47,7 @@ describe("handleSendNudge", () => {
 		const host = addPlayer("00000000-0000-4000-8000-000000000001", "Ana");
 		const other = addPlayer("00000000-0000-4000-8000-000000000003", "Caio");
 		const guest = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000002",
 			nick: "Beto",
 			code: host.code,
@@ -73,6 +75,7 @@ describe("handleSendNudge", () => {
 	test("cooldown compartilhado bloqueia arremesso logo após a cutucada", () => {
 		const host = addPlayer("00000000-0000-4000-8000-000000000001", "Ana");
 		const guest = handleHello(hub, {
+			protocolVersion: 2,
 			uuid: "00000000-0000-4000-8000-000000000002",
 			nick: "Beto",
 			code: host.code,

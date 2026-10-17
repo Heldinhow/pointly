@@ -20,6 +20,7 @@ describe("server ↔ @planning-poker/shared workspace", () => {
 		// Tipos usados como anotações (TS-only — compilação já validou)
 		const empty: SalaState | null = null;
 		const hello: HelloPayload = {
+			protocolVersion: 2,
 			uuid: "550e8400-e29b-41d4-a716-446655440000",
 			nick: "Ana",
 		};

@@ -278,7 +278,9 @@ describe("Sala — toState", () => {
 		expect(state.code).toBe("ABCD");
 		expect(state.hostId).toBe("p1");
 		expect(state.players.length).toBe(2);
-		expect(state.votes).toEqual({ p1: "5", p2: "8" });
+		expect(state.votes).toEqual({});
+		expect(sala.toState("p1").votes).toEqual({ p1: "5" });
+		expect(Object.fromEntries(sala.votes)).toEqual({ p1: "5", p2: "8" });
 		expect(state.phase).toBe("revealable");
 	});
 });

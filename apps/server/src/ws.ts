@@ -17,6 +17,7 @@ import {
 	ClientToServerEventSchema,
 	ServerToClientEventSchema,
 	type ClientToServerEvent,
+	type HelloPayload,
 	type HistoriaAddPayload,
 	type HistoriaMovePayload,
 	type HistoriaRemovePayload,
@@ -291,7 +292,7 @@ export class WSService {
 
 	private handleHelloEvent(
 		ws: BunWS,
-		payload: { uuid: string; nick: string; code?: string },
+		payload: HelloPayload,
 	): void {
 		const outcome = handleHello(this.hub, payload);
 		if (!outcome.ok) {
@@ -665,8 +666,10 @@ export class WSService {
 				salaCode: code,
 			}, "debug");
 		}
-		const state = sala.toState();
-		this.broadcast(code, toRoomStateEvent(state), except);
+		for (const ws of this.connections) {
+			if (ws.data.code !== code || ws === except) continue;
+			this.sendEvent(ws, toRoomStateEvent(sala.toState(ws.data.playerId ?? undefined)));
+		}
 	}
 
 	private sendEvent(ws: BunWS, event: ServerToClientEvent): void {

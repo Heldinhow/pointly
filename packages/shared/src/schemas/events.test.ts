@@ -38,8 +38,17 @@ import {
 // ---------------------------------------------------------------------------
 
 describe("HelloPayloadSchema", () => {
+	test("exige versão literal 2 sem default", () => {
+		const legacy = { uuid: "550e8400-e29b-41d4-a716-446655440000", nick: "Ana" };
+		expect(HelloPayloadSchema.safeParse(legacy).success).toBe(false);
+		for (const protocolVersion of [1, 3, "2", null]) {
+			expect(HelloPayloadSchema.safeParse({ ...legacy, protocolVersion }).success).toBe(false);
+		}
+		expect(HelloPayloadSchema.parse({ ...legacy, protocolVersion: 2 })).toEqual({ ...legacy, protocolVersion: 2 });
+	});
 	test("aceita hello com code (join)", () => {
 		const r = HelloPayloadSchema.safeParse({
+			protocolVersion: 2,
 			uuid: "550e8400-e29b-41d4-a716-446655440000",
 			nick: "Ana",
 			code: "ABCD",
@@ -49,6 +58,7 @@ describe("HelloPayloadSchema", () => {
 
 	test("aceita hello sem code (criar sala)", () => {
 		const r = HelloPayloadSchema.safeParse({
+			protocolVersion: 2,
 			uuid: "550e8400-e29b-41d4-a716-446655440000",
 			nick: "Ana",
 		});
@@ -57,6 +67,7 @@ describe("HelloPayloadSchema", () => {
 
 	test("rejeita uuid malformado", () => {
 		const r = HelloPayloadSchema.safeParse({
+			protocolVersion: 2,
 			uuid: "not-uuid",
 			nick: "Ana",
 		});
@@ -65,6 +76,7 @@ describe("HelloPayloadSchema", () => {
 
 	test("rejeita nick inválido (espaço duplo)", () => {
 		const r = HelloPayloadSchema.safeParse({
+			protocolVersion: 2,
 			uuid: "550e8400-e29b-41d4-a716-446655440000",
 			nick: "Ana  Maria",
 		});
@@ -129,7 +141,6 @@ describe("WelcomeResponseSchema", () => {
 		players: [
 			{
 				id: "p1",
-				uuid: "550e8400-e29b-41d4-a716-446655440000",
 				nick: "Ana",
 				role: "host",
 				seatIndex: 0,
@@ -335,7 +346,7 @@ describe("ClientToServerEventSchema (discriminated union)", () => {
 		const samples = [
 			{
 				type: "hello" as const,
-				payload: { uuid: "550e8400-e29b-41d4-a716-446655440000", nick: "Ana" },
+				payload: { protocolVersion: 2, uuid: "550e8400-e29b-41d4-a716-446655440000", nick: "Ana" },
 			},
 			{ type: "cast_vote" as const, payload: { value: "5" as const } },
 			{ type: "reveal_votes" as const, payload: {} },
@@ -538,19 +549,19 @@ describe("HelloPayloadSchema avatar", () => {
 	const JPEG = "data:image/jpeg;base64,/9j/4AAQ";
 
 	test("aceita hello com avatar válido", () => {
-		const r = HelloPayloadSchema.safeParse({ uuid: UUID, nick: "Ana", avatar: JPEG });
+		const r = HelloPayloadSchema.safeParse({ protocolVersion: 2, uuid: UUID, nick: "Ana", avatar: JPEG });
 		expect(r.success).toBe(true);
 		if (r.success) expect(r.data.avatar).toBe(JPEG);
 	});
 
 	test("aceita hello sem avatar (fallback iniciais)", () => {
-		const r = HelloPayloadSchema.safeParse({ uuid: UUID, nick: "Ana" });
+		const r = HelloPayloadSchema.safeParse({ protocolVersion: 2, uuid: UUID, nick: "Ana" });
 		expect(r.success).toBe(true);
 	});
 
 	test("rejeita hello com avatar acima do teto", () => {
 		const oversized = `data:image/jpeg;base64,${"A".repeat(40000)}`;
-		const r = HelloPayloadSchema.safeParse({ uuid: UUID, nick: "Ana", avatar: oversized });
+		const r = HelloPayloadSchema.safeParse({ protocolVersion: 2, uuid: UUID, nick: "Ana", avatar: oversized });
 		expect(r.success).toBe(false);
 	});
 });

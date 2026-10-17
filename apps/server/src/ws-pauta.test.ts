@@ -84,13 +84,13 @@ beforeEach(() => {
 	service.onOpen(bob);
 	service.onMessage(
 		ana,
-		JSON.stringify({ type: "hello", payload: { uuid: UUID_ANA, nick: "Ana" } }),
+		JSON.stringify({ type: "hello", payload: { protocolVersion: 2, uuid: UUID_ANA, nick: "Ana" } }),
 	);
 	service.onMessage(
 		bob,
 		JSON.stringify({
 			type: "hello",
-			payload: { uuid: UUID_BOB, nick: "Bob", code: ana.data.code },
+			payload: { protocolVersion: 2, uuid: UUID_BOB, nick: "Bob", code: ana.data.code },
 		}),
 	);
 	ana.messages.length = 0;
@@ -253,6 +253,7 @@ describe("WS Pauta — bullet 2: espectador / fase / pauta cheia", () => {
 			JSON.stringify({
 				type: "hello",
 				payload: {
+					protocolVersion: 2,
 					uuid: UUID_OLHO,
 					nick: "Olho",
 					code: ana.data.code,

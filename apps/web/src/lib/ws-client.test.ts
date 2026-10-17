@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { JoinError } from "./errors";
 import { PointlySocket } from "./ws-client";
-import type { SalaState } from "@planning-poker/shared";
+import { ClientToServerEventSchema, type HelloPayload, type SalaState } from "@planning-poker/shared";
 
 const PORT = 3191;
 const WS_URL = `ws://127.0.0.1:${PORT}/ws`;
@@ -37,7 +37,6 @@ function salaFor(code: string, playerId: string): SalaState {
 		players: [
 			{
 				id: playerId,
-				uuid: "00000000-0000-4000-8000-000000000001",
 				nick: "Ana",
 				role: "player",
 				seatIndex: 0,
@@ -164,7 +163,6 @@ beforeAll(() => {
 					const updated = salaFor("LIVE", playerId);
 					updated.players.push({
 						id: "p_test000002",
-						uuid: "00000000-0000-4000-8000-000000000002",
 						nick: "Beto",
 						role: "player",
 						seatIndex: 1,
@@ -543,7 +541,7 @@ describe("PointlySocket — auto-reconnect (morte real)", () => {
 
 	function killableServer(
 		port: number,
-		onHello: (ws: ServerHandle, count: number) => void,
+		onHello: (ws: ServerHandle, count: number, hello: HelloPayload) => void,
 	): {
 		server: ReturnType<typeof Bun.serve>;
 		hellos: () => number;
@@ -559,23 +557,24 @@ describe("PointlySocket — auto-reconnect (morte real)", () => {
 			},
 			websocket: {
 				open(ws) {
-					live.add(ws as unknown as ServerHandle);
+					live.add(ws);
 				},
 				message(ws, raw: string | Buffer) {
 					const text =
 						typeof raw === "string" ? raw : raw.toString("utf-8");
-					let json: { type?: string };
+					let input: unknown;
 					try {
-						json = JSON.parse(text) as typeof json;
+						input = JSON.parse(text);
 					} catch {
 						return;
 					}
-					if (json.type !== "hello") return;
+					const parsed = ClientToServerEventSchema.safeParse(input);
+					if (!parsed.success || parsed.data.type !== "hello") return;
 					hellos += 1;
-					onHello(ws as unknown as ServerHandle, hellos);
+					onHello(ws, hellos, parsed.data.payload);
 				},
 				close(ws) {
-					live.delete(ws as unknown as ServerHandle);
+					live.delete(ws);
 				},
 			},
 		});
@@ -621,7 +620,9 @@ describe("PointlySocket — auto-reconnect (morte real)", () => {
 	}
 
 	test("queda real agenda retry com o mesmo hello e avisa onReconnected", async () => {
-		const { server, hellos, killAll } = killableServer(PORT + 2, (ws) => {
+		const payloads: HelloPayload[] = [];
+		const { server, hellos, killAll } = killableServer(PORT + 2, (ws, _count, hello) => {
+			payloads.push(hello);
 			ws.send(welcomeData());
 		});
 		const reconnecting: Array<{ attempt: number; nextInMs: number }> = [];
@@ -659,6 +660,10 @@ describe("PointlySocket — auto-reconnect (morte real)", () => {
 			expect(reconnecting.length).toBeGreaterThan(0);
 			expect(reconnecting[0]?.attempt).toBe(1);
 			expect(hellos()).toBeGreaterThanOrEqual(2);
+			expect(payloads).toEqual([
+				{ protocolVersion: 2, uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana", code: "AB12" },
+				{ protocolVersion: 2, uuid: "00000000-0000-4000-8000-000000000001", nick: "Ana", code: "AB12" },
+			]);
 			expect(socket.getStatus()).toBe("ready");
 			// Retry com sucesso: onClose não disparou.
 			expect(closed).toEqual([]);

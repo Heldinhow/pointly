@@ -9,7 +9,7 @@ import {
 } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { Lang } from "../lib/i18n";
-import type { Historia, Player, SalaState, Vote } from "@planning-poker/shared";
+import { ClientToServerEventSchema, type HelloPayload, type Historia, type PublicPlayer as Player, type SalaState, type Vote } from "@planning-poker/shared";
 import { useSession } from "../store/session";
 import { CONFIRM_TIMEOUT_MS } from "../lib/confirm";
 import { ArenaPage } from "./arena";
@@ -173,7 +173,6 @@ function player(
 	index: number,
 ): Player {
 	return {
-		uuid: `00000000-0000-4000-8000-0000000000${String(index).padStart(2, "0")}`,
 		nick: `Player ${index}`,
 		role: "player",
 		seatIndex: index,
@@ -1424,15 +1423,13 @@ describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {
 		});
 	}
 
-	function helloOf(ws: RejoinMockWS): {
-		type: string;
-		payload: { uuid: string; nick: string; code?: string };
-	} {
-		const raw = ws.sent[0] as string;
-		return JSON.parse(raw) as {
-			type: string;
-			payload: { uuid: string; nick: string; code?: string };
-		};
+	function helloOf(ws: RejoinMockWS): { type: "hello"; payload: HelloPayload } {
+		const raw = ws.sent[0];
+		if (!raw) throw new Error("hello ausente");
+		const event = ClientToServerEventSchema.parse(JSON.parse(raw));
+		if (event.type !== "hello") throw new Error("evento não é hello");
+		expect(event.payload.protocolVersion).toBe(2);
+		return event;
 	}
 
 	function welcomeWithVote(code: string, playerId: string): string {
@@ -1447,7 +1444,6 @@ describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {
 					players: [
 						player({
 							id: playerId,
-							uuid: "00000000-0000-4000-8000-000000000099",
 							nick: "Ana",
 							role: "host",
 							hasVoted: true,
@@ -1480,7 +1476,6 @@ describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {
 						players: [
 							player({
 								id: playerId,
-								uuid: "00000000-0000-4000-8000-000000000099",
 								nick: "Ana",
 								role: "host",
 							}, 0),
