@@ -1,6 +1,6 @@
 ---
 name: verify-pointly
-description: Drive and verify the Pointly planning-poker web app (React+Vite UI on :5173, Bun+Hono WS server on :3001) the way a user does. Use to prove room create/join, voting/reveal, agenda (pauta), and table interactions, in OpenChamber.
+description: Drive and verify the Pointly planning-poker web app (React+Vite UI on :5173, Bun+Hono WS server on :3001) the way a user does. Use to prove room create/join, voting/reveal, agenda (pauta), and table interactions, via the Playwright E2E suite or a manual browser pass.
 ---
 
 # Verify Pointly
@@ -9,21 +9,21 @@ Pointly is Planning Poker sem cadastro: an ephemeral room ("Sala") with a 4-char
 
 ## Launch
 
-Two services; run each in its own background `shell` session from the repo root `/Users/helder/pointly`:
+Two services; run each in its own background `shell` session from the repo root (the checkout you are working in, e.g. `git rev-parse --show-toplevel`):
 
 ```
 bun --filter server dev        # Bun+Hono WS on :3001
 bun --filter pointly-web dev   # Vite UI on :5173 (proxies /api and /ws to :3001)
 ```
 
+Record the shell session handle (or PID) of each service when you start it.
+
 Ready signals: server logs `[server] listening on http://localhost:3001`; Vite logs `ready in ... ms` and `Local: http://localhost:5173/`. The UI needs the server up (WS at `/ws`); a lone Vite gives a dead room.
 
-Teardown kills only what this run started (both ports are ours):
-
-```
-lsof -ti tcp:3001 | while read p; do kill "$p"; done
-lsof -ti tcp:5173 | while read p; do kill "$p"; done
-```
+Teardown stops only the two sessions/PIDs recorded above (e.g. kill the
+stored PID, or stop the stored background session handle). Never kill by
+port scan (`lsof`/`fuser -k`) or by process name: the ports may host
+unrelated processes.
 
 ## Doctor
 
@@ -39,11 +39,18 @@ curl -s http://localhost:3001/api/v1/salas/<CODE>   # 404 exists:false when the 
 
 ## Drive
 
-Harness: `openchamber_web`. Flow: `browser.open` → `browser.snapshot` → act by selector → `browser.snapshot` to read the result.
+Automated first: the Playwright E2E suite (`e2e/README.md`) drives the
+real Vite frontend against the real backend on its own ports
+(`:5179`/`:3001`, `reuseExistingServer: false`):
 
 ```
-browser.open { url: "http://localhost:5173/join", viewport: "desktop" }
+bun run typecheck:e2e
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser bun run test:e2e
 ```
+
+For a manual pass, open `http://localhost:5173/join` in a real browser
+(desktop viewport 1280×800, then a mobile viewport 390×844 with touch)
+and walk the handles below, reading the result on screen after each step.
 
 Use the app's real handles (they are stable and test-anchored):
 
@@ -61,7 +68,9 @@ Speech is brushed aside by real controls: prefer `data-testid` and `aria-label` 
 
 Save proofs under `/tmp/pointly-verify/` (untracked, outside git). For each drive capture:
 
-1. `browser.capture { label: "<feature>-<state>" }` and copy the returned path into `/tmp/pointly-verify/`.
+1. A screenshot of the end state saved into `/tmp/pointly-verify/`
+   (Playwright keeps screenshots only on failure; for a manual pass use
+   the browser's own screenshot).
 2. The observable end state in the snapshot text (e.g. `Round 1 · Revealed`, `Average ... 5`).
 3. The side effect via API/logs, not just the screen: `curl http://localhost:3001/api/v1/salas/<CODE>` (expect `"phase":"revealed"`) and the server log lines (`ws.event ... event":"cast_vote"`, `"votes_revealed"`).
 
@@ -69,11 +78,11 @@ Proof standard: exercise the real user path (click the deck, not an internal set
 
 ## Cleanup
 
-Kill the two dev processes started above (by the ports they own, never by process name). Rooms are ephemeral: they vanish with the server. Evidence in `/tmp/pointly-verify/` is never removed by cleanup.
+Kill only the recorded sessions/PIDs from Launch (never by port or process name). Rooms are ephemeral: they vanish with the server. Evidence in `/tmp/pointly-verify/` is never removed by cleanup.
 
 ## Gotchas
 
 - **The deck is locked until an agenda story exists.** With `pauta` present and no active story, every `deck-card-*` is `disabled` and shows "Add or select a story in the agenda to unlock the cards." Add a story first. A legacy room without `pauta` keeps the old always-on deck.
-- Spectators (`spectate: true`) cannot vote; card clicks surface an inline error, not a disabled state.
+- Spectators (`spectate: true`) cannot vote: the deck cards render `disabled` for them, so no vote request is ever sent and no error surfaces on click.
 - Signup-free but stateful: nick draft/avatar live on the device (localStorage) and are re-sent on reload; a reload rejoins the same seat via the persisted UUID.
 - Joining a code that no longer exists (server restarted) shows "sala não encontrada" and clears the session.
