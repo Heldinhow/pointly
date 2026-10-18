@@ -43,8 +43,8 @@
 .pt-landing__lede {
   max-width: 480px;
   margin: 24px 0 0;
-  color: var(--muted-foreground);
-  font-size: 17px;
+  color: var(--secondary-foreground);
+  font-size: 18px;
   line-height: 1.6;
 }
 .pt-landing__hero-actions {

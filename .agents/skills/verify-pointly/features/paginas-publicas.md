@@ -2,7 +2,8 @@
 
 ## Sub-features
 
-- Home PT (`/`) and EN (`/en`) with a create-room call to action.
+- Home PT (`/`) and EN (`/en`): "Create room" is the single primary hero CTA, "Enter with code" is the secondary link (`/join?mode=join`), and "Try a round" is a discreet link to the `#demo` section.
+- Hero paragraph (home/landing) renders at 18px with `--secondary-foreground`; join form hints use the same token, all ≥4.5:1 in light and dark.
 - Landing pages: `/planning-poker`, `/scrum-poker` (+ `/en/...`), with FAQ.
 - Guides hub `/guias` (PT, links every guide card, including the `estimativa-agil` pillar; EN mirror `/en/guides` is also indexable) and three PT articles (`como-jogar-planning-poker`, `o-que-e-planning-poker`, `story-points`) plus EN mirrors under `/en/guides/*`.
 - pt-BR guide batch, all with Article + FAQPage + BreadcrumbList (the pillar also carries an ItemList mapa): `/guias/planning-poker-remoto`, `/guias/story-points-vs-horas`, `/guias/fibonacci-estimativa-agil`, `/guias/t-shirt-sizing`, `/planning-poker-online-gratis-comparativo`, `/guias/estimativa-agil`, `/guias/votos-divergentes-planning-poker`, `/guias/planning-poker-para-devs`, `/guias/agenda-sessao-planning-poker`, `/guias/scrum-poker-vs-planning-poker`.

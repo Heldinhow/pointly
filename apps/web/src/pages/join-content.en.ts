@@ -2,6 +2,11 @@ import type { JoinContent } from "./join-content";
 
 export const JOIN_CONTENT_EN: JoinContent = {
 	lang: "en",
+	meta: {
+		title: "Create a room or enter with a code · Pointly",
+		description:
+			"Create a planning poker room with no signup or enter with the invite code. No account, no waiting: just a nickname to estimate with your team.",
+	},
 	intro: {
 		h1Line1: "Your team.",
 		h1Line2: "At the same table.",
@@ -26,6 +31,7 @@ export const JOIN_CONTENT_EN: JoinContent = {
 		nickLabel: "Nickname",
 		nickPlaceholder: "What does the team call you?",
 		nickHint: "2 to 20 characters, no double spaces.",
+		photoLabel: "Add photo (optional)",
 		codeLabel: "Room code",
 		codeHint: "4 letters or digits. Paste the code from the invite.",
 		codeCharAria: (index) => `Character ${index + 1} of 4`,

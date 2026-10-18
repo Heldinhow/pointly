@@ -28,8 +28,8 @@
 .join-intro-copy {
   max-width: 380px;
   margin: 26px 0 0;
-  color: var(--muted-foreground);
-  font-size: 17px;
+  color: var(--secondary-foreground);
+  font-size: 18px;
   line-height: 1.6;
 }
 .join-ritual {
@@ -160,6 +160,7 @@
   outline-offset: 2px;
 }
 .join-form [data-slot="field-description"] {
+  color: var(--secondary-foreground);
   font-size: 14px;
   line-height: 1.55;
 }
@@ -216,7 +217,7 @@
 .join-spectate-hint {
   font-size: 14px;
   line-height: 1.55;
-  color: var(--muted-foreground);
+  color: var(--secondary-foreground);
 }
 .join-otp input {
   width: 50px;

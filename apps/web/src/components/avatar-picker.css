@@ -37,3 +37,15 @@
 .avatar-picker--compact .avatar-picker-row {
   gap: 8px;
 }
+.avatar-picker--quiet [data-slot="field-label"] {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  font-weight: 400;
+}
+.avatar-picker--quiet .avatar-picker-preview {
+  width: 36px;
+  height: 36px;
+}
+.avatar-picker.avatar-picker--quiet [data-slot="field-description"] {
+  color: var(--muted-foreground);
+}

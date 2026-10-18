@@ -9,6 +9,8 @@ import {
 } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { useSession } from "../store/session";
+import { META_DESCRIPTION_SELECTOR } from "../seo/meta";
+import { JOIN_CONTENT } from "./join-content";
 import { JoinPage } from "./join";
 import { ClientToServerEventSchema } from "@planning-poker/shared";
 import type { Lang } from "@/lib/i18n";
@@ -158,6 +160,7 @@ describe("JoinPage", () => {
 		installMocks(jsonFetch(200, {}));
 		renderJoin("/join", "en");
 		expect(screen.getByRole("list", { name: "How it works" })).toBeTruthy();
+		expect(screen.getByText("Add photo (optional)")).toBeTruthy();
 		fireEvent.click(submitButton("Create room"));
 		expect(
 			screen.getByText("Nickname needs at least 2 characters."),
@@ -165,6 +168,72 @@ describe("JoinPage", () => {
 		fireEvent.click(screen.getByRole("radio", { name: "Join with code" }));
 		expect(screen.getByRole("group", { name: "Room code" })).toBeTruthy();
 		expect(submitButton("Join the room")).toBeTruthy();
+	});
+
+	test("título e meta description seguem o idioma da rota", () => {
+		installMocks(jsonFetch(200, {}));
+		renderJoin("/join", "en");
+		expect(document.title).toBe(JOIN_CONTENT.en.meta.title);
+		expect(
+			document.head
+				.querySelector(META_DESCRIPTION_SELECTOR)
+				?.getAttribute("content"),
+		).toBe(JOIN_CONTENT.en.meta.description);
+
+		cleanup();
+		renderJoin("/join", "pt-BR");
+		expect(document.title).toBe(JOIN_CONTENT["pt-BR"].meta.title);
+		expect(
+			document.head
+				.querySelector(META_DESCRIPTION_SELECTOR)
+				?.getAttribute("content"),
+		).toBe(JOIN_CONTENT["pt-BR"].meta.description);
+	});
+
+	test("foto vira opção secundária com o rótulo opcional", () => {
+		installMocks(jsonFetch(200, {}));
+		renderJoin("/join");
+		const label = screen.getByText("Adicionar foto (opcional)");
+		const field = label.closest('[data-slot="field"]');
+		expect(field?.classList.contains("avatar-picker--quiet")).toBe(true);
+		expect(label.getAttribute("data-slot")).toBe("field-label");
+	});
+
+	test("/join abre no modo criar sala", () => {
+		installMocks(jsonFetch(200, {}));
+		renderJoin("/join");
+		expect(
+			(screen.getByRole("radio", { name: "Criar sala" }) as HTMLInputElement)
+				.checked,
+		).toBe(true);
+		expect(screen.queryByRole("group", { name: "Código da sala" })).toBeNull();
+		expect(submitButton("Criar sala")).toBeTruthy();
+	});
+
+	test("apelido fora de 2–20 caracteres erra no campo sem chamar rede", () => {
+		let fetchCalls = 0;
+		installMocks((async () => {
+			fetchCalls += 1;
+			return new Response("{}", { status: 200 });
+		}) as unknown as typeof fetch);
+		renderJoin("/join");
+		const nick = screen.getByLabelText("Apelido") as HTMLInputElement;
+		fireEvent.change(nick, { target: { value: "A" } });
+		fireEvent.click(submitButton("Criar sala"));
+		const minError = screen.getByText(
+			"Apelido precisa de ao menos 2 caracteres.",
+		);
+		expect(minError.id).toBe("nick-error");
+		expect(nick.getAttribute("aria-invalid")).toBe("true");
+		expect(nick.getAttribute("aria-describedby")).toContain("nick-error");
+		expect(MockSocket.instances).toHaveLength(0);
+
+		fireEvent.change(nick, { target: { value: "A".repeat(21) } });
+		fireEvent.click(submitButton("Criar sala"));
+		expect(
+			screen.getByText("Apelido pode ter no máximo 20 caracteres."),
+		).toBeTruthy();
+		expect(fetchCalls).toBe(0);
 	});
 
 	test("bloqueia envio com apelido inválido sem chamar rede", () => {

@@ -22,6 +22,8 @@ interface AvatarPickerProps {
 	compact?: boolean;
 	/** Idioma dos rótulos; o default pt-BR preserva o uso antigo. */
 	lang?: Lang;
+	label?: string;
+	quiet?: boolean;
 }
 
 const AVATAR_PICKER_LABELS: Record<
@@ -69,6 +71,8 @@ export function AvatarPicker({
 	onChange,
 	compact = false,
 	lang = "pt-BR",
+	label,
+	quiet = false,
 }: AvatarPickerProps): React.ReactElement {
 	const labels = AVATAR_PICKER_LABELS[lang];
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -101,10 +105,14 @@ export function AvatarPicker({
 
 	return (
 		<Field
-			className={cn("avatar-picker", compact && "avatar-picker--compact")}
+			className={cn(
+				"avatar-picker",
+				compact && "avatar-picker--compact",
+				quiet && "avatar-picker--quiet",
+			)}
 			invalid={error !== null}
 		>
-			<FieldLabel>{labels.field}</FieldLabel>
+			<FieldLabel>{label ?? labels.field}</FieldLabel>
 			<div className="avatar-picker-row">
 				<span className="avatar-picker-preview" data-testid="avatar-preview">
 					{value ? (
@@ -128,7 +136,7 @@ export function AvatarPicker({
 					/>
 					<Button
 						type="button"
-						variant="outline"
+						variant={quiet ? "ghost" : "outline"}
 						size="sm"
 						loading={busy}
 						onClick={() => inputRef.current?.click()}
