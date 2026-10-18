@@ -1,4 +1,5 @@
 import type { GuideCopy, GuideHubCopy } from "./guide-content";
+import { SITE_GUIDE_CONTENT_PT } from "./guide-content-seo.pt";
 
 const META_PT = "Pointly · atualizado em setembro de 2026";
 
@@ -30,6 +31,34 @@ export const GUIDE_HUB_PT: GuideHubCopy = {
 			description:
 				"Escala, sequência de Fibonacci, story points vs horas e como calibrar a estimativa com uma história de referência.",
 		},
+		{
+			to: "/guias/planning-poker-remoto",
+			readingTime: "8 min de leitura",
+			title: "Planning poker remoto: estimar com time distribuído",
+			description:
+				"Como rodar a sessão em videochamada sem ancoragem: agenda de 45 minutos, fusos horários e checklist de facilitação.",
+		},
+		{
+			to: "/guias/story-points-vs-horas",
+			readingTime: "7 min de leitura",
+			title: "Story points vs horas: como responder quando fica pronto",
+			description:
+				"Por que não converter ponto em hora e como prever prazo com a velocidade do time, em faixa.",
+		},
+		{
+			to: "/guias/fibonacci-estimativa-agil",
+			readingTime: "7 min de leitura",
+			title: "Fibonacci na estimativa ágil: por que 1, 2, 3, 5, 8, 13",
+			description:
+				"A sequência clássica e a modificada, o que cada faixa de valor significa e o que fazer quando a história chega a 13.",
+		},
+		{
+			to: "/guias/t-shirt-sizing",
+			readingTime: "7 min de leitura",
+			title: "T-shirt sizing: escala PP-GG e conversão em pontos",
+			description:
+				"Estimativa por tamanhos para triagem de backlog, com tabelas de conversão para story points.",
+		},
 	],
 	closing: {
 		title: "Pronto para estimar junto?",
@@ -39,6 +68,7 @@ export const GUIDE_HUB_PT: GuideHubCopy = {
 };
 
 export const GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
+	...SITE_GUIDE_CONTENT_PT,
 	"como-jogar": {
 		lang: "pt-BR",
 		path: "/guias/como-jogar-planning-poker",

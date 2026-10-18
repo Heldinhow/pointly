@@ -41,6 +41,11 @@ import {
   StoryPointsPtPage,
   WhatIsEnPage,
   WhatIsPtPage,
+  FibonacciEstimativaPtPage,
+  PlanningPokerComparativoPtPage,
+  PlanningPokerRemotoPtPage,
+  StoryPointsVsHorasPtPage,
+  TShirtSizingPtPage,
 } from "@/pages/guide";
 import { HomePage } from "@/pages/home";
 import {
@@ -171,6 +176,23 @@ export default function App(): React.ReactElement {
             <Route path="/guias/como-jogar-planning-poker" element={<HowToPlayPtPage />} />
             <Route path="/guias/o-que-e-planning-poker" element={<WhatIsPtPage />} />
             <Route path="/guias/story-points" element={<StoryPointsPtPage />} />
+            <Route
+              path="/guias/planning-poker-remoto"
+              element={<PlanningPokerRemotoPtPage />}
+            />
+            <Route
+              path="/guias/story-points-vs-horas"
+              element={<StoryPointsVsHorasPtPage />}
+            />
+            <Route
+              path="/guias/fibonacci-estimativa-agil"
+              element={<FibonacciEstimativaPtPage />}
+            />
+            <Route path="/guias/t-shirt-sizing" element={<TShirtSizingPtPage />} />
+            <Route
+              path="/planning-poker-online-gratis-comparativo"
+              element={<PlanningPokerComparativoPtPage />}
+            />
             <Route path="/en/planning-poker" element={<PlanningPokerEnPage />} />
             <Route path="/en/scrum-poker" element={<ScrumPokerEnPage />} />
             <Route path="/en/guides" element={<GuidesHubEnPage />} />

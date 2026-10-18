@@ -12,6 +12,11 @@ import {
   StoryPointsPtPage,
   WhatIsEnPage,
   WhatIsPtPage,
+  FibonacciEstimativaPtPage,
+  PlanningPokerComparativoPtPage,
+  PlanningPokerRemotoPtPage,
+  StoryPointsVsHorasPtPage,
+  TShirtSizingPtPage,
 } from "./guide";
 
 afterEach(() => {
@@ -41,6 +46,36 @@ const GUIDES: ReadonlyArray<{
     id: "story-points",
     path: "/guias/story-points",
     Page: StoryPointsPtPage,
+  },
+  {
+    lang: "pt-BR",
+    id: "planning-poker-remoto",
+    path: "/guias/planning-poker-remoto",
+    Page: PlanningPokerRemotoPtPage,
+  },
+  {
+    lang: "pt-BR",
+    id: "story-points-vs-horas",
+    path: "/guias/story-points-vs-horas",
+    Page: StoryPointsVsHorasPtPage,
+  },
+  {
+    lang: "pt-BR",
+    id: "fibonacci-estimativa-agil",
+    path: "/guias/fibonacci-estimativa-agil",
+    Page: FibonacciEstimativaPtPage,
+  },
+  {
+    lang: "pt-BR",
+    id: "t-shirt-sizing",
+    path: "/guias/t-shirt-sizing",
+    Page: TShirtSizingPtPage,
+  },
+  {
+    lang: "pt-BR",
+    id: "comparativo-ferramentas",
+    path: "/planning-poker-online-gratis-comparativo",
+    Page: PlanningPokerComparativoPtPage,
   },
   {
     lang: "en",
@@ -128,7 +163,7 @@ describe("Guias (15.T6 — pt + EN)", () => {
   ];
 
   for (const { lang, path, Page } of HUBS) {
-    test(`${path}: intro + 3 cards na ordem de R3 + CTA`, () => {
+    test(`${path}: intro + cards do conteúdo + CTA`, () => {
       const content = GUIDE_HUB[lang];
       render(
         <MemoryRouter initialEntries={[path]}>

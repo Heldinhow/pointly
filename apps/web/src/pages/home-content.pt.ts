@@ -71,19 +71,19 @@ export const HOME_CONTENT_PT: HomeContent = {
 			"Três leituras curtas para chegar na primeira rodada com o time alinhado.",
 		links: [
 			{
-				to: "/planning-poker",
-				title: "Planning poker",
-				body: "A mesa completa: sala, votos secretos e reveal em tempo real.",
+				to: "/guias/como-jogar-planning-poker",
+				title: "Como jogar, passo a passo",
+				body: "O roteiro de uma sessão real: papéis, rodada a rodada e o que fazer quando os votos divergem.",
 			},
 			{
-				to: "/scrum-poker",
-				title: "Scrum poker",
-				body: "O mesmo ritual no sprint planning, item a item do backlog.",
+				to: "/guias/o-que-e-planning-poker",
+				title: "O que é planning poker?",
+				body: "De onde veio, por que o voto simultâneo funciona e quando usar o ritual.",
 			},
 			{
-				to: "/guias",
-				title: "Guias",
-				body: "Como jogar, o que é e como estimar story points.",
+				to: "/guias/story-points",
+				title: "Story points na prática",
+				body: "Escala, sequência de Fibonacci e como calibrar a estimativa com uma história de referência.",
 			},
 		],
 	},

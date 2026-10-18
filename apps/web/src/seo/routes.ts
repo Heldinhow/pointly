@@ -9,7 +9,7 @@
  * pré-renderizada/listada sem tocar no resto do pipeline.
  */
 
-import { GUIDE_CONTENT } from "../pages/guide-content";
+import { GUIDE_CONTENT, GUIDE_HUB } from "../pages/guide-content";
 import { LANDING_CONTENT } from "../pages/landing-content";
 import {
 	alternateVersions,
@@ -27,6 +27,7 @@ export const SITE_URL = "https://pointly.space";
 /** Data de publicação dos guias (15.T6); revisões atualizam `GUIDES_MODIFIED`. */
 export const GUIDES_PUBLISHED = "2026-09-19";
 export const GUIDES_MODIFIED = "2026-09-19";
+export const GUIDES_BATCH2_PUBLISHED = "2026-10-18";
 
 const OG_IMAGE = `${SITE_URL}/images/pointly-og.jpg`;
 const OG_IMAGE_WIDTH = 1200;
@@ -86,6 +87,7 @@ export type SeoRoute = {
 	ogType?: "website" | "article";
 	/** Data real de revisão; só entra no sitemap quando existe. */
 	lastmod?: string;
+	published?: string;
 	/** Versões em outros idiomas (hreflang recíproco). */
 	alternates?: readonly SeoAlternate[];
 	/** JSON-LD injetado no `<head>` (um `<script>` por entrada). */
@@ -144,6 +146,8 @@ export function articleJsonLd(article: {
 	description: string;
 	lang: string;
 	path: string;
+	datePublished?: string;
+	dateModified?: string;
 }): Readonly<Record<string, unknown>> {
 	const url = `${SITE_URL}${article.path}`;
 	const organization = {
@@ -167,8 +171,64 @@ export function articleJsonLd(article: {
 		mainEntityOfPage: url,
 		author: organization,
 		publisher: organization,
-		datePublished: GUIDES_PUBLISHED,
-		dateModified: GUIDES_MODIFIED,
+		datePublished: article.datePublished ?? GUIDES_PUBLISHED,
+		dateModified: article.dateModified ?? GUIDES_MODIFIED,
+	};
+}
+
+export function breadcrumbJsonLd(
+	trail: readonly { name: string; path: string }[],
+): Readonly<Record<string, unknown>> {
+	return {
+		"@context": "https://schema.org",
+		"@type": "BreadcrumbList",
+		itemListElement: trail.map((crumb, index) => ({
+			"@type": "ListItem",
+			position: index + 1,
+			name: crumb.name,
+			item: `${SITE_URL}${crumb.path}`,
+		})),
+	};
+}
+
+export function itemListJsonLd(
+	items: readonly { name: string; url: string }[],
+): Readonly<Record<string, unknown>> {
+	return {
+		"@context": "https://schema.org",
+		"@type": "ItemList",
+		itemListElement: items.map((item, index) => ({
+			"@type": "ListItem",
+			position: index + 1,
+			name: item.name,
+			url: item.url,
+		})),
+	};
+}
+
+export function collectionPageJsonLd(collection: {
+	name: string;
+	description: string;
+	lang: string;
+	path: string;
+	items: readonly { name: string; path: string }[];
+}): Readonly<Record<string, unknown>> {
+	return {
+		"@context": "https://schema.org",
+		"@type": "CollectionPage",
+		name: collection.name,
+		description: collection.description,
+		inLanguage: collection.lang,
+		url: `${SITE_URL}${collection.path}`,
+		mainEntity: {
+			"@type": "ItemList",
+			itemListElement: collection.items.map((item, index) => ({
+				"@type": "ListItem",
+				position: index + 1,
+				name: item.name,
+				url: `${SITE_URL}${item.path}`,
+			})),
+		},
 	};
 }
 
@@ -180,9 +240,37 @@ const EN_SCRUM_POKER = LANDING_CONTENT.en["scrum-poker"];
 const PT_HOW_TO_PLAY = GUIDE_CONTENT["pt-BR"]["como-jogar"];
 const PT_WHAT_IS = GUIDE_CONTENT["pt-BR"]["o-que-e"];
 const PT_STORY_POINTS = GUIDE_CONTENT["pt-BR"]["story-points"];
+const PT_REMOTO = GUIDE_CONTENT["pt-BR"]["planning-poker-remoto"];
+const PT_POINTS_VS_HORAS = GUIDE_CONTENT["pt-BR"]["story-points-vs-horas"];
+const PT_FIBONACCI = GUIDE_CONTENT["pt-BR"]["fibonacci-estimativa-agil"];
+const PT_TSHIRT = GUIDE_CONTENT["pt-BR"]["t-shirt-sizing"];
+const PT_COMPARATIVO = GUIDE_CONTENT["pt-BR"]["comparativo-ferramentas"];
 const EN_HOW_TO_PLAY = GUIDE_CONTENT.en["how-to-play"];
 const EN_WHAT_IS = GUIDE_CONTENT.en["what-is"];
 const EN_STORY_POINTS = GUIDE_CONTENT.en["story-points"];
+const PT_HUB = GUIDE_HUB["pt-BR"];
+
+function guideBreadcrumbPt(
+	name: string,
+	path: string,
+): Readonly<Record<string, unknown>> {
+	return breadcrumbJsonLd([
+		{ name: "Pointly", path: PATHS.homePt },
+		{ name: PT_HUB.h1, path: PATHS.guidesPt },
+		{ name, path },
+	]);
+}
+
+function guideBreadcrumbEn(
+	name: string,
+	path: string,
+): Readonly<Record<string, unknown>> {
+	return breadcrumbJsonLd([
+		{ name: "Pointly", path: PATHS.homeEn },
+		{ name: GUIDE_HUB.en.h1, path: PATHS.guidesEn },
+		{ name, path },
+	]);
+}
 
 const HOW_TO_PLAY_DESCRIPTION_PT =
 	"O roteiro completo de uma sessão de planning poker: papéis, rodadas, como lidar com divergência e o que fazer depois do reveal.";
@@ -190,6 +278,16 @@ const WHAT_IS_DESCRIPTION_PT =
 	"O que é planning poker, de onde veio, por que funciona e quando usar — com exemplos práticos para o seu time estimar melhor.";
 const STORY_POINTS_DESCRIPTION_PT =
 	"Story points sem mistério: escala, sequência de Fibonacci, story points vs horas e como calibrar a estimativa do seu time.";
+const REMOTO_DESCRIPTION_PT =
+	"Como fazer planning poker remoto: sala online sem cadastro, voto secreto, agenda de 45 min e dicas para evitar ancoragem em videochamada.";
+const POINTS_VS_HORAS_DESCRIPTION_PT =
+	"Story points ou horas? Veja a diferença, por que não converter ponto em hora e como dar prazo usando a velocidade do time.";
+const FIBONACCI_DESCRIPTION_PT =
+	"Por que o planning poker usa Fibonacci, o que cada valor significa, o que fazer com 13 pontos e como calibrar as cartas do seu time.";
+const TSHIRT_DESCRIPTION_PT =
+	"T-shirt sizing explicado: escala PP a GG, passo a passo, conversão para story points e quando usar em vez de planning poker.";
+const COMPARATIVO_DESCRIPTION_PT =
+	"Compare ferramentas de planning poker online grátis e sem cadastro em português: limites, anúncios, baralhos e extras, com fonte de cada dado.";
 const HOW_TO_PLAY_DESCRIPTION_EN =
 	"The complete walkthrough of a planning poker session: roles, rounds, how to handle disagreement and what to do after the reveal.";
 const WHAT_IS_DESCRIPTION_EN =
@@ -202,7 +300,7 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		path: PATHS.homePt,
 		lang: "pt-BR",
 		indexable: true,
-		title: "Pointly — Planning Poker para Times Ágeis",
+		title: "Pointly — Planning Poker Online para Times Ágeis",
 		description:
 			"Planning poker sem cadastro para times ágeis: crie a sala em segundos, compartilhe o link e estime story points em tempo real.",
 		alternates: alternateVersions(PATHS.homePt, PATHS.homeEn, "pt-BR"),
@@ -262,6 +360,19 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		description:
 			"Guias práticos de planning poker e estimativas ágeis: como jogar, o que é e como estimar story points — para aplicar na próxima planning.",
 		alternates: alternateVersions(PATHS.guidesPt, PATHS.guidesEn, "pt-BR"),
+		jsonLd: [
+			collectionPageJsonLd({
+				name: PT_HUB.h1,
+				description:
+					"Guias práticos de planning poker e estimativas ágeis: como jogar, o que é e como estimar story points — para aplicar na próxima planning.",
+				lang: "pt-BR",
+				path: PATHS.guidesPt,
+				items: PT_HUB.cards.map((card) => ({
+					name: card.title,
+					path: card.to,
+				})),
+			}),
+		],
 	},
 	{
 		path: PATHS.howToPlayPt,
@@ -280,6 +391,7 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 				path: PATHS.howToPlayPt,
 			}),
 			faqPageJsonLd(PT_HOW_TO_PLAY.faq.items),
+			guideBreadcrumbPt(PT_HOW_TO_PLAY.h1, PATHS.howToPlayPt),
 		],
 	},
 	{
@@ -299,6 +411,7 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 				path: PATHS.whatIsPt,
 			}),
 			faqPageJsonLd(PT_WHAT_IS.faq.items),
+			guideBreadcrumbPt(PT_WHAT_IS.h1, PATHS.whatIsPt),
 		],
 	},
 	{
@@ -318,6 +431,127 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 				path: PATHS.storyPointsPt,
 			}),
 			faqPageJsonLd(PT_STORY_POINTS.faq.items),
+			guideBreadcrumbPt(PT_STORY_POINTS.h1, PATHS.storyPointsPt),
+		],
+	},
+	{
+		path: PATHS.planningPokerRemotoPt,
+		lang: "pt-BR",
+		indexable: true,
+		title: "Planning Poker Remoto: Guia para Times Distribuídos",
+		description: REMOTO_DESCRIPTION_PT,
+		ogType: "article",
+		lastmod: GUIDES_BATCH2_PUBLISHED,
+		published: GUIDES_BATCH2_PUBLISHED,
+		jsonLd: [
+			articleJsonLd({
+				headline: PT_REMOTO.h1,
+				description: REMOTO_DESCRIPTION_PT,
+				lang: "pt-BR",
+				path: PATHS.planningPokerRemotoPt,
+				datePublished: GUIDES_BATCH2_PUBLISHED,
+				dateModified: GUIDES_BATCH2_PUBLISHED,
+			}),
+			faqPageJsonLd(PT_REMOTO.faq.items),
+			guideBreadcrumbPt(PT_REMOTO.h1, PATHS.planningPokerRemotoPt),
+		],
+	},
+	{
+		path: PATHS.storyPointsVsHorasPt,
+		lang: "pt-BR",
+		indexable: true,
+		title: "Story Points vs Horas: Qual Usar e Por Quê",
+		description: POINTS_VS_HORAS_DESCRIPTION_PT,
+		ogType: "article",
+		lastmod: GUIDES_BATCH2_PUBLISHED,
+		published: GUIDES_BATCH2_PUBLISHED,
+		jsonLd: [
+			articleJsonLd({
+				headline: PT_POINTS_VS_HORAS.h1,
+				description: POINTS_VS_HORAS_DESCRIPTION_PT,
+				lang: "pt-BR",
+				path: PATHS.storyPointsVsHorasPt,
+				datePublished: GUIDES_BATCH2_PUBLISHED,
+				dateModified: GUIDES_BATCH2_PUBLISHED,
+			}),
+			faqPageJsonLd(PT_POINTS_VS_HORAS.faq.items),
+			guideBreadcrumbPt(PT_POINTS_VS_HORAS.h1, PATHS.storyPointsVsHorasPt),
+		],
+	},
+	{
+		path: PATHS.fibonacciEstimativaPt,
+		lang: "pt-BR",
+		indexable: true,
+		title: "Fibonacci na Estimativa Ágil: Valores e Como Usar",
+		description: FIBONACCI_DESCRIPTION_PT,
+		ogType: "article",
+		lastmod: GUIDES_BATCH2_PUBLISHED,
+		published: GUIDES_BATCH2_PUBLISHED,
+		jsonLd: [
+			articleJsonLd({
+				headline: PT_FIBONACCI.h1,
+				description: FIBONACCI_DESCRIPTION_PT,
+				lang: "pt-BR",
+				path: PATHS.fibonacciEstimativaPt,
+				datePublished: GUIDES_BATCH2_PUBLISHED,
+				dateModified: GUIDES_BATCH2_PUBLISHED,
+			}),
+			faqPageJsonLd(PT_FIBONACCI.faq.items),
+			guideBreadcrumbPt(PT_FIBONACCI.h1, PATHS.fibonacciEstimativaPt),
+		],
+	},
+	{
+		path: PATHS.tShirtSizingPt,
+		lang: "pt-BR",
+		indexable: true,
+		title: "T-Shirt Sizing: O Que É e Como Converter em Pontos",
+		description: TSHIRT_DESCRIPTION_PT,
+		ogType: "article",
+		lastmod: GUIDES_BATCH2_PUBLISHED,
+		published: GUIDES_BATCH2_PUBLISHED,
+		jsonLd: [
+			articleJsonLd({
+				headline: PT_TSHIRT.h1,
+				description: TSHIRT_DESCRIPTION_PT,
+				lang: "pt-BR",
+				path: PATHS.tShirtSizingPt,
+				datePublished: GUIDES_BATCH2_PUBLISHED,
+				dateModified: GUIDES_BATCH2_PUBLISHED,
+			}),
+			faqPageJsonLd(PT_TSHIRT.faq.items),
+			guideBreadcrumbPt(PT_TSHIRT.h1, PATHS.tShirtSizingPt),
+		],
+	},
+	{
+		path: PATHS.comparativoPt,
+		lang: "pt-BR",
+		indexable: true,
+		title: "Planning Poker Online Grátis: Comparativo 2026",
+		description: COMPARATIVO_DESCRIPTION_PT,
+		ogType: "article",
+		lastmod: GUIDES_BATCH2_PUBLISHED,
+		published: GUIDES_BATCH2_PUBLISHED,
+		jsonLd: [
+			articleJsonLd({
+				headline: PT_COMPARATIVO.h1,
+				description: COMPARATIVO_DESCRIPTION_PT,
+				lang: "pt-BR",
+				path: PATHS.comparativoPt,
+				datePublished: GUIDES_BATCH2_PUBLISHED,
+				dateModified: GUIDES_BATCH2_PUBLISHED,
+			}),
+			faqPageJsonLd(PT_COMPARATIVO.faq.items),
+			itemListJsonLd([
+				{ name: "Pointly", url: `${SITE_URL}${PATHS.planningPokerPt}` },
+				{ name: "Point Poker", url: "https://www.pointpoker.app/pt/" },
+				{ name: "SprintsPoker", url: "https://sprintspoker.com/pt" },
+				{ name: "Scrum Poker Online", url: "https://www.scrumpoker-online.org/pt/" },
+				{ name: "Utilaria", url: "https://utilaria.com.br/planning-poker/" },
+			]),
+			breadcrumbJsonLd([
+				{ name: "Pointly", path: PATHS.homePt },
+				{ name: PT_COMPARATIVO.h1, path: PATHS.comparativoPt },
+			]),
 		],
 	},
 	{
@@ -376,6 +610,7 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 				path: PATHS.howToPlayEn,
 			}),
 			faqPageJsonLd(EN_HOW_TO_PLAY.faq.items),
+			guideBreadcrumbEn(EN_HOW_TO_PLAY.h1, PATHS.howToPlayEn),
 		],
 	},
 	{
@@ -395,6 +630,7 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 				path: PATHS.whatIsEn,
 			}),
 			faqPageJsonLd(EN_WHAT_IS.faq.items),
+			guideBreadcrumbEn(EN_WHAT_IS.h1, PATHS.whatIsEn),
 		],
 	},
 	{
@@ -414,6 +650,7 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 				path: PATHS.storyPointsEn,
 			}),
 			faqPageJsonLd(EN_STORY_POINTS.faq.items),
+			guideBreadcrumbEn(EN_STORY_POINTS.h1, PATHS.storyPointsEn),
 		],
 	},
 	{
@@ -507,7 +744,10 @@ export function headForRoute(route: SeoRoute): {
 		elements.push(
 			{
 				type: "meta",
-				props: { property: "article:published_time", content: GUIDES_PUBLISHED },
+				props: {
+					property: "article:published_time",
+					content: route.published ?? GUIDES_PUBLISHED,
+				},
 			},
 			{
 				type: "meta",
