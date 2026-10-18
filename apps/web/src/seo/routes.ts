@@ -10,6 +10,7 @@
  */
 
 import { GUIDE_CONTENT, GUIDE_HUB } from "../pages/guide-content";
+import { GUIA_MAPA_PT } from "../pages/guide-content-seo.pt";
 import { LANDING_CONTENT } from "../pages/landing-content";
 import {
 	alternateVersions,
@@ -245,6 +246,13 @@ const PT_POINTS_VS_HORAS = GUIDE_CONTENT["pt-BR"]["story-points-vs-horas"];
 const PT_FIBONACCI = GUIDE_CONTENT["pt-BR"]["fibonacci-estimativa-agil"];
 const PT_TSHIRT = GUIDE_CONTENT["pt-BR"]["t-shirt-sizing"];
 const PT_COMPARATIVO = GUIDE_CONTENT["pt-BR"]["comparativo-ferramentas"];
+const PT_ESTIMATIVA_AGIL = GUIDE_CONTENT["pt-BR"]["estimativa-agil"];
+const PT_VOTOS_DIVERGENTES =
+	GUIDE_CONTENT["pt-BR"]["votos-divergentes-planning-poker"];
+const PT_PARA_DEVS = GUIDE_CONTENT["pt-BR"]["planning-poker-para-devs"];
+const PT_AGENDA = GUIDE_CONTENT["pt-BR"]["agenda-sessao-planning-poker"];
+const PT_SCRUM_VS_PLANNING =
+	GUIDE_CONTENT["pt-BR"]["scrum-poker-vs-planning-poker"];
 const EN_HOW_TO_PLAY = GUIDE_CONTENT.en["how-to-play"];
 const EN_WHAT_IS = GUIDE_CONTENT.en["what-is"];
 const EN_STORY_POINTS = GUIDE_CONTENT.en["story-points"];
@@ -293,6 +301,16 @@ const TSHIRT_DESCRIPTION_PT =
 	"T-shirt sizing explicado: escala PP a GG, passo a passo, conversão para story points e quando usar em vez de planning poker na triagem de backlog.";
 const COMPARATIVO_DESCRIPTION_PT =
 	"Compare ferramentas de planning poker online grátis e sem cadastro em português: limites, anúncios, baralhos e extras, com fonte de cada dado.";
+const ESTIMATIVA_AGIL_DESCRIPTION_PT =
+	"Estimativa ágil explicada: story points, Fibonacci, t-shirt sizing, planning poker e velocidade. Veja o mapa completo e vá direto ao guia certo.";
+const VOTOS_DIVERGENTES_DESCRIPTION_PT =
+	"O que fazer quando os votos do planning poker divergem: quem fala primeiro, como perguntar, quando reestimar e quando dividir a história em vez de votar.";
+const PARA_DEVS_DESCRIPTION_PT =
+	"Como estimar bugs, spikes e tarefas técnicas no planning poker: o que votar, quando limitar por tempo, quando dividir a história e como usar a pausa.";
+const AGENDA_DESCRIPTION_PT =
+	"Modelo de agenda de 45 minutos para sessão de planning poker, com papéis, pauta por bloco e checklist antes, durante e depois da estimativa.";
+const SCRUM_VS_PLANNING_DESCRIPTION_PT =
+	"Scrum poker e planning poker são a mesma técnica? Entenda os nomes (pointing poker, pôquer de planejamento), os mitos comuns e qual termo usar no seu time.";
 const HOW_TO_PLAY_DESCRIPTION_EN =
 	"The complete walkthrough of a planning poker session, step by step: roles, rounds, how to handle disagreement and what to do after the reveal.";
 const WHAT_IS_DESCRIPTION_EN =
@@ -555,6 +573,125 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 				{ name: "Pointly", path: PATHS.homePt },
 				{ name: PT_COMPARATIVO.h1, path: PATHS.comparativoPt },
 			]),
+		],
+	},
+	{
+		path: PATHS.estimativaAgilPt,
+		lang: "pt-BR",
+		indexable: true,
+		title: "Estimativa Ágil: Guia Completo para Times | Pointly",
+		description: ESTIMATIVA_AGIL_DESCRIPTION_PT,
+		ogType: "article",
+		lastmod: GUIDES_BATCH2_PUBLISHED,
+		published: GUIDES_BATCH2_PUBLISHED,
+		jsonLd: [
+			articleJsonLd({
+				headline: PT_ESTIMATIVA_AGIL.h1,
+				description: ESTIMATIVA_AGIL_DESCRIPTION_PT,
+				lang: "pt-BR",
+				path: PATHS.estimativaAgilPt,
+				datePublished: GUIDES_BATCH2_PUBLISHED,
+				dateModified: GUIDES_BATCH2_PUBLISHED,
+			}),
+			faqPageJsonLd(PT_ESTIMATIVA_AGIL.faq.items),
+			guideBreadcrumbPt(PT_ESTIMATIVA_AGIL.h1, PATHS.estimativaAgilPt),
+			itemListJsonLd(
+				GUIA_MAPA_PT.map((item) => ({
+					name: item.title,
+					url: `${SITE_URL}${item.to}`,
+				})),
+			),
+		],
+	},
+	{
+		path: PATHS.votosDivergentesPt,
+		lang: "pt-BR",
+		indexable: true,
+		title: "Votos Divergentes no Planning Poker: Como Agir | Pointly",
+		description: VOTOS_DIVERGENTES_DESCRIPTION_PT,
+		ogType: "article",
+		lastmod: GUIDES_BATCH2_PUBLISHED,
+		published: GUIDES_BATCH2_PUBLISHED,
+		jsonLd: [
+			articleJsonLd({
+				headline: PT_VOTOS_DIVERGENTES.h1,
+				description: VOTOS_DIVERGENTES_DESCRIPTION_PT,
+				lang: "pt-BR",
+				path: PATHS.votosDivergentesPt,
+				datePublished: GUIDES_BATCH2_PUBLISHED,
+				dateModified: GUIDES_BATCH2_PUBLISHED,
+			}),
+			faqPageJsonLd(PT_VOTOS_DIVERGENTES.faq.items),
+			guideBreadcrumbPt(PT_VOTOS_DIVERGENTES.h1, PATHS.votosDivergentesPt),
+		],
+	},
+	{
+		path: PATHS.planningPokerParaDevsPt,
+		lang: "pt-BR",
+		indexable: true,
+		title: "Planning Poker para Devs: Bugs, Spikes e Tarefas | Pointly",
+		description: PARA_DEVS_DESCRIPTION_PT,
+		ogType: "article",
+		lastmod: GUIDES_BATCH2_PUBLISHED,
+		published: GUIDES_BATCH2_PUBLISHED,
+		jsonLd: [
+			articleJsonLd({
+				headline: PT_PARA_DEVS.h1,
+				description: PARA_DEVS_DESCRIPTION_PT,
+				lang: "pt-BR",
+				path: PATHS.planningPokerParaDevsPt,
+				datePublished: GUIDES_BATCH2_PUBLISHED,
+				dateModified: GUIDES_BATCH2_PUBLISHED,
+			}),
+			faqPageJsonLd(PT_PARA_DEVS.faq.items),
+			guideBreadcrumbPt(PT_PARA_DEVS.h1, PATHS.planningPokerParaDevsPt),
+		],
+	},
+	{
+		path: PATHS.agendaSessaoPt,
+		lang: "pt-BR",
+		indexable: true,
+		title: "Agenda de Planning Poker em 45 Min + Checklist | Pointly",
+		description: AGENDA_DESCRIPTION_PT,
+		ogType: "article",
+		lastmod: GUIDES_BATCH2_PUBLISHED,
+		published: GUIDES_BATCH2_PUBLISHED,
+		jsonLd: [
+			articleJsonLd({
+				headline: PT_AGENDA.h1,
+				description: AGENDA_DESCRIPTION_PT,
+				lang: "pt-BR",
+				path: PATHS.agendaSessaoPt,
+				datePublished: GUIDES_BATCH2_PUBLISHED,
+				dateModified: GUIDES_BATCH2_PUBLISHED,
+			}),
+			faqPageJsonLd(PT_AGENDA.faq.items),
+			guideBreadcrumbPt(PT_AGENDA.h1, PATHS.agendaSessaoPt),
+		],
+	},
+	{
+		path: PATHS.scrumPokerVsPlanningPokerPt,
+		lang: "pt-BR",
+		indexable: true,
+		title: "Scrum Poker x Planning Poker: Qual a Diferença? | Pointly",
+		description: SCRUM_VS_PLANNING_DESCRIPTION_PT,
+		ogType: "article",
+		lastmod: GUIDES_BATCH2_PUBLISHED,
+		published: GUIDES_BATCH2_PUBLISHED,
+		jsonLd: [
+			articleJsonLd({
+				headline: PT_SCRUM_VS_PLANNING.h1,
+				description: SCRUM_VS_PLANNING_DESCRIPTION_PT,
+				lang: "pt-BR",
+				path: PATHS.scrumPokerVsPlanningPokerPt,
+				datePublished: GUIDES_BATCH2_PUBLISHED,
+				dateModified: GUIDES_BATCH2_PUBLISHED,
+			}),
+			faqPageJsonLd(PT_SCRUM_VS_PLANNING.faq.items),
+			guideBreadcrumbPt(
+				PT_SCRUM_VS_PLANNING.h1,
+				PATHS.scrumPokerVsPlanningPokerPt,
+			),
 		],
 	},
 	{

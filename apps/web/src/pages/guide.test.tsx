@@ -4,6 +4,8 @@ import { MemoryRouter } from "react-router-dom";
 import type { Lang } from "./guide-content";
 import { GUIDE_CONTENT, GUIDE_HUB } from "./guide-content";
 import {
+  AgendaSessaoPtPage,
+  EstimativaAgilPtPage,
   GuidesHubEnPage,
   GuidesHubPtPage,
   HowToPlayEnPage,
@@ -14,9 +16,12 @@ import {
   WhatIsPtPage,
   FibonacciEstimativaPtPage,
   PlanningPokerComparativoPtPage,
+  PlanningPokerParaDevsPtPage,
   PlanningPokerRemotoPtPage,
+  ScrumPokerVsPlanningPokerPtPage,
   StoryPointsVsHorasPtPage,
   TShirtSizingPtPage,
+  VotosDivergentesPtPage,
 } from "./guide";
 
 afterEach(() => {
@@ -76,6 +81,36 @@ const GUIDES: ReadonlyArray<{
     id: "comparativo-ferramentas",
     path: "/planning-poker-online-gratis-comparativo",
     Page: PlanningPokerComparativoPtPage,
+  },
+  {
+    lang: "pt-BR",
+    id: "estimativa-agil",
+    path: "/guias/estimativa-agil",
+    Page: EstimativaAgilPtPage,
+  },
+  {
+    lang: "pt-BR",
+    id: "votos-divergentes-planning-poker",
+    path: "/guias/votos-divergentes-planning-poker",
+    Page: VotosDivergentesPtPage,
+  },
+  {
+    lang: "pt-BR",
+    id: "planning-poker-para-devs",
+    path: "/guias/planning-poker-para-devs",
+    Page: PlanningPokerParaDevsPtPage,
+  },
+  {
+    lang: "pt-BR",
+    id: "agenda-sessao-planning-poker",
+    path: "/guias/agenda-sessao-planning-poker",
+    Page: AgendaSessaoPtPage,
+  },
+  {
+    lang: "pt-BR",
+    id: "scrum-poker-vs-planning-poker",
+    path: "/guias/scrum-poker-vs-planning-poker",
+    Page: ScrumPokerVsPlanningPokerPtPage,
   },
   {
     lang: "en",

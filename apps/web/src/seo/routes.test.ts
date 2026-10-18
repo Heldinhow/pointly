@@ -140,6 +140,27 @@ describe("Registro SEO (15.T6 — hreflang, sitemap e schema)", () => {
         items: GUIDE_CONTENT["pt-BR"]["comparativo-ferramentas"].faq.items,
       },
       {
+        path: "/guias/estimativa-agil",
+        items: GUIDE_CONTENT["pt-BR"]["estimativa-agil"].faq.items,
+      },
+      {
+        path: "/guias/votos-divergentes-planning-poker",
+        items: GUIDE_CONTENT["pt-BR"]["votos-divergentes-planning-poker"].faq
+          .items,
+      },
+      {
+        path: "/guias/planning-poker-para-devs",
+        items: GUIDE_CONTENT["pt-BR"]["planning-poker-para-devs"].faq.items,
+      },
+      {
+        path: "/guias/agenda-sessao-planning-poker",
+        items: GUIDE_CONTENT["pt-BR"]["agenda-sessao-planning-poker"].faq.items,
+      },
+      {
+        path: "/guias/scrum-poker-vs-planning-poker",
+        items: GUIDE_CONTENT["pt-BR"]["scrum-poker-vs-planning-poker"].faq.items,
+      },
+      {
         path: "/en/guides/how-to-play-planning-poker",
         items: GUIDE_CONTENT.en["how-to-play"].faq.items,
       },

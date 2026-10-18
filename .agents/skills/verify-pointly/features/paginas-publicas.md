@@ -4,9 +4,10 @@
 
 - Home PT (`/`) and EN (`/en`) with a create-room call to action.
 - Landing pages: `/planning-poker`, `/scrum-poker` (+ `/en/...`), with FAQ.
-- Guides hub `/guias` and three PT articles (`como-jogar-planning-poker`, `o-que-e-planning-poker`, `story-points`) plus EN mirrors under `/en/guides/*`.
+- Guides hub `/guias` (PT only, links every guide card, including the `estimativa-agil` pillar) and three PT articles (`como-jogar-planning-poker`, `o-que-e-planning-poker`, `story-points`) plus EN mirrors under `/en/guides/*`.
+- pt-BR guide batch, all with Article + FAQPage + BreadcrumbList (the pillar also carries an ItemList mapa): `/guias/planning-poker-remoto`, `/guias/story-points-vs-horas`, `/guias/fibonacci-estimativa-agil`, `/guias/t-shirt-sizing`, `/planning-poker-online-gratis-comparativo`, `/guias/estimativa-agil`, `/guias/votos-divergentes-planning-poker`, `/guias/planning-poker-para-devs`, `/guias/agenda-sessao-planning-poker`, `/guias/scrum-poker-vs-planning-poker`.
 - Language toggle and theme toggle in the header; footer nav to landing/guides.
-- SEO surface: canonical, hreflang alternates, JSON-LD, and robots `noindex` on app routes.
+- SEO surface: canonical, hreflang alternates, JSON-LD, and robots `noindex` on app routes. Every indexable route appears once in `sitemap.xml` (build artifact) and in `public/llms.txt`.
 
 ## How to get to it (user POV)
 
@@ -27,6 +28,8 @@ curl -s http://localhost:3001/...   // public pages are served by Vite in dev; v
 ```
 
 In dev, SEO head tags are only fully materialized by the prerender in `bun run build:web`; do not claim prerendered metadata from the dev server.
+
+After `bun run build:web`, the deterministic check runs over `apps/web/dist`: each prerendered `…/index.html` must carry the expected `<title>`/meta description lengths, one canonical, exactly one `<h1>`, parseable `application/ld+json`, and links to the hub; `sitemap.xml` and `llms.txt` must contain every indexable route once.
 
 ## Gotchas
 
