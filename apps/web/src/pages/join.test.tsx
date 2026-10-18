@@ -355,7 +355,7 @@ describe("JoinPage", () => {
 			}),
 		).toBeTruthy();
 		expect(
-			screen.getByText("Assiste e reage, mas não vota nem ocupa assento."),
+			screen.getByText("Assiste e reage, mas não vota nem entra como jogador."),
 		).toBeTruthy();
 		fireEvent.click(screen.getByLabelText(/Entrar como espectador/));
 		expect(
@@ -479,7 +479,7 @@ describe("JoinPage", () => {
 		expect(screen.queryByTestId("join-options-toggle")).toBeNull();
 		expect(screen.getByLabelText(/Entrar como espectador/)).toBeTruthy();
 		expect(
-			screen.getByText("Assiste e reage, mas não vota nem ocupa assento."),
+			screen.getByText("Assiste e reage, mas não vota nem entra como jogador."),
 		).toBeTruthy();
 		expect(screen.getByLabelText("Escolher foto")).toBeTruthy();
 	});

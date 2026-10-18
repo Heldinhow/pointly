@@ -95,10 +95,11 @@ Kill only the recorded sessions/PIDs from Launch (never by port or process name)
   the code.
 - **Photo/spectator are always visible** on the join form (no
   disclosure): check `#spectate` directly.
-- **First story:** an empty agenda shows `Adicionar primeira história`
-  (`first-story-action`) for non-spectators; it focuses the real
-  `#pauta-novo-titulo` input and never creates a story by itself.
-  Spectators never get this action.
+- **First story:** with no active story, the table center shows
+  `Adicionar história` (`first-story-action`) for non-spectators; it
+  focuses the real `#pauta-novo-titulo` input and never creates a story
+  by itself. Spectators never get this action but do see why the cards
+  are locked.
 - **Ended vs dropped:** `sala_ended` (`server_restart`, `replaced`,
   `last_left`) and `missing` render the terminal `room-ended` card (no
   more votes, back to `/join` without recreating). A reason-less drop

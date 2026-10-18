@@ -11,12 +11,17 @@
   font-size: 20px;
 }
 .arena-toolbar {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 20;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
   padding: 0 0 25px;
   border-bottom: 1px solid var(--border);
+  background: var(--background);
 }
 .arena-room-heading,
 .arena-live-status {
@@ -50,6 +55,14 @@
 .arena-room-heading h1 span {
   font-family: var(--font-mono);
   letter-spacing: 0.02em;
+}
+/* Código da sala como âncora do convite: grande o bastante para ler e
+   ditar sem abrir o card do convite. */
+.arena-room-heading h1 .arena-room-code {
+  font-size: 1.6em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
 }
 .arena-room-heading p {
   font-size: 12px;
@@ -139,6 +152,16 @@
 .arena-reveal [data-slot="card-panel"] > div > span {
   font-size: 12px;
   color: #c3dbce;
+}
+/* Cancelar dentro do feltro: o outline padrão herda texto claro sobre o
+   fundo claro do popover, então usa a paleta da mesa. */
+.arena-reveal [data-slot="button"].arena-confirm-cancel {
+  border-color: #ffffff59;
+  background: transparent;
+  color: #f2f7f3;
+}
+.arena-reveal [data-slot="button"].arena-confirm-cancel:hover {
+  background: #ffffff14;
 }
 /* História ativa no centro da mesa (#211): contexto persistente e compacto
    acima da pergunta. Título clampado em 2 linhas; critério em disclosure
@@ -342,7 +365,7 @@
   flex: 1;
   min-height: 44px;
 }
-.arena-invite [aria-live="polite"]:empty {
+.arena-invite-feedback:empty {
   display: none;
 }
 .arena-invite [data-slot="card-panel"] {
@@ -353,6 +376,17 @@
 }
 .arena-invite [data-slot="button"][data-slot] {
   font-size: 14px;
+}
+/* Legenda das cartas bloqueadas: fica logo abaixo do deck, sem competir
+   com a mensagem do estado (que vive no card acima). */
+.arena-deck-locked {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
 }
 .arena-waiting {
   border-block: 1px solid var(--border);
@@ -377,9 +411,9 @@
 .arena-waiting p + p {
   margin-top: 12px;
 }
-/* Janela de confirmação da nova rodada: barra de 2px que encolhe no ritmo
-   exato de NEW_ROUND_CONFIRM_TIMEOUT_MS (duração via inline style, sem
-   duplicar o valor). Só transform; global reduced-motion já colapsa. */
+/* Barra de 2px que encolhe no ritmo exato de CONFIRM_TIMEOUT_MS (duração
+   via inline style, sem duplicar o valor). Usada na confirmação de apagar
+   história pontuada; só transform, reduced-motion global já colapsa. */
 .arena-confirm-countdown {
   align-self: stretch;
   display: block;
@@ -517,6 +551,7 @@ img.arena-spectator-avatar {
     display: none;
   }
   .arena-live-status {
+    flex-wrap: wrap;
     gap: 8px;
   }
   .arena-live-status > button {
@@ -529,6 +564,12 @@ img.arena-spectator-avatar {
   .arena-live-status > button svg {
     width: 18px;
     height: 18px;
+  }
+  /* Copiar o convite mantém o rótulo no celular: é o caminho principal
+     para chamar o time e o feedback "Copiado" precisa ser legível. */
+  .arena-live-status > button.arena-copy-invite {
+    font-size: 14px;
+    padding-inline: 12px;
   }
   .arena-room-heading h1 {
     font-size: 18px;

@@ -22,8 +22,8 @@ const MENU_LABELS: Record<Lang, MenuLabels> = {
 	"pt-BR": {
 		reloading: (secs) => `Recarregando · ${secs}s`,
 		interactWith: (nick) => `Interagir com ${nick}`,
-		throwAt: (nick) => `Arremessar em ${nick}`,
-		choose: "Escolha um projétil",
+		throwAt: (nick) => `Jogar em ${nick}`,
+		choose: "Escolha um item",
 		itemAt: (label, nick) => `${label} em ${nick}`,
 		epic: "Épica",
 		nudge: (nick) => `Cutucar ${nick}`,
@@ -32,8 +32,8 @@ const MENU_LABELS: Record<Lang, MenuLabels> = {
 	en: {
 		reloading: (secs) => `Reloading · ${secs}s`,
 		interactWith: (nick) => `Interact with ${nick}`,
-		throwAt: (nick) => `Throw at ${nick}`,
-		choose: "Choose a projectile",
+		throwAt: (nick) => `Send to ${nick}`,
+		choose: "Choose an item",
 		itemAt: (label, nick) => `${label} at ${nick}`,
 		epic: "Epic",
 		nudge: (nick) => `Nudge ${nick}`,

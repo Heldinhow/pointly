@@ -32,6 +32,14 @@ export type ArenaContent = {
 		) => string;
 		presence: (connected: number, voted: number) => string;
 		leave: string;
+		leaveConfirmTitle: string;
+		leaveConfirmAction: string;
+		leaveConfirmHostNext: (nick: string) => string;
+		leaveConfirmHostSolo: string;
+		leaveConfirmHostNone: string;
+		leaveConfirmVotes: string;
+		leaveConfirmKeep: string;
+		leaveCancel: string;
 	};
 	reconnecting: {
 		title: string;
@@ -62,10 +70,14 @@ export type ArenaContent = {
 		titleRevealed: string;
 		titleReady: string;
 		titleVoting: string;
+		titleAwaitingStory: string;
+		titleAwaitingStorySpectator: string;
+		titlePickStory: string;
 		descRevealed: string;
 		descReady: string;
 		descCanReveal: string;
 		descWaiting: string;
+		descAwaitingStory: string;
 		reveal: string;
 		revealAria: string;
 		revealAriaWaiting: string;
@@ -78,6 +90,7 @@ export type ArenaContent = {
 		newRoundAriaConfirm: string;
 		newRoundHint: string;
 		newRoundHintConfirm: string;
+		newRoundCancel: string;
 		errorTitle: string;
 		newRoundErrorTitle: string;
 	};
@@ -97,7 +110,7 @@ export type ArenaContent = {
 		spectatorVoteError: string;
 		errorTitle: string;
 		awaitingStory: string;
-		firstStoryTitle: string;
+		lockedLegend: string;
 		addFirstStory: string;
 	};
 	pauta: {
@@ -150,6 +163,7 @@ export type ArenaContent = {
 		description: string;
 		linkAria: string;
 		copy: string;
+		copyLink: string;
 		copied: string;
 		copyFeedback: string;
 		copyError: string;
@@ -166,6 +180,7 @@ export type ArenaContent = {
 		mean: string;
 		range: string;
 		pipTitle: (count: number, value: string) => string;
+		pipsLegend: string;
 		noNumericsNote: string;
 		justifyLead: string;
 		copy: string;

@@ -6,6 +6,7 @@ import {
   EyeIcon,
   EyeOffIcon,
   LogOutIcon,
+  PlusIcon,
   RotateCcwIcon,
   UsersIcon,
 } from "lucide-react";
@@ -63,13 +64,13 @@ import {
 import { useSession } from "@/store/session";
 import { JoinError, friendlyJoinMessage, genericJoinMessage } from "@/lib/errors";
 import { SOCKET_ERROR_COPY } from "@/lib/forms";
-import { CONFIRM_TIMEOUT_MS } from "@/lib/confirm";
 import { getHistoriaAtiva } from "@/lib/pauta";
 import type { Lang } from "@/lib/i18n";
 import { clearAvatar, loadAvatar, saveAvatar } from "@/lib/avatar";
 import { clearSession, loadSession } from "@/lib/identity";
 import { safeClear } from "@/lib/storage";
 import { copyText } from "@/lib/clipboard";
+import { middleTruncate } from "@/lib/utils";
 import { resolveWsUrl } from "@/lib/api";
 import {
   PROJECTILE_CHAIR_COOLDOWN_MS,
@@ -80,13 +81,6 @@ import { ARENA_CONTENT } from "./arena-content";
 
 /** Limite duro do domínio: 12 assentos por sala. */
 export const SEAT_COUNT = 12;
-
-/**
- * Janela da confirmação dupla de nova rodada: a primeira ativação (botão
- * ou N) arma o estado de confirmação; sem a segunda ativação a tempo o
- * comando volta ao estado inicial sem trafegar nada.
- */
-export const NEW_ROUND_CONFIRM_TIMEOUT_MS = CONFIRM_TIMEOUT_MS;
 
 // Re-export de compat (SSOT em `@/lib/projectiles`).
 export { PROJECTILE_CHAIR_COOLDOWN_MS, PROJECTILE_COOLDOWN_MS };
@@ -210,6 +204,7 @@ export function ArenaPage({
   const [inviteHidden, setInviteHidden] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
+  const [linkFocused, setLinkFocused] = useState(false);
   const [resultsCopied, setResultsCopied] = useState(false);
   const [resultsCopyError, setResultsCopyError] = useState(false);
   const [connectionLost, setConnectionLost] = useState(false);
@@ -223,6 +218,7 @@ export function ArenaPage({
   const [historiaError, setHistoriaError] = useState<string | null>(null);
   const [confirmingNewRound, setConfirmingNewRound] = useState(false);
   const [newRoundError, setNewRoundError] = useState<string | null>(null);
+  const [confirmingLeave, setConfirmingLeave] = useState(false);
   // Projéteis em qualquer fase: cooldown de 1s e voos confirmados pelo servidor.
   const [projectileError, setProjectileError] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
@@ -251,7 +247,6 @@ export function ArenaPage({
   const rejoinKeyRef = useRef<string | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resultsCopyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const newRoundTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Espelho mutável do `confirmingNewRound` para os handlers de teclado
   // (o listener lê o valor fresco sem re-subscrever a cada render).
   const confirmingRef = useRef(false);
@@ -276,10 +271,6 @@ export function ArenaPage({
         } else if (confirmingRef.current) {
           // Nova rodada confirmada (round incrementado, votos
           // limpos): volta ao estado inicial.
-          if (newRoundTimer.current) {
-            clearTimeout(newRoundTimer.current);
-            newRoundTimer.current = null;
-          }
           setConfirmingNewRound(false);
           setNewRoundError(null);
         }
@@ -355,10 +346,6 @@ export function ArenaPage({
           /new.?round|start_new|nova.?rodada/i.test(text) ||
           /new.?round|start_new/i.test(_code)
         ) {
-          if (newRoundTimer.current) {
-            clearTimeout(newRoundTimer.current);
-            newRoundTimer.current = null;
-          }
           setConfirmingNewRound(false);
           setNewRoundError(shown(content.errors.newRound));
         } else if (/reveal|revelar|revela/i.test(text) || /reveal/i.test(_code)) {
@@ -448,9 +435,9 @@ export function ArenaPage({
 
   // Atalho N pede/confirma nova rodada (qualquer Player, só após o
   // reveal). Exige a mesma confirmação dupla do botão: a primeira
-  // ativação arma, a segunda dentro da janela envia; sem a segunda a
-  // tempo o comando volta ao estado inicial. Ignora inputs, repeat e
-  // modificadores · mesmo guard do botão.
+  // ativação arma, a segunda envia; o Cancelar (ou o erro do servidor)
+  // desarma sem trafegar. Ignora inputs, repeat e modificadores · mesmo
+  // guard do botão.
   useEffect(() => {
     function onKey(event: KeyboardEvent): void {
       if (event.repeat || event.metaKey || event.ctrlKey || event.altKey) {
@@ -464,16 +451,7 @@ export function ArenaPage({
       if (!confirmingRef.current) {
         setNewRoundError(null);
         setConfirmingNewRound(true);
-        if (newRoundTimer.current) clearTimeout(newRoundTimer.current);
-        newRoundTimer.current = setTimeout(() => {
-          newRoundTimer.current = null;
-          setConfirmingNewRound(false);
-        }, NEW_ROUND_CONFIRM_TIMEOUT_MS);
         return;
-      }
-      if (newRoundTimer.current) {
-        clearTimeout(newRoundTimer.current);
-        newRoundTimer.current = null;
       }
       setConfirmingNewRound(false);
       setNewRoundError(null);
@@ -489,7 +467,6 @@ export function ArenaPage({
     return () => {
       if (copyTimer.current) clearTimeout(copyTimer.current);
       if (resultsCopyTimer.current) clearTimeout(resultsCopyTimer.current);
-      if (newRoundTimer.current) clearTimeout(newRoundTimer.current);
     };
   }, []);
 
@@ -718,13 +695,14 @@ export function ArenaPage({
   // `pauta` no wire segue com o deck antigo (compat retroativa).
   const historiaAtiva = getHistoriaAtiva(sala.pauta, sala.historiaAtualId);
   const hasPauta = sala.pauta !== undefined;
+  const historiaCount = sala.pauta?.length ?? 0;
   const awaitingStory = hasPauta && historiaAtiva === null;
   const deckDisabled = isSpectator || awaitingStory;
-  const showFirstStoryAction = !isSpectator && awaitingStory && sala.pauta?.length === 0;
+  const storyBlocked = awaitingStory && !isSpectator;
 
   function focusFirstStory(): void {
     const input = document.getElementById("pauta-novo-titulo");
-    if (!(input instanceof HTMLInputElement)) return;
+    if (!input || input.tagName !== "INPUT") return;
     input.focus({ preventScroll: true });
     input.scrollIntoView({ block: "center", behavior: "instant" });
   }
@@ -750,6 +728,30 @@ export function ArenaPage({
     totalVoted > 0 && (sala.phase === "voting" || sala.phase === "revealable");
   const isReadyToReveal = sala.phase === "revealable";
   const isRevealed = sala.phase === "revealed";
+  // "Todos votaram" só vale com mais de um votante: sozinho, o votante
+  // único deixa a sala pronta para revelar sem falar pelo time.
+  const readyWithTeam = isReadyToReveal && connectedVoters.length > 1;
+
+  const centerTitle = isRevealed
+    ? content.reveal.titleRevealed
+    : awaitingStory
+      ? isSpectator
+        ? content.reveal.titleAwaitingStorySpectator
+        : historiaCount === 0
+          ? content.reveal.titleAwaitingStory
+          : content.reveal.titlePickStory
+      : isReadyToReveal
+        ? content.reveal.titleReady
+        : content.reveal.titleVoting;
+  const centerDescription = isRevealed
+    ? content.reveal.descRevealed
+    : awaitingStory
+      ? content.reveal.descAwaitingStory
+      : readyWithTeam
+        ? content.reveal.descReady
+        : canReveal
+          ? content.reveal.descCanReveal
+          : content.reveal.descWaiting;
 
   // Dado da mesa (14.6): pós-reveal divergente, o sorteio determinístico
   // aponta um assento para justificar primeiro. Derivado do snapshot —
@@ -796,29 +798,25 @@ export function ArenaPage({
 
   // Nova rodada (issue 08): qualquer Player abre após o reveal, mas com
   // segunda ativação de confirmação (botão ou N). A primeira ativação
-  // arma e inicia a janela de expiração; sem a segunda a tempo o comando
-  // volta ao estado inicial sem trafegar nada.
+  // arma; a segunda envia; o Cancelar desarma sem trafegar nada e sem
+  // expiração por contagem.
   function handleNewRoundRequest(): void {
     if (!isRevealed) return;
     if (!confirmingNewRound) {
       setNewRoundError(null);
       setConfirmingNewRound(true);
-      if (newRoundTimer.current) clearTimeout(newRoundTimer.current);
-      newRoundTimer.current = setTimeout(() => {
-        newRoundTimer.current = null;
-        setConfirmingNewRound(false);
-      }, NEW_ROUND_CONFIRM_TIMEOUT_MS);
       return;
-    }
-    if (newRoundTimer.current) {
-      clearTimeout(newRoundTimer.current);
-      newRoundTimer.current = null;
     }
     setConfirmingNewRound(false);
     setNewRoundError(null);
     const sent = sendNewRoundThroughSession();
     if (sent) trackNewRound();
     else setNewRoundError(errorCopy.newRound);
+  }
+
+  function handleNewRoundCancel(): void {
+    setConfirmingNewRound(false);
+    setNewRoundError(null);
   }
 
   function handleCardSelect(value: Vote): void {
@@ -994,10 +992,33 @@ export function ArenaPage({
     }
   }
 
-  function handleLeave(): void {
-    // Ticket 09: saída voluntária avisa o servidor primeiro para a
-    // presença atualizar em tempo real nos demais (e promover novo
-    // Host quando o Host sai). F5 NÃO passa por aqui.
+  // Saída com consequência (HEL-65): host ou rodada com votos pedem
+  // confirmação com o que acontece com a sala. O próximo host segue a
+  // mesma regra do servidor (`promoteOldestPlayer`): votante mais antigo.
+  const nextHost =
+    voters
+      .filter((p) => p.id !== playerId)
+      .sort((a, b) => a.joinedAt - b.joinedAt)[0] ?? null;
+  // O servidor só apaga a sala quando não sobra ninguém na lista (quem
+  // está desconectado ainda conta e pode ser promovido).
+  const leaveEndsRoom = players.length <= 1;
+  const needsLeaveConfirm = isSelfHost || totalVoted > 0;
+  const leaveConsequence = isSelfHost
+    ? leaveEndsRoom
+      ? content.toolbar.leaveConfirmHostSolo
+      : nextHost
+        ? content.toolbar.leaveConfirmHostNext(nextHost.nick)
+        : content.toolbar.leaveConfirmHostNone
+    : content.toolbar.leaveConfirmKeep;
+  const leaveVotesNote =
+    totalVoted > 0 && !leaveEndsRoom ? content.toolbar.leaveConfirmVotes : null;
+
+  /**
+   * Saída voluntária: avisa o servidor primeiro para a presença atualizar
+   * em tempo real nos demais (e promover novo Host quando o Host sai).
+   * F5 NÃO passa por aqui.
+   */
+  function leaveRoomNow(): void {
     sendThroughSession("sendLeaveRoom");
     try {
       socket?.close();
@@ -1006,6 +1027,14 @@ export function ArenaPage({
     }
     disconnect();
     navigate("/join");
+  }
+
+  function handleLeave(): void {
+    if (!needsLeaveConfirm) {
+      leaveRoomNow();
+      return;
+    }
+    setConfirmingLeave(true);
   }
 
   return (
@@ -1017,7 +1046,8 @@ export function ArenaPage({
           </span>
           <div>
             <h1 data-testid="sala-code">
-              {content.toolbar.room} <span>{sala.code}</span>
+              {content.toolbar.room}{" "}
+              <span className="arena-room-code">{sala.code}</span>
             </h1>
             <p data-testid="round-label">
               {content.toolbar.round(sala.round, phaseLabel(sala.phase))}
@@ -1035,23 +1065,62 @@ export function ArenaPage({
                 )
               : content.toolbar.presence(connected.length, voted)}
           </span>
+          <Button
+            type="button"
+            variant="outline"
+            className="arena-copy-invite"
+            data-testid="toolbar-copy-invite"
+            onClick={() => {
+              void handleCopy();
+            }}
+          >
+            {copied ? (
+              <CheckIcon aria-hidden="true" />
+            ) : (
+              <CopyIcon aria-hidden="true" />
+            )}
+            {copied ? content.invite.copied : content.invite.copy}
+          </Button>
+          <span className="sr-only" role="status" data-testid="invite-copy-status">
+            {copied
+              ? content.invite.copied
+              : copyError
+                ? content.invite.copyError
+                : ""}
+          </span>
           <Button variant="ghost" onClick={handleLeave}>
             <LogOutIcon aria-hidden="true" />
             {content.toolbar.leave}
           </Button>
         </div>
+        {confirmingLeave ? (
+          <Alert variant="warning" data-testid="leave-confirm">
+            <AlertTitle>{content.toolbar.leaveConfirmTitle}</AlertTitle>
+            <AlertDescription className="flex flex-col items-start gap-3">
+              <p>{leaveConsequence}</p>
+              {leaveVotesNote ? <p>{leaveVotesNote}</p> : null}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  data-testid="leave-confirm-button"
+                  onClick={leaveRoomNow}
+                >
+                  {content.toolbar.leaveConfirmAction}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  data-testid="leave-cancel-button"
+                  onClick={() => setConfirmingLeave(false)}
+                >
+                  {content.toolbar.leaveCancel}
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        ) : null}
       </header>
-      {showFirstStoryAction && !connectionLost && !reconnecting ? (
-        <Alert>
-          <AlertTitle>{content.deck.firstStoryTitle}</AlertTitle>
-          <AlertDescription>
-            <p>{content.deck.awaitingStory}</p>
-            <Button type="button" data-testid="first-story-action" onClick={focusFirstStory}>
-              {content.deck.addFirstStory}
-            </Button>
-          </AlertDescription>
-        </Alert>
-      ) : null}
       {reconnecting && !connectionLost && (
         <Alert variant="warning">
           <AlertTitle>{content.reconnecting.title}</AlertTitle>
@@ -1184,25 +1253,13 @@ export function ArenaPage({
                 </div>
               ) : null}
               <CardHeader>
-                <CardTitle className="text-base">
-                  {isRevealed
-                    ? content.reveal.titleRevealed
-                    : isReadyToReveal
-                      ? content.reveal.titleReady
-                      : content.reveal.titleVoting}
-                </CardTitle>
+                <CardTitle className="text-base">{centerTitle}</CardTitle>
                 <CardDescription data-testid="reveal-hint" aria-live="polite">
-                  {isRevealed
-                    ? content.reveal.descRevealed
-                    : isReadyToReveal
-                      ? content.reveal.descReady
-                      : canReveal
-                        ? content.reveal.descCanReveal
-                        : content.reveal.descWaiting}
+                  {centerDescription}
                 </CardDescription>
               </CardHeader>
               <CardPanel className="flex flex-col gap-3">
-                {!isRevealed && (
+                {!isRevealed && !awaitingStory && (
                   <div className="flex flex-wrap items-center gap-2">
                     <Button
                       type="button"
@@ -1228,28 +1285,53 @@ export function ArenaPage({
                     </span>
                   </div>
                 )}
-                {isRevealed && (
-                  <div className="flex flex-col items-center gap-2">
+                {!isRevealed && storyBlocked ? (
+                  <div className="flex justify-center">
                     <Button
                       type="button"
-                      data-testid="new-round-button"
-                      data-confirming={confirmingNewRound ? "true" : "false"}
-                      variant={
-                        confirmingNewRound ? "destructive-outline" : "default"
-                      }
-                      onClick={handleNewRoundRequest}
-                      aria-keyshortcuts="n"
-                      aria-label={
-                        confirmingNewRound
-                          ? content.reveal.newRoundAriaConfirm
-                          : content.reveal.newRoundAria
-                      }
+                      data-testid="first-story-action"
+                      onClick={focusFirstStory}
                     >
-                      <RotateCcwIcon aria-hidden="true" />
-                      {confirmingNewRound
-                        ? content.reveal.newRoundConfirm
-                        : content.reveal.newRound}
+                      <PlusIcon aria-hidden="true" />
+                      {content.deck.addFirstStory}
                     </Button>
+                  </div>
+                ) : null}
+                {isRevealed && (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <Button
+                        type="button"
+                        data-testid="new-round-button"
+                        data-confirming={confirmingNewRound ? "true" : "false"}
+                        variant={
+                          confirmingNewRound ? "destructive-outline" : "default"
+                        }
+                        onClick={handleNewRoundRequest}
+                        aria-keyshortcuts="n"
+                        aria-label={
+                          confirmingNewRound
+                            ? content.reveal.newRoundAriaConfirm
+                            : content.reveal.newRoundAria
+                        }
+                      >
+                        <RotateCcwIcon aria-hidden="true" />
+                        {confirmingNewRound
+                          ? content.reveal.newRoundConfirm
+                          : content.reveal.newRound}
+                      </Button>
+                      {confirmingNewRound ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="arena-confirm-cancel"
+                          data-testid="new-round-cancel"
+                          onClick={handleNewRoundCancel}
+                        >
+                          {content.reveal.newRoundCancel}
+                        </Button>
+                      ) : null}
+                    </div>
                     <span
                       data-testid="new-round-hint"
                       aria-live="polite"
@@ -1259,16 +1341,6 @@ export function ArenaPage({
                         ? content.reveal.newRoundHintConfirm
                         : content.reveal.newRoundHint}
                     </span>
-                    {confirmingNewRound ? (
-                      <span
-                        data-testid="new-round-countdown"
-                        aria-hidden="true"
-                        className="arena-confirm-countdown"
-                        style={{
-                          animationDuration: `${NEW_ROUND_CONFIRM_TIMEOUT_MS}ms`,
-                        }}
-                      />
-                    ) : null}
                   </div>
                 )}
                 {revealError ? (
@@ -1325,6 +1397,14 @@ export function ArenaPage({
                 disabled={deckDisabled}
                 lang={lang}
               />
+              {awaitingStory ? (
+                <p
+                  className="arena-deck-locked"
+                  data-testid="deck-locked-legend"
+                >
+                  {content.deck.lockedLegend}
+                </p>
+              ) : null}
               {voteError ? (
                 <Alert variant="error">
                   <AlertTitle>{content.deck.errorTitle}</AlertTitle>
@@ -1490,11 +1570,23 @@ export function ArenaPage({
                                 group.count,
                                 group.value,
                               )}
+                              aria-label={content.results.pipTitle(
+                                group.count,
+                                group.value,
+                              )}
                               className="rounded-full bg-muted px-2 py-0.5 font-mono text-xs tabular-nums"
                             >
                               {group.count}×{group.value}
                             </span>
                           ))}
+                        </span>
+                      ) : null}
+                      {voteGroups.length > 0 ? (
+                        <span
+                          data-testid="stats-pips-legend"
+                          className="text-xs text-muted-foreground"
+                        >
+                          {content.results.pipsLegend}
                         </span>
                       ) : null}
                     </div>
@@ -1575,26 +1667,26 @@ export function ArenaPage({
                 <div className="flex gap-2">
                   <Input
                     readOnly
-                    value={inviteUrl}
+                    value={linkFocused ? inviteUrl : middleTruncate(inviteUrl)}
                     aria-label={content.invite.linkAria}
-                    onFocus={(event) => event.currentTarget.select()}
+                    title={inviteUrl}
+                    onFocus={() => setLinkFocused(true)}
+                    onBlur={() => setLinkFocused(false)}
+                    onClick={(event) => event.currentTarget.select()}
                   />
                   <Button
                     type="button"
                     variant="outline"
+                    data-testid="invite-copy-button"
                     onClick={() => {
                       void handleCopy();
                     }}
                   >
-                    {copied ? (
-                      <CheckIcon aria-hidden="true" />
-                    ) : (
-                      <CopyIcon aria-hidden="true" />
-                    )}
-                    {copied ? content.invite.copied : content.invite.copy}
+                    <CopyIcon aria-hidden="true" />
+                    {content.invite.copyLink}
                   </Button>
                 </div>
-                <div aria-live="polite" className="min-h-5 text-sm">
+                <div className="arena-invite-feedback min-h-5 text-sm">
                   {copied ? (
                     <span
                       className="text-success-foreground"

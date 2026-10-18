@@ -127,6 +127,9 @@ export async function readInviteUrl(player: Player, expectedCode: string): Promi
 	const { page } = player;
 	const input = page.getByLabel(/Link de convite|Invite link/i);
 	await expect(input).toBeVisible();
+	// O campo mostra o meio truncado até receber foco; o valor inteiro
+	// aparece ao focar (e o botão de copiar usa sempre a URL completa).
+	await input.focus();
 	const value = await input.inputValue();
 	const url = new URL(value);
 	expect(url.origin).toBe(new URL(page.url()).origin);

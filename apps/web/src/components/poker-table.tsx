@@ -44,7 +44,7 @@ const TABLE_LABELS: Record<Lang, TableLabels> = {
     emptySeatSr: "Assento vazio",
   },
   en: {
-    seatsAria: "Room seats",
+    seatsAria: "People at the table",
     demoSeatsAria: "Demo team",
     disconnected: "Disconnected",
     noVote: "No vote",
@@ -52,7 +52,7 @@ const TABLE_LABELS: Record<Lang, TableLabels> = {
     waiting: "Waiting",
     justify: "Justifies first",
     emptySeat: "Open",
-    emptySeatSr: "Empty seat",
+    emptySeatSr: "Empty place",
   },
 };
 
