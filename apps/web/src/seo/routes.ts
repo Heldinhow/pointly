@@ -249,6 +249,7 @@ const EN_HOW_TO_PLAY = GUIDE_CONTENT.en["how-to-play"];
 const EN_WHAT_IS = GUIDE_CONTENT.en["what-is"];
 const EN_STORY_POINTS = GUIDE_CONTENT.en["story-points"];
 const PT_HUB = GUIDE_HUB["pt-BR"];
+const EN_HUB = GUIDE_HUB.en;
 
 function guideBreadcrumbPt(
 	name: string,
@@ -272,28 +273,32 @@ function guideBreadcrumbEn(
 	]);
 }
 
+const GUIDES_DESCRIPTION_PT =
+	"Guias práticos de planning poker e estimativas ágeis: como jogar, o que é e como estimar story points — para aplicar na próxima planning com o time.";
+const GUIDES_DESCRIPTION_EN =
+	"Practical guides to planning poker and agile estimation: how to play, what it is and how to estimate story points before your next planning session.";
 const HOW_TO_PLAY_DESCRIPTION_PT =
-	"O roteiro completo de uma sessão de planning poker: papéis, rodadas, como lidar com divergência e o que fazer depois do reveal.";
+	"O roteiro completo de uma sessão de planning poker em 7 passos: papéis, rodadas, como lidar com divergência e o que registrar depois do reveal.";
 const WHAT_IS_DESCRIPTION_PT =
-	"O que é planning poker, de onde veio, por que funciona e quando usar — com exemplos práticos para o seu time estimar melhor.";
+	"O que é planning poker, de onde veio, por que funciona e quando usar, com um exemplo prático de rodada para o seu time estimar melhor no dia a dia.";
 const STORY_POINTS_DESCRIPTION_PT =
-	"Story points sem mistério: escala, sequência de Fibonacci, story points vs horas e como calibrar a estimativa do seu time.";
+	"Story points sem mistério: escala, sequência de Fibonacci, story points vs horas e como calibrar a estimativa do seu time com uma história de referência.";
 const REMOTO_DESCRIPTION_PT =
-	"Como fazer planning poker remoto: sala online sem cadastro, voto secreto, agenda de 45 min e dicas para evitar ancoragem em videochamada.";
+	"Como fazer planning poker remoto com time distribuído: sala online sem cadastro, voto secreto, agenda de 45 min e dicas contra ancoragem em videochamada.";
 const POINTS_VS_HORAS_DESCRIPTION_PT =
-	"Story points ou horas? Veja a diferença, por que não converter ponto em hora e como dar prazo usando a velocidade do time.";
+	"Story points ou horas? Veja a diferença, por que não converter ponto em hora e como dar prazo usando a velocidade do time, em faixa, sem falsa precisão.";
 const FIBONACCI_DESCRIPTION_PT =
-	"Por que o planning poker usa Fibonacci, o que cada valor significa, o que fazer com 13 pontos e como calibrar as cartas do seu time.";
+	"Por que o planning poker usa Fibonacci, o que cada valor significa, o que fazer com 13 pontos e como calibrar as cartas do seu time na prática.";
 const TSHIRT_DESCRIPTION_PT =
-	"T-shirt sizing explicado: escala PP a GG, passo a passo, conversão para story points e quando usar em vez de planning poker.";
+	"T-shirt sizing explicado: escala PP a GG, passo a passo, conversão para story points e quando usar em vez de planning poker na triagem de backlog.";
 const COMPARATIVO_DESCRIPTION_PT =
 	"Compare ferramentas de planning poker online grátis e sem cadastro em português: limites, anúncios, baralhos e extras, com fonte de cada dado.";
 const HOW_TO_PLAY_DESCRIPTION_EN =
-	"The complete walkthrough of a planning poker session: roles, rounds, how to handle disagreement and what to do after the reveal.";
+	"The complete walkthrough of a planning poker session, step by step: roles, rounds, how to handle disagreement and what to do after the reveal.";
 const WHAT_IS_DESCRIPTION_EN =
-	"What planning poker is, where it came from, why it works and when to use it — with practical examples for your team.";
+	"What planning poker is, where it came from, why it works and when to use it, with practical examples so your team can estimate better together.";
 const STORY_POINTS_DESCRIPTION_EN =
-	"Story points made simple: the scale, the Fibonacci sequence, story points vs hours and how to calibrate your team's estimates.";
+	"Story points made simple: the scale, the Fibonacci sequence, story points vs hours and how to calibrate your team's estimates with a reference story.";
 
 export const SEO_ROUTES: readonly SeoRoute[] = [
 	{
@@ -302,7 +307,7 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		indexable: true,
 		title: "Pointly — Planning Poker Online para Times Ágeis",
 		description:
-			"Planning poker sem cadastro para times ágeis: crie a sala em segundos, compartilhe o link e estime story points em tempo real.",
+			"Planning poker sem cadastro para times ágeis: crie a sala em segundos, compartilhe o link e estime story points em tempo real até o time fechar um número.",
 		alternates: alternateVersions(PATHS.homePt, PATHS.homeEn, "pt-BR"),
 		jsonLd: [
 			JSON_LD_SOFTWARE_APPLICATION,
@@ -315,7 +320,7 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		indexable: true,
 		title: "Pointly — Planning Poker for Agile Teams",
 		description:
-			"Planning poker with no signup for agile teams: create a room in seconds, share the link and estimate story points in real time.",
+			"Planning poker with no signup for agile teams: create a room in seconds, share the link and estimate story points in real time until the team agrees.",
 		alternates: alternateVersions(PATHS.homePt, PATHS.homeEn, "en"),
 		jsonLd: [
 			JSON_LD_SOFTWARE_APPLICATION_EN,
@@ -345,7 +350,7 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		indexable: true,
 		title: "Scrum Poker Online Grátis | Pointly",
 		description:
-			"Scrum poker online grátis e sem cadastro: crie a sala, compartilhe o código e estime story points em tempo real com o time.",
+			"Scrum poker online grátis e sem cadastro: crie a sala, compartilhe o código e estime story points em tempo real com o time no navegador, sem instalar nada.",
 		alternates: alternateVersions(PATHS.scrumPokerPt, PATHS.scrumPokerEn, "pt-BR"),
 		jsonLd: [
 			JSON_LD_SOFTWARE_APPLICATION,
@@ -357,14 +362,12 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		lang: "pt-BR",
 		indexable: true,
 		title: "Guias de Planning Poker e Estimativas Ágeis | Pointly",
-		description:
-			"Guias práticos de planning poker e estimativas ágeis: como jogar, o que é e como estimar story points — para aplicar na próxima planning.",
+		description: GUIDES_DESCRIPTION_PT,
 		alternates: alternateVersions(PATHS.guidesPt, PATHS.guidesEn, "pt-BR"),
 		jsonLd: [
 			collectionPageJsonLd({
 				name: PT_HUB.h1,
-				description:
-					"Guias práticos de planning poker e estimativas ágeis: como jogar, o que é e como estimar story points — para aplicar na próxima planning.",
+				description: GUIDES_DESCRIPTION_PT,
 				lang: "pt-BR",
 				path: PATHS.guidesPt,
 				items: PT_HUB.cards.map((card) => ({
@@ -438,7 +441,7 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		path: PATHS.planningPokerRemotoPt,
 		lang: "pt-BR",
 		indexable: true,
-		title: "Planning Poker Remoto: Guia para Times Distribuídos",
+		title: "Planning Poker Remoto: Guia do Time Distribuído | Pointly",
 		description: REMOTO_DESCRIPTION_PT,
 		ogType: "article",
 		lastmod: GUIDES_BATCH2_PUBLISHED,
@@ -460,7 +463,7 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		path: PATHS.storyPointsVsHorasPt,
 		lang: "pt-BR",
 		indexable: true,
-		title: "Story Points vs Horas: Qual Usar e Por Quê",
+		title: "Story Points vs Horas: Qual Usar e Por Quê | Pointly",
 		description: POINTS_VS_HORAS_DESCRIPTION_PT,
 		ogType: "article",
 		lastmod: GUIDES_BATCH2_PUBLISHED,
@@ -482,7 +485,7 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		path: PATHS.fibonacciEstimativaPt,
 		lang: "pt-BR",
 		indexable: true,
-		title: "Fibonacci na Estimativa Ágil: Valores e Como Usar",
+		title: "Fibonacci na Estimativa Ágil: Valores e Uso | Pointly",
 		description: FIBONACCI_DESCRIPTION_PT,
 		ogType: "article",
 		lastmod: GUIDES_BATCH2_PUBLISHED,
@@ -504,7 +507,7 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		path: PATHS.tShirtSizingPt,
 		lang: "pt-BR",
 		indexable: true,
-		title: "T-Shirt Sizing: O Que É e Como Converter em Pontos",
+		title: "T-Shirt Sizing: O Que É e Como Converter | Pointly",
 		description: TSHIRT_DESCRIPTION_PT,
 		ogType: "article",
 		lastmod: GUIDES_BATCH2_PUBLISHED,
@@ -526,7 +529,7 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		path: PATHS.comparativoPt,
 		lang: "pt-BR",
 		indexable: true,
-		title: "Planning Poker Online Grátis: Comparativo 2026",
+		title: "Planning Poker Online Grátis: Comparativo 2026 | Pointly",
 		description: COMPARATIVO_DESCRIPTION_PT,
 		ogType: "article",
 		lastmod: GUIDES_BATCH2_PUBLISHED,
@@ -560,7 +563,7 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		indexable: true,
 		title: "Free Online Planning Poker — No Signup | Pointly",
 		description:
-			"Create a free online planning poker room in seconds — no signup, no install. Estimate with your team in real time and reach consensus.",
+			"Create a free online planning poker room in seconds — no signup, no install. Estimate with your team in real time and reach consensus on the cards.",
 		alternates: alternateVersions(
 			PATHS.planningPokerPt,
 			PATHS.planningPokerEn,
@@ -577,7 +580,7 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		indexable: true,
 		title: "Free Scrum Poker Online — No Signup | Pointly",
 		description:
-			"Free scrum poker with no signup: create the room, share the code and estimate story points with your team in real time.",
+			"Free scrum poker with no signup: create the room, share the code and estimate story points with your team in real time, right in the browser.",
 		alternates: alternateVersions(PATHS.scrumPokerPt, PATHS.scrumPokerEn, "en"),
 		jsonLd: [
 			JSON_LD_SOFTWARE_APPLICATION,
@@ -589,9 +592,24 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		lang: "en",
 		indexable: true,
 		title: "Planning Poker & Agile Estimation Guides | Pointly",
-		description:
-			"Practical guides to planning poker and agile estimation: how to play, what it is and how to estimate story points before your next planning session.",
+		description: GUIDES_DESCRIPTION_EN,
 		alternates: alternateVersions(PATHS.guidesPt, PATHS.guidesEn, "en"),
+		jsonLd: [
+			collectionPageJsonLd({
+				name: EN_HUB.h1,
+				description: GUIDES_DESCRIPTION_EN,
+				lang: "en",
+				path: PATHS.guidesEn,
+				items: EN_HUB.cards.map((card) => ({
+					name: card.title,
+					path: card.to,
+				})),
+			}),
+			breadcrumbJsonLd([
+				{ name: "Pointly", path: PATHS.homeEn },
+				{ name: EN_HUB.h1, path: PATHS.guidesEn },
+			]),
+		],
 	},
 	{
 		path: PATHS.howToPlayEn,

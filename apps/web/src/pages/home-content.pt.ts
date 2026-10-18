@@ -68,7 +68,7 @@ export const HOME_CONTENT_PT: HomeContent = {
 	learn: {
 		title: "Entenda o ritual antes de votar",
 		intro:
-			"Três leituras curtas para chegar na primeira rodada com o time alinhado.",
+			"Quatro leituras curtas para chegar na primeira rodada com o time alinhado.",
 		links: [
 			{
 				to: "/guias/como-jogar-planning-poker",
@@ -84,6 +84,11 @@ export const HOME_CONTENT_PT: HomeContent = {
 				to: "/guias/story-points",
 				title: "Story points na prática",
 				body: "Escala, sequência de Fibonacci e como calibrar a estimativa com uma história de referência.",
+			},
+			{
+				to: "/planning-poker-online-gratis-comparativo",
+				title: "Comparativo de ferramentas grátis",
+				body: "Pointly, Point Poker, SprintsPoker, Scrum Poker Online e Utilaria: limites, baralhos e extras.",
 			},
 		],
 	},

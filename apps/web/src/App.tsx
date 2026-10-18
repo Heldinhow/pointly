@@ -229,6 +229,11 @@ export default function App(): React.ReactElement {
             <NavLink to={isEn ? "/en/guides" : "/guias"}>
               {isEn ? "Guides" : "Guias"}
             </NavLink>
+            {!isEn && (
+              <NavLink to="/planning-poker-online-gratis-comparativo">
+                Comparativo
+              </NavLink>
+            )}
             {showLanguageSwitch ? (
               <LanguageLink pathname={pathname} lang={lang} />
             ) : (

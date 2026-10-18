@@ -250,6 +250,10 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 							},
 						],
 					},
+					{
+						type: "p",
+						text: "Veja também: [story points vs horas](/guias/story-points-vs-horas) para responder prazo com velocidade e o [comparativo de ferramentas](/planning-poker-online-gratis-comparativo) para escolher a sala.",
+					},
 				],
 			},
 			{
@@ -505,6 +509,10 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 						type: "p",
 						text: "Quer testar o fluxo sem compromisso? [Crie uma sala no Pointly](/join) e rode uma rodada com as histórias do próximo sprint.",
 					},
+					{
+						type: "p",
+						text: "Veja também: [t-shirt sizing](/guias/t-shirt-sizing) para triar o backlog em tamanhos antes de estimar em pontos e o [comparativo de ferramentas](/planning-poker-online-gratis-comparativo) para escolher a sala.",
+					},
 				],
 			},
 			{
@@ -727,6 +735,10 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 					{
 						type: "p",
 						text: "O que qualquer escala precisa ter: ser relativa, conhecida por todos e estável por tempo suficiente para acumular histórico. Trocar de escala a cada sprint reinicia a curva de aprendizado do time.",
+					},
+					{
+						type: "p",
+						text: "Veja também: [story points vs horas](/guias/story-points-vs-horas) para transformar a escala em previsão de prazo e o [comparativo de ferramentas](/planning-poker-online-gratis-comparativo) para escolher onde votar.",
 					},
 				],
 			},
@@ -1029,6 +1041,10 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 								body: "Tamanhos brilham na triagem; no sprint, a granularidade dos pontos evita que itens próximos pareçam iguais.",
 							},
 						],
+					},
+					{
+						type: "p",
+						text: "Veja também: [Fibonacci na estimativa ágil](/guias/fibonacci-estimativa-agil) para entender os valores da conversão e o [comparativo de ferramentas](/planning-poker-online-gratis-comparativo) para escolher a sala.",
 					},
 				],
 			},
@@ -1346,6 +1362,10 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 					{
 						type: "p",
 						text: "Um último critério que não cabe na tabela: o que o time faz depois da sessão. Se o número estimado precisa voltar para outra ferramenta, opções com exportação reduzem trabalho manual e erro de digitação; se a sala é descartável por definição, isso pesa menos.",
+					},
+					{
+						type: "p",
+						text: "Veja também: [planning poker remoto](/guias/planning-poker-remoto) para rodar a sessão em videochamada e [story points vs horas](/guias/story-points-vs-horas) para responder prazo sem converter pontos.",
 					},
 				],
 			},
