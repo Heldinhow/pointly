@@ -13,6 +13,8 @@
 - Web: `bun --filter pointly-web dev | build | typecheck`, `bun test src/` dentro de `apps/web`.
 - Server: `bun --filter server test`, `tsc --noEmit` dentro de `apps/server`.
 - Shared: `bun --filter @planning-poker/shared test | typecheck`.
+- E2E: Playwright em `e2e/` com `playwright.config.ts` (sobe `server` :3001 e Vite :5179, `reuseExistingServer: false`). `bun run test:e2e` (= `typecheck:e2e` → `playwright test`), `bun run test:e2e:list`, `bun run typecheck:e2e`.
+- Raiz: `bun run test:serve-web` (= `node --test scripts/serve-web.test.mjs`).
 - Não criar scripts novos quando o filtro já resolve.
 
 ## UI — preferir coss (`https://coss.com/ui`) sempre que possível
@@ -34,12 +36,19 @@
 - `packages/shared`: `shared test + typecheck` suficiente (`bun --filter @planning-poker/shared test && bun --filter @planning-poker/shared typecheck`).
 - `apps/server`: `server test + typecheck`; opcional `/health` se o server estiver rodando.
 - `apps/web` não-visual: `web test + typecheck + build:web` (coberto pelo `verify`).
-- `apps/web` visual: `verify` MAIS ou (a) futuro `verify:ui`/Playwright quando restaurado (PR B) OU (b) checklist OpenChamber/browser contra `DESIGN.md` nos viewports 375/390/768/1024/1440, com screenshots salvos fora do git (path untracked, ex.: `/tmp/...`) — nunca alegar Playwright se a suite não existe nesta tree.
+- `apps/web` visual: `verify` MAIS `bun run test:e2e` (a suite Playwright existe nesta tree) OU checklist OpenChamber/browser contra `DESIGN.md` nos viewports 375/390/768/1024/1440, com screenshots salvos fora do git (path untracked, ex.: `/tmp/...`).
+- Feature user-facing: rode `verify-pointly` (`.agents/skills/verify-pointly/SKILL.md`) no fim e atualize o arquivo correspondente em `.agents/skills/verify-pointly/features/` na mesma mudança; sem mudança de feature, não mexa no mapa.
 - Mudanças Docker/compose: rode `docker compose build` quando Docker estiver disponível; senão, deixe para o CI (PR C) e registre como indisponível.
+
+## Deploy
+
+- CI (`.github/workflows/verify.yml`): PR e push em `main` rodam `verify` → `e2e`; `permissions: contents: read` (sem job de deploy).
+- `docker-compose.yml` + `Dockerfile`: alvos `server` (:3001) e `web` (:8080) na rede externa `dokploy-network`; routers do `web` gerenciados pela UI do Dokploy (`roadmap.md`). Nenhum arquivo do repo declara deploy automático ao dar merge em `main`.
 
 ## Como trabalhar
 
 - Direto por padrão; delegação/subagentes só por benefício concreto ou pedido explícito (sem skill orquestradora; agentes disponíveis em `.codex/agents/`).
 - Verificação proporcional (`verify-and-stop`): menor prova suficiente, focada antes de gates largos. TDD só para comportamento novo, lógica complexa ou regressão.
 - Não repetir valores mutáveis em docs — referenciar a constante/teste SSOT.
+- `.specs/LESSONS.md` é auto-gerado; lições se editam via script/`.specs/lessons.json`, nunca à mão.
 - Não rodar `/graphify` nem indexação salvo pedido explícito ou `graphify-out/graph.json` existente.
