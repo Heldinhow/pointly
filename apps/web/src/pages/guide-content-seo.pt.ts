@@ -2,6 +2,73 @@ import type { GuideCopy } from "./guide-content";
 
 const META_OUT_2026 = "Pointly · atualizado em outubro de 2026";
 
+export const GUIA_MAPA_PT: readonly {
+	to: string;
+	title: string;
+	body: string;
+}[] = [
+	{
+		to: "/guias/como-jogar-planning-poker",
+		title: "Como jogar planning poker",
+		body: "O roteiro completo de uma sessão: papéis, rodada a rodada e o que fazer quando os votos divergem.",
+	},
+	{
+		to: "/guias/o-que-e-planning-poker",
+		title: "O que é planning poker?",
+		body: "De onde veio, por que o voto simultâneo funciona e quando usar o ritual.",
+	},
+	{
+		to: "/guias/story-points",
+		title: "Story points",
+		body: "A escala relativa, o Fibonacci e a calibração com uma história de referência.",
+	},
+	{
+		to: "/guias/planning-poker-remoto",
+		title: "Planning poker remoto",
+		body: "Como rodar a sessão com time distribuído, sem ancoragem no chat.",
+	},
+	{
+		to: "/guias/story-points-vs-horas",
+		title: "Story points vs horas",
+		body: "Por que não converter ponto em hora e como prever prazo com a velocidade do time.",
+	},
+	{
+		to: "/guias/fibonacci-estimativa-agil",
+		title: "Fibonacci na estimativa ágil",
+		body: "O que cada faixa de valor significa e o que fazer quando a história chega a 13.",
+	},
+	{
+		to: "/guias/t-shirt-sizing",
+		title: "T-shirt sizing",
+		body: "A escala PP-GG para triagem de backlog e a conversão para story points.",
+	},
+	{
+		to: "/guias/votos-divergentes-planning-poker",
+		title: "Votos divergentes no planning poker",
+		body: "O roteiro de facilitação para conduzir a discussão e reestimar.",
+	},
+	{
+		to: "/guias/planning-poker-para-devs",
+		title: "Planning poker para devs",
+		body: "Como estimar bugs, spikes e tarefas técnicas, com opções em vez de regra.",
+	},
+	{
+		to: "/guias/agenda-sessao-planning-poker",
+		title: "Agenda de sessão de planning poker",
+		body: "O modelo de 45 minutos em blocos, com papéis e checklist.",
+	},
+	{
+		to: "/guias/scrum-poker-vs-planning-poker",
+		title: "Scrum poker x planning poker",
+		body: "Por que os nomes descrevem a mesma técnica e qual usar no seu time.",
+	},
+	{
+		to: "/planning-poker-online-gratis-comparativo",
+		title: "Comparativo de ferramentas grátis",
+		body: "Pointly e outras quatro ferramentas lado a lado, com a fonte de cada dado.",
+	},
+];
+
 export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 	"planning-poker-remoto": {
 		lang: "pt-BR",
@@ -132,6 +199,10 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 					{
 						type: "p",
 						text: "Duas coisas ajudam a manter o ritmo: revezar quem apresenta cada história e anotar as dúvidas que aparecerem para responder fora da sessão. A reunião não precisa resolver tudo, só precisa fechar números com entendimento suficiente.",
+					},
+					{
+						type: "p",
+						text: "Para uma agenda completa, agnóstica de formato e com checklist de antes, durante e depois, veja o [modelo de sessão de 45 minutos](/guias/agenda-sessao-planning-poker).",
 					},
 				],
 			},
@@ -1419,6 +1490,1275 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 				{ to: "/planning-poker", label: "Planning poker online grátis" },
 				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
 				{ to: "/guias/planning-poker-remoto", label: "Planning poker remoto" },
+			],
+		},
+	},
+	"estimativa-agil": {
+		lang: "pt-BR",
+		path: "/guias/estimativa-agil",
+		h1: "Estimativa ágil: guia completo para times Scrum",
+		lede: "Estimativa ágil é dimensionar o trabalho de forma relativa, comparando itens entre si em vez de prever horas. O time usa story points, tamanhos de camiseta ou planning poker para chegar a um número combinado, e a velocidade recente ajuda a prever quanto cabe em cada sprint.",
+		meta: `9 min de leitura · ${META_OUT_2026}`,
+		tocLabel: "Neste guia",
+		back: { to: "/guias", label: "Guias de planning poker" },
+		sections: [
+			{
+				id: "o-que-e",
+				title: "O que é estimativa ágil (e por que não é prometer data)",
+				blocks: [
+					{
+						type: "p",
+						text: "Estimativa ágil é dimensionar o trabalho de forma relativa. Em vez de perguntar quantas horas um item vai levar, o time pergunta quanto ele é maior ou menor que outros itens que já conhece. O número que sai do ritual é uma leitura de esforço, complexidade e incerteza, não uma promessa de calendário.",
+					},
+					{
+						type: "p",
+						text: "O guia do Scrum, publicado em scrumguides.org, não prescreve técnica nem evento de estimativa. Ele diz que o refinamento do backlog adiciona detalhes como descrição, ordem e tamanho, e que quem executa o trabalho é responsável pelo dimensionamento. Estimar, portanto, é prática de apoio ao planejamento, não uma exigência do framework.",
+					},
+					{
+						type: "p",
+						text: "A confusão comum é tratar a estimativa como compromisso. Quando o número vira promessa de data, o time começa a inflar valores para se proteger e perde o que torna a estimativa útil: honestidade sobre o desconhecido. Prazo se responde com a velocidade do time, em faixa, como explica o guia de [story points vs horas](/guias/story-points-vs-horas).",
+					},
+				],
+			},
+			{
+				id: "relativa-x-absoluta",
+				title: "Estimativa relativa x absoluta",
+				blocks: [
+					{
+						type: "p",
+						text: "A estimativa absoluta tenta prever tempo de relógio: quatro horas, dois dias, uma semana. A relativa compara itens entre si: este é parecido com aquele, aquele outro é maior. Comparar é mais fácil que prever, porque quem compara tem referência concreta e quem prevê trabalha com suposição.",
+					},
+					{
+						type: "p",
+						text: "A unidade relativa mais usada é o story point, que não tem valor absoluto. Um item de 5 pontos equivale a outro item de 5 pontos do mesmo time, e nada mais que isso. Os detalhes da escala e a armadilha da conversão para horas estão no guia de [story points vs horas](/guias/story-points-vs-horas).",
+					},
+					{
+						type: "p",
+						text: "Horas não são proibidas. Elas funcionam em trabalho repetível e conhecido, como quebra de uma história em tarefas ou manutenção com histórico. O erro é misturar as duas unidades no mesmo planejamento e acabar convertendo uma na outra para fechar conta de prazo.",
+					},
+				],
+			},
+			{
+				id: "tecnicas",
+				title: "As principais técnicas, lado a lado",
+				blocks: [
+					{
+						type: "p",
+						text: "Não existe técnica certa para todo momento. As três famílias abaixo cobrem a maior parte dos casos, e a escolha depende da fase do backlog e do que o time precisa decidir.",
+					},
+					{
+						type: "table",
+						headers: ["Técnica", "Quando usar", "Guia"],
+						rows: [
+							[
+								"Story points com Fibonacci",
+								"Itens que vão entrar em sprint e medição de velocidade",
+								"[Story points](/guias/story-points) e [Fibonacci](/guias/fibonacci-estimativa-agil)",
+							],
+							[
+								"T-shirt sizing",
+								"Triagem rápida de backlog grande e conversa de roadmap",
+								"[T-shirt sizing](/guias/t-shirt-sizing)",
+							],
+							[
+								"Planning poker",
+								"Quando a estimativa precisa de mais de uma cabeça",
+								"[Como jogar](/guias/como-jogar-planning-poker)",
+							],
+						],
+					},
+					{
+						type: "p",
+						text: "O ponto é a unidade relativa; o Fibonacci é a escala que cresce rápido para não forçar precisão onde ela não existe. A calibração com história de referência está no [guia de story points](/guias/story-points), e os valores de cada faixa, no [guia de Fibonacci](/guias/fibonacci-estimativa-agil).",
+					},
+					{
+						type: "p",
+						text: "T-shirt sizing troca números por tamanhos (PP, P, M, G, GG) e rende na triagem de backlog grande. O [guia de t-shirt sizing](/guias/t-shirt-sizing) mostra a escala e as tabelas de conversão para pontos.",
+					},
+					{
+						type: "p",
+						text: "Planning poker é o ritual de votação em grupo: voto secreto, reveal simultâneo e conversa nos extremos. Serve para qualquer escala, de pontos a tamanhos. O [guia de como jogar](/guias/como-jogar-planning-poker) percorre a sessão inteira, e o [guia de scrum poker x planning poker](/guias/scrum-poker-vs-planning-poker) esclarece os nomes.",
+					},
+				],
+			},
+			{
+				id: "como-nasce",
+				title: "Como uma estimativa nasce na prática",
+				blocks: [
+					{
+						type: "p",
+						text: "O ciclo abaixo vale para qualquer técnica. Cada time ajusta detalhes, mas a sequência raramente muda.",
+					},
+					{
+						type: "steps",
+						items: [
+							{
+								title: "Refinar antes de estimar.",
+								body: "O item chega com contexto e critérios de aceite. Dúvida de entendimento se resolve no refinamento, não na votação.",
+							},
+							{
+								title: "Comparar com referências.",
+								body: "O time usa histórias já entregues como régua, como descreve o [guia de story points](/guias/story-points).",
+							},
+							{
+								title: "Votar em segredo.",
+								body: "Cada pessoa escolhe a carta sem ver o voto das outras. O voto simultâneo evita a ancoragem do primeiro número falado.",
+							},
+							{
+								title: "Revelar e discutir.",
+								body: "Quem votou menos e quem votou mais explica primeiro. O [guia de votos divergentes](/guias/votos-divergentes-planning-poker) traz o roteiro completo dessa conversa.",
+							},
+							{
+								title: "Registrar o valor.",
+								body: "O número combinado volta para o item no backlog, onde o time planeja. A sala do Pointly é efêmera e não guarda histórico, então o registro é responsabilidade do time.",
+							},
+						],
+					},
+					{
+						type: "p",
+						text: "A cadência importa mais que o formato. Estimar uma vez por sprint, com os itens que vão entrar na sprint seguinte, costuma bastar. Sessões extras só se justificam quando o backlog acumulou itens novos relevantes, e não como rotina.",
+					},
+				],
+			},
+			{
+				id: "da-estimativa-a-previsao",
+				title: "Da estimativa à previsão: velocidade (sem converter em horas)",
+				blocks: [
+					{
+						type: "p",
+						text: "Com os números no backlog, o time soma os pontos concluídos a cada sprint. Essa série é a velocidade, e ela responde quanto cabe nas próximas sprints sem passar por horas.",
+					},
+					{
+						type: "p",
+						text: "Nas primeiras sprints, a faixa é larga e pouco confiável, e isso é normal. Recalibre conforme o histórico cresce e trate a velocidade como medida do time atual, não como número eterno: férias, entradas e saídas de pessoas e mudanças no produto deslocam a faixa.",
+					},
+					{
+						type: "p",
+						text: "A leitura é sempre em faixa. Se o time fechou entre 22 e 26 pontos nas últimas sprints, o próximo planejamento parte dessa faixa, não de uma meta exata. Converter a velocidade para horas reintroduz a falsa precisão que os pontos existem para evitar.",
+					},
+					{
+						type: "p",
+						text: "Velocidade serve para o time prever o próprio trabalho. Não serve para comparar times nem para avaliar pessoas, porque cada escala é local. Aprofunde em [story points vs horas](/guias/story-points-vs-horas).",
+					},
+				],
+			},
+			{
+				id: "erros-comuns",
+				title: "Erros comuns de quem está começando",
+				blocks: [
+					{
+						type: "list",
+						items: [
+							{
+								title: "Converter pontos em horas.",
+								body: "A taxa fixa quebra quando o time, o produto ou o tipo de item muda. Previsão sai da velocidade, em faixa.",
+							},
+							{
+								title: "Estimar tudo.",
+								body: "Nem bug urgente, nem tarefa operacional, nem investigação pedem voto. O critério é o que precisa de decisão de planejamento, como discute o [guia de planning poker para devs](/guias/planning-poker-para-devs).",
+							},
+							{
+								title: "Tratar pontos como produtividade.",
+								body: "Pontos medem o item, não a pessoa. Quando viram meta, inflam e perdem sentido.",
+							},
+							{
+								title: "Trocar de escala toda sprint.",
+								body: "A régua só acumula sentido com estabilidade. Trocar de escala reinicia o aprendizado do time.",
+							},
+							{
+								title: "Estimar item grande demais.",
+								body: "Item no teto da escala pede divisão, não votação repetida até alguém ceder.",
+							},
+							{
+								title: "Pular o registro.",
+								body: "Estimativa que morre na reunião não vira previsão nem calibração da régua.",
+							},
+						],
+					},
+				],
+			},
+			{
+				id: "mapa-de-guias",
+				title: "Mapa de todos os guias do Pointly",
+				blocks: [
+					{
+						type: "p",
+						text: "Todos os guias publicados, com uma linha cada. Vá direto ao que a sua dúvida pede.",
+					},
+					{
+						type: "list",
+						items: GUIA_MAPA_PT.map((item) => ({
+							title: `${item.title}.`,
+							body: item.body,
+						})),
+					},
+					{
+						type: "p",
+						text: "A lista completa com descrições também vive no [hub de guias](/guias), e o [comparativo de ferramentas](/planning-poker-online-gratis-comparativo) ajuda a escolher onde votar.",
+					},
+				],
+			},
+			{
+				id: "perguntas-frequentes",
+				title: "Perguntas frequentes",
+				blocks: [],
+			},
+		],
+		faq: {
+			title: "Perguntas frequentes",
+			items: [
+				{
+					question: "O que é estimativa ágil?",
+					answer:
+						"É dimensionar o trabalho de forma relativa, comparando itens entre si em vez de prever horas. O time usa story points, tamanhos de camiseta ou planning poker para chegar a um número combinado, e a velocidade recente ajuda a prever quanto cabe em cada sprint.",
+				},
+				{
+					question: "Qual a diferença entre estimativa ágil e estimativa tradicional em horas?",
+					answer:
+						"A estimativa tradicional mede tempo de relógio, e o ágil compara itens entre si. Horas parecem precisas, mas mudam com quem executa e com as surpresas do trabalho. Pontos e tamanhos sobrevivem a essas mudanças e alimentam previsões em faixa, sem falsa precisão.",
+				},
+				{
+					question: "Quais as técnicas de estimativa mais usadas no ágil?",
+					answer:
+						"Story points com escala Fibonacci, t-shirt sizing e planning poker, que é o ritual de votação em grupo. As três se combinam bem: tamanhos triam o backlog grande, o poker faz as votações e os pontos alimentam a velocidade. O mapa acima liga cada técnica ao guia completo.",
+				},
+				{
+					question: "Por onde um time novo deve começar a estimar?",
+					answer:
+						"Comece estimando histórias já entregues, para calibrar a régua com itens conhecidos, e escolha uma história de referência. Depois rode o ciclo normal: refinar, votar em segredo, discutir divergências e registrar. O guia de como jogar percorre essa primeira sessão passo a passo.",
+				},
+				{
+					question: "Todo time ágil precisa estimar?",
+					answer:
+						"Não por exigência do Scrum Guide. O texto fala em itens com descrição, ordem e tamanho, e não prescreve técnica nem evento de estimativa. Na prática, times que precisam decidir quanto cabe na sprint estimam para decidir com mais segurança. A escolha é do time.",
+				},
+				{
+					question: "Para que serve a velocidade do time?",
+					answer:
+						"Para prever quanto o time consegue puxar nas próximas sprints, a partir do próprio histórico de pontos concluídos. É leitura em faixa, para o time, e não meta de produtividade. Velocidade também não se compara entre times, porque cada escala é local.",
+				},
+			],
+		},
+		closing: {
+			title: "Faça a primeira estimativa com seu time",
+			body: "Crie uma sala grátis, escolha uma história de referência e rode uma rodada agora.",
+			cta: "Criar sala",
+			relatedLabel: "Continue",
+			related: [
+				{ to: "/guias/story-points", label: "Story points na prática" },
+				{
+					to: "/guias/votos-divergentes-planning-poker",
+					label: "Votos divergentes, o que fazer",
+				},
+				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
+			],
+		},
+	},
+	"votos-divergentes-planning-poker": {
+		lang: "pt-BR",
+		path: "/guias/votos-divergentes-planning-poker",
+		h1: "Votos divergentes no planning poker: como conduzir a discussão e reestimar",
+		lede: "Quando os votos divergem, peça primeiro a quem votou mais alto e mais baixo que expliquem o raciocínio, sem discutir o número. Registre as suposições reveladas, atualize a história e vote de novo uma vez. Se o espalhamento persistir, divida a história ou crie uma investigação.",
+		meta: `6 min de leitura · ${META_OUT_2026}`,
+		tocLabel: "Neste guia",
+		back: { to: "/guias", label: "Guias de planning poker" },
+		sections: [
+			{
+				id: "divergencia-e-informacao",
+				title: "Divergência é informação, não falha",
+				blocks: [
+					{
+						type: "p",
+						text: "Quando o reveal mostra cartas distantes, o time não falhou: descobriu que cada pessoa estava estimando uma história diferente. Num exemplo fictício, quem votou 13 enxergou um caso que quem votou 3 não considerou, e é essa diferença que a conversa precisa revelar.",
+					},
+					{
+						type: "p",
+						text: "O tamanho do espalhamento orienta o que fazer. O [guia de como jogar](/guias/como-jogar-planning-poker) resume as faixas, de um ajuste de entendimento até dividir a história antes de estimar de novo. Aqui o foco é a conversa em si: quem fala, em que ordem e quando parar.",
+					},
+					{
+						type: "p",
+						text: "Vale lembrar o que o reveal já resolveu. Como cada pessoa votou sem ver a carta das outras, os números registram leituras independentes. Divergência, nesse desenho, é sinal de que o time tem o que aprender junto, não de que alguém votou errado.",
+					},
+				],
+			},
+			{
+				id: "ler-a-distribuicao",
+				title: "Antes de falar: ler a distribuição do reveal",
+				blocks: [
+					{
+						type: "p",
+						text: "Depois do reveal, a mesa mostra mediana, média, intervalo e a distribuição por carta, e marca a rodada como unânime ou divergente. Antes de pedir a palavra, vale olhar o conjunto.",
+					},
+					{
+						type: "list",
+						items: [
+							{
+								title: "Mediana.",
+								body: "O valor central dos votos numéricos. Costuma ser a referência natural para fechar, porque não é arrastada por um voto extremo.",
+							},
+							{
+								title: "Média.",
+								body: "A leitura do conjunto, sensível a um voto muito alto ou muito baixo. Ajuda a entender o quadro, mas não decide sozinha.",
+							},
+							{
+								title: "Intervalo.",
+								body: "Do menor ao maior voto. Espalhamento largo pede conversa; espalhamento curto pede um ajuste rápido.",
+							},
+							{
+								title: "Distribuição.",
+								body: "Quantos votos por carta. Mostra se o time se dividiu entre vizinhos (3 e 5) ou entre extremos (2 e 13).",
+							},
+						],
+					},
+					{
+						type: "p",
+						text: "A carta de pausa fica fora de todas essas contas: ela conta presença, mas não é número. Quem deu pausa não estimou, e isso é informação para a conversa.",
+					},
+				],
+			},
+			{
+				id: "roteiro-em-5-passos",
+				title: "Roteiro de discussão em 5 passos",
+				blocks: [
+					{
+						type: "p",
+						text: "O material da Mountain Goat Software, referência usada por muitos times, recomenda pedir que quem votou alto e quem votou baixo explique primeiro e limitar o tempo da discussão. O roteiro abaixo segue essa prática e acrescenta o registro e o critério de parada.",
+					},
+					{
+						type: "steps",
+						items: [
+							{
+								title: "Pare e olhe o espalhamento.",
+								body: "Antes de qualquer justificativa, todos veem a distribuição. O objetivo da rodada é entender, não convencer.",
+							},
+							{
+								title: "Os extremos explicam primeiro.",
+								body: "Quem votou menos e quem votou mais falam antes dos votos do meio. São os extremos que costumam carregar as suposições diferentes.",
+							},
+							{
+								title: "Capture suposições e dúvidas.",
+								body: "Anote as hipóteses que apareceram: caso esquecido, integração, risco. O que ficar em aberto vira item de backlog, não assunto de reunião eterna.",
+							},
+							{
+								title: "Atualize a história e vote de novo, uma vez.",
+								body: "Com o entendimento novo, o time vota mais uma rodada. O guia de como jogar trata a segunda rodada como normal, não como fracasso.",
+							},
+							{
+								title: "Feche, divida ou investigue.",
+								body: "Se os votos convergiram, registre o número combinado. Se o espalhamento persistir, divida a história ou abra uma investigação com tempo definido.",
+							},
+						],
+					},
+				],
+			},
+			{
+				id: "tipos-de-divergencia",
+				title: "Tipos de divergência e causas típicas",
+				blocks: [
+					{
+						type: "p",
+						text: "A conversa rende mais quando o time identifica o tipo de divergência. Cada causa pede um encaminhamento diferente.",
+					},
+					{
+						type: "list",
+						items: [
+							{
+								title: "Desconhecimento desigual.",
+								body: "Uma pessoa conhece um caso que as outras não viram. A conversa espalha o conhecimento e a rodada seguinte converge.",
+							},
+							{
+								title: "Escopo lido de formas diferentes.",
+								body: "Cada um leu um critério de aceite por um ângulo. Atualize a história com o entendimento comum antes de votar de novo.",
+							},
+							{
+								title: "Risco oculto.",
+								body: "Alguém enxerga uma dependência, uma migração ou um ambiente que os outros não consideraram. O risco vira item próprio ou a história ganha uma investigação.",
+							},
+							{
+								title: "Critérios de aceite ambíguos.",
+								body: "Sem acordo sobre o que pronto significa, cada voto estima uma história diferente. O lugar disso é o refinamento.",
+							},
+						],
+					},
+				],
+			},
+			{
+				id: "frases-uteis",
+				title: "Frases e perguntas úteis para o facilitador",
+				blocks: [
+					{
+						type: "p",
+						text: "Perguntas neutras reduzem a pressão para convergir e ajudam quem votou diferente a falar sem se defender. Algumas que funcionam:",
+					},
+					{
+						type: "list",
+						items: [
+							{
+								title: "O que você está vendo que eu não estou?",
+								body: "Convida o voto extremo a apresentar o caso desconhecido, sem tom de correção.",
+							},
+							{
+								title: "Que parte da história pesou mais no seu voto?",
+								body: "Faz a pessoa revelar a suposição central em vez de defender o número.",
+							},
+							{
+								title: "Existe algum caso, integração ou risco que a gente ainda não citou?",
+								body: "Abre espaço para o que ficou só na cabeça de alguém.",
+							},
+							{
+								title: "Se a gente dividisse a história, quais partes apareceriam?",
+								body: "Testa se o item tem pedaços independentes e prepara uma divisão.",
+							},
+							{
+								title: "O que precisaria estar claro para os votos ficarem mais próximos?",
+								body: "Transforma a divergência em lista de pendências para o refinamento.",
+							},
+						],
+					},
+				],
+			},
+			{
+				id: "armadilhas",
+				title: "Armadilhas no caminho do consenso",
+				blocks: [
+					{
+						type: "list",
+						items: [
+							{
+								title: "Pressão para convergir.",
+								body: "Prazo apertado empurra o time para o número do meio sem conversa. Divergência engolida hoje volta como surpresa na sprint.",
+							},
+							{
+								title: "Hierarquia.",
+								body: "Quando a pessoa mais sênior fala primeiro, o time ancora nela. O voto secreto resolve a primeira metade; na discussão, peça os extremos antes dos votos do meio.",
+							},
+							{
+								title: "A média resolve.",
+								body: "Média e mediana ajudam a ler o conjunto, mas fechar pela planilha esconde o desacordo em vez de resolvê-lo. O número final é o que o time sustenta.",
+							},
+							{
+								title: "Debate infinito.",
+								body: "Conversa sem limite de tempo vira aula. Combine um teto por item e leve o que sobrar para o refinamento.",
+							},
+						],
+					},
+				],
+			},
+			{
+				id: "quando-parar-de-votar",
+				title: "Quando parar de votar: dividir ou investigar",
+				blocks: [
+					{
+						type: "p",
+						text: "Duas rodadas com o espalhamento no mesmo lugar são o sinal de parada. Se as cartas mostram partes independentes dentro da história, divida e estime cada uma. Se o problema é desconhecimento, abra uma investigação com tempo definido, como descreve o [guia de planning poker para devs](/guias/planning-poker-para-devs).",
+					},
+					{
+						type: "p",
+						text: "Um item no teto da escala, 13 no deck do Pointly, já é pedido de divisão mesmo em rodada unânime. O [guia de Fibonacci](/guias/fibonacci-estimativa-agil) explica por que o teto existe e como quebrar o item.",
+					},
+					{
+						type: "p",
+						text: "Para ver tudo isso acontecendo na prática, [crie uma sala](/join) e vote uma história com o time. O roteiro funciona melhor depois de uma rodada real.",
+					},
+				],
+			},
+			{
+				id: "perguntas-frequentes",
+				title: "Perguntas frequentes",
+				blocks: [],
+			},
+		],
+		faq: {
+			title: "Perguntas frequentes",
+			items: [
+				{
+					question: "O que fazer quando os votos do planning poker são muito diferentes?",
+					answer:
+						"Peça primeiro a quem votou mais alto e mais baixo que explique o raciocínio, sem discutir o número. Registre as suposições reveladas, atualize a história e vote de novo uma vez. Se o espalhamento persistir, divida a história ou crie uma investigação.",
+				},
+				{
+					question: "Quem deve explicar primeiro depois do reveal?",
+					answer:
+						"Os extremos: quem votou menos e quem votou mais. São esses votos que costumam carregar suposições diferentes, e ouvi-los antes dos votos do meio evita que a discussão vire defesa do número mais popular. O resto do time escuta antes de responder.",
+				},
+				{
+					question: "Quantas rodadas de votação são normais?",
+					answer:
+						"Uma segunda rodada é comum. O blog do Scrum Poker Online, consultado em 18/10/2026, diz que um par de rondas costuma bastar. Se a terceira rodada mantiver o espalhamento, o problema é de entendimento ou de escopo: divida a história ou leve para o refinamento.",
+				},
+				{
+					question: "Posso usar a média ou a mediana para fechar?",
+					answer:
+						"A mediana é a referência mais natural para fechar, porque não é arrastada por um voto extremo. A média ajuda a ler o conjunto, mas nenhuma das duas decide sozinha: o número final é o que o time sustenta depois da conversa. A estatística não substitui o entendimento.",
+				},
+				{
+					question: "Como evitar que a opinião do sênior ancore o time?",
+					answer:
+						"O voto secreto resolve a maior parte: ninguém vê o número do sênior antes de registrar o próprio. Depois do reveal, peça os extremos primeiro e conduza as perguntas de forma neutra, para que a experiência informe a conversa sem encerrá-la. Ancoragem se combina com processo.",
+				},
+				{
+					question: "Quando devo dividir a história em vez de votar de novo?",
+					answer:
+						"Quando o espalhamento persistir depois da segunda rodada, quando os votos mostrarem partes independentes dentro da história ou quando o item estiver no teto da escala. Dividir transforma uma estimativa travada em duas ou três conversas simples e mais honestas.",
+				},
+			],
+		},
+		closing: {
+			title: "Pratique numa sala",
+			body: "Crie uma sala grátis e conduza a próxima divergência com o roteiro na mão.",
+			cta: "Criar sala",
+			relatedLabel: "Continue",
+			related: [
+				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
+				{ to: "/guias/planning-poker-remoto", label: "Planning poker remoto" },
+				{ to: "/guias/planning-poker-para-devs", label: "Planning poker para devs" },
+			],
+		},
+	},
+	"planning-poker-para-devs": {
+		lang: "pt-BR",
+		path: "/guias/planning-poker-para-devs",
+		h1: "Planning poker para devs: como estimar bugs, spikes e tarefas técnicas",
+		lede: "Não existe regra única. Bugs podem ser estimados quando consomem capacidade da sprint e o time precisa planejar com eles. Spikes costumam ser limitadas por tempo, com objetivo e ponto de revisão, em vez de prever resultado. Tarefas técnicas se estimam por comparação com trabalho já entregue.",
+		meta: `7 min de leitura · ${META_OUT_2026}`,
+		tocLabel: "Neste guia",
+		back: { to: "/guias", label: "Guias de planning poker" },
+		sections: [
+			{
+				id: "o-que-muda",
+				title: "O que muda quando o item não é uma história de usuário",
+				blocks: [
+					{
+						type: "p",
+						text: "História de usuário tem valor de negócio e critério de aceite. Bug, spike e tarefa técnica não têm esse formato, mas consomem capacidade do mesmo jeito. A pergunta que decide se o item entra na votação é prática: ele vai disputar espaço na sprint e precisa ser comparado com o resto?",
+					},
+					{
+						type: "p",
+						text: "Três casos resumem o problema: bug que consome dias, spike que ninguém sabe dimensionar e refatoração que precisa caber no planejamento. Para os três, a resposta costuma ser uma política combinada pelo time, e o papel deste guia é mostrar as opções, sem receita fixa.",
+					},
+				],
+			},
+			{
+				id: "bugs",
+				title: "Bugs: estimar, dar tamanho padrão ou só priorizar?",
+				blocks: [
+					{
+						type: "p",
+						text: "Existem três políticas comuns, e todas funcionam quando o time mantém consistência. O que não funciona é decidir caso a caso, toda sprint, sem combinado.",
+					},
+					{
+						type: "list",
+						items: [
+							{
+								title: "Estimar como qualquer item.",
+								body: "O bug entra na mesa, recebe um número por comparação e disputa a sprint com o resto. Funciona bem quando o bug é grande ou incerto e a decisão do que cabe precisa ser explícita.",
+							},
+							{
+								title: "Tamanho padrão.",
+								body: "Alguns times combinam que todo bug recebe o mesmo valor, para não gastar sessão discutindo detalhe. O risco é o valor fixo esconder bugs grandes, que deveriam ter tratamento próprio.",
+							},
+							{
+								title: "Só priorizar.",
+								body: "Bug urgente entra por prioridade, fora da estimativa, com o custo tratado como parte do trabalho do time. Se isso vira regra para tudo, nenhum bug tem tamanho visível e a previsão perde precisão.",
+							},
+						],
+					},
+					{
+						type: "p",
+						text: "Bug achado dentro da sprint é diferente de bug no backlog do produto. O primeiro geralmente faz parte do item em andamento: corrigir é concluir o que já foi combinado, e o time só estima de novo se o escopo mudou. O segundo não tem dono nem sprint, e é aí que a política entra: ele vira item estimado, item de tamanho fixo ou trabalho priorizado.",
+					},
+					{
+						type: "p",
+						text: "Como escolher? Experimente uma política por algumas sprints e compare a estimativa com o que os bugs consumiram de verdade. Quando os votos de um bug abrirem discussão de escopo, o [guia de votos divergentes](/guias/votos-divergentes-planning-poker) tem o roteiro da conversa.",
+					},
+				],
+			},
+			{
+				id: "spikes",
+				title: "Spikes: investigação com timebox",
+				blocks: [
+					{
+						type: "p",
+						text: "Spike é uma investigação: o time não sabe o suficiente para estimar e precisa descobrir. O combinado que costuma funcionar tem três peças: um objetivo escrito, um limite de tempo e um ponto de revisão onde o resultado volta para o time.",
+					},
+					{
+						type: "list",
+						items: [
+							{
+								title: "Objetivo.",
+								body: "Uma pergunta específica, do tipo \"dá para usar o provedor novo de pagamento?\".",
+							},
+							{
+								title: "Limite de tempo.",
+								body: "O timebox é a peça central. Duas horas, um dia ou o que o time decidir; sem ele, investigação vira projeto paralelo.",
+							},
+							{
+								title: "Ponto de revisão.",
+								body: "O que será apresentado no fim, mesmo que a resposta seja \"não dá\".",
+							},
+						],
+					},
+					{
+						type: "p",
+						text: "Quando a spike estoura, o time decide no ponto de revisão: encerrar com o que aprendeu, dividir a pergunta em outra spike menor ou aceitar mais incerteza e estimar o item com o que já sabe. O que não funciona é estender o prazo em silêncio.",
+					},
+					{
+						type: "p",
+						text: "Sobre estimar a spike em si: como o resultado é desconhecido, faz mais sentido limitar por tempo do que atribuir pontos ao que ela vai encontrar. Se o time quiser registrar algo, registre o investimento, como meia sprint de investigação, e mantenha a convenção estável.",
+					},
+				],
+			},
+			{
+				id: "refatoracao",
+				title: "Refatoração, dívida técnica e tarefas técnicas",
+				blocks: [
+					{
+						type: "p",
+						text: "Tarefa técnica sem referência não tem âncora. A saída é escolher um item entregue parecido e comparar: uma migração de biblioteca parecida com a última, um ajuste de consultas parecido com o trabalho do mês passado. Se a comparação não existe, divida a tarefa até cada parte ter referência possível.",
+					},
+					{
+						type: "p",
+						text: "Dívida técnica costuma ser maior do que parece para quem não está no código. Antes de votar, o time precisa explicar o problema e o resultado esperado, como faria com qualquer história. Sem isso, o voto mede o entendimento de cada um, não o trabalho.",
+					},
+					{
+						type: "p",
+						text: "Quando a refatoração é grande demais para uma sessão, corte por área, e cada parte vira um item com referência própria. É o mesmo movimento do item que chega ao teto da escala, descrito no [guia de Fibonacci](/guias/fibonacci-estimativa-agil).",
+					},
+				],
+			},
+			{
+				id: "como-votar-com-o-deck-do-pointly",
+				title: "Como votar com o baralho do Pointly",
+				blocks: [
+					{
+						type: "p",
+						text: "O deck do Pointly é o mesmo para qualquer tipo de item: 0, ½, 1, 2, 3, 5, 8, 13 e a carta de pausa. A leitura também é a de sempre: itens pequenos e conhecidos nas cartas baixas, itens grandes e incertos nas altas.",
+					},
+					{
+						type: "p",
+						text: "Em item técnico, a pausa (☕) ganha um uso específico: sinalizar que falta informação para votar, como um detalhe de infraestrutura que ninguém pesquisou. Ela conta presença, mas fica fora da média, da mediana e do intervalo, então não distorce as contas do reveal.",
+					},
+					{
+						type: "p",
+						text: "Se o item chega a 13, o sinal é dividir antes de começar. O deck termina em 13 de propósito: acima disso a estimativa vira chute e a conversa rende mais separando o trabalho.",
+					},
+					{
+						type: "p",
+						text: "O comportamento completo do reveal e o roteiro de divergência estão no [guia de como jogar](/guias/como-jogar-planning-poker).",
+					},
+				],
+			},
+			{
+				id: "checklist-item-pronto",
+				title: "Checklist: este item está pronto para votar?",
+				blocks: [
+					{
+						type: "list",
+						items: [
+							{
+								title: "O problema está descrito.",
+								body: "Sintoma, contexto e o que conta como resolvido, mesmo que em uma frase.",
+							},
+							{
+								title: "O time sabe o que não sabe.",
+								body: "Dúvida de infraestrutura, dependência externa ou dado desconhecido anotados antes do voto.",
+							},
+							{
+								title: "Há uma referência.",
+								body: "Um item entregue parecido, ainda que a comparação seja grosseira.",
+							},
+							{
+								title: "O item cabe na sprint?",
+								body: "Se não cabe, divida antes de votar, em vez de espremer no tempo.",
+							},
+							{
+								title: "A política está combinada.",
+								body: "Bug entra por estimativa, tamanho fixo ou prioridade? Spike conta na velocidade? O time já respondeu isso.",
+							},
+							{
+								title: "O resultado tem destino.",
+								body: "O número combinado vai para o backlog na hora, porque a sala do Pointly é efêmera e não guarda histórico.",
+							},
+						],
+					},
+				],
+			},
+			{
+				id: "erros-comuns",
+				title: "Erros comuns de times de engenharia",
+				blocks: [
+					{
+						type: "list",
+						items: [
+							{
+								title: "Estimar dívida técnica sem explicar.",
+								body: "Vira votação no escuro: quem escreveu o código leva vantagem e o número fica pessoal.",
+							},
+							{
+								title: "Spike sem timebox.",
+								body: "Investigação aberta vira projeto e passa a competir com o compromisso da sprint.",
+							},
+							{
+								title: "Usar tamanho fixo para tudo.",
+								body: "Bug gigante com meio ponto esconde esforço e quebra a previsão das próximas sprints.",
+							},
+							{
+								title: "Deixar bug urgente fora de qualquer registro.",
+								body: "Quando a conta da sprint fecha, ninguém sabe quanto do tempo foi para bug.",
+							},
+							{
+								title: "Tratar refatoração como invisível.",
+								body: "Se o trabalho não aparece no plano, ele não é planejado, e a sprint estoura.",
+							},
+							{
+								title: "Reestimar por pressão.",
+								body: "Mudar o número para o item caber inverte a lógica: o backlog é que se ajusta.",
+							},
+						],
+					},
+				],
+			},
+			{
+				id: "perguntas-frequentes",
+				title: "Perguntas frequentes",
+				blocks: [],
+			},
+		],
+		faq: {
+			title: "Perguntas frequentes",
+			items: [
+				{
+					question: "Devo estimar bugs com story points?",
+					answer:
+						"Depende de quanto o bug disputa a sprint. Bug grande ou incerto merece estimativa normal, por comparação. Bug pequeno pode seguir uma política de tamanho fixo combinada pelo time, e bug urgente pode entrar por prioridade. O importante é a política ser explícita e consistente.",
+				},
+				{
+					question: "Como estimar uma spike?",
+					answer:
+						"Limite a spike por tempo em vez de estimar o resultado. Combine um objetivo específico, um timebox de horas ou dias e um ponto de revisão onde o aprendizado volta para o time. O que se registra é o investimento na investigação, não o que ela vai encontrar.",
+				},
+				{
+					question: "Spike conta na velocidade do time?",
+					answer:
+						"Depende da política do time, e as duas escolhas se defendem. Contar a spike como item normal mantém a conta simples; deixá-la fora exige registro separado para o planejamento não perder o custo de vista. O que não funciona é mudar a regra sem combinar.",
+				},
+				{
+					question: "Como estimar refatoração e dívida técnica?",
+					answer:
+						"Por comparação com trabalho já entregue. Escolha um item parecido, explique o problema e o resultado esperado, e vote com essa referência na mesa. Se não existe referência, divida a tarefa em partes menores até que cada uma tenha comparação possível.",
+				},
+				{
+					question: "O que fazer quando ninguém sabe estimar a tarefa técnica?",
+					answer:
+						"Use a carta de pausa e trate como sinal de investigação. Se ninguém no time consegue comparar o item com nada, falta contexto: marque uma spike com objetivo e prazo, e só volte a estimar depois que o resultado da investigação estiver na mesa.",
+				},
+				{
+					question: "Pontos de bug inflacionam a velocidade?",
+					answer:
+						"Se bugs entram na sprint com pontos, eles somam na velocidade como qualquer item. Isso não é errado, mas muda a leitura: mais pontos com mais bugs não significam mais entrega de produto. Acompanhe a proporção para a previsão continuar honesta.",
+				},
+			],
+		},
+		closing: {
+			title: "Estime o próximo refinamento",
+			body: "Crie uma sala grátis e leve a fila de bugs, spikes e tarefas técnicas para a mesa.",
+			cta: "Criar sala",
+			relatedLabel: "Continue",
+			related: [
+				{
+					to: "/guias/votos-divergentes-planning-poker",
+					label: "Votos divergentes, o que fazer",
+				},
+				{ to: "/guias/story-points", label: "Story points na prática" },
+				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
+			],
+		},
+	},
+	"agenda-sessao-planning-poker": {
+		lang: "pt-BR",
+		path: "/guias/agenda-sessao-planning-poker",
+		h1: "Modelo de agenda para sessão de planning poker (45 min) + checklist",
+		lede: "Uma sessão de planning poker de 45 minutos pode ter quatro blocos: alinhar a história de referência, percorrer a fila de itens, discutir os divergentes e fechar registrando os valores. Prepare backlog e critérios de aceite antes, defina quem facilita e limite a discussão de cada item.",
+		meta: `6 min de leitura · ${META_OUT_2026}`,
+		tocLabel: "Neste guia",
+		back: { to: "/guias", label: "Guias de planning poker" },
+		sections: [
+			{
+				id: "antes-de-comecar",
+				title: "Antes de começar: o que o time precisa ter pronto",
+				blocks: [
+					{
+						type: "p",
+						text: "A sessão rende quando a preparação acontece antes dela. O mínimo é backlog da vez priorizado, itens com contexto e critérios de aceite, quem constrói presente e um lugar para registrar os números.",
+					},
+					{
+						type: "p",
+						text: "Vale compartilhar os itens por escrito algumas horas antes. Quem chega com a história lida vota melhor, e a sessão não vira leitura coletiva. O [guia de como jogar](/guias/como-jogar-planning-poker) detalha o que preparar para a primeira rodada.",
+					},
+					{
+						type: "p",
+						text: "Se a sessão for na tela, deixe a sala pronta antes do horário: apelido escolhido, link no convite. Quem entra atrasado não precisa esperar rodada nova para acompanhar.",
+					},
+				],
+			},
+			{
+				id: "papeis",
+				title: "Papéis na sessão",
+				blocks: [
+					{
+						type: "p",
+						text: "Quatro papéis aparecem em quase toda sessão que funciona. Em times pequenos, a mesma pessoa acumula funções, desde que o combinado fique claro.",
+					},
+					{
+						type: "list",
+						items: [
+							{
+								title: "Facilitador.",
+								body: "Conduz a pauta, controla o tempo por item e garante que os extremos falem. Pode ser qualquer pessoa do time, de preferência em rodízio.",
+							},
+							{
+								title: "Product owner.",
+								body: "Apresenta contexto e prioridade e responde dúvidas de escopo. Participa da conversa; quem vota é quem constrói.",
+							},
+							{
+								title: "Quem constrói.",
+								body: "Devs, design e demais executores votam. O critério é o do guia de como jogar: se a pessoa coloca a mão no que será entregue, ela vota.",
+							},
+							{
+								title: "Quem registra.",
+								body: "Alguém anota os números combinados no backlog, porque a sala do Pointly é efêmera e não guarda histórico.",
+							},
+						],
+					},
+				],
+			},
+			{
+				id: "agenda-de-45-minutos",
+				title: "Agenda de 45 minutos em blocos",
+				blocks: [
+					{
+						type: "p",
+						text: "Os tempos abaixo são sugestão, ajustável ao tamanho do time e da fila. O que importa é a ordem: calibrar, percorrer, discutir e fechar.",
+					},
+					{
+						type: "table",
+						headers: ["Bloco", "Objetivo", "Tempo sugerido", "Quem conduz"],
+						rows: [
+							[
+								"Abertura",
+								"Combinar o tempo e relembrar a história de referência",
+								"5 min",
+								"Facilitador",
+							],
+							[
+								"Fila de itens",
+								"Apresentar, votar e discutir cada item no ritmo combinado",
+								"25 min",
+								"Facilitador e PO",
+							],
+							[
+								"Divergentes",
+								"Voltar aos itens que ficaram abertos e fechar ou dividir",
+								"10 min",
+								"Facilitador",
+							],
+							[
+								"Registro",
+								"Gravar os valores no backlog e alinhar o que volta para refinamento",
+								"5 min",
+								"Quem registra",
+							],
+						],
+					},
+					{
+						type: "p",
+						text: "A fila de itens ocupa a maior parte do tempo porque é ali que o número nasce. Se um item travar, o facilitador o deixa para o bloco de divergentes em vez de consumir o tempo dos outros.",
+					},
+					{
+						type: "p",
+						text: "Para o roteiro exato da conversa com quem votou diferente, use o [guia de votos divergentes](/guias/votos-divergentes-planning-poker).",
+					},
+				],
+			},
+			{
+				id: "adaptando-a-agenda",
+				title: "Como adaptar quando a sessão é maior ou menor",
+				blocks: [
+					{
+						type: "p",
+						text: "Os blocos são princípios, não minutagem sagrada. Para sessões de 30 minutos, corte a calibração inicial quando o time já tem referências na cabeça e limite a fila. Para sessões de 90 minutos ou mais, insira uma pausa e divida a fila em duas metas de itens.",
+					},
+					{
+						type: "p",
+						text: "O time também pode rodar os blocos na mesma sala, em sequência: a conversa de cada item não precisa de ferramenta própria. O que não muda é o combinado de tempo por item no início e o registro no fim.",
+					},
+					{
+						type: "p",
+						text: "Em videochamada, o cuidado extra é com a ancoragem no chat: voto digitado antes do reveal estraga a rodada. O [guia de planning poker remoto](/guias/planning-poker-remoto) cobre os ajustes de time distribuído.",
+					},
+				],
+			},
+			{
+				id: "checklist",
+				title: "Checklist copiável",
+				blocks: [
+					{
+						type: "p",
+						text: "Antes:",
+					},
+					{
+						type: "list",
+						items: [
+							{
+								title: "Backlog priorizado.",
+								body: "Cada item com contexto e critérios de aceite, compartilhado com antecedência.",
+							},
+							{
+								title: "História de referência escolhida.",
+								body: "Uma pequena e já entregue, para calibrar a régua de todo mundo.",
+							},
+							{
+								title: "Sala criada e link compartilhado.",
+								body: "Se a sessão for na tela, com o código de 4 caracteres no convite.",
+							},
+							{
+								title: "Duração combinada.",
+								body: "Tempo total e teto por item anunciados na abertura, para todos.",
+							},
+						],
+					},
+					{
+						type: "p",
+						text: "Durante:",
+					},
+					{
+						type: "list",
+						items: [
+							{
+								title: "Cada item lido antes do voto.",
+								body: "Sem exceção, mesmo quando todo mundo acha que conhece a história.",
+							},
+							{
+								title: "Voto secreto preservado.",
+								body: "Ninguém fala nem digita o número antes do reveal.",
+							},
+							{
+								title: "Extremos ouvidos primeiro.",
+								body: "Quem votou menos e quem votou mais explicam; a conversa tem tempo limitado.",
+							},
+							{
+								title: "Segunda rodada só quando precisa.",
+								body: "O espalhamento é quem pede nova votação, não o hábito.",
+							},
+						],
+					},
+					{
+						type: "p",
+						text: "Depois:",
+					},
+					{
+						type: "list",
+						items: [
+							{
+								title: "Valores registrados.",
+								body: "O número combinado vai para o backlog antes de a sessão acabar.",
+							},
+							{
+								title: "Itens abertos encaminhados.",
+								body: "O que não fechou volta ao refinamento com uma nota do que faltou.",
+							},
+							{
+								title: "Aprendizados compartilhados.",
+								body: "Quem faltou recebe o combinado e as dúvidas registradas.",
+							},
+						],
+					},
+				],
+			},
+			{
+				id: "sinais-fora-do-trilho",
+				title: "Sinais de que a sessão está saindo do trilho",
+				blocks: [
+					{
+						type: "list",
+						items: [
+							{
+								title: "A discussão virou desenho de solução.",
+								body: "Anote e siga; refinamento é outro momento, com outras pessoas no foco.",
+							},
+							{
+								title: "Um item passou de dez minutos.",
+								body: "Falta contexto. Ele volta para o refinamento em vez de segurar a fila.",
+							},
+							{
+								title: "As mesmas pessoas falam sempre.",
+								body: "Puxe os extremos e reveze quem apresenta cada história.",
+							},
+							{
+								title: "O relógio sumiu.",
+								body: "Sem tempo visível, a fila não fecha. O facilitador retoma o combinado.",
+							},
+							{
+								title: "As últimas histórias foram votadas no automático.",
+								body: "Melhor terminar antes do que aprovar número sem conversa.",
+							},
+						],
+					},
+				],
+			},
+			{
+				id: "perguntas-frequentes",
+				title: "Perguntas frequentes",
+				blocks: [],
+			},
+		],
+		faq: {
+			title: "Perguntas frequentes",
+			items: [
+				{
+					question: "Quanto tempo deve durar uma sessão de planning poker?",
+					answer:
+						"Depende do tamanho da fila, mas 45 minutos cobrem bem uma leva de histórias pequenas. Histórias simples levam de 2 a 5 minutos, incluindo a conversa; itens que passam de dez minutos precisam de mais contexto. Sessões curtas e regulares funcionam melhor que maratonas.",
+				},
+				{
+					question: "Quantas histórias dá para estimar em uma sessão?",
+					answer:
+						"Em 45 minutos, um time com prática estima de 8 a 12 histórias pequenas, ou menos itens grandes. O número importa menos que a qualidade: uma sessão que fecha oito itens com entendimento vale mais que uma que travou na terceira história.",
+				},
+				{
+					question: "Quem deve participar da sessão?",
+					answer:
+						"Quem constrói vota: devs, design e demais executores. Produto e quem facilita participam da conversa, sem voto. O critério completo está no guia de como jogar, mas a regra prática é simples: quem coloca a mão no trabalho estima o trabalho.",
+				},
+				{
+					question: "O que preparar antes do planning poker?",
+					answer:
+						"Backlog priorizado, itens com contexto e critérios de aceite, história de referência escolhida e um lugar para registrar os valores. Compartilhe os itens por escrito com algumas horas de antecedência e combine a duração da sessão na abertura, antes do primeiro voto.",
+				},
+				{
+					question: "O que fazer com as histórias que não foram estimadas?",
+					answer:
+						"Elas voltam para o refinamento com uma nota do que faltou: contexto, critério de aceite ou uma dúvida específica. A próxima sessão começa por elas, e assim a fila não acumula itens mal descritos que travam toda rodada de estimativa.",
+				},
+				{
+					question: "Como registrar os resultados se a sala some depois?",
+					answer:
+						"A sala do Pointly é efêmera: quando todos saem, ela deixa de existir, sem histórico nem exportação. Por isso o registro é responsabilidade do time: grave o valor combinado no item do backlog antes de a sessão acabar, com alguém designado para isso.",
+				},
+			],
+		},
+		closing: {
+			title: "Monte a sala e rode a pauta",
+			body: "Crie uma sala grátis, compartilhe o código e siga o modelo de 45 minutos com o time.",
+			cta: "Criar sala",
+			relatedLabel: "Continue",
+			related: [
+				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
+				{ to: "/guias/planning-poker-remoto", label: "Planning poker remoto" },
+				{
+					to: "/guias/votos-divergentes-planning-poker",
+					label: "Votos divergentes, o que fazer",
+				},
+			],
+		},
+	},
+	"scrum-poker-vs-planning-poker": {
+		lang: "pt-BR",
+		path: "/guias/scrum-poker-vs-planning-poker",
+		h1: "Scrum poker x planning poker: qual é a diferença?",
+		lede: "Scrum poker e planning poker são o mesmo ritual: cada pessoa vota em segredo uma carta de estimativa e todos revelam juntos. O nome \"scrum poker\" costuma aparecer quando o time faz isso no sprint planning de Scrum; \"pointing poker\" e \"pôquer de planejamento\" são variações do mesmo nome.",
+		meta: `4 min de leitura · ${META_OUT_2026}`,
+		tocLabel: "Neste guia",
+		back: { to: "/guias", label: "Guias de planning poker" },
+		sections: [
+			{
+				id: "mesma-tecnica",
+				title: "Resposta curta: é a mesma técnica",
+				blocks: [
+					{
+						type: "p",
+						text: "Scrum poker, planning poker, pointing poker e pôquer de planejamento descrevem a mesma atividade: o time estima trabalho votando com cartas, em segredo, e revela junto. Os nomes mudam por hábito e por região, não pelo método, como aponta o blog do Scrum Poker Online em uma página em português consultada em 18/10/2026.",
+					},
+					{
+						type: "table",
+						headers: ["Nome", "Onde costuma aparecer", "Observação"],
+						rows: [
+							[
+								"Planning poker",
+								"Material internacional e times em geral",
+								"Aparece grafado como Planning Poker® no site da Mountain Goat Software (consulta em 18/10/2026)",
+							],
+							[
+								"Scrum poker",
+								"Times que estimam dentro do sprint planning",
+								"Mesmo ritual, nome ligado à cerimônia do Scrum",
+							],
+							[
+								"Pointing poker",
+								"Textos que falam em \"pontuar histórias\"",
+								"Mesma atividade, com foco no ato de pontuar",
+							],
+							[
+								"Pôquer de planejamento",
+								"Tradução em português, menos comum",
+								"Mesmo significado, usado em conversas informais",
+							],
+						],
+					},
+					{
+						type: "p",
+						text: "O que sustenta a técnica é o voto secreto com reveal simultâneo, e isso não muda com o nome. O [guia de como jogar](/guias/como-jogar-planning-poker) percorre a sessão inteira, valendo para qualquer um dos termos.",
+					},
+				],
+			},
+			{
+				id: "de-onde-vem-cada-nome",
+				title: "De onde vem cada nome",
+				blocks: [
+					{
+						type: "p",
+						text: "Planning poker é o nome que circula no material internacional de agilidade. No site da Mountain Goat Software, referência citada por muitos times, o termo aparece com o símbolo de marca registrada (Planning Poker®). Se a grafia importar para o seu material, confira a fonte original antes de publicar.",
+					},
+					{
+						type: "p",
+						text: "Scrum poker aparece quando o time adota Scrum: a estimativa acontece no sprint planning e o nome pega o contexto emprestado. Pointing poker enfatiza o ato de pontuar e é comum em textos em inglês. Pôquer de planejamento é a versão literal em português, usada com menos frequência.",
+					},
+					{
+						type: "p",
+						text: "Em todos os casos, o que o nome descreve é a mesma dinâmica de cartas. Nenhuma das variações indica uma versão diferente do ritual, e nenhuma exige baralho ou ferramenta especial.",
+					},
+				],
+			},
+			{
+				id: "o-que-muda-na-pratica",
+				title: "O que pode mudar na prática",
+				blocks: [
+					{
+						type: "p",
+						text: "A dinâmica não muda: voto secreto, reveal simultâneo, conversa nos extremos e, se precisar, nova rodada. O que muda é a cerimônia em volta.",
+					},
+					{
+						type: "list",
+						items: [
+							{
+								title: "No sprint planning.",
+								body: "O time estima os itens que vão entrar na sprint, e os números alimentam a decisão de quanto puxar.",
+							},
+							{
+								title: "No refinamento.",
+								body: "O time estima itens futuros para o backlog ganhar dimensão, sem a pressão do compromisso imediato.",
+							},
+							{
+								title: "Fora do Scrum.",
+								body: "Times que usam Kanban ou outro fluxo também estimam em grupo para comparar itens e planejar capacidade.",
+							},
+						],
+					},
+					{
+						type: "p",
+						text: "Chamar a sessão de scrum poker ou de planning poker não muda o deck, o voto nem as estatísticas do reveal. O que muda é o horário em que ela acontece na semana.",
+					},
+				],
+			},
+			{
+				id: "qual-nome-usar",
+				title: "Qual nome usar no seu time",
+				blocks: [
+					{
+						type: "p",
+						text: "Escolha um nome e mantenha em atas, backlog e material de onboarding. Times que alternam entre três termos gastam tempo explicando que é tudo a mesma coisa.",
+					},
+					{
+						type: "p",
+						text: "Se o time vive Scrum, scrum poker comunica bem o contexto. Se a estimativa acontece no refinamento ou o time não segue framework, planning poker é o nome mais neutro. Para material escrito em português para gente de fora, pôquer de planejamento aparece às vezes, mas planning poker é mais reconhecido.",
+					},
+					{
+						type: "p",
+						text: "O material do time é um só: o guia de [o que é planning poker](/guias/o-que-e-planning-poker) aprofunda a origem da técnica, e este aqui resolve a terminologia.",
+					},
+				],
+			},
+			{
+				id: "mitos",
+				title: "Mitos comuns",
+				blocks: [
+					{
+						type: "list",
+						items: [
+							{
+								title: "É só para Scrum?",
+								body: "Não. O ritual funciona em qualquer fluxo que precise comparar itens em grupo; o Scrum é só o contexto mais comum.",
+							},
+							{
+								title: "Precisa de baralho especial?",
+								body: "Não. Cartas de papel ou uma sala no navegador servem; o deck Fibonacci é convenção, não requisito.",
+							},
+							{
+								title: "Scrum poker é uma versão diferente?",
+								body: "Não. É o mesmo ritual com outro nome, como explica a primeira seção.",
+							},
+							{
+								title: "Sem aposta, por que poker?",
+								body: "O nome vem da mecânica de cartas: voto escondido e revelação simultânea. Não há aposta nem adversário; a rodada existe para o time estimar junto.",
+							},
+						],
+					},
+					{
+						type: "p",
+						text: "Ficou a dúvida sobre a escala? O [guia de t-shirt sizing](/guias/t-shirt-sizing) mostra quando trocar os números por tamanhos, e o [mapa de estimativa ágil](/guias/estimativa-agil) liga todas as técnicas.",
+					},
+				],
+			},
+			{
+				id: "perguntas-frequentes",
+				title: "Perguntas frequentes",
+				blocks: [],
+			},
+		],
+		faq: {
+			title: "Perguntas frequentes",
+			items: [
+				{
+					question: "Scrum poker e planning poker são a mesma coisa?",
+					answer:
+						"Sim. Os dois nomes descrevem o mesmo ritual: cada pessoa vota em segredo uma carta de estimativa e todos revelam juntos. A diferença é de contexto e hábito, não de técnica. Times que estimam dentro do sprint planning tendem a usar scrum poker; os demais, planning poker.",
+				},
+				{
+					question: "O que é pointing poker?",
+					answer:
+						"É mais um nome para a mesma atividade. O termo enfatiza o ato de pontuar histórias e aparece bastante em textos em inglês. Se você ouvir alguém dizer \"vamos fazer um pointing\", é o mesmo ritual, com as mesmas cartas e o mesmo reveal simultâneo.",
+				},
+				{
+					question: "Planning poker só funciona em Scrum?",
+					answer:
+						"Não. O ritual funciona em qualquer fluxo que precise estimar itens em grupo, incluindo Kanban e times sem framework definido. O Scrum é apenas onde o nome \"scrum poker\" pegou. O que sustenta a técnica é o voto secreto com reveal simultâneo, não a cerimônia.",
+				},
+				{
+					question: "Por que se chama \"poker\" se não há aposta?",
+					answer:
+						"O nome vem da mecânica: cartas escondidas e revelação simultânea, como numa mesa de pôquer. Na estimativa não há aposta nem adversário. O objetivo é estimar esforço em grupo, e o reveal existe para provocar a conversa sobre as diferenças.",
+				},
+				{
+					question: "Qual termo devo usar com meu time?",
+					answer:
+						"Escolha um e seja consistente em atas, guias e ferramentas. Planning poker é o nome mais reconhecido no material internacional; scrum poker comunica bem em times de Scrum; pôquer de planejamento é a variação em português. O importante é o time saber que são sinônimos.",
+				},
+				{
+					question: "Planning poker e t-shirt sizing são a mesma técnica?",
+					answer:
+						"Não. As duas são estimativas relativas, mas a escala muda: planning poker costuma votar números Fibonacci, e t-shirt sizing vota tamanhos de roupa. O ritual de votação pode ser o mesmo; o guia de t-shirt sizing mostra quando a escala de letras encaixa melhor.",
+				},
+			],
+		},
+		closing: {
+			title: "Teste o ritual numa sala",
+			body: "Crie uma sala grátis e jogue uma rodada. O nome é o de menos.",
+			cta: "Criar sala",
+			relatedLabel: "Continue",
+			related: [
+				{ to: "/planning-poker", label: "Planning poker" },
+				{ to: "/scrum-poker", label: "Scrum poker" },
+				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
 			],
 		},
 	},

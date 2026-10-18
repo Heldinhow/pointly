@@ -296,3 +296,37 @@ export function TShirtSizingPtPage(): React.ReactElement {
 export function PlanningPokerComparativoPtPage(): React.ReactElement {
   return <GuidePage content={GUIDE_CONTENT["pt-BR"]["comparativo-ferramentas"]} />;
 }
+
+export function EstimativaAgilPtPage(): React.ReactElement {
+  return <GuidePage content={GUIDE_CONTENT["pt-BR"]["estimativa-agil"]} />;
+}
+
+export function VotosDivergentesPtPage(): React.ReactElement {
+  return (
+    <GuidePage
+      content={GUIDE_CONTENT["pt-BR"]["votos-divergentes-planning-poker"]}
+    />
+  );
+}
+
+export function PlanningPokerParaDevsPtPage(): React.ReactElement {
+  return (
+    <GuidePage content={GUIDE_CONTENT["pt-BR"]["planning-poker-para-devs"]} />
+  );
+}
+
+export function AgendaSessaoPtPage(): React.ReactElement {
+  return (
+    <GuidePage
+      content={GUIDE_CONTENT["pt-BR"]["agenda-sessao-planning-poker"]}
+    />
+  );
+}
+
+export function ScrumPokerVsPlanningPokerPtPage(): React.ReactElement {
+  return (
+    <GuidePage
+      content={GUIDE_CONTENT["pt-BR"]["scrum-poker-vs-planning-poker"]}
+    />
+  );
+}

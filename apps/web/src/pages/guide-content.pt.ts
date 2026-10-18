@@ -66,6 +66,41 @@ export const GUIDE_HUB_PT: GuideHubCopy = {
 			description:
 				"Pointly, Point Poker, SprintsPoker, Scrum Poker Online e Utilaria lado a lado: cadastro, limite de participantes, baralhos, anúncios e extras.",
 		},
+		{
+			to: "/guias/estimativa-agil",
+			readingTime: "9 min de leitura",
+			title: "Estimativa ágil: o mapa completo",
+			description:
+				"Relativa x absoluta, story points, Fibonacci, t-shirt sizing, planning poker e velocidade, com link para cada guia.",
+		},
+		{
+			to: "/guias/votos-divergentes-planning-poker",
+			readingTime: "6 min de leitura",
+			title: "Votos divergentes no planning poker: como conduzir a discussão",
+			description:
+				"Roteiro de 5 passos para depois do reveal: quem fala primeiro, como perguntar e quando dividir a história.",
+		},
+		{
+			to: "/guias/planning-poker-para-devs",
+			readingTime: "7 min de leitura",
+			title: "Planning poker para devs: bugs, spikes e tarefas técnicas",
+			description:
+				"Como estimar bug, investigação com timebox e dívida técnica, com opções em vez de regra.",
+		},
+		{
+			to: "/guias/agenda-sessao-planning-poker",
+			readingTime: "6 min de leitura",
+			title: "Agenda de sessão de planning poker: modelo de 45 minutos",
+			description:
+				"Papéis, blocos com tempo sugerido e checklist de antes, durante e depois da estimativa.",
+		},
+		{
+			to: "/guias/scrum-poker-vs-planning-poker",
+			readingTime: "4 min de leitura",
+			title: "Scrum poker x planning poker: qual é a diferença?",
+			description:
+				"Os nomes da mesma técnica (pointing poker, pôquer de planejamento) e qual usar no seu time.",
+		},
 	],
 	closing: {
 		title: "Pronto para estimar junto?",
@@ -227,6 +262,10 @@ export const GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 					{
 						type: "p",
 						text: "Uma segunda rodada não é fracasso. Quando o spread diminui, é sinal de que a conversa funcionou — mesmo que o time ainda não tenha fechado.",
+					},
+					{
+						type: "p",
+						text: "Para o roteiro de facilitação depois do reveal, com frases úteis, causas típicas e critério de parada, veja [votos divergentes no planning poker](/guias/votos-divergentes-planning-poker).",
 					},
 				],
 			},
@@ -439,6 +478,10 @@ export const GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 					{
 						type: "p",
 						text: "Times que usam Scrum costumam chamar a sessão de scrum poker mesmo quando o deck é o mesmo do planning poker — a diferença está na cerimônia, não nas cartas.",
+					},
+					{
+						type: "p",
+						text: "O contexto de cada termo e como escolher o nome do time têm um guia próprio: [scrum poker x planning poker](/guias/scrum-poker-vs-planning-poker).",
 					},
 				],
 			},

@@ -28,6 +28,11 @@ Pointly é planning poker online grátis para times ágeis: sem cadastro, salas 
 - Fibonacci na estimativa ágil: https://pointly.space/guias/fibonacci-estimativa-agil
 - T-shirt sizing: https://pointly.space/guias/t-shirt-sizing
 - Comparativo de ferramentas grátis: https://pointly.space/planning-poker-online-gratis-comparativo
+- Estimativa ágil: https://pointly.space/guias/estimativa-agil
+- Votos divergentes no planning poker: https://pointly.space/guias/votos-divergentes-planning-poker
+- Planning poker para devs: https://pointly.space/guias/planning-poker-para-devs
+- Agenda de sessão de planning poker: https://pointly.space/guias/agenda-sessao-planning-poker
+- Scrum poker x planning poker: https://pointly.space/guias/scrum-poker-vs-planning-poker
 - Entrar / criar sala: https://pointly.space/join
 
 ## English

@@ -33,6 +33,11 @@ export const PATHS = {
 	fibonacciEstimativaPt: "/guias/fibonacci-estimativa-agil",
 	tShirtSizingPt: "/guias/t-shirt-sizing",
 	comparativoPt: "/planning-poker-online-gratis-comparativo",
+	estimativaAgilPt: "/guias/estimativa-agil",
+	votosDivergentesPt: "/guias/votos-divergentes-planning-poker",
+	planningPokerParaDevsPt: "/guias/planning-poker-para-devs",
+	agendaSessaoPt: "/guias/agenda-sessao-planning-poker",
+	scrumPokerVsPlanningPokerPt: "/guias/scrum-poker-vs-planning-poker",
 } as const;
 
 /**
@@ -97,6 +102,11 @@ export const PUBLIC_PATHS: readonly SeoPathEntry[] = [
 	ptOnly(PATHS.fibonacciEstimativaPt),
 	ptOnly(PATHS.tShirtSizingPt),
 	ptOnly(PATHS.comparativoPt),
+	ptOnly(PATHS.estimativaAgilPt),
+	ptOnly(PATHS.votosDivergentesPt),
+	ptOnly(PATHS.planningPokerParaDevsPt),
+	ptOnly(PATHS.agendaSessaoPt),
+	ptOnly(PATHS.scrumPokerVsPlanningPokerPt),
 	entry(PATHS.planningPokerPt, PATHS.planningPokerEn, "en"),
 	entry(PATHS.scrumPokerPt, PATHS.scrumPokerEn, "en"),
 	entry(PATHS.guidesPt, PATHS.guidesEn, "en"),
