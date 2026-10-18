@@ -26,6 +26,7 @@ import {
 } from "@/lib/analytics";
 import { checkSala, resolveWsUrl } from "@/lib/api";
 import { clearAvatar, loadAvatar, saveAvatar } from "@/lib/avatar";
+import { META_DESCRIPTION_SELECTOR, syncMetaDescription } from "@/seo/meta";
 import {
   JoinError,
   friendlyJoinMessage,
@@ -81,6 +82,20 @@ export function JoinPage({
     setCodeError(null);
     setFormError(null);
   }, [searchParams]);
+
+  useEffect(() => {
+    const previousTitle = document.title;
+    const previousDescription =
+      document.head
+        .querySelector(META_DESCRIPTION_SELECTOR)
+        ?.getAttribute("content") ?? null;
+    document.title = content.meta.title;
+    syncMetaDescription(content.meta.description);
+    return () => {
+      document.title = previousTitle;
+      syncMetaDescription(previousDescription);
+    };
+  }, [content]);
 
   useEffect(() => {
     return () => {
@@ -343,6 +358,8 @@ export function JoinPage({
                 value={avatar}
                 onChange={handleAvatarChange}
                 lang={lang}
+                label={content.card.photoLabel}
+                quiet
               />
 
               {mode === "join" ? (

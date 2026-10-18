@@ -12,6 +12,10 @@ export type JoinStep = { title: string; body: string };
 
 export type JoinContent = {
 	lang: Lang;
+	meta: {
+		title: string;
+		description: string;
+	};
 	intro: {
 		h1Line1: string;
 		h1Line2: string;
@@ -29,6 +33,7 @@ export type JoinContent = {
 		nickLabel: string;
 		nickPlaceholder: string;
 		nickHint: string;
+		photoLabel: string;
 		codeLabel: string;
 		codeHint: string;
 		codeCharAria: (index: number) => string;

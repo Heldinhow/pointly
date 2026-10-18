@@ -36,6 +36,31 @@ describe("HomePage (ticket 10 — Inicial com demonstração)", () => {
 		).toBeTruthy();
 	});
 
+	test("hero tem um único CTA primário e a rodada fica como link discreto", () => {
+		renderHome();
+
+		const hero = screen.getByTestId("home-hero");
+		const primaryButtons = hero.querySelectorAll('[data-slot="button"]');
+		expect(primaryButtons).toHaveLength(1);
+		expect(screen.getByTestId("home-cta-create")).toBe(
+			primaryButtons[0] as HTMLElement,
+		);
+		expect(screen.getByTestId("home-cta-create").getAttribute("href")).toBe(
+			"/join",
+		);
+
+		const join = screen.getByTestId("home-cta-join");
+		expect(join.tagName).toBe("A");
+		expect(join.getAttribute("href")).toBe("/join?mode=join");
+
+		const tryRound = screen.getByRole("link", {
+			name: /Experimente uma rodada/,
+		});
+		expect(tryRound.getAttribute("href")).toBe("#demo");
+		expect(tryRound.className).toContain("pt-home__demo-link");
+		expect(tryRound.getAttribute("data-slot")).toBeNull();
+	});
+
 	test("bloco de leitura liga os guias no corpo", () => {
 		renderHome();
 

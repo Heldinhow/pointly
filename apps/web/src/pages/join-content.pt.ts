@@ -2,6 +2,11 @@ import type { JoinContent } from "./join-content";
 
 export const JOIN_CONTENT_PT: JoinContent = {
 	lang: "pt-BR",
+	meta: {
+		title: "Criar sala ou entrar com código · Pointly",
+		description:
+			"Crie uma sala de planning poker sem cadastro ou entre com o código do convite. Sem conta e sem espera: só um apelido para estimar com o time.",
+	},
 	intro: {
 		h1Line1: "Seu time.",
 		h1Line2: "Na mesma mesa.",
@@ -26,6 +31,7 @@ export const JOIN_CONTENT_PT: JoinContent = {
 		nickLabel: "Apelido",
 		nickPlaceholder: "Como o time te chama?",
 		nickHint: "2 a 20 caracteres, sem espaços duplos.",
+		photoLabel: "Adicionar foto (opcional)",
 		codeLabel: "Código da sala",
 		codeHint: "4 letras ou números. Cole o código do convite.",
 		codeCharAria: (index) => `Caractere ${index + 1} de 4`,
