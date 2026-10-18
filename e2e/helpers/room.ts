@@ -82,7 +82,6 @@ export async function joinWithManualCode(
 	await inputs.first().click();
 	await inputs.first().pressSequentially(code.toUpperCase(), { delay: 30 });
 	if (opts.spectate) {
-		await page.getByTestId("join-options-toggle").click();
 		await page.locator("#spectate").check();
 	}
 	await page.locator('button[type="submit"]').click();
@@ -106,7 +105,6 @@ export async function joinWithInviteLink(
 	await page.goto(url.toString());
 	await page.locator("#nick").fill(nick);
 	if (opts.spectate) {
-		await page.getByTestId("join-options-toggle").click();
 		await page.locator("#spectate").check();
 	}
 	await page.locator('button[type="submit"]').click();

@@ -83,8 +83,9 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser bunx playwright te
    sintético **não vazio** (`G-POINTLY-E2E-DISABLED`): zero requests
    aos hosts de analytics, sem `script` injetado e sem `gtag`.
 7. `e2e/join-usability.spec.ts` — `/join`, `/join?mode=join` e
-   `/join?code=AB12`: apelido + submit cabem no primeiro viewport
-   390×844, sem scroll horizontal e com `Foto e preferências` fechado.
+   `/join?code=AB12`: sem scroll horizontal e sem seção recolhida; nos
+   caminhos de join a opção `Entrar como espectador` (`#spectate`, com
+   ícone e hint) fica visível de imediato, e no create ela não existe.
 
 Projetos: `chromium-desktop` (1280×800) e `chromium-mobile`
 (390×844 com touch — Chromium com viewport de telefone, **não** iOS real).
@@ -110,9 +111,9 @@ e o touch (`maxTouchPoints`) antes do cenário.
   como `vote_cast` e `player_joined`.
 - Convite: lido do campo real da arena (`readInviteUrl`, com validação de
   origem/path/code, sem fallback); o join navega no link lido.
-- Espectador/foto ficam no disclosure `Foto e preferências` (fechado por
-  padrão): o harness abre `join-options-toggle` antes de marcar
-  `#spectate` — nunca clique por bypass em controle oculto.
+- Espectador/foto ficam visíveis direto no formulário de entrada (sem
+  seção recolhida): o harness marca `#spectate` diretamente — nunca
+  clique por bypass em controle oculto.
 - Encerramento × desconexão: `sala_ended` (`server_restart`, `replaced`,
   `last_left`) e `sala_nao_encontrada` no retry são terminais
   (`room-ended`, sem novos votos, volta à entrada sem recriar sala);

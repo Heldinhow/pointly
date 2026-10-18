@@ -90,13 +90,11 @@ Kill only the recorded sessions/PIDs from Launch (never by port or process name)
   into a vanished room (arena rejoin) clears the session and shows the
   terminal "Esta sala não está mais disponível." card, with a return to
   `/join` (no dead code reuse).
-- **Invite vs manual:** a valid `/join?code=XXXX` shows a compact summary
-  (`invite-code`) with `Edit code` to reopen the OTP + mode switch; an
-  invalid code is never truncated into a valid one — the manual OTP
-  stays empty with an error.
-- **Photo/spectator live in a closed disclosure** (`Foto e preferências`,
-  `join-options-toggle`): open it before checking `#spectate` — never
-  bypass-click a hidden control.
+- **Invite vs manual:** a valid `/join?code=XXXX` prefills the same OTP
+  field and keeps the mode switch visible; the manual path just types
+  the code.
+- **Photo/spectator are always visible** on the join form (no
+  disclosure): check `#spectate` directly.
 - **First story:** an empty agenda shows `Adicionar primeira história`
   (`first-story-action`) for non-spectators; it focuses the real
   `#pauta-novo-titulo` input and never creates a story by itself.
