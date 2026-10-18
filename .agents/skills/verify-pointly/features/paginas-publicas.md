@@ -4,7 +4,7 @@
 
 - Home PT (`/`) and EN (`/en`) with a create-room call to action.
 - Landing pages: `/planning-poker`, `/scrum-poker` (+ `/en/...`), with FAQ.
-- Guides hub `/guias` (PT only, links every guide card, including the `estimativa-agil` pillar) and three PT articles (`como-jogar-planning-poker`, `o-que-e-planning-poker`, `story-points`) plus EN mirrors under `/en/guides/*`.
+- Guides hub `/guias` (PT, links every guide card, including the `estimativa-agil` pillar; EN mirror `/en/guides` is also indexable) and three PT articles (`como-jogar-planning-poker`, `o-que-e-planning-poker`, `story-points`) plus EN mirrors under `/en/guides/*`.
 - pt-BR guide batch, all with Article + FAQPage + BreadcrumbList (the pillar also carries an ItemList mapa): `/guias/planning-poker-remoto`, `/guias/story-points-vs-horas`, `/guias/fibonacci-estimativa-agil`, `/guias/t-shirt-sizing`, `/planning-poker-online-gratis-comparativo`, `/guias/estimativa-agil`, `/guias/votos-divergentes-planning-poker`, `/guias/planning-poker-para-devs`, `/guias/agenda-sessao-planning-poker`, `/guias/scrum-poker-vs-planning-poker`.
 - Language toggle and theme toggle in the header; footer nav to landing/guides.
 - SEO surface: canonical, hreflang alternates, JSON-LD, and robots `noindex` on app routes. Every indexable route appears once in `sitemap.xml` (build artifact) and in `public/llms.txt`.
