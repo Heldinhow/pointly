@@ -28,6 +28,11 @@ export const PATHS = {
 	whatIsEn: "/en/guides/what-is-planning-poker",
 	storyPointsPt: "/guias/story-points",
 	storyPointsEn: "/en/guides/story-points",
+	planningPokerRemotoPt: "/guias/planning-poker-remoto",
+	storyPointsVsHorasPt: "/guias/story-points-vs-horas",
+	fibonacciEstimativaPt: "/guias/fibonacci-estimativa-agil",
+	tShirtSizingPt: "/guias/t-shirt-sizing",
+	comparativoPt: "/planning-poker-online-gratis-comparativo",
 } as const;
 
 /**
@@ -73,6 +78,10 @@ function entry(
 	};
 }
 
+function ptOnly(path: string): SeoPathEntry {
+	return { path, lang: "pt-BR", indexable: true, alternates: [] };
+}
+
 /** Todas as rotas públicas indexáveis, nos dois idiomas (sem o 404). */
 export const PUBLIC_PATHS: readonly SeoPathEntry[] = [
 	entry(PATHS.homePt, PATHS.homeEn, "pt-BR"),
@@ -83,6 +92,11 @@ export const PUBLIC_PATHS: readonly SeoPathEntry[] = [
 	entry(PATHS.howToPlayPt, PATHS.howToPlayEn, "pt-BR"),
 	entry(PATHS.whatIsPt, PATHS.whatIsEn, "pt-BR"),
 	entry(PATHS.storyPointsPt, PATHS.storyPointsEn, "pt-BR"),
+	ptOnly(PATHS.planningPokerRemotoPt),
+	ptOnly(PATHS.storyPointsVsHorasPt),
+	ptOnly(PATHS.fibonacciEstimativaPt),
+	ptOnly(PATHS.tShirtSizingPt),
+	ptOnly(PATHS.comparativoPt),
 	entry(PATHS.planningPokerPt, PATHS.planningPokerEn, "en"),
 	entry(PATHS.scrumPokerPt, PATHS.scrumPokerEn, "en"),
 	entry(PATHS.guidesPt, PATHS.guidesEn, "en"),

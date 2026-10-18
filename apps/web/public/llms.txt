@@ -23,6 +23,11 @@ Pointly é planning poker online grátis para times ágeis: sem cadastro, salas 
 - Como jogar: https://pointly.space/guias/como-jogar-planning-poker
 - O que é planning poker: https://pointly.space/guias/o-que-e-planning-poker
 - Story points: https://pointly.space/guias/story-points
+- Planning poker remoto: https://pointly.space/guias/planning-poker-remoto
+- Story points vs horas: https://pointly.space/guias/story-points-vs-horas
+- Fibonacci na estimativa ágil: https://pointly.space/guias/fibonacci-estimativa-agil
+- T-shirt sizing: https://pointly.space/guias/t-shirt-sizing
+- Comparativo de ferramentas grátis: https://pointly.space/planning-poker-online-gratis-comparativo
 - Entrar / criar sala: https://pointly.space/join
 
 ## English

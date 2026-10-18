@@ -276,3 +276,23 @@ export function StoryPointsPtPage(): React.ReactElement {
 export function StoryPointsEnPage(): React.ReactElement {
   return <GuidePage content={GUIDE_CONTENT.en["story-points"]} />;
 }
+
+export function PlanningPokerRemotoPtPage(): React.ReactElement {
+  return <GuidePage content={GUIDE_CONTENT["pt-BR"]["planning-poker-remoto"]} />;
+}
+
+export function StoryPointsVsHorasPtPage(): React.ReactElement {
+  return <GuidePage content={GUIDE_CONTENT["pt-BR"]["story-points-vs-horas"]} />;
+}
+
+export function FibonacciEstimativaPtPage(): React.ReactElement {
+  return <GuidePage content={GUIDE_CONTENT["pt-BR"]["fibonacci-estimativa-agil"]} />;
+}
+
+export function TShirtSizingPtPage(): React.ReactElement {
+  return <GuidePage content={GUIDE_CONTENT["pt-BR"]["t-shirt-sizing"]} />;
+}
+
+export function PlanningPokerComparativoPtPage(): React.ReactElement {
+  return <GuidePage content={GUIDE_CONTENT["pt-BR"]["comparativo-ferramentas"]} />;
+}

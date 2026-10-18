@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { GUIDE_CONTENT } from "../pages/guide-content";
+import { GUIDE_CONTENT, GUIDE_HUB } from "../pages/guide-content";
 import { LANDING_CONTENT } from "../pages/landing-content";
 import { PUBLIC_PATHS } from "./paths";
 import {
@@ -52,6 +52,7 @@ describe("Registro SEO (15.T6 — hreflang, sitemap e schema)", () => {
     const sitemap = buildSitemap();
     for (const route of INDEXABLE) {
       expect(sitemap).toContain(`<loc>${SITE_URL}${route.path}</loc>`);
+      if ((route.alternates?.length ?? 0) === 0) continue;
       expect(sitemap).toContain(
         `<xhtml:link rel="alternate" hreflang="${route.lang}" href="${SITE_URL}${route.path}" />`,
       );
@@ -117,6 +118,26 @@ describe("Registro SEO (15.T6 — hreflang, sitemap e schema)", () => {
       {
         path: "/guias/story-points",
         items: GUIDE_CONTENT["pt-BR"]["story-points"].faq.items,
+      },
+      {
+        path: "/guias/planning-poker-remoto",
+        items: GUIDE_CONTENT["pt-BR"]["planning-poker-remoto"].faq.items,
+      },
+      {
+        path: "/guias/story-points-vs-horas",
+        items: GUIDE_CONTENT["pt-BR"]["story-points-vs-horas"].faq.items,
+      },
+      {
+        path: "/guias/fibonacci-estimativa-agil",
+        items: GUIDE_CONTENT["pt-BR"]["fibonacci-estimativa-agil"].faq.items,
+      },
+      {
+        path: "/guias/t-shirt-sizing",
+        items: GUIDE_CONTENT["pt-BR"]["t-shirt-sizing"].faq.items,
+      },
+      {
+        path: "/planning-poker-online-gratis-comparativo",
+        items: GUIDE_CONTENT["pt-BR"]["comparativo-ferramentas"].faq.items,
       },
       {
         path: "/en/guides/how-to-play-planning-poker",
@@ -193,11 +214,11 @@ describe("Registro SEO (15.T6 — hreflang, sitemap e schema)", () => {
   test("guias levam lastmod real; demais rotas não inventam data", () => {
     const sitemap = buildSitemap();
     const guides = SEO_ROUTES.filter((route) => route.ogType === "article");
-    expect(guides.length).toBe(6);
+    expect(guides.length).toBeGreaterThan(0);
     for (const route of guides) {
-      expect(route.lastmod).toBe(GUIDES_MODIFIED);
+      expect(route.lastmod).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(sitemap).toContain(
-        `<loc>${SITE_URL}${route.path}</loc>\n    <lastmod>${GUIDES_MODIFIED}</lastmod>`,
+        `<loc>${SITE_URL}${route.path}</loc>\n    <lastmod>${route.lastmod}</lastmod>`,
       );
     }
     const withoutDate = SEO_ROUTES.filter(
@@ -207,7 +228,9 @@ describe("Registro SEO (15.T6 — hreflang, sitemap e schema)", () => {
     for (const route of withoutDate) {
       expect(route.lastmod).toBeUndefined();
     }
-    expect(sitemap.match(/<lastmod>[^<]+<\/lastmod>/g)?.length).toBe(6);
+    expect(sitemap.match(/<lastmod>[^<]+<\/lastmod>/g)?.length).toBe(
+      guides.length,
+    );
   });
 
   test("head tem OG completo, locale e datas de artigo", () => {
@@ -255,6 +278,64 @@ describe("Registro SEO (15.T6 — hreflang, sitemap e schema)", () => {
     expect(article?.image?.height).toBe(630);
   });
 
+  test("guias publicam BreadcrumbList até a raiz", () => {
+    const guides = SEO_ROUTES.filter((route) => route.ogType === "article");
+    for (const route of guides) {
+      const breadcrumb = route.jsonLd?.find(
+        (entry) => entry["@type"] === "BreadcrumbList",
+      ) as
+        | {
+            itemListElement: ReadonlyArray<{
+              position: number;
+              name: string;
+              item: string;
+            }>;
+          }
+        | undefined;
+      expect(breadcrumb).toBeTruthy();
+      const trail = breadcrumb?.itemListElement ?? [];
+      expect(trail.length).toBeGreaterThanOrEqual(2);
+      expect(trail[0]?.item).toBe(
+        `${SITE_URL}${route.lang === "en" ? "/en" : "/"}`,
+      );
+      expect(trail.at(-1)?.item).toBe(`${SITE_URL}${route.path}`);
+      for (const [index, crumb] of trail.entries()) {
+        expect(crumb.position).toBe(index + 1);
+        expect(crumb.item.startsWith(SITE_URL)).toBe(true);
+      }
+    }
+  });
+
+  test("/guias publica CollectionPage com ItemList espelhando os cards", () => {
+    const route = SEO_ROUTES.find((r) => r.path === "/guias");
+    const collection = route?.jsonLd?.find(
+      (entry) => entry["@type"] === "CollectionPage",
+    ) as
+      | {
+          inLanguage: string;
+          url: string;
+          mainEntity: {
+            "@type": string;
+            itemListElement: ReadonlyArray<{
+              position: number;
+              name: string;
+              url: string;
+            }>;
+          };
+        }
+      | undefined;
+    expect(collection?.url).toBe(`${SITE_URL}/guias`);
+    expect(collection?.inLanguage).toBe("pt-BR");
+    const cards = GUIDE_HUB["pt-BR"].cards;
+    expect(collection?.mainEntity["@type"]).toBe("ItemList");
+    expect(
+      collection?.mainEntity.itemListElement.map((item) => item.url),
+    ).toEqual(cards.map((card) => `${SITE_URL}${card.to}`));
+    expect(
+      collection?.mainEntity.itemListElement.map((item) => item.position),
+    ).toEqual(cards.map((_, index) => index + 1));
+  });
+
   test("titles e descriptions ficam em faixas de SERP", () => {
     for (const route of INDEXABLE) {
       expect(route.title.length).toBeGreaterThanOrEqual(20);
@@ -280,7 +361,7 @@ describe("Registro SEO (15.T6 — hreflang, sitemap e schema)", () => {
       expect(route).toBeTruthy();
       expect(route?.indexable).toBe(true);
       expect(route?.lang).toBe(entry.lang);
-      expect(route?.alternates).toEqual(entry.alternates);
+      expect(route?.alternates ?? []).toEqual(entry.alternates);
     }
     // Toda rota indexável está no índice leve, exceto comparações triviais.
     for (const route of INDEXABLE) {

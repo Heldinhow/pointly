@@ -36,7 +36,7 @@ describe("HomePage (ticket 10 — Inicial com demonstração)", () => {
 		).toBeTruthy();
 	});
 
-	test("bloco de leitura liga landings e guias no corpo", () => {
+	test("bloco de leitura liga os três guias no corpo", () => {
 		renderHome();
 
 		const learn = screen.getByTestId("home-learn");
@@ -44,7 +44,11 @@ describe("HomePage (ticket 10 — Inicial com demonstração)", () => {
 			link.getAttribute("href"),
 		);
 		expect(hrefs).toEqual(
-			expect.arrayContaining(["/planning-poker", "/scrum-poker", "/guias"]),
+			expect.arrayContaining([
+				"/guias/como-jogar-planning-poker",
+				"/guias/o-que-e-planning-poker",
+				"/guias/story-points",
+			]),
 		);
 		// Ordem no documento: demo antes de "como funciona", que vem antes do bloco de leitura.
 		const demo = screen.getByTestId("demo");
