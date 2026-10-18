@@ -260,6 +260,9 @@ export class Sala {
 		if (player.status === "connected") return player;
 		const updated: Player = { ...player, status: "connected" };
 		this.players.set(player.id, updated);
+		if (this.phase === "revealable" && !this.allConnectedVoted()) {
+			this.phase = "voting";
+		}
 		return updated;
 	}
 

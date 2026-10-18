@@ -687,7 +687,7 @@ describe("Sala — propriedades", () => {
 	});
 });
 
-test.failing("BUG CONHECIDO: reconectar votante em revealable mantém fase revealable com votante conectado sem voto", () => {
+test("reconectar votante sem voto em revealable rebaixa a fase para voting", () => {
 	const sala = new Sala("AB12", makePlayer("p1", "host", 1000), 1000);
 	sala.addPlayer(makePlayer("p2", "player", 1001));
 	sala.addPlayer(makePlayer("p3", "player", 1002));
@@ -698,7 +698,6 @@ test.failing("BUG CONHECIDO: reconectar votante em revealable mantém fase revea
 	const p2 = sala.getPlayer("p2")!;
 	sala.markConnected(p2.uuid);
 	const connectedVoters = [...sala.players.values()].filter((p) => p.status === "connected" && p.role !== "spectator");
-	const revealableComVotanteSemVoto =
-		sala.phase === "revealable" && connectedVoters.some((p) => !p.hasVoted);
-	expect(revealableComVotanteSemVoto).toBe(false);
+	expect(sala.phase).toBe("voting");
+	expect(connectedVoters.some((p) => !p.hasVoted)).toBe(true);
 });
