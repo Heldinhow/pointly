@@ -13,6 +13,7 @@ import type { RoomEndReason } from "../lib/ws-client";
 import { ClientToServerEventSchema, type HelloPayload, type Historia, type PublicPlayer as Player, type SalaState, type Vote } from "@planning-poker/shared";
 import { useSession } from "../store/session";
 import { CONFIRM_TIMEOUT_MS } from "../lib/confirm";
+import { middleTruncate } from "../lib/utils";
 import { ArenaPage } from "./arena";
 
 type RoomHandler = (sala: SalaState) => void;
@@ -42,6 +43,7 @@ class FakeSocket {
 	sentVotes: string[] = [];
 	sentReveals = 0;
 	sentNewRounds = 0;
+	sentLeaves = 0;
 	sentProjectiles: Array<{ targetPlayerId: string; projectileType: string }> =
 		[];
 	sentNudges: Array<{ targetPlayerId: string; nudgeId: string }> = [];
@@ -94,6 +96,11 @@ class FakeSocket {
 
 	sendStartNewRound(): boolean {
 		this.sentNewRounds += 1;
+		return true;
+	}
+
+	sendLeaveRoom(): boolean {
+		this.sentLeaves += 1;
 		return true;
 	}
 
@@ -339,7 +346,7 @@ describe("ArenaPage (ticket 04)", () => {
 			/1 in the room/,
 		);
 		expect(screen.getByText("Reveal votes")).toBeTruthy();
-		expect(screen.getAllByText("Empty seat")).toHaveLength(11);
+		expect(screen.getAllByText("Empty place")).toHaveLength(11);
 	});
 
 	test("segundo navegador aparece ao vivo com assento e votos corretos", async () => {
@@ -377,11 +384,76 @@ describe("ArenaPage (ticket 04)", () => {
 		const link = screen.getByLabelText(
 			"Link de convite",
 		) as HTMLInputElement;
-		expect(link.value).toBe("http://localhost/join?code=AB12");
+		expect(link.value).toBe(
+			middleTruncate("http://localhost/join?code=AB12"),
+		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Copiar" }));
+		fireEvent.click(screen.getByTestId("invite-copy-button"));
 		expect(await screen.findByTestId("copy-feedback")).toBeTruthy();
 		expect(written).toEqual(["http://localhost/join?code=AB12"]);
+	});
+
+	test("copiar convite pela toolbar fica no topo, troca o rótulo e anuncia", async () => {
+		const written = stubClipboard();
+		const socket = new FakeSocket();
+		seed({ sala: sala(), playerId: "p_host", socket });
+		renderArena();
+
+		const button = screen.getByTestId("toolbar-copy-invite");
+		expect(button.textContent).toBe("Copiar convite");
+
+		fireEvent.click(button);
+		await waitFor(() => expect(button.textContent).toBe("Copiado"));
+		expect(written).toEqual(["http://localhost/join?code=AB12"]);
+		expect(screen.getByTestId("invite-copy-status").textContent).toBe(
+			"Copiado",
+		);
+
+		fireEvent.click(screen.getByTestId("invite-copy-button"));
+		expect(screen.getByTestId("invite-copy-button").textContent).toBe(
+			"Copiar link",
+		);
+		expect(await screen.findByTestId("copy-feedback")).toBeTruthy();
+	});
+
+	test("falha ao copiar pela toolbar avisa sem depender do card do convite", async () => {
+		Object.defineProperty(window.navigator, "clipboard", {
+			configurable: true,
+			value: {
+				writeText: async () => {
+					throw new Error("denied");
+				},
+			},
+		});
+		const socket = new FakeSocket();
+		seed({ sala: sala(), playerId: "p_host", socket });
+		renderArena();
+
+		fireEvent.click(screen.getByTestId("toolbar-copy-invite"));
+		await waitFor(() =>
+			expect(screen.getByTestId("invite-copy-status").textContent).toMatch(
+				/Não foi possível copiar/,
+			),
+		);
+	});
+
+	test("link do convite mostra os dois extremos e a URL inteira no foco", async () => {
+		stubClipboard();
+		const socket = new FakeSocket();
+		seed({ sala: sala(), playerId: "p_host", socket });
+		renderArena();
+
+		const link = screen.getByLabelText(
+			"Link de convite",
+		) as HTMLInputElement;
+		expect(link.value).toBe(middleTruncate("http://localhost/join?code=AB12"));
+		expect(link.title).toBe("http://localhost/join?code=AB12");
+
+		fireEvent.focus(link);
+		expect(link.value).toBe("http://localhost/join?code=AB12");
+
+		fireEvent.blur(link);
+		expect(link.value).toBe(middleTruncate("http://localhost/join?code=AB12"));
 	});
 
 	test("convite é ocultável quando solo e volta com mostrar", () => {
@@ -688,6 +760,30 @@ describe("ArenaPage (ticket 06 — Reveal)", () => {
 		expect(screen.getByTestId("reveal-button")).toBeTruthy();
 	});
 
+	test("com um votante só o time não é quem votou: sem Todos votaram", () => {
+		const socket = new FakeSocket();
+		const host = player(
+			{ id: "p_host", nick: "Ana", role: "host", hasVoted: true, value: "5" },
+			0,
+		);
+		seed({
+			sala: sala({ players: [host], phase: "revealable" }),
+			playerId: host.id,
+			socket,
+		});
+		renderArena();
+
+		expect(screen.getByTestId("round-label").textContent).toMatch(
+			/Pronta para revelar/,
+		);
+		expect(screen.getByTestId("reveal-hint").textContent).not.toMatch(
+			/Todos votaram/,
+		);
+		expect(screen.getByTestId("reveal-hint").textContent).toMatch(
+			/Já temos votos/,
+		);
+	});
+
 	test("reveal manual chega via room_state", async () => {
 		const socket = new FakeSocket();
 		const host = player(
@@ -827,6 +923,23 @@ describe("ArenaPage (ticket 07 — Resultados)", () => {
 		// Quem não votou segue sem estimativa — sem zero automático.
 		expect(screen.getByTestId("seat-4").textContent).toMatch(/Sem voto/);
 		expect(screen.getByTestId("seat-4").textContent).not.toMatch(/\b0\b/);
+	});
+
+	test("a notação 1×3 é explicada na tela e no nome acessível", () => {
+		const socket = new FakeSocket();
+		const state = revealedSala([
+			{ id: "p_host", nick: "Ana", value: "3" },
+			{ id: "p_beto", nick: "Beto", value: "5" },
+		]);
+		seed({ sala: state, playerId: "p_host", socket });
+		renderArena();
+
+		const pip = screen.getByTestId("stats-pip-3");
+		expect(pip.textContent).toBe("1×3");
+		expect(pip.getAttribute("aria-label")).toBe("1 voto em 3");
+		expect(screen.getByTestId("stats-pips-legend").textContent).toMatch(
+			/1×3 é 1 voto na carta 3/,
+		);
 	});
 
 	test("unanimidade é sinalizada de relance", () => {
@@ -1179,23 +1292,54 @@ describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 			"true",
 		);
 		expect(screen.getByTestId("new-round-hint").textContent).toMatch(
-			/Ative de novo para confirmar/,
+			/Confirme para limpar os votos/,
 		);
 	});
 
-	test("armação mostra countdown no ritmo da janela e some ao confirmar", async () => {
+	test("armação mostra Cancelar visível e não expira por contagem", async () => {
 		const { socket } = revealedTwoPlayer();
-		const { NEW_ROUND_CONFIRM_TIMEOUT_MS } = await import("./arena");
 
-		expect(screen.queryByTestId("new-round-countdown")).toBeNull();
+		expect(screen.queryByTestId("new-round-cancel")).toBeNull();
 		fireEvent.click(screen.getByTestId("new-round-button"));
-		const countdown = screen.getByTestId("new-round-countdown");
-		expect(countdown.style.animationDuration).toBe(
-			`${NEW_ROUND_CONFIRM_TIMEOUT_MS}ms`,
+		expect(screen.getByTestId("new-round-cancel").textContent).toBe(
+			"Cancelar",
+		);
+		expect(screen.queryByTestId("new-round-countdown")).toBeNull();
+
+		await act(async () => {
+			await new Promise((resolve) =>
+				setTimeout(resolve, CONFIRM_TIMEOUT_MS + 400),
+			);
+		});
+
+		// Sem janela de expiração: a confirmação continua armada e o
+		// próximo clique envia de verdade.
+		expect(screen.getByTestId("new-round-button").getAttribute("data-confirming")).toBe(
+			"true",
 		);
 		fireEvent.click(screen.getByTestId("new-round-button"));
 		expect(socket.sentNewRounds).toBe(1);
-		expect(screen.queryByTestId("new-round-countdown")).toBeNull();
+	}, 15000);
+
+	test("Cancelar desarma a confirmação sem enviar nada", () => {
+		const { socket } = revealedTwoPlayer();
+
+		fireEvent.click(screen.getByTestId("new-round-button"));
+		expect(screen.getByTestId("new-round-cancel")).toBeTruthy();
+
+		fireEvent.click(screen.getByTestId("new-round-cancel"));
+		expect(socket.sentNewRounds).toBe(0);
+		expect(screen.getByTestId("new-round-button").getAttribute("data-confirming")).toBe(
+			"false",
+		);
+		expect(screen.queryByTestId("new-round-cancel")).toBeNull();
+		expect(screen.getByTestId("new-round-hint").textContent).toMatch(
+			/Prontos para a próxima estimativa/,
+		);
+
+		// Depois de cancelar, o próximo clique só arma de novo.
+		fireEvent.click(screen.getByTestId("new-round-button"));
+		expect(socket.sentNewRounds).toBe(0);
 	});
 
 	test("segundo clique confirma e envia start_new_round uma vez", () => {
@@ -1206,37 +1350,6 @@ describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 		fireEvent.click(screen.getByTestId("new-round-button"));
 		expect(socket.sentNewRounds).toBe(1);
 	});
-
-	test("confirmação expirada volta ao estado inicial sem enviar", async () => {
-		const { socket } = revealedTwoPlayer();
-		const { NEW_ROUND_CONFIRM_TIMEOUT_MS } = await import("./arena");
-
-		fireEvent.click(screen.getByTestId("new-round-button"));
-		expect(socket.sentNewRounds).toBe(0);
-		expect(screen.getByTestId("new-round-button").getAttribute("data-confirming")).toBe(
-			"true",
-		);
-
-		await act(async () => {
-			await new Promise((resolve) =>
-				setTimeout(resolve, NEW_ROUND_CONFIRM_TIMEOUT_MS + 400),
-			);
-		});
-
-		// Expirou: volta ao rótulo inicial e o próximo clique arma de
-		// novo em vez de enviar.
-		expect(screen.getByTestId("new-round-button").getAttribute("data-confirming")).toBe(
-			"false",
-		);
-		expect(screen.getByTestId("new-round-button").textContent).toMatch(
-			/Nova rodada/,
-		);
-		fireEvent.click(screen.getByTestId("new-round-button"));
-		expect(socket.sentNewRounds).toBe(0);
-		expect(screen.getByTestId("new-round-button").getAttribute("data-confirming")).toBe(
-			"true",
-		);
-	}, 15000);
 
 	test("atalho N exige a mesma confirmação dupla", () => {
 		const { socket } = revealedTwoPlayer();
@@ -1708,21 +1821,107 @@ describe("ArenaPage (ticket 09 — Sessão e continuidade)", () => {
 		}
 	});
 
-	test("saída voluntária envia leave_room e limpa a sessão", async () => {
-		class LeavingSocket extends FakeSocket {
-			sentLeaves = 0;
-			sendLeaveRoom(): boolean {
-				this.sentLeaves += 1;
-				return true;
-			}
-		}
-		const socket = new LeavingSocket();
+	test("host confirma a saída: avisa que a sala encerra e só sai ao confirmar", async () => {
+		const socket = new FakeSocket();
 		const host = player({ id: "p_host", nick: "Ana", role: "host" }, 0);
 		seed({ sala: sala({ players: [host] }), playerId: host.id, socket });
 		persistSession("AB12", "Ana");
 		renderArena();
 
-		fireEvent.click(screen.getByRole("button", { name: /Sair da sala/ }));
+		fireEvent.click(screen.getByRole("button", { name: /^Sair da sala$/ }));
+		const confirm = screen.getByTestId("leave-confirm");
+		expect(confirm.textContent).toMatch(/sala é encerrada/);
+		expect(confirm.textContent).toMatch(/está sozinho/);
+		expect(socket.sentLeaves).toBe(0);
+		expect(socket.closed).toBe(false);
+
+		fireEvent.click(screen.getByTestId("leave-confirm-button"));
+		expect(socket.sentLeaves).toBe(1);
+		expect(socket.closed).toBe(true);
+		expect(window.localStorage.getItem("pointly-session")).toBeNull();
+		expect(await screen.findByText("JOIN")).toBeTruthy();
+	});
+
+	test("Cancelar na saída mantém a sessão e a sala", () => {
+		const socket = new FakeSocket();
+		const host = player({ id: "p_host", nick: "Ana", role: "host" }, 0);
+		seed({ sala: sala({ players: [host] }), playerId: host.id, socket });
+		renderArena();
+
+		fireEvent.click(screen.getByRole("button", { name: /^Sair da sala$/ }));
+		fireEvent.click(screen.getByTestId("leave-cancel-button"));
+
+		expect(screen.queryByTestId("leave-confirm")).toBeNull();
+		expect(socket.sentLeaves).toBe(0);
+		expect(socket.closed).toBe(false);
+		expect(screen.getByTestId("sala-code")).toBeTruthy();
+	});
+
+	test("host com companhia avisa quem assume antes de sair", () => {
+		const socket = new FakeSocket();
+		const ana = player({ id: "p_ana", nick: "Ana", role: "host" }, 0);
+		const beto = player({ id: "p_beto", nick: "Beto" }, 1);
+		seed({
+			sala: sala({ players: [ana, beto], hostId: ana.id }),
+			playerId: ana.id,
+			socket,
+		});
+		renderArena();
+
+		fireEvent.click(screen.getByRole("button", { name: /^Sair da sala$/ }));
+		const confirm = screen.getByTestId("leave-confirm");
+		expect(confirm.textContent).toMatch(/Beto assume a sala/);
+		expect(confirm.textContent).not.toMatch(/sala é encerrada/);
+	});
+
+	test("não-host com voto é perguntado e vê que os votos ficam", () => {
+		const socket = new FakeSocket();
+		const ana = player({ id: "p_ana", nick: "Ana", role: "host" }, 0);
+		const beto = player(
+			{ id: "p_beto", nick: "Beto", hasVoted: true, value: "5" },
+			1,
+		);
+		seed({
+			sala: sala({
+				players: [ana, beto],
+				phase: "voting",
+				votes: { p_beto: "5" },
+			}),
+			playerId: beto.id,
+			socket,
+			nick: "Beto",
+		});
+		renderArena();
+
+		fireEvent.click(screen.getByRole("button", { name: /^Sair da sala$/ }));
+		const confirm = screen.getByTestId("leave-confirm");
+		expect(confirm.textContent).toMatch(/votos desta rodada ficam/);
+		expect(confirm.textContent).toMatch(/sala continua aberta/);
+		expect(socket.sentLeaves).toBe(0);
+	});
+
+	test("não-host sem votos sai direto, sem confirmação", async () => {
+		const socket = new FakeSocket();
+		const ana = player({ id: "p_ana", nick: "Ana", role: "host" }, 0);
+		const beto = player({ id: "p_beto", nick: "Beto" }, 1);
+		seed({ sala: sala({ players: [ana, beto] }), playerId: beto.id, socket, nick: "Beto" });
+		renderArena();
+
+		fireEvent.click(screen.getByRole("button", { name: /^Sair da sala$/ }));
+		expect(screen.queryByTestId("leave-confirm")).toBeNull();
+		expect(socket.sentLeaves).toBe(1);
+		expect(await screen.findByText("JOIN")).toBeTruthy();
+	});
+
+	test("saída voluntária envia leave_room e limpa a sessão", async () => {
+		const socket = new FakeSocket();
+		const host = player({ id: "p_host", nick: "Ana", role: "host" }, 0);
+		seed({ sala: sala({ players: [host] }), playerId: host.id, socket });
+		persistSession("AB12", "Ana");
+		renderArena();
+
+		fireEvent.click(screen.getByRole("button", { name: /^Sair da sala$/ }));
+		fireEvent.click(screen.getByTestId("leave-confirm-button"));
 		expect(socket.sentLeaves).toBe(1);
 		expect(socket.closed).toBe(true);
 		expect(window.localStorage.getItem("pointly-session")).toBeNull();
@@ -1939,7 +2138,7 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		]) {
 			expect(screen.getByTestId(`projectile-${type}`)).toBeTruthy();
 		}
-		expect(screen.getByRole("menu").textContent).toContain(`Arremessar em ${beto.nick}`);
+		expect(screen.getByRole("menu").textContent).toContain(`Jogar em ${beto.nick}`);
 
 		fireEvent.click(screen.getByTestId("projectile-tomato"));
 		expect(socket.sentProjectiles).toEqual([
@@ -2304,6 +2503,37 @@ describe("ArenaPage (issue #158 — polimento e auditoria)", () => {
 		expect(screen.queryByRole("button", { name: "Interagir com Beto" })).toBeNull();
 		expect(screen.queryByRole("menu")).toBeNull();
 	});
+
+	test("EN: a mesa não usa jargão de throw/cooldown/seat", async () => {
+		pairSala("voting");
+		renderArena("/s/AB12", "en");
+
+		const hint = screen.getByTestId("projectile-hint").textContent ?? "";
+		expect(hint).not.toMatch(/throw|cooldown/i);
+		expect(hint).toMatch(/flying chair/);
+		const caption =
+			document.querySelector(".arena-table-caption")?.textContent ?? "";
+		expect(caption).toMatch(/places/);
+		expect(caption).not.toMatch(/seats/i);
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "Interact with Beto" }),
+		);
+		const menu = await screen.findByRole("menu");
+		expect(menu.textContent).toContain("Send to Beto");
+		expect(menu.textContent).toContain("Choose an item");
+		expect(menu.textContent).not.toMatch(/throw|projectile/i);
+	});
+
+	test("convite usa o mesmo verbo da landing: compartilhar o código", () => {
+		pairSala("voting");
+		renderArena();
+
+		expect(screen.getByText(/Compartilhe o código ou o link/)).toBeTruthy();
+		expect(screen.getByTestId("toolbar-copy-invite").textContent).toBe(
+			"Copiar convite",
+		);
+	});
 });
 
 describe("ArenaPage (espectador)", () => {
@@ -2346,6 +2576,37 @@ describe("ArenaPage (espectador)", () => {
 		// Espectador não ocupa assento: só 1 seat ocupado.
 		expect(screen.getByTestId("seat-0").textContent).toMatch(/Ana/);
 		expect(screen.queryByTestId("seat--1")).toBeNull();
+	});
+
+	test("espectador sem história ativa vê o motivo, não um convite para votar", () => {
+		const socket = new FakeSocket();
+		const ana = player({ id: "p_ana", nick: "Ana", role: "host" }, 0);
+		const olho = player(
+			{
+				id: "p_olho",
+				nick: "Olho",
+				role: "spectator",
+				seatIndex: -1,
+			},
+			-1,
+		);
+		seed({
+			sala: pautaSala([], { players: [ana, olho], historiaAtualId: null }),
+			playerId: olho.id,
+			socket,
+			nick: "Olho",
+		});
+		renderArena();
+
+		expect(document.querySelector(".poker-center")?.textContent).toMatch(
+			/Aguardando a primeira história/,
+		);
+		expect(document.querySelector(".poker-center")?.textContent).not.toMatch(
+			/Qual é a sua estimativa|Escolha uma carta/,
+		);
+		expect(screen.getByTestId("deck-locked-legend")).toBeTruthy();
+		// Quem assiste não cria história.
+		expect(screen.queryByTestId("first-story-action")).toBeNull();
 	});
 
 	test("clique no deck como espectador mostra alerta sem enviar voto", () => {
@@ -2649,6 +2910,22 @@ describe("Card Pauta (#165)", () => {
 		expect(screen.getByTestId("deck-selection").textContent).toMatch(
 			/liberar as cartas/,
 		);
+		expect(screen.getByTestId("deck-locked-legend").textContent).toMatch(
+			/Cartas bloqueadas/,
+		);
+		// O centro da mesa explica o bloqueio e leva ao único caminho de
+		// criação: o formulário da Pauta.
+		expect(screen.getByTestId("reveal-hint").textContent).toMatch(
+			/As cartas abrem quando existir uma história ativa/,
+		);
+		expect(
+			document.querySelector(".poker-center")?.textContent,
+		).toMatch(/Adicione uma história para liberar as cartas/);
+		expect(screen.queryByText(/Comece pela primeira história/)).toBeNull();
+		expect(screen.queryByTestId("reveal-button")).toBeNull();
+
+		fireEvent.click(screen.getByTestId("first-story-action"));
+		expect(document.activeElement?.id).toBe("pauta-novo-titulo");
 
 		fireEvent.change(screen.getByTestId("pauta-novo-titulo"), {
 			target: { value: "Checkout PIX" },
@@ -2673,6 +2950,8 @@ describe("Card Pauta (#165)", () => {
 		expect(
 			(screen.getByTestId("deck-card-5") as HTMLButtonElement).disabled,
 		).toBe(false);
+		expect(screen.queryByTestId("deck-locked-legend")).toBeNull();
+		expect(screen.queryByTestId("first-story-action")).toBeNull();
 	});
 
 	test("título vazio mostra historia-error inline e não envia", () => {
@@ -2696,6 +2975,28 @@ describe("Card Pauta (#165)", () => {
 			target: { value: "A" },
 		});
 		expect(screen.queryByTestId("historia-error")).toBeNull();
+	});
+
+	test("a Pauta é o único caminho de criação e o critério nasce opcional", () => {
+		const socket = new FakeSocket();
+		const host = hostOnly();
+		seed({
+			sala: pautaSala([], { players: [host] }),
+			playerId: host.id,
+			socket,
+		});
+		renderArena();
+
+		// Um só botão de criação (o submit da Pauta); o centro só aponta
+		// para ele. O antigo banner "Comece pela primeira história" saiu.
+		expect(screen.getAllByTestId("pauta-add-button")).toHaveLength(1);
+		expect(screen.getByTestId("first-story-action")).toBeTruthy();
+		expect(screen.queryByText(/Comece pela primeira história/)).toBeNull();
+		expect(screen.queryByText(/Adicionar primeira história/)).toBeNull();
+
+		const toggle = screen.getByTestId("pauta-criterio-toggle");
+		expect(toggle.textContent).toMatch(/Critério de aceite \(opcional\)/);
+		expect(screen.queryByTestId("pauta-novo-criterio")).toBeNull();
 	});
 
 	test("critério colapsável envia junto quando preenchido", () => {
@@ -3295,7 +3596,7 @@ describe("História ativa no centro da mesa (#211)", () => {
 		);
 	});
 
-	test("pauta sem ativa mantém a copy atual e o deck bloqueado", () => {
+	test("pauta sem ativa troca a copy do centro e mantém o deck bloqueado", () => {
 		const socket = new FakeSocket();
 		const host = hostOnly();
 		seed({
@@ -3310,11 +3611,15 @@ describe("História ativa no centro da mesa (#211)", () => {
 
 		expect(screen.queryByTestId("arena-story")).toBeNull();
 		expect(document.querySelector(".poker-center")?.textContent).toMatch(
-			/Qual é a sua estimativa\?/,
+			/Selecione uma história para liberar as cartas/,
 		);
 		expect(screen.getByTestId("deck-selection").textContent).toMatch(
 			/liberar as cartas/,
 		);
+		expect(screen.getByTestId("deck-locked-legend")).toBeTruthy();
+		// Selecionar a história da lista ou criar uma nova (que já entra
+		// ativa): o CTA do centro leva ao mesmo formulário da Pauta.
+		expect(screen.getByTestId("first-story-action")).toBeTruthy();
 	});
 
 	test("EN: rótulos e anúncio da história ativa", async () => {

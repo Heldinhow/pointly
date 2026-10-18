@@ -65,8 +65,8 @@ export interface PautaCardProps {
 /**
  * Card Pauta da Arena (#165, parent #160): criar, editar, mover, selecionar
  * e apagar histórias sem sair da sala. Sem drag e sem modal — mover usa
- * ↑↓ por índice; apagar pontuada usa a confirmação dupla padrão (5s, mesmo
- * countdown da Nova Rodada). Números da Pontuação em mono tabular e
+ * ↑↓ por índice; apagar pontuada usa a confirmação dupla padrão (5s, com
+ * countdown próprio). Números da Pontuação em mono tabular e
  * `aria-live` na lista e no badge. A ativa governa a rodada (deck).
  */
 export function PautaCard({

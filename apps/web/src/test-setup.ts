@@ -28,6 +28,12 @@ Element.prototype.matches = function (selector: string): boolean {
 
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
+// jsdom não implementa rolagem; a arena leva o foco ao campo da Pauta com
+// scrollIntoView.
+if (typeof Element.prototype.scrollIntoView !== "function") {
+	Element.prototype.scrollIntoView = () => {};
+}
+
 if (typeof globalThis.requestAnimationFrame !== "function") {
 	const raf = ((callback: FrameRequestCallback) =>
 		setTimeout(() => callback(Date.now()), 0)) as unknown as typeof requestAnimationFrame;

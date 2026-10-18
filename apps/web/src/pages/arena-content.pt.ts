@@ -27,6 +27,18 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		presence: (connected, voted) =>
 			`${connected} na sala · ${voted} ${voted === 1 ? "votou" : "votaram"}`,
 		leave: "Sair da sala",
+		leaveConfirmTitle: "Sair da sala?",
+		leaveConfirmAction: "Confirmar saída",
+		leaveConfirmHostNext: (nick) =>
+			`Você é o host. Ao sair, ${nick} assume a sala.`,
+		leaveConfirmHostSolo:
+			"Você é o host e está sozinho. Ao sair, a sala é encerrada e o link para de funcionar.",
+		leaveConfirmHostNone:
+			"Você é o host. Ao sair, a sala fica sem host: só restam espectadores.",
+		leaveConfirmVotes:
+			"Os votos desta rodada ficam na sala para quem continuar.",
+		leaveConfirmKeep: "A sala continua aberta para o time.",
+		leaveCancel: "Cancelar",
 	},
 	reconnecting: {
 		title: "Reconectando…",
@@ -63,11 +75,15 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		titleRevealed: "Cartas na mesa",
 		titleReady: "Vamos revelar?",
 		titleVoting: "Qual é a sua estimativa?",
+		titleAwaitingStory: "Adicione uma história para liberar as cartas",
+		titleAwaitingStorySpectator: "Aguardando a primeira história",
+		titlePickStory: "Selecione uma história para liberar as cartas",
 		descRevealed: "Votos revelados. Discutam as diferenças.",
 		descReady: "Todos votaram.",
 		descCanReveal: "Já temos votos. Qualquer pessoa pode revelar.",
 		descWaiting:
 			"Aguardando o primeiro voto. Escolha uma carta para começar.",
+		descAwaitingStory: "As cartas abrem quando existir uma história ativa.",
 		reveal: "Revelar votos",
 		revealAria: "Revelar votos (atalho R)",
 		revealAriaWaiting: "Aguardando votos para revelar",
@@ -81,16 +97,16 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		newRoundHint:
 			"Prontos para a próxima estimativa? Os votos serão limpos após sua confirmação.",
 		newRoundHintConfirm:
-			"Ative de novo para confirmar e limpar os votos. A confirmação expira em 5 segundos.",
+			"Confirme para limpar os votos e votar a próxima história. Dá para cancelar sem perder nada.",
+		newRoundCancel: "Cancelar",
 		errorTitle: "Não foi possível revelar",
 		newRoundErrorTitle: "Não foi possível abrir nova rodada",
 	},
 	projectile: {
-		hint: "Passe o mouse ou toque em alguém para arremessar · 1s de intervalo (cadeirada: 8s).",
+		hint: "Toque em alguém para jogar um item · 1s entre jogadas (cadeirada épica: 8s).",
 		errorTitle: "Não foi possível interagir",
-		cooldown: (secs) =>
-			`Recarregando · aguarde ${secs}s para arremessar de novo.`,
-		unavailable: "Arremesso indisponível: escolha outro participante conectado.",
+		cooldown: (secs) => `Recarregando · aguarde ${secs}s para jogar de novo.`,
+		unavailable: "Indisponível: escolha outro participante conectado.",
 		nudgeCooldown: (secs) =>
 			`Recarregando · aguarde ${secs}s para cutucar de novo.`,
 		nudgeUnavailable:
@@ -107,8 +123,8 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		errorTitle: "Não foi possível votar",
 		awaitingStory:
 			"Adicione ou selecione uma história na Pauta para liberar as cartas.",
-		firstStoryTitle: "Comece pela primeira história",
-		addFirstStory: "Adicionar primeira história",
+		lockedLegend: "Cartas bloqueadas: falta uma história ativa.",
+		addFirstStory: "Adicionar história",
 	},
 	pauta: {
 		title: "Pauta",
@@ -117,7 +133,7 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		addLabel: "Nova história",
 		tituloLabel: "Título",
 		tituloPlaceholder: "Ex.: Checkout PIX",
-		criterioToggle: "Adicionar critério",
+		criterioToggle: "Critério de aceite (opcional)",
 		criterioToggleOpen: "Ocultar critério",
 		criterioLabel: "Critério",
 		criterioPlaceholder: "Critério de aceite em texto puro, até 1000 caracteres.",
@@ -159,10 +175,12 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 	},
 	invite: {
 		title: "Convidar o time",
-		description: "Compartilhe o link e reúna o time à mesa.",
+		description:
+			"Compartilhe o código ou o link e reúna o time à mesa.",
 		linkAria: "Link de convite",
-		copy: "Copiar",
-		copied: "Copiado!",
+		copy: "Copiar convite",
+		copyLink: "Copiar link",
+		copied: "Copiado",
 		copyFeedback: "Link copiado! É só enviar ao time.",
 		copyError:
 			"Não foi possível copiar. Selecione o link e copie manualmente.",
@@ -181,6 +199,8 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		range: "intervalo",
 		pipTitle: (count, value) =>
 			`${count} ${count > 1 ? "votos" : "voto"} em ${value}`,
+		pipsLegend:
+			"Cada etiqueta mostra votos×valor: 1×3 é 1 voto na carta 3.",
 		noNumericsNote:
 			"Só pausa ou ninguém votou · sem média, mediana nem intervalo.",
 		justifyLead: "Justifica primeiro:",
@@ -197,8 +217,9 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		spectatorBody:
 			"As cartas ficam escondidas até a revelação. Você assiste sem votar.",
 		body: "As cartas ficam escondidas até a revelação. Escolha sem influência do time.",
-		solo: "Você está sozinho. Copie o convite para chamar o time. Dá para votar sozinho para testar o fluxo.",
-		soloSpectator: "Você está sozinho. Copie o convite para chamar o time.",
+		solo: "Você está sozinho. Compartilhe o código para chamar o time. Dá para votar sozinho para testar o fluxo.",
+		soloSpectator:
+			"Você está sozinho. Compartilhe o código para chamar o time.",
 	},
 	errors: {
 		genericAction: "Não foi possível completar a ação.",

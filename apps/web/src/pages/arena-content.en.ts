@@ -24,6 +24,17 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 			`${voters} playing · ${spectators} watching · ${voted} voted`,
 		presence: (connected, voted) => `${connected} in the room · ${voted} voted`,
 		leave: "Leave room",
+		leaveConfirmTitle: "Leave the room?",
+		leaveConfirmAction: "Confirm leaving",
+		leaveConfirmHostNext: (nick) =>
+			`You're the host. Leaving makes ${nick} the host.`,
+		leaveConfirmHostSolo:
+			"You're the host and you're alone. Leaving ends the room and the link stops working.",
+		leaveConfirmHostNone:
+			"You're the host. If you leave, the room has no host: only spectators stay.",
+		leaveConfirmVotes: "The votes in this round stay in the room.",
+		leaveConfirmKeep: "The room stays open for the team.",
+		leaveCancel: "Cancel",
 	},
 	reconnecting: {
 		title: "Reconnecting…",
@@ -49,7 +60,7 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 	playArea: {
 		aria: "Planning poker table",
 		caption: "Planning poker table",
-		seatsLeft: (taken, total) => `${taken} of ${total} seats`,
+		seatsLeft: (taken, total) => `${taken} of ${total} places`,
 	},
 	story: {
 		active: "Active story",
@@ -60,10 +71,14 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		titleRevealed: "Cards on the table",
 		titleReady: "Ready to reveal?",
 		titleVoting: "What's your estimate?",
+		titleAwaitingStory: "Add a story to unlock the cards",
+		titleAwaitingStorySpectator: "Waiting for the first story",
+		titlePickStory: "Select a story to unlock the cards",
 		descRevealed: "Votes revealed. Talk through the differences.",
 		descReady: "Everyone voted.",
 		descCanReveal: "We already have votes. Anyone can reveal.",
 		descWaiting: "Waiting for the first vote. Pick a card to start.",
+		descAwaitingStory: "The cards unlock once a story is active.",
 		reveal: "Reveal votes",
 		revealAria: "Reveal votes (shortcut R)",
 		revealAriaWaiting: "Waiting for votes to reveal",
@@ -77,15 +92,16 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		newRoundHint:
 			"Ready for the next estimate? Votes are cleared after your confirmation.",
 		newRoundHintConfirm:
-			"Activate again to confirm and clear the votes. Confirmation expires in 5 seconds.",
+			"Confirm to clear the votes and estimate the next story. You can cancel without losing anything.",
+		newRoundCancel: "Cancel",
 		errorTitle: "Couldn't reveal",
 		newRoundErrorTitle: "Couldn't start a new round",
 	},
 	projectile: {
-		hint: "Hover or tap someone to throw · 1s cooldown (chair: 8s).",
+		hint: "Tap someone to send an item · 1s between sends (epic flying chair: 8s).",
 		errorTitle: "Couldn't interact",
-		cooldown: (secs) => `Reloading · wait ${secs}s to throw again.`,
-		unavailable: "Throw unavailable: pick another connected participant.",
+		cooldown: (secs) => `Reloading · wait ${secs}s to send again.`,
+		unavailable: "Unavailable: pick another connected participant.",
 		nudgeCooldown: (secs) => `Reloading · wait ${secs}s to nudge again.`,
 		nudgeUnavailable: "Nudge unavailable: pick another connected participant.",
 	},
@@ -100,8 +116,8 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		errorTitle: "Couldn't vote",
 		awaitingStory:
 			"Add or select a story in the agenda to unlock the cards.",
-		firstStoryTitle: "Start with the first story",
-		addFirstStory: "Add the first story",
+		lockedLegend: "Cards locked: no active story yet.",
+		addFirstStory: "Add a story",
 	},
 	pauta: {
 		title: "Agenda",
@@ -110,7 +126,7 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		addLabel: "New story",
 		tituloLabel: "Title",
 		tituloPlaceholder: "e.g. PIX checkout",
-		criterioToggle: "Add acceptance criteria",
+		criterioToggle: "Acceptance criteria (optional)",
 		criterioToggleOpen: "Hide acceptance criteria",
 		criterioLabel: "Acceptance criteria",
 		criterioPlaceholder: "Plain-text acceptance criteria, up to 1000 characters.",
@@ -152,10 +168,11 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 	},
 	invite: {
 		title: "Invite the team",
-		description: "Share the link and gather the team at the table.",
+		description: "Share the code or the link and gather the team at the table.",
 		linkAria: "Invite link",
-		copy: "Copy",
-		copied: "Copied!",
+		copy: "Copy invite",
+		copyLink: "Copy link",
+		copied: "Copied",
 		copyFeedback: "Link copied! Just send it to the team.",
 		copyError: "Couldn't copy. Select the link and copy it manually.",
 		hide: "Hide invite",
@@ -173,6 +190,7 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		range: "range",
 		pipTitle: (count, value) =>
 			`${count} ${count > 1 ? "votes" : "vote"} on ${value}`,
+		pipsLegend: "Each chip reads votes×value: 1×3 means 1 vote on card 3.",
 		noNumericsNote:
 			"Only pause or nobody voted · no average, median or range.",
 		justifyLead: "Justifies first:",
@@ -187,8 +205,8 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		title: "Every opinion counts.",
 		spectatorBody: "Cards stay hidden until the reveal. You watch without voting.",
 		body: "Cards stay hidden until the reveal. Pick with no influence from the team.",
-		solo: "You're alone. Copy the invite to bring the team in. You can vote alone to test the flow.",
-		soloSpectator: "You're alone. Copy the invite to bring the team in.",
+		solo: "You're alone. Share the code to bring the team in. You can vote alone to test the flow.",
+		soloSpectator: "You're alone. Share the code to bring the team in.",
 	},
 	errors: {
 		genericAction: "Couldn't complete the action.",
