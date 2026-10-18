@@ -2577,7 +2577,7 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 				blocks: [
 					{
 						type: "p",
-						text: "Scrum poker, planning poker, pointing poker e pôquer de planejamento descrevem a mesma atividade: o time estima trabalho votando com cartas, em segredo, e revela junto. Os nomes mudam por hábito e por região, não pelo método, como aponta o blog do Scrum Poker Online em uma página em português consultada em 18/10/2026.",
+						text: "Scrum poker, planning poker, pointing poker e pôquer de planejamento descrevem a mesma atividade: o time estima trabalho votando com cartas, em segredo, e revela junto. Os nomes mudam por hábito e por região, não pelo método.",
 					},
 					{
 						type: "table",
