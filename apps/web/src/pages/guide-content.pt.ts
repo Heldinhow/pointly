@@ -59,6 +59,13 @@ export const GUIDE_HUB_PT: GuideHubCopy = {
 			description:
 				"Estimativa por tamanhos para triagem de backlog, com tabelas de conversão para story points.",
 		},
+		{
+			to: "/planning-poker-online-gratis-comparativo",
+			readingTime: "8 min de leitura",
+			title: "Planning poker online grátis: comparativo",
+			description:
+				"Pointly, Point Poker, SprintsPoker, Scrum Poker Online e Utilaria lado a lado: cadastro, limite de participantes, baralhos, anúncios e extras.",
+		},
 	],
 	closing: {
 		title: "Pronto para estimar junto?",

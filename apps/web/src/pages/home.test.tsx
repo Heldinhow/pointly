@@ -36,7 +36,7 @@ describe("HomePage (ticket 10 — Inicial com demonstração)", () => {
 		).toBeTruthy();
 	});
 
-	test("bloco de leitura liga os três guias no corpo", () => {
+	test("bloco de leitura liga os guias no corpo", () => {
 		renderHome();
 
 		const learn = screen.getByTestId("home-learn");
@@ -48,6 +48,7 @@ describe("HomePage (ticket 10 — Inicial com demonstração)", () => {
 				"/guias/como-jogar-planning-poker",
 				"/guias/o-que-e-planning-poker",
 				"/guias/story-points",
+				"/planning-poker-online-gratis-comparativo",
 			]),
 		);
 		// Ordem no documento: demo antes de "como funciona", que vem antes do bloco de leitura.

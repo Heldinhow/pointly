@@ -19,11 +19,14 @@ function emitStaticSeo(): Plugin {
 		enforce: "post",
 		generateBundle(_options, bundle) {
 			const shell = bundle["index.html"];
-			if (shell?.type === "asset") {
+			if (shell?.type === "asset" && typeof shell.source === "string") {
 				this.emitFile({
 					type: "asset",
 					fileName: "shell.html",
-					source: shell.source,
+					source: shell.source.replace(
+						"<head>",
+						'<head>\n\t\t<meta name="robots" content="noindex" />',
+					),
 				});
 			}
 			this.emitFile({
