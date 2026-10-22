@@ -1,4 +1,5 @@
 import type { HomeContent } from "./home-content";
+import { GUIDE_REGISTRY_PT } from "./guide-registry.pt";
 
 export const HOME_CONTENT_PT: HomeContent = {
 	lang: "pt-BR",
@@ -66,30 +67,13 @@ export const HOME_CONTENT_PT: HomeContent = {
 		cta: "Criar sala",
 	},
 	learn: {
-		title: "Entenda o ritual antes de votar",
+		title: "Guias",
 		intro:
-			"Quatro leituras curtas para chegar na primeira rodada com o time alinhado.",
-		links: [
-			{
-				to: "/guias/como-jogar-planning-poker",
-				title: "Como jogar, passo a passo",
-				body: "O roteiro de uma sessão real: papéis, rodada a rodada e o que fazer quando os votos divergem.",
-			},
-			{
-				to: "/guias/o-que-e-planning-poker",
-				title: "O que é planning poker?",
-				body: "De onde veio, por que o voto simultâneo funciona e quando usar o ritual.",
-			},
-			{
-				to: "/guias/story-points",
-				title: "Story points na prática",
-				body: "Escala, sequência de Fibonacci e como calibrar a estimativa com uma história de referência.",
-			},
-			{
-				to: "/planning-poker-online-gratis-comparativo",
-				title: "Comparativo de ferramentas grátis",
-				body: "Pointly, Point Poker, SprintsPoker, Scrum Poker Online e Utilaria: limites, baralhos e extras.",
-			},
-		],
+			"Todos os guias de planning poker e estimativas ágeis, do passo a passo ao comparativo de ferramentas.",
+		links: GUIDE_REGISTRY_PT.map((guide) => ({
+			to: guide.path,
+			title: guide.title,
+			body: guide.description,
+		})),
 	},
 };

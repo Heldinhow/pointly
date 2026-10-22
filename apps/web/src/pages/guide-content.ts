@@ -31,6 +31,16 @@ export type GuideSection = {
 	blocks: readonly GuideBlock[];
 };
 
+export type GuideRelatedLink = { to: string; label: string };
+
+export type GuideClosing = {
+	title: string;
+	body: string;
+	cta: string;
+	relatedLabel: string;
+	related: readonly GuideRelatedLink[];
+};
+
 export type GuideCopy = {
 	lang: Lang;
 	path: string;
@@ -42,13 +52,11 @@ export type GuideCopy = {
 	back: { to: string; label: string };
 	sections: readonly GuideSection[];
 	faq: { title: string; items: readonly GuideFaqItem[] };
-	closing: {
-		title: string;
-		body: string;
-		cta: string;
-		relatedLabel: string;
-		related: readonly { to: string; label: string }[];
-	};
+	closing: GuideClosing;
+};
+
+export type GuideCopySource = Omit<GuideCopy, "closing"> & {
+	closing: Pick<GuideClosing, "title" | "body">;
 };
 
 export type GuideHubCard = {

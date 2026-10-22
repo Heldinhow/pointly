@@ -3,6 +3,7 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import type { Lang } from "./guide-content";
 import { GUIDE_CONTENT, GUIDE_HUB } from "./guide-content";
+import { GUIDE_REGISTRY_PT } from "./guide-registry.pt";
 import {
   AgendaSessaoPtPage,
   EstimativaAgilPtPage,
@@ -172,18 +173,34 @@ describe("Guias (15.T6 — pt + EN)", () => {
       }
 
       // CTA para criar sala.
-      expect(
-        screen
-          .getAllByRole("link", { name: new RegExp(content.closing.cta, "i") })
-          .map((link) => link.getAttribute("href"))
-          .every((href) => href === "/join"),
-      ).toBe(true);
+      const cta = screen.getByRole("link", { name: content.closing.cta });
+      expect(cta.textContent?.trim()).toBe(content.closing.cta);
+      expect(cta.getAttribute("href")).toBe("/join");
 
-      // Links relacionados presentes.
-      for (const related of content.closing.related) {
-        expect(
-          screen.getByRole("link", { name: related.label }).getAttribute("href"),
-        ).toBe(related.to);
+      // Bloco "Leia também": 3–4 guias, com âncoras descritivas.
+      const relatedBlock = screen.getByTestId("guide-related");
+      expect(
+        within(relatedBlock).getByRole("heading", {
+          name: content.closing.relatedLabel,
+        }),
+      ).toBeTruthy();
+      const relatedLinks = within(relatedBlock).getAllByRole("link");
+      expect(relatedLinks.length).toBeGreaterThanOrEqual(3);
+      expect(relatedLinks.length).toBeLessThanOrEqual(4);
+      expect(relatedLinks.map((link) => link.getAttribute("href"))).toEqual(
+        content.closing.related.map((related) => related.to),
+      );
+      for (const relativeLink of relatedLinks) {
+        expect(relativeLink.textContent).not.toMatch(/clique aqui/i);
+        if (lang === "pt-BR") {
+          const target = GUIDE_REGISTRY_PT.find(
+            (guide) => guide.path === relativeLink.getAttribute("href"),
+          );
+          expect(target).toBeTruthy();
+          expect(relativeLink.textContent?.toLowerCase()).toContain(
+            target?.keyword.toLowerCase() ?? "",
+          );
+        }
       }
     });
   }

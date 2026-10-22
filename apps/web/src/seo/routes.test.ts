@@ -1,10 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { GUIDE_CONTENT, GUIDE_HUB } from "../pages/guide-content";
+import { GUIDE_REGISTRY_PT } from "../pages/guide-registry.pt";
 import { LANDING_CONTENT } from "../pages/landing-content";
 import { PUBLIC_PATHS } from "./paths";
 import {
 	buildSitemap,
+	canonicalFor,
 	GUIDES_MODIFIED,
 	headForRoute,
 	SEO_ROUTES,
@@ -65,7 +67,7 @@ describe("Registro SEO (15.T6 — hreflang, sitemap e schema)", () => {
     );
   });
 
-  test("sitemap é apex-only: nenhum www.pointly.space e todo loc sob SITE_URL", () => {
+  test("sitemap é apex-only e bate exatamente com o canonical de cada rota", () => {
     const sitemap = buildSitemap();
 
     expect(SITE_URL).toBe("https://pointly.space");
@@ -73,16 +75,41 @@ describe("Registro SEO (15.T6 — hreflang, sitemap e schema)", () => {
     expect(sitemap).not.toContain("www.pointly.space");
     expect(sitemap).not.toContain("http://pointly.space");
 
-    const locs = sitemap.match(/<loc>[^<]+<\/loc>/g) ?? [];
-    expect(locs.length).toBe(INDEXABLE.length);
+    const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(
+      (match) => match[1],
+    );
+    const expected = INDEXABLE.map((route) => canonicalFor(route));
+    expect(locs.slice().sort()).toEqual(
+      expected.filter((url): url is string => Boolean(url)).sort(),
+    );
+    expect(new Set(locs).size).toBe(locs.length);
     for (const loc of locs) {
-      expect(loc).toMatch(/^<loc>https:\/\/pointly\.space\//);
+      const url = new URL(loc);
+      expect(url.origin).toBe("https://pointly.space");
+      expect(url.search).toBe("");
+      expect(url.hash).toBe("");
     }
 
     const hrefs = sitemap.match(/href="[^"]+"/g) ?? [];
     expect(hrefs.length).toBeGreaterThan(0);
     for (const href of hrefs) {
       expect(href).toMatch(/^href="https:\/\/pointly\.space\//);
+    }
+  });
+
+  test("todo guia do registro tem uma rota indexável e uma URL no sitemap", () => {
+    const sitemap = buildSitemap();
+    const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(
+      (match) => match[1],
+    );
+
+    for (const guide of GUIDE_REGISTRY_PT) {
+      const routes = INDEXABLE.filter((route) => route.path === guide.path);
+      expect(routes).toHaveLength(1);
+      expect(routes[0]?.lang).toBe("pt-BR");
+      const canonical = canonicalFor(routes[0]!);
+      expect(canonical).toBe(`${SITE_URL}${guide.path}`);
+      expect(locs.filter((loc) => loc === canonical)).toHaveLength(1);
     }
   });
 

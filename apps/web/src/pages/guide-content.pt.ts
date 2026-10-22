@@ -1,4 +1,5 @@
-import type { GuideCopy, GuideHubCopy } from "./guide-content";
+import type { GuideCopy, GuideCopySource, GuideHubCopy } from "./guide-content";
+import { GUIDE_REGISTRY_PT, relatedGuidesPt } from "./guide-registry.pt";
 import { SITE_GUIDE_CONTENT_PT } from "./guide-content-seo.pt";
 
 const META_PT = "Pointly · atualizado em setembro de 2026";
@@ -9,99 +10,12 @@ export const GUIDE_HUB_PT: GuideHubCopy = {
 	h1: "Guias de planning poker",
 	lede: "Guias práticos para rodar estimativas melhores: comece pelo passo a passo, entenda o porquê e domine os story points.",
 	startHere: "Comece aqui",
-	cards: [
-		{
-			to: "/guias/como-jogar-planning-poker",
-			readingTime: "6 min de leitura",
-			title: "Como jogar planning poker, passo a passo",
-			description:
-				"O roteiro de uma sessão real: papéis, rodada a rodada, tempo por história e o que fazer quando os votos divergem.",
-		},
-		{
-			to: "/guias/o-que-e-planning-poker",
-			readingTime: "5 min de leitura",
-			title: "O que é planning poker?",
-			description:
-				"De onde veio, por que o voto simultâneo funciona e quando usar o ritual — com um exemplo prático de rodada.",
-		},
-		{
-			to: "/guias/story-points",
-			readingTime: "7 min de leitura",
-			title: "Story points: o que são e como estimar",
-			description:
-				"Escala, sequência de Fibonacci, story points vs horas e como calibrar a estimativa com uma história de referência.",
-		},
-		{
-			to: "/guias/planning-poker-remoto",
-			readingTime: "8 min de leitura",
-			title: "Planning poker remoto: estimar com time distribuído",
-			description:
-				"Como rodar a sessão em videochamada sem ancoragem: agenda de 45 minutos, fusos horários e checklist de facilitação.",
-		},
-		{
-			to: "/guias/story-points-vs-horas",
-			readingTime: "7 min de leitura",
-			title: "Story points vs horas: como responder quando fica pronto",
-			description:
-				"Por que não converter ponto em hora e como prever prazo com a velocidade do time, em faixa.",
-		},
-		{
-			to: "/guias/fibonacci-estimativa-agil",
-			readingTime: "7 min de leitura",
-			title: "Fibonacci na estimativa ágil: por que 1, 2, 3, 5, 8, 13",
-			description:
-				"A sequência clássica e a modificada, o que cada faixa de valor significa e o que fazer quando a história chega a 13.",
-		},
-		{
-			to: "/guias/t-shirt-sizing",
-			readingTime: "7 min de leitura",
-			title: "T-shirt sizing: escala PP-GG e conversão em pontos",
-			description:
-				"Estimativa por tamanhos para triagem de backlog, com tabelas de conversão para story points.",
-		},
-		{
-			to: "/planning-poker-online-gratis-comparativo",
-			readingTime: "8 min de leitura",
-			title: "Planning poker online grátis: comparativo",
-			description:
-				"Pointly, Point Poker, SprintsPoker, Scrum Poker Online e Utilaria lado a lado: cadastro, limite de participantes, baralhos, anúncios e extras.",
-		},
-		{
-			to: "/guias/estimativa-agil",
-			readingTime: "9 min de leitura",
-			title: "Estimativa ágil: o mapa completo",
-			description:
-				"Relativa x absoluta, story points, Fibonacci, t-shirt sizing, planning poker e velocidade, com link para cada guia.",
-		},
-		{
-			to: "/guias/votos-divergentes-planning-poker",
-			readingTime: "6 min de leitura",
-			title: "Votos divergentes no planning poker: como conduzir a discussão",
-			description:
-				"Roteiro de 5 passos para depois do reveal: quem fala primeiro, como perguntar e quando dividir a história.",
-		},
-		{
-			to: "/guias/planning-poker-para-devs",
-			readingTime: "7 min de leitura",
-			title: "Planning poker para devs: bugs, spikes e tarefas técnicas",
-			description:
-				"Como estimar bug, investigação com timebox e dívida técnica, com opções em vez de regra.",
-		},
-		{
-			to: "/guias/agenda-sessao-planning-poker",
-			readingTime: "6 min de leitura",
-			title: "Agenda de sessão de planning poker: modelo de 45 minutos",
-			description:
-				"Papéis, blocos com tempo sugerido e checklist de antes, durante e depois da estimativa.",
-		},
-		{
-			to: "/guias/scrum-poker-vs-planning-poker",
-			readingTime: "4 min de leitura",
-			title: "Scrum poker x planning poker: qual é a diferença?",
-			description:
-				"Os nomes da mesma técnica (pointing poker, pôquer de planejamento) e qual usar no seu time.",
-		},
-	],
+	cards: GUIDE_REGISTRY_PT.map((guide) => ({
+		to: guide.path,
+		readingTime: guide.readingTime,
+		title: guide.title,
+		description: guide.description,
+	})),
 	closing: {
 		title: "Pronto para estimar junto?",
 		body: "Crie a sala, mande o código para o time e comece a primeira rodada.",
@@ -109,7 +23,7 @@ export const GUIDE_HUB_PT: GuideHubCopy = {
 	},
 };
 
-export const GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
+const GUIDE_CONTENT_PT_SOURCE: Record<string, GuideCopySource> = {
 	...SITE_GUIDE_CONTENT_PT,
 	"como-jogar": {
 		lang: "pt-BR",
@@ -361,13 +275,6 @@ export const GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 		closing: {
 			title: "Coloque em prática",
 			body: "Crie uma sala grátis, convide o time e rode a primeira história hoje.",
-			cta: "Criar sala",
-			relatedLabel: "Continue",
-			related: [
-				{ to: "/guias/o-que-e-planning-poker", label: "O que é planning poker" },
-				{ to: "/guias/story-points", label: "Story points na prática" },
-				{ to: "/planning-poker", label: "Planning poker online grátis" },
-			],
 		},
 	},
 	"o-que-e": {
@@ -581,13 +488,6 @@ export const GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 		closing: {
 			title: "Aplique no próximo time",
 			body: "Crie uma sala grátis e transforme a próxima planning em uma conversa com número no fim.",
-			cta: "Criar sala",
-			relatedLabel: "Continue",
-			related: [
-				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
-				{ to: "/guias/story-points", label: "Story points na prática" },
-				{ to: "/planning-poker", label: "Planning poker online grátis" },
-			],
 		},
 	},
 	"story-points": {
@@ -811,13 +711,25 @@ export const GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 		closing: {
 			title: "Estime a próxima história",
 			body: "Crie uma sala grátis e coloque a escala em prática com o time.",
-			cta: "Criar sala",
-			relatedLabel: "Continue",
-			related: [
-				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
-				{ to: "/guias/o-que-e-planning-poker", label: "O que é planning poker" },
-				{ to: "/scrum-poker", label: "Scrum poker online grátis" },
-			],
 		},
 	},
 };
+
+function withPtGuideLinks(copy: GuideCopySource): GuideCopy {
+	return {
+		...copy,
+		closing: {
+			...copy.closing,
+			cta: "Criar sala grátis",
+			relatedLabel: "Leia também",
+			related: relatedGuidesPt(copy.path),
+		},
+	};
+}
+
+export const GUIDE_CONTENT_PT: Record<string, GuideCopy> = Object.fromEntries(
+	Object.entries(GUIDE_CONTENT_PT_SOURCE).map(([id, copy]) => [
+		id,
+		withPtGuideLinks(copy),
+	]),
+);
