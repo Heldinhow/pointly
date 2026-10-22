@@ -488,23 +488,55 @@ export function ProjectileFlight({ event, arenaRef, onDone, lang = "pt-BR" }: {
         });
         // Carimbo junto do alvo: acima do avatar, ou abaixo do nome se a barra fixa cobrir.
         const stamp = impact.querySelector<HTMLElement>(".projectile-stamp");
-        // Nunca recortado: centro do carimbo preso dentro da viewport e abaixo da barra fixa.
+        // Posição do carimbo: primeira candidata livre dentro da viewport, abaixo
+        // da barra fixa e sem cobrir a cadeira tombada, nomes, status nem avatares
+        // (preferência: acima do avatar → lado oposto à cadeira → abaixo do status
+        // → além da cadeira). Sem candidata limpa: a de menor sobreposição.
         const toolbarBottom = document.querySelector(".arena-toolbar")?.getBoundingClientRect().bottom ?? 0;
-        // Margem cobre a entrada (escala até ~1,3 enquanto já visível) e o giro de -8°.
-        const halfW = ((stamp?.offsetWidth ?? 120) / 2) * 1.3 + 8;
-        const halfH = ((stamp?.offsetHeight ?? 26) / 2) * 1.3 + 12;
         const viewportH = window.innerHeight || 800;
         const vw = document.documentElement.clientWidth || window.innerWidth;
-        const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), Math.max(min, max));
-        const above = -radius - 30;
-        const absY = (y: number) => bounds.top + to.y + y;
-        const stampY = absY(above) - halfH < toolbarBottom ? radius + 52 : above;
-        const stampYClamped = clamp(stampY, toolbarBottom + halfH - bounds.top - to.y, viewportH - halfH - bounds.top - to.y);
-        const stampX = clamp(-restSide * 10, halfW - bounds.left - to.x, vw - halfW - bounds.left - to.x);
+        const stampScale = window.matchMedia("(max-width: 700px)").matches ? 0.8 : 1;
+        // Caixa visível: giro de -8° + "pop" de entrada (~1,15 quando já opaco).
+        const w = (stamp?.offsetWidth ?? 120) * stampScale * 1.15 + 10;
+        const h = (stamp?.offsetHeight ?? 26) * stampScale * 1.15 + 14;
+        type Box = { l: number; t: number; r: number; b: number };
+        const vx = bounds.left + to.x;
+        const vy = bounds.top + to.y;
+        const boxAt = (dx: number, dy: number): Box => ({ l: vx + dx - w / 2, t: vy + dy - h / 2, r: vx + dx + w / 2, b: vy + dy + h / 2 });
+        const restHalf = (chairH * restScale) / 2 + 4;
+        const obstacles: Box[] = [
+          { l: bounds.left + rest.x - restHalf, t: bounds.top + rest.y - restHalf, r: bounds.left + rest.x + restHalf, b: bounds.top + rest.y + restHalf },
+          ...[...arena.querySelectorAll<HTMLElement>(".poker-name, .poker-status, .poker-avatar, .poker-empty-label")].map((element) => {
+            const rect = element.getBoundingClientRect();
+            return { l: rect.left - 3, t: rect.top - 3, r: rect.right + 3, b: rect.bottom + 3 };
+          }).filter((box) => box.r > box.l),
+        ];
+        const area = (box: Box) => obstacles.reduce((sum, o) =>
+          sum + Math.max(0, Math.min(box.r, o.r) - Math.max(box.l, o.l)) * Math.max(0, Math.min(box.b, o.b) - Math.max(box.t, o.t)), 0);
+        const inside = (box: Box) => box.l >= 4 && box.r <= vw - 4 && box.t >= toolbarBottom + 4 && box.b <= viewportH - 4;
+        const statusBottom = target.closest(".poker-seat")?.querySelector(".poker-status")?.getBoundingClientRect().bottom;
+        const below = (statusBottom ?? vy + radius + 46) - vy + 6 + h / 2;
+        const opposite = -restSide;
+        const candidates: Array<[number, number]> = [
+          [0, -radius - 6 - h / 2],
+          [opposite * (radius + 8 + w / 2), -radius / 2],
+          [opposite * (radius + 8 + w / 2), 0],
+          [0, below],
+          [rest.x - to.x + restSide * (restHalf + 6 + w / 2), rest.y - to.y],
+          [rest.x - to.x, rest.y - to.y - restHalf - 6 - h / 2],
+          [rest.x - to.x, rest.y - to.y + restHalf + 6 + h / 2],
+        ];
+        const scored = candidates.map(([dx, dy], index) => ({ dx, dy, index, box: boxAt(dx, dy) }))
+          .filter(({ box }) => inside(box))
+          .map((candidate) => ({ ...candidate, overlap: area(candidate.box) }));
+        const best = scored.find((candidate) => candidate.overlap === 0)
+          ?? [...scored].sort((x, y) => x.overlap - y.overlap)[0]
+          ?? { dx: Math.min(Math.max(0, w / 2 + 4 - vx), vw - w / 2 - 4 - vx), dy: Math.max(-radius - 6 - h / 2, toolbarBottom + h / 2 + 4 - vy), index: -1 };
+        stamp?.setAttribute("data-placement", String(best.index));
         const stampAt = (scale: number, rotation: number) =>
-          `translate(${round(stampX)}px, ${round(stampYClamped)}px) translate(-50%, -50%) rotate(${rotation}deg) scale(${scale})`;
+          `translate(${round(best.dx)}px, ${round(best.dy)}px) translate(-50%, -50%) rotate(${rotation}deg) scale(${round(scale * stampScale)})`;
         run(stamp, [
-          { offset: 0, transform: stampAt(1.9, -16), opacity: 0, easing: "cubic-bezier(0.5, 0, 0.75, 0)" },
+          { offset: 0, transform: stampAt(1.6, -14), opacity: 0, easing: "cubic-bezier(0.5, 0, 0.75, 0)" },
           { offset: 0.1, transform: stampAt(0.92, -8), opacity: 1, easing: "ease-out" },
           { offset: 0.17, transform: stampAt(1.05, -9), opacity: 1, easing: "ease-in-out" },
           { offset: 0.24, transform: stampAt(1, -8), opacity: 1 },
