@@ -1,6 +1,6 @@
 import { afterEach, expect, mock, spyOn, test } from "bun:test";
 import { cleanup, render, waitFor } from "@testing-library/react";
-import { ProjectileFlight, type ProjectileFlightEvent } from "./projectile-flight";
+import { CHAIR_TIMELINE, ProjectileFlight, STATIC_NOTICE_MS, type ProjectileFlightEvent } from "./projectile-flight";
 
 const originalAnimate = Object.getOwnPropertyDescriptor(Element.prototype, "animate");
 const animations: Array<{ target: Element; frames: Keyframe[]; timing: KeyframeAnimationOptions; cancel: ReturnType<typeof mock> }> = [];
@@ -55,11 +55,16 @@ test.each(["chair", "tomato", "rock", "brick", "paper_ball", "paper_plane"] as c
   for (const animation of animations) expect(animation.cancel).toHaveBeenCalledTimes(1);
 });
 
-test("cadeirada permanece até o fim das estrelas e termina uma única vez", async () => {
+test("cadeirada fica tombada por 2-3s e termina uma única vez", () => {
+  const timers = spyOn(globalThis, "setTimeout");
   const { onDone } = showProjectile("chair");
-  await new Promise((resolve) => setTimeout(resolve, 1100));
+  expect(Number(timers.mock.calls.at(-1)?.[1])).toBe(CHAIR_TIMELINE.end);
+  expect(CHAIR_TIMELINE.restUntil - CHAIR_TIMELINE.landed).toBeGreaterThanOrEqual(1500);
+  expect(CHAIR_TIMELINE.end - CHAIR_TIMELINE.contact).toBeGreaterThanOrEqual(2000);
   expect(onDone).not.toHaveBeenCalled();
-  await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+  (timers.mock.calls.at(-1)?.[0] as () => void)();
+  (timers.mock.calls.at(-1)?.[0] as () => void)();
+  expect(onDone).toHaveBeenCalledTimes(1);
   expect(onDone).toHaveBeenCalledWith(1);
 });
 
@@ -131,24 +136,68 @@ test("ripple do feltro aparece só na cadeirada", () => {
   expect(rockView.container.querySelector(".projectile-ripple")).toBeNull();
 });
 
-test("cadeirada gira em 3D no voo", () => {
+test("cadeirada entra de fora da tela, girando, opaca", () => {
   showProjectile("chair");
   const chairFlight = animations.find(({ target }) => target.classList.contains("projectile-flight"))!;
-  expect(chairFlight).toBeTruthy();
-  expect(chairFlight.frames.some((frame) => String(frame.transform).includes("rotateY("))).toBe(true);
-  expect(chairFlight.frames.some((frame) => String(frame.transform).includes("rotateX("))).toBe(true);
+  const first = chairFlight.frames[0]!;
+  const y = Number(/translate\(-?[\d.]+px, (-?[\d.]+)px\)/.exec(String(first.transform))?.[1]);
+  expect(y).toBeLessThan(-100);
+  const rotations = chairFlight.frames.map((frame) => Number(/rotate\((-?[\d.]+)deg\)/.exec(String(frame.transform))?.[1]));
+  expect(Math.abs(rotations[0]! - rotations[24]!)).toBeGreaterThan(360);
+  const contactIndex = chairFlight.frames.findIndex((frame) => Number(frame.offset) * Number(chairFlight.timing.duration) >= CHAIR_TIMELINE.contact - 0.5);
+  for (const frame of chairFlight.frames.slice(0, contactIndex)) expect(frame.opacity).toBe(1);
 });
 
-test("cadeirada sacode a mesa e solta o grip no contato", () => {
-  const { container } = showProjectile("chair");
-  const tableAnimation = animations.find(({ target }) => target.classList.contains("poker-table"));
-  expect(tableAnimation).toBeTruthy();
-  expect(Number(tableAnimation!.timing.delay)).toBeGreaterThan(0);
-  const grip = container.querySelector(".projectile-grip");
-  expect(grip).toBeTruthy();
-  const gripAnimation = animations.find(({ target }) => target === grip);
-  expect(gripAnimation).toBeTruthy();
-  expect(Number(gripAnimation!.frames.at(-1)?.opacity)).toBe(0);
+test("cadeirada sacode a mesa 3px por 150ms, balança o assento e carimba CADEIRADA!", () => {
+  const { container, target } = showProjectile("chair");
+  const tableAnimation = animations.find(({ target }) => target.classList.contains("poker-table"))!;
+  expect(Number(tableAnimation.timing.delay)).toBe(CHAIR_TIMELINE.contact);
+  expect(Number(tableAnimation.timing.duration)).toBe(150);
+  const offsets = tableAnimation.frames.flatMap((frame) => [...String(frame.transform).matchAll(/(-?[\d.]+)px/g)].map((m) => Math.abs(Number(m[1]))));
+  expect(Math.max(...offsets)).toBeLessThanOrEqual(3);
+  const sway = animations.find((animation) => animation.target === target)!;
+  expect(sway.frames.filter((frame) => String(frame.transform).includes("rotate(")).length).toBeGreaterThanOrEqual(4);
+  expect(target.style.transformOrigin).toBe("50% 100%");
+  const stamp = container.querySelector('[data-testid="projectile-stamp"]')!;
+  expect(stamp.textContent).toBe("CADEIRADA!");
+  expect(animations.some((animation) => animation.target === stamp)).toBe(true);
+  expect(animations.filter(({ target }) => target.classList.contains("projectile-star"))).toHaveLength(5);
+});
+
+test.each([
+  ["rock", "projectile-bump"],
+  ["brick", "projectile-crack"],
+  ["tomato", "projectile-splat"],
+] as const)("%s tem batida própria (%s)", (type, testId) => {
+  const { container } = showProjectile(type);
+  const element = container.querySelector(`[data-testid="${testId}"]`)!;
+  expect(element).toBeTruthy();
+  expect(animations.some((animation) => animation.target === element)).toBe(true);
+});
+
+test("tomate escorre e dura 2-3s", () => {
+  const { container } = showProjectile("tomato");
+  const splat = animations.find(({ target }) => target.classList.contains("projectile-splat"))!;
+  expect(Number(splat.timing.duration)).toBeGreaterThanOrEqual(2000);
+  expect(Number(splat.timing.duration)).toBeLessThanOrEqual(3000);
+  expect(container.querySelectorAll('[data-testid="projectile-drip"]')).toHaveLength(3);
+});
+
+test("aviãozinho faz voo em S e fica espetado", () => {
+  // Alvo 300px à direita do centro da mesa: geometria real para o S.
+  spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+    const x = this.dataset.projectilePlayer ? 300 : 0;
+    return { left: x, top: 0, width: 44, height: 44, right: x + 44, bottom: 44, x, y: 0, toJSON() {} } as DOMRect;
+  });
+  showProjectile("paper_plane");
+  const flight = animations.find(({ target }) => target.classList.contains("projectile-flight"))!;
+  const angles = flight.frames.map((frame) => Number(/rotate\((-?[\d.]+)deg\)/.exec(String(frame.transform))?.[1]));
+  const deltas = angles.slice(1, 49).map((angle, index) => angle - angles[index]!).filter((d) => Math.abs(d) > 0.05);
+  const turns = deltas.slice(1).filter((d, index) => Math.sign(d) !== Math.sign(deltas[index]!)).length;
+  expect(turns).toBeGreaterThanOrEqual(1);
+  const transforms = flight.frames.map((frame) => String(frame.transform));
+  const held = transforms.filter((t, index) => index > 48 && t === transforms[index - 1]);
+  expect(held.length).toBeGreaterThanOrEqual(1);
 });
 
 test("projétil comum não sacode a mesa", () => {
@@ -157,32 +206,29 @@ test("projétil comum não sacode a mesa", () => {
 });
 
 
-test("cadeirada sincroniza contato, pausa de 60ms e termina em 1200ms", () => {
-  const timers = spyOn(globalThis, "setTimeout");
+test("cadeirada sincroniza contato e pausa de 60ms", () => {
   const { target } = showProjectile("chair");
   const flight = animations.find(({ target }) => target.classList.contains("projectile-flight"))!;
   const reaction = animations.find((animation) => animation.target === target)!;
-  const contact = Number(reaction.timing.delay);
-  expect(contact).toBe(540);
-  // A curva global não pode antecipar o fim do hit-stop.
+  expect(Number(reaction.timing.delay)).toBe(CHAIR_TIMELINE.contact);
   expect(reaction.timing.easing).toBe("linear");
-  const at = (time: number) => flight.frames.find((frame) => Math.abs(Number(frame.offset) * Number(flight.timing.duration) - time) < 0.01);
-  expect(at(540)?.transform).toBe(at(600)?.transform);
+  const at = (time: number) => flight.frames.find((frame) => Math.abs(Number(frame.offset) * Number(flight.timing.duration) - time) < 1);
+  expect(at(CHAIR_TIMELINE.contact)?.transform).toBe(at(CHAIR_TIMELINE.contact + CHAIR_TIMELINE.hitStop)?.transform);
   expect(reaction.frames[0]?.transform).toBe(reaction.frames[1]?.transform);
-  expect(Number(reaction.frames[1]?.offset) * Number(reaction.timing.duration)).toBe(60);
-  expect(Number(timers.mock.calls.at(-1)?.[1])).toBe(1200);
 });
 
-test("movimento reduzido mantém destaque estático no alvo e limpa ao desmontar", () => {
+test.each(["chair", "rock"] as const)("movimento reduzido (%s) mostra ícone + rótulo estáticos, sem animação", (type) => {
+  const timers = spyOn(globalThis, "setTimeout");
   const media = window.matchMedia("(prefers-reduced-motion: reduce)");
   spyOn(window, "matchMedia").mockReturnValue({ ...media, matches: true });
-  const { target, onDone, unmount } = showProjectile("chair");
+  const { container, onDone, unmount } = showProjectile(type);
   expect(onDone).not.toHaveBeenCalled();
-  expect(animations).toHaveLength(1);
-  expect(animations[0]!.target).toBe(target);
-  expect(animations[0]!.frames.every((frame) => !frame.transform)).toBe(true);
+  expect(animations).toHaveLength(0);
+  const notice = container.querySelector<HTMLElement>('[data-testid="projectile-static"]')!;
+  expect(notice.dataset.visible).toBe("true");
+  expect(notice.textContent).toBe(type === "chair" ? "CADEIRADA!" : "Pedra");
+  expect(Number(timers.mock.calls.at(-1)?.[1])).toBe(STATIC_NOTICE_MS);
   unmount();
-  expect(animations[0]!.cancel).toHaveBeenCalledTimes(1);
 });
 
 test("cancelamento repetido conclui uma única vez", () => {
@@ -193,7 +239,7 @@ test("cancelamento repetido conclui uma única vez", () => {
   expect(onDone).toHaveBeenCalledTimes(1);
 });
 
-test("saída do alvo encerra a cadeirada e cancela seus efeitos", async () => {
+test("saída do alvo encerra a cadeirada, cancela seus efeitos e restaura o alvo", async () => {
   const { target, onDone, unmount } = showProjectile("chair");
   target.remove();
   await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));

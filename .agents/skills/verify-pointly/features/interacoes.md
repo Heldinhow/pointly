@@ -3,6 +3,9 @@
 ## Sub-features
 
 - Send a projectile at another seat (paper ball, paper plane, rock, brick, tomato, epic flying chair); the epic chair has a longer reload ("cadeirada épica").
+- Each item has its own beat on a hit (HEL-72), identical for thrower and target: paper ball bounces once and rolls off; paper plane flies an S path and stays stuck in the avatar ring for ~0.8s; rock drops fast, the avatar sinks and a "galo" (`[data-testid="projectile-bump"]`) shows for ~1s; brick cracks the avatar ring (`projectile-crack`); tomato splats and drips (`projectile-splat`, 3× `projectile-drip`) for ~2.7s over the avatar only. Dodge/deflect keep the old miss paths.
+- Epic chair (cadeirada, HEL-72): enters from off-screen (above the viewport), spinning, opaque, for ~0.9s; on impact the target seat sways, the table shakes ~3px for 150ms, wood shards + 5 orbiting stars (dark-outlined, readable in both themes) and a "CADEIRADA!" stamp (`[data-testid="projectile-stamp"]`; "CHAIR SMASH!" in EN) appear by the target; the chair then lies tipped over beside the avatar (never over the name) until ~3.1s and fades by 3.4s.
+- `prefers-reduced-motion`: no flight/shake; a static pill with the item icon + label (`[data-testid="projectile-static"]`, chair = "CADEIRADA!") sits above the target for 1.5s.
 - Nudge (cutucada): preset messages ("Bora!", "☕ Café?", "Polêmica!", "Confia") as a balloon over the target's seat; shares the projectile reload.
 - Reload feedback: buttons lock and show a countdown; a second send inside the reload is refused with an inline message, not a crash. The UI names the interval in plain words (no "throw"/"cooldown"/"seat" jargon).
 - Invite: "Copy invite" sits in the sticky room header (`toolbar-copy-invite`) so it never needs scrolling, with a persistent screen-reader status (`invite-copy-status`) for success and failure. The sidebar has the same action labeled "Copy link" (`invite-copy-button`). The link field shows start and end of the URL, middle-truncated (`…`), with the full URL on focus.
@@ -40,7 +43,12 @@ browser.click { selector: "[data-testid=\"leave-cancel-button\"]" }         // s
 browser.click { selector: "[data-testid=\"leave-confirm-button\"]" }        // leaves
 ```
 
+Animation pass (HEL-72): two separate browser contexts (thrower + target), desktop 1280×800 and 390×844, light and dark (`localStorage["pointly-theme"]`), plus one run with `reducedMotion: "reduce"`. Add a story first (`#pauta-novo-titulo` + `pauta-add-button`) so the deck is enabled, then throw the chair and click `deck-card-5` on the target while the chair is on screen — the vote must register (`aria-pressed="true"`). Screenshot both pages at ~0.45/1.0/1.35/2.3/3.0s for the chair; sample rAF deltas for fps (expect ~60, no frames >34ms) and a `layout-shift` PerformanceObserver (expect 0 on the target).
+
 ## Gotchas
+
+- Outcome (hit/dodge/deflect) is rolled by the server; the per-item beats only play on `data-outcome="hit"` (read it on `[data-testid="projectile-flight"]`) — retry the throw after the 1s reload until you get a hit. The chair always hits.
+- In dev the web app opens the WS straight at `ws://<host>:3001/ws` (not via the Vite proxy); on non-default ports set `VITE_WS_URL` and the server's `ALLOWED_ORIGINS`, or you will create rooms on whatever server owns :3001.
 
 - Reloads are enforced client-side *and* server-side; the server is SSOT (`PROJECTILE_COOLDOWN_MS` / `PROJECTILE_CHAIR_COOLDOWN_MS` in `packages/shared`). A successful-looking click inside the reload should still be refused.
 - Sending at yourself or at a disconnected seat surfaces `content.projectile.unavailable` — not proof of the happy path.

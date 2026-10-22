@@ -17,11 +17,10 @@
   pointer-events: none;
 }
 .projectile-layer:has(.projectile-flight--chair) {
-  /* Espaço para erguer a cadeira acima dos assentos superiores, sem overflow lateral. */
-  overflow: visible;
-  clip-path: inset(-160px -24px -80px);
-  /* Profundidade do giro da cadeirada (rotateX/rotateY). */
-  perspective: 900px;
+  /* A cadeira entra de fora da tela (pelo alto); só o eixo X é recortado,
+     então não surge rolagem lateral no celular. */
+  overflow-x: clip;
+  overflow-y: visible;
 }
 .projectile-flight {
   position: absolute;
@@ -40,23 +39,16 @@
 .projectile-flight--chair {
   width: 80px;
   height: 88px;
-  /* Pegada no encosto; o efeito ajusta o pivô quando o desenho é espelhado. */
-  transform-origin: 30px 10px;
+  /* Pivô no centro do desenho: giro no voo e tombo ao lado do alvo. */
+  transform-origin: 40px 44px;
+  /* Acima da batida (carimbo/estrelas ficam no impacto, que vem depois). */
+  z-index: 1;
 }
 .projectile-flight--chair .projectile-icon {
   width: 80px;
   height: 88px;
-  filter: drop-shadow(0 3px 2px rgb(10 20 20 / 30%));
-}
-.projectile-flight--chair .projectile-icon,
-.projectile-grip {
+  filter: drop-shadow(0 4px 3px rgb(10 20 20 / 40%));
   transform: scaleX(var(--chair-facing, 1));
-}
-.projectile-grip {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
 }
 
 /* Eco do projétil rápido: mesma trajetória, atrás e translúcida; o mais
@@ -94,6 +86,7 @@
 /* Explosão de partículas no ponto de contato (cor por tipo). */
 .projectile-impact {
   position: absolute;
+  z-index: 2;
   left: 0;
   top: 0;
   width: 0;
@@ -153,10 +146,12 @@
   border-width: 1px;
 }
 .projectile-impact--chair .projectile-particle {
-  width: 6px;
-  height: 2px;
+  width: 9px;
+  height: 4px;
   border-radius: 1px;
-  background: #bd8a55;
+  /* Estilhaço de madeira com contorno: lê no feltro e no fundo claro/escuro. */
+  background: #8a5a2b;
+  box-shadow: 0 0 0 1px #fde68a;
 }
 .projectile-impact--rock .projectile-particle,
 .projectile-impact--brick .projectile-particle {
@@ -201,20 +196,125 @@
   animation-duration: var(--impact-duration);
 }
 
-/* Estrelas do smash da cadeirada. */
+/* Estrelas orbitando a cabeça: amarelo com contorno escuro (contraste nos dois temas). */
 .projectile-star {
   position: absolute;
-  color: #fbbf24;
-  font-size: 12px;
-  font-style: normal;
-  line-height: 1;
-  text-shadow: 0 1px 2px rgb(20 40 30 / 40%);
-  animation: projectile-star var(--impact-duration) ease-out both;
-  animation-delay: var(--contact-delay, 1200ms);
+  left: -9px;
+  top: -9px;
+  width: 18px;
+  height: 18px;
+  opacity: 0;
+  will-change: transform, opacity;
 }
-.projectile-star--1 { left: -30px; top: calc(-46px + var(--star-offset, 0px)); }
-.projectile-star--2 { left: 14px; top: calc(-52px + var(--star-offset, 0px)); animation-delay: calc(var(--contact-delay) + var(--star-stagger)); }
-.projectile-star--3 { left: -8px; top: calc(-62px + var(--star-offset, 0px)); font-size: 10px; animation-delay: calc(var(--contact-delay) + var(--star-stagger) * 2); }
+.projectile-star svg {
+  width: 100%;
+  height: 100%;
+  fill: #facc15;
+  stroke: #3b2405;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+/* Carimbo "CADEIRADA!" junto do alvo. */
+.projectile-stamp {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 3px 9px 2px;
+  border: 3px solid #b91c1c;
+  border-radius: 6px;
+  background: #fff7ed;
+  color: #b91c1c;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 3px 0 #7f1d1d, 0 6px 14px rgb(20 10 10 / 35%);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+@media (max-width: 700px) {
+  .projectile-stamp { font-size: 13px; padding: 2px 7px 1px; }
+}
+/* Pedra: "galo" no topo da cabeça. */
+.projectile-bump {
+  position: absolute;
+  left: -8px;
+  top: -12px;
+  width: 16px;
+  height: 14px;
+  border-radius: 50% 50% 45% 45%;
+  background: radial-gradient(circle at 38% 32%, #ffd1c2 0 18%, #f08a7a 45%, #c2453a 100%);
+  border: 1.5px solid #7a1f17;
+  opacity: 0;
+  transform-origin: 50% 100%;
+  will-change: transform, opacity;
+}
+/* Tijolo: rachadura sobre o anel do avatar, girada para o lado do golpe. */
+.projectile-crack {
+  position: absolute;
+  left: calc(-1 * var(--avatar-r, 22px) - 8px);
+  top: calc(-1 * var(--avatar-r, 22px) - 8px);
+  width: calc(2 * var(--avatar-r, 22px) + 16px);
+  height: calc(2 * var(--avatar-r, 22px) + 16px);
+  fill: none;
+  stroke: #1c1917;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 1px #fafaf9);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+/* Tomate: mancha que escorre. */
+.projectile-splat {
+  position: absolute;
+  left: -22px;
+  top: -20px;
+  width: 44px;
+  height: 38px;
+  border-radius: 46% 54% 40% 60% / 58% 42% 58% 42%;
+  background: radial-gradient(circle at 40% 35%, #f87171 0 20%, #dc2626 55%, #991b1b 100%);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.projectile-drip {
+  position: absolute;
+  /* Escorre só sobre o avatar: nunca alcança o nome (abaixo do anel). */
+  top: 0;
+  width: 6px;
+  height: 10px;
+  border-radius: 3px 3px 50% 50%;
+  background: #b91c1c;
+  transform-origin: 50% 0;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.projectile-drip--1 { left: -13px; }
+.projectile-drip--2 { left: -2px; height: 12px; }
+.projectile-drip--3 { left: 9px; width: 5px; }
+
+/* Movimento reduzido: ícone + rótulo estáticos acima do alvo. */
+.projectile-static {
+  display: none;
+  position: absolute;
+  z-index: 3;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 5px;
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgb(20 40 30 / 20%);
+  transform: translate(-50%, -100%);
+}
+.projectile-static[data-visible="true"] {
+  display: inline-flex;
+}
 
 @keyframes projectile-ring {
   from { transform: scale(0.2); opacity: 1; }
@@ -244,7 +344,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .projectile-layer {
+  .projectile-flight,
+  .projectile-echo,
+  .projectile-shadow,
+  .projectile-impact {
     display: none;
   }
 }

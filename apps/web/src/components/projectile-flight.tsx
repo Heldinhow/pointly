@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef, type CSSProperties, type RefObject } from "react";
 import type { ProjectileThrownPayload, ProjectileType } from "@planning-poker/shared";
+import { PROJECTILE_CATALOG } from "@/lib/projectiles";
+import type { Lang } from "@/lib/i18n";
 import "./projectile-flight.css";
 
 export interface ProjectileFlightEvent extends ProjectileThrownPayload {
@@ -76,9 +78,10 @@ export function ProjectileIcon({ type }: { type: ProjectileType }): React.ReactE
 }
 
 type ProjectileWeight = "light" | "medium" | "heavy";
+type CommonProjectile = Exclude<ProjectileType, "chair">;
 
 interface ProjectileMotion {
-  /** Duração base do voo (ms). */
+  /** Duração base do voo até o contato (ms). */
   baseMs: number;
   /** Acréscimo de duração por pixel de distância (ms/px). */
   msPerPx: number;
@@ -88,66 +91,78 @@ interface ProjectileMotion {
   arcMax: number;
   /** Giro total no voo; 0 = alinhado à tangente (aviãozinho). */
   spin: number;
-  /** Fração do voo até o contato. */
-  contact: number;
+  /** Duração da batida própria depois do contato (ms), só no acerto. */
+  afterMs: number;
   weight: ProjectileWeight;
 }
 
 /** Perfil de voo por tipo; a cadeirada tem coreografia própria, fora da tabela. */
-const PROJECTILE_MOTION: Record<Exclude<ProjectileType, "chair">, ProjectileMotion> = {
-  paper_ball: { baseMs: 320, msPerPx: 1.5, arcRatio: 0.2, arcMin: 40, arcMax: 90, spin: 540, contact: 0.68, weight: "light" },
-  paper_plane: { baseMs: 420, msPerPx: 1.8, arcRatio: 0.12, arcMin: 36, arcMax: 60, spin: 0, contact: 0.72, weight: "light" },
-  rock: { baseMs: 260, msPerPx: 1.2, arcRatio: 0.18, arcMin: 40, arcMax: 100, spin: 990, contact: 0.66, weight: "heavy" },
-  brick: { baseMs: 280, msPerPx: 1.3, arcRatio: 0.16, arcMin: 40, arcMax: 96, spin: 1170, contact: 0.66, weight: "heavy" },
-  tomato: { baseMs: 300, msPerPx: 1.4, arcRatio: 0.2, arcMin: 42, arcMax: 100, spin: 720, contact: 0.68, weight: "medium" },
+const PROJECTILE_MOTION: Record<CommonProjectile, ProjectileMotion> = {
+  paper_ball: { baseMs: 300, msPerPx: 1.3, arcRatio: 0.22, arcMin: 44, arcMax: 96, spin: 540, afterMs: 760, weight: "light" },
+  paper_plane: { baseMs: 620, msPerPx: 1.9, arcRatio: 0.1, arcMin: 24, arcMax: 48, spin: 0, afterMs: 1100, weight: "light" },
+  rock: { baseMs: 220, msPerPx: 0.85, arcRatio: 0.12, arcMin: 30, arcMax: 70, spin: 720, afterMs: 1300, weight: "heavy" },
+  brick: { baseMs: 340, msPerPx: 1.2, arcRatio: 0.2, arcMin: 48, arcMax: 110, spin: 540, afterMs: 1700, weight: "heavy" },
+  tomato: { baseMs: 300, msPerPx: 1.25, arcRatio: 0.2, arcMin: 42, arcMax: 100, spin: 600, afterMs: 2700, weight: "medium" },
 };
 
-const CHAIR_FLIGHT_MS = 900;
-const CHAIR_CONTACT_MS = 540;
-const CHAIR_HIT_STOP_MS = 60;
-const CHAIR_CONTACT = CHAIR_CONTACT_MS / CHAIR_FLIGHT_MS;
-const FLIGHT_MIN_MS = 560;
-const FLIGHT_MAX_MS = 1400;
+/** Curva temporal do voo por peso: leve flutua (sai rápido e desacelera), pesado acelera. */
+const WEIGHT_WARP: Record<ProjectileWeight, (t: number) => number> = {
+  light: (t) => 1 - (1 - t) ** 1.25,
+  medium: (t) => t,
+  heavy: (t) => t ** 1.45,
+};
+
+/** Batida da cadeirada (ms desde o arremesso). */
+export const CHAIR_TIMELINE = {
+  contact: 900,
+  hitStop: 60,
+  landed: 1460,
+  restUntil: 3100,
+  end: 3400,
+} as const;
+const FLIGHT_MIN_MS = 480;
+const FLIGHT_MAX_MS = 1500;
+const MISS_AFTER_MS = 320;
 const IMPACT_MS = 600;
 const CHAIR_IMPACT_MS = 500;
 const STAR_STAGGER_MS = 80;
 const IMPACT_PARTICLES = 5;
-const TRAJECTORY_SAMPLES = 60;
+const TRAJECTORY_SAMPLES = 48;
 const RELEASE_FRACTION = 0.06;
 const ECHO_DELAYS_MS = [35, 70];
 const ECHO_OPACITIES = [0.26, 0.13];
-const CHAIR_SHAKE_MS = 240;
-const GRIP_RELEASE_MS = 80;
+const TABLE_SHAKE_MS = 150;
+const TABLE_SHAKE_PX = 3;
 const PARTICLE_SAMPLES = 14;
+const CHAIR_STARS = 5;
+const TOMATO_DRIPS = 3;
+/** Versão de movimento reduzido: ícone + rótulo estáticos junto do alvo. */
+export const STATIC_NOTICE_MS = 1500;
 
-/**
- * Partícula do impacto em coordenadas balísticas (px/s): a posição é função
- * pura do tempo — gravidade dá o arco de subida, estalo e queda.
- */
+const STAMP_TEXT: Record<Lang, string> = { "pt-BR": "CADEIRADA!", en: "CHAIR SMASH!" };
+
+/** Partícula do impacto em coordenadas balísticas (px/s). */
 interface ImpactParticle {
   vx: number;
   vy: number;
-  /** Giro em graus por segundo. */
   spin: number;
-  /** Aceleração da queda (px/s²), calibrada pelo peso. */
   gravity: number;
 }
 
-function flightDuration(type: Exclude<ProjectileType, "chair">, distance: number): number {
+function flightDuration(type: CommonProjectile, distance: number): number {
   const motion = PROJECTILE_MOTION[type];
   return Math.min(FLIGHT_MAX_MS, Math.max(FLIGHT_MIN_MS, motion.baseMs + distance * motion.msPerPx));
 }
 
-/** Converte deslocamento desejado ao fim do impacto em velocidade inicial. */
 function launch(dx: number, dy: number, spin: number, gravity: number, seconds: number): ImpactParticle {
   return { vx: dx / seconds, vy: (dy - 0.5 * gravity * seconds ** 2) / seconds, spin, gravity };
 }
 
-/** Spray radial da cadeirada (impacto em todas as direções). */
+/** Estilhaços radiais da cadeirada. */
 function radialSpray(seconds: number): ImpactParticle[] {
   return Array.from({ length: IMPACT_PARTICLES }, (_, index) => {
-    const angle = (index / IMPACT_PARTICLES) * Math.PI * 2;
-    return launch(Math.cos(angle) * 44, Math.sin(angle) * 40 - 12, index % 2 ? 190 : -140, 150, seconds);
+    const angle = (index / IMPACT_PARTICLES) * Math.PI * 2 - Math.PI / 2;
+    return launch(Math.cos(angle) * 56, Math.sin(angle) * 44 - 16, index % 2 ? 260 : -200, 180, seconds);
   });
 }
 
@@ -166,7 +181,6 @@ function directionalSpray(weight: ProjectileWeight, ux: number, uy: number, seco
   });
 }
 
-/** Amostra o arco balístico em keyframes lineares (a física mora na fórmula). */
 function particleFrames(particle: ImpactParticle, seconds: number): Keyframe[] {
   return Array.from({ length: PARTICLE_SAMPLES + 1 }, (_, index) => {
     const progress = index / PARTICLE_SAMPLES;
@@ -179,28 +193,35 @@ function particleFrames(particle: ImpactParticle, seconds: number): Keyframe[] {
   });
 }
 
-export function ProjectileFlight({ event, arenaRef, onDone }: {
+const round = (value: number) => Math.round(value * 100) / 100;
+
+export function ProjectileFlight({ event, arenaRef, onDone, lang = "pt-BR" }: {
   event: ProjectileFlightEvent;
   arenaRef: RefObject<HTMLDivElement>;
   onDone: (key: number) => void;
+  lang?: Lang;
 }): React.ReactElement {
   const flightRef = useRef<HTMLSpanElement>(null);
   const shadowRef = useRef<HTMLSpanElement>(null);
   const echoRefs = useRef<Array<HTMLSpanElement | null>>([]);
-  const gripRef = useRef<SVGSVGElement>(null);
   const impactRef = useRef<HTMLSpanElement>(null);
+  const staticRef = useRef<HTMLSpanElement>(null);
   const chair = event.projectileType === "chair";
+  const type = event.projectileType;
+  const hit = event.outcome === "hit" || chair;
 
   useLayoutEffect(() => {
     const node = flightRef.current;
     const shadow = shadowRef.current;
     const echoes = echoRefs.current;
-    const grip = gripRef.current;
     const impact = impactRef.current;
+    const notice = staticRef.current;
     const arena = arenaRef.current;
     const animations: Animation[] = [];
+    let lifetime = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let observer: MutationObserver | undefined;
+    let restoreTarget: (() => void) | undefined;
     let finished = false;
     let cleaned = false;
     const cleanup = () => {
@@ -209,6 +230,7 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
       clearTimeout(timer);
       observer?.disconnect();
       animations.forEach((animation) => animation.cancel());
+      restoreTarget?.();
       window.removeEventListener("resize", done);
       document.removeEventListener("visibilitychange", done);
       reducedMotion.removeEventListener("change", done);
@@ -224,19 +246,15 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
       done();
       return;
     }
-
-    // Anonimato: a origem é sempre o centro da mesa — nunca o avatar de
-    // quem arremessou. Só o alvo importa; o sender segue no payload apenas
-    // para o cooldown local de quem jogou.
-    const target = arena.querySelector<HTMLElement>(
-      `[data-projectile-player="${event.targetPlayerId}"]`,
-    );
+    // Anonimato: a origem é o centro da mesa (ou fora da tela, na cadeirada) —
+    // nunca o avatar de quem arremessou.
+    const target = arena.querySelector<HTMLElement>(`[data-projectile-player="${event.targetPlayerId}"]`);
     if (!target) {
       done();
       return;
     }
-    const watchLifetime = (lifetime: number) => {
-      timer = setTimeout(done, lifetime);
+    const watchLifetime = (ms: number) => {
+      timer = setTimeout(done, ms);
       window.addEventListener("resize", done);
       document.addEventListener("visibilitychange", done);
       reducedMotion.addEventListener("change", done);
@@ -245,270 +263,393 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
       });
       observer.observe(arena, { childList: true, subtree: true });
     };
-    if (reducedMotion.matches) {
-      // O destaque pertence ao alvo: o overlay continua oculto em reduced-motion.
-      if (chair && Date.now() - event.receivedAt <= CHAIR_FLIGHT_MS && typeof target.animate === "function") {
-        const highlight = { outline: "2px solid var(--ring)", outlineOffset: "4px" };
-        animations.push(target.animate([highlight, highlight], { duration: 600 }));
-        watchLifetime(600);
-        return cleanup;
-      }
-      done();
-      return;
-    }
     const bounds = arena.getBoundingClientRect();
-    const center = (element: HTMLElement) => {
-      const rect = element.getBoundingClientRect();
-      return { x: rect.left + rect.width / 2 - bounds.left, y: rect.top + rect.height / 2 - bounds.top };
+    const targetRect = target.getBoundingClientRect();
+    const to = {
+      x: targetRect.left + targetRect.width / 2 - bounds.left,
+      y: targetRect.top + targetRect.height / 2 - bounds.top,
+    };
+    const radius = targetRect.width / 2 || 22;
+    const age = Date.now() - event.receivedAt;
+
+    if (reducedMotion.matches) {
+      // Versão estática: ícone + rótulo junto do alvo, sem voo nem tremor.
+      if (age > STATIC_NOTICE_MS || !notice) {
+        done();
+        return;
+      }
+      notice.style.left = `${round(to.x)}px`;
+      notice.style.top = `${round(to.y - radius - 6)}px`;
+      notice.dataset.visible = "true";
+      watchLifetime(STATIC_NOTICE_MS);
+      return cleanup;
+    }
+
+    const run = (element: Element | null | undefined, frames: Keyframe[], timing: KeyframeAnimationOptions) => {
+      if (!element || typeof element.animate !== "function") return;
+      animations.push(element.animate(frames, timing));
+      lifetime = Math.max(lifetime, Number(timing.delay ?? 0) + Number(timing.duration ?? 0));
     };
     const origin = arena.querySelector<HTMLElement>(".poker-center");
-    const from = origin ? center(origin) : { x: bounds.width / 2, y: bounds.height / 2 };
-    const to = center(target);
+    const originRect = origin?.getBoundingClientRect();
+    const center = originRect
+      ? { x: originRect.left + originRect.width / 2 - bounds.left, y: originRect.top + originRect.height / 2 - bounds.top }
+      : { x: bounds.width / 2, y: bounds.height / 2 };
+    const sideOf = (x: number) => (to.x - x < 0 ? -1 : 1);
+    const at = (ms: number, total: number) => round(ms / total);
+
+    if (impact) {
+      impact.style.left = `${round(to.x)}px`;
+      impact.style.top = `${round(to.y)}px`;
+      impact.style.setProperty("--avatar-r", `${round(radius)}px`);
+    }
+
+    if (chair) {
+      const T = CHAIR_TIMELINE;
+      const total = T.end;
+      if (age > total) {
+        done();
+        return;
+      }
+      const side = sideOf(center.x);
+      const mobile = window.matchMedia("(max-width: 700px)").matches;
+      const size = mobile ? 1 : 1.25;
+      const restScale = mobile ? 0.62 : 0.72;
+      // Entra de fora da tela, pelo alto e do lado de dentro da mesa.
+      const from = {
+        x: Math.min(bounds.width - 40, Math.max(40, to.x - side * Math.min(170, bounds.width * 0.3))),
+        y: -bounds.top - 140,
+      };
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const distance = Math.hypot(dx, dy) || 1;
+      const ux = dx / distance;
+      const uy = dy / distance;
+      const contact = { x: to.x - ux * (radius + 22), y: to.y - uy * (radius + 22) };
+      // Tombada ao lado do avatar, na altura do rosto: nunca sobre o nome.
+      const restOffset = radius + 30 * (restScale / 0.62) + 8;
+      const restSide = to.x + side * (restOffset + 34) > bounds.width || to.x + side * (restOffset + 34) < 0 ? -side : side;
+      const rest = { x: to.x + restSide * restOffset, y: to.y - 10 };
+      const strikeRot = -side * 24;
+      const restRot = restSide * 96;
+      node.style.setProperty("--chair-facing", String(side));
+      const pose = (x: number, y: number, rotation: number, scale: number) =>
+        `translate(${round(x - 40)}px, ${round(y - 44)}px) rotate(${round(rotation)}deg) scale(${round(scale)})`;
+      const frames: Keyframe[] = [];
+      const samples = 24;
+      for (let index = 0; index <= samples; index += 1) {
+        const t = index / samples;
+        const fall = t ** 1.6;
+        frames.push({
+          offset: at(t * T.contact, total),
+          transform: pose(from.x + (contact.x - from.x) * t, from.y + (contact.y - from.y) * fall, strikeRot - side * 720 * (1 - t) ** 1.3, size),
+          opacity: 1,
+        });
+      }
+      const apex = { x: (contact.x + rest.x) / 2, y: Math.min(contact.y, rest.y) - 38 };
+      frames.push(
+        { offset: at(T.contact + T.hitStop, total), transform: pose(contact.x, contact.y, strikeRot, size), opacity: 1, easing: "cubic-bezier(0.2, 0.8, 0.4, 1)" },
+        { offset: at(1240, total), transform: pose(apex.x, apex.y, (strikeRot + restRot) / 2, (size + restScale) / 2), opacity: 1, easing: "cubic-bezier(0.6, 0, 0.9, 0.5)" },
+        { offset: at(T.landed, total), transform: pose(rest.x, rest.y, restRot + restSide * 10, restScale), opacity: 1, easing: "ease-out" },
+        { offset: at(T.landed + 110, total), transform: pose(rest.x, rest.y, restRot - restSide * 4, restScale), opacity: 1, easing: "ease-in-out" },
+        { offset: at(T.landed + 200, total), transform: pose(rest.x, rest.y, restRot, restScale), opacity: 1 },
+        { offset: at(T.restUntil, total), transform: pose(rest.x, rest.y, restRot, restScale), opacity: 1, easing: "ease-in" },
+        { offset: 1, transform: pose(rest.x, rest.y + 6, restRot, restScale * 0.96), opacity: 0 },
+      );
+      run(node, frames, { duration: total, fill: "both" });
+
+      // Tremor curto da mesa: 3px por 150ms.
+      const table = arena.querySelector<HTMLElement>(".poker-table");
+      const s = TABLE_SHAKE_PX;
+      run(table, [
+        { transform: "none" },
+        { offset: 0.2, transform: `translate(${s * side}px, ${s * 0.6}px)` },
+        { offset: 0.45, transform: `translate(${-s * side * 0.8}px, ${-s * 0.4}px)` },
+        { offset: 0.7, transform: `translate(${s * side * 0.4}px, ${s * 0.2}px)` },
+        { transform: "none" },
+      ], { duration: TABLE_SHAKE_MS, delay: T.contact, easing: "linear" });
+
+      // O assento balança a partir da base, com squash no golpe.
+      const previousOrigin = target.style.transformOrigin;
+      target.style.transformOrigin = "50% 100%";
+      restoreTarget = () => { target.style.transformOrigin = previousOrigin; };
+      const squash = `translate(${round(ux * 4)}px, ${round(uy * 4)}px) rotate(${side * 14}deg) scale(1.08, 0.78)`;
+      const reactionMs = 1000;
+      run(target, [
+        { offset: 0, transform: squash },
+        { offset: T.hitStop / reactionMs, transform: squash, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
+        { offset: 0.28, transform: `rotate(${-side * 12}deg) scale(1.03, 1.04)`, easing: "ease-in-out" },
+        { offset: 0.48, transform: `rotate(${side * 8}deg)`, easing: "ease-in-out" },
+        { offset: 0.66, transform: `rotate(${-side * 4}deg)`, easing: "ease-in-out" },
+        { offset: 0.82, transform: `rotate(${side * 2}deg)`, easing: "ease-out" },
+        { offset: 1, transform: "none" },
+      ], { duration: reactionMs, delay: T.contact, easing: "linear" });
+
+      if (impact) {
+        impact.style.setProperty("--contact-delay", `${T.contact}ms`);
+        impact.style.setProperty("--impact-duration", `${CHAIR_IMPACT_MS}ms`);
+        const seconds = CHAIR_IMPACT_MS / 1000;
+        const spray = radialSpray(seconds);
+        impact.querySelectorAll<HTMLElement>(".projectile-particle").forEach((particle, index) => {
+          run(particle, particleFrames(spray[index % spray.length]!, seconds), { duration: CHAIR_IMPACT_MS, delay: T.contact, easing: "linear", fill: "both" });
+        });
+        // Estrelas orbitando a cabeça do alvo (contorno escuro: lê nos dois temas).
+        const orbitMs = 1500;
+        impact.querySelectorAll<HTMLElement>(".projectile-star").forEach((star, index) => {
+          const phase = (index / CHAIR_STARS) * Math.PI * 2;
+          const starFrames: Keyframe[] = Array.from({ length: 17 }, (_, step) => {
+            const p = step / 16;
+            const angle = phase + p * Math.PI * 2.2;
+            const pop = p < 0.1 ? p / 0.1 : p > 0.8 ? Math.max(0, (1 - p) / 0.2) : 1;
+            return {
+              offset: p,
+              transform: `translate(${round(Math.cos(angle) * (radius + 12))}px, ${round(-radius - 8 + Math.sin(angle) * 9)}px) rotate(${round(p * 260)}deg) scale(${round(0.4 + 0.6 * pop)})`,
+              opacity: round(pop),
+            };
+          });
+          run(star, starFrames, { duration: orbitMs, delay: T.contact + index * 30, easing: "linear", fill: "both" });
+        });
+        // Carimbo junto do alvo: acima do avatar, ou abaixo do nome se a barra fixa cobrir.
+        const stamp = impact.querySelector<HTMLElement>(".projectile-stamp");
+        const toolbarBottom = document.querySelector(".arena-toolbar")?.getBoundingClientRect().bottom ?? 0;
+        const above = -radius - 30;
+        const stampY = to.y + above + bounds.top - 16 < toolbarBottom ? radius + 52 : above;
+        const stampX = Math.min(bounds.width - 64 - to.x, Math.max(64 - to.x, -restSide * 10));
+        const stampAt = (scale: number, rotation: number) =>
+          `translate(${round(stampX)}px, ${round(stampY)}px) translate(-50%, -50%) rotate(${rotation}deg) scale(${scale})`;
+        run(stamp, [
+          { offset: 0, transform: stampAt(2.4, -18), opacity: 0, easing: "cubic-bezier(0.5, 0, 0.75, 0)" },
+          { offset: 0.1, transform: stampAt(0.92, -8), opacity: 1, easing: "ease-out" },
+          { offset: 0.17, transform: stampAt(1.05, -9), opacity: 1, easing: "ease-in-out" },
+          { offset: 0.24, transform: stampAt(1, -8), opacity: 1 },
+          { offset: 0.85, transform: stampAt(1, -8), opacity: 1, easing: "ease-in" },
+          { offset: 1, transform: stampAt(1.06, -8), opacity: 0 },
+        ], { duration: 1900, delay: T.contact + T.hitStop, fill: "both" });
+        run(impact, [{ opacity: 1 }, { opacity: 1 }], {
+          duration: Math.max(CHAIR_IMPACT_MS + STAR_STAGGER_MS * 2, total - T.contact),
+          delay: T.contact,
+        });
+      }
+      watchLifetime(Math.max(lifetime, total));
+      return cleanup;
+    }
+
+    // ——— Projéteis comuns ———
+    const motion = PROJECTILE_MOTION[type as CommonProjectile];
+    const from = center;
     const dx = to.x - from.x;
     const dy = to.y - from.y;
     const distance = Math.hypot(dx, dy) || 1;
     const ux = dx / distance;
     const uy = dy / distance;
     const side = dx < 0 ? -1 : 1;
-
-    const type = event.projectileType;
-    // No contato o avatar já está comprimido e deslocado pelo golpe.
-    const contact = type === "chair" ? { x: to.x + ux * 18, y: to.y + uy * 18 } : to;
-    const duration = type === "chair" ? CHAIR_FLIGHT_MS : flightDuration(type, distance);
-    if (Date.now() - event.receivedAt > duration) {
+    const flightMs = flightDuration(type as CommonProjectile, distance);
+    const total = flightMs + (hit ? motion.afterMs : MISS_AFTER_MS);
+    if (age > total) {
       done();
       return;
     }
-    const contactFraction = type === "chair" ? CHAIR_CONTACT : PROJECTILE_MOTION[type].contact;
-    const contactAt = duration * contactFraction;
-    const reactionAt = type !== "chair" && event.outcome === "dodge" ? duration * 0.5 : contactAt;
-    const reactionMs = type === "chair" ? 660 : 460;
-    const impactMs = type === "chair" ? CHAIR_IMPACT_MS : IMPACT_MS;
-    const hasImpact = event.outcome === "hit" || type === "chair";
-    // Inclui a última estrela, a recuperação do avatar e o eco mais atrasado — não só o trajeto.
-    const lifetime = Math.max(
-      duration + (type === "chair" ? 0 : ECHO_DELAYS_MS[ECHO_DELAYS_MS.length - 1]!),
-      reactionAt + reactionMs,
-      hasImpact ? contactAt + impactMs + (type === "chair" ? STAR_STAGGER_MS * 2 : 0) : 0,
-    );
-
-    let frames: Keyframe[];
-    let shadowFrames: Keyframe[] | null = null;
-    if (type === "chair") {
-      // Mãos no topo do encosto (30, 10), pé dianteiro em (72, 78).
-      // Espelha o desenho inteiro: as pernas continuam apontando para o alvo.
-      const pivotX = side > 0 ? 30 : 50;
-      node.style.transformOrigin = `${pivotX}px 10px`;
-      node.style.setProperty("--chair-facing", String(side));
-      const mobile = window.matchMedia("(max-width: 700px)").matches;
-      const size = mobile ? 1.1 : 1.35;
-      const tipX = side * 42;
-      const tipY = 68;
-      // Pernas apontam para fora da mesa; o encosto fica do lado de dentro.
-      // O ponto de contato inclui escala/espelho e não usa perspectiva 3D.
-      const angle = (Math.atan2(uy, ux) - Math.atan2(tipY, tipX)) * 180 / Math.PI;
-      // Nas duas colunas do mobile, bate pela lateral para caber na viewport.
-      const strikeAngle = mobile ? -side * 60 : ((angle + 540) % 360) - 180;
-      const radians = strikeAngle * Math.PI / 180;
-      const gripPoint = {
-        x: contact.x - size * (tipX * Math.cos(radians) - tipY * Math.sin(radians)),
-        y: contact.y - size * (tipX * Math.sin(radians) + tipY * Math.cos(radians)),
+    const contactFraction = flightMs / total;
+    const arc = Math.min(motion.arcMax, Math.max(motion.arcMin, distance * motion.arcRatio));
+    const plane = type === "paper_plane";
+    const warp = WEIGHT_WARP[motion.weight];
+    const sway = plane ? Math.min(34, Math.max(16, distance * 0.14)) : 0;
+    const pathAt = (raw: number) => {
+      const t = warp(Math.min(1, Math.max(0, raw)));
+      // Aviãozinho: voo em S (senoide perpendicular à reta, zero nas pontas).
+      const s = Math.sin(t * Math.PI * 2) * sway;
+      return {
+        x: from.x + dx * t - uy * s,
+        y: from.y + dy * t - 4 * arc * t * (1 - t) + ux * s,
       };
-      const held = (x: number, y: number, rotation: number, scale = size, tiltX = 0, turnY = 0) =>
-        `translate(${x - pivotX}px, ${y - 10}px) rotate(${rotation}deg) rotateY(${turnY}deg) rotateX(${tiltX}deg) scale(${scale})`;
-      const windup = strikeAngle - side * 85;
-      const strike = held(gripPoint.x, gripPoint.y, strikeAngle);
-      const frame = (ms: number, transform: string, opacity = 1, easing = "linear"): Keyframe =>
-        ({ offset: ms / CHAIR_FLIGHT_MS, transform, opacity, easing });
-      frames = [
-        frame(0, held(from.x, from.y - 30, 0, size * 0.55), 0, "cubic-bezier(0.16, 1, 0.3, 1)"),
-        frame(140, held(from.x, from.y - 30, 0), 1, "cubic-bezier(0.35, 0, 0.65, 1)"),
-        // Aproxima e arma em um movimento único, sem estacionar junto ao alvo.
-        frame(420, held(gripPoint.x - ux * 22, gripPoint.y - uy * 22 - 24, windup, size, -8, side * 18), 1, "cubic-bezier(0.55, 0, 0.9, 0.35)"),
-        frame(CHAIR_CONTACT_MS, strike),
-        frame(CHAIR_CONTACT_MS + CHAIR_HIT_STOP_MS, strike, 1, "cubic-bezier(0.16, 1, 0.3, 1)"),
-        // Um rebote e queda para dentro da mesa; libera a leitura do avatar.
-        frame(710, held(gripPoint.x - ux * 24, gripPoint.y - uy * 24 - 14, strikeAngle - side * 24, size, -5, side * 8), 1, "ease-in"),
-        frame(900, held(gripPoint.x - ux * 46, gripPoint.y - uy * 46 + 34, strikeAngle + side * 24, size * 0.8), 0),
+    };
+    const tangentAt = (t: number) => {
+      const a = pathAt(t - 0.015);
+      const b = pathAt(t + 0.015);
+      return Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+    };
+    let lastAngle = plane ? tangentAt(0) : 0;
+    const angleAt = (t: number) => {
+      if (!plane) return t * motion.spin * side;
+      // Tangente contínua: desenrola o salto de ±180°.
+      let angle = tangentAt(t);
+      while (angle - lastAngle > 180) angle -= 360;
+      while (angle - lastAngle < -180) angle += 360;
+      lastAngle = angle;
+      return angle;
+    };
+    const transform = (x: number, y: number, angle: number, scaleX = 1, scaleY = scaleX) =>
+      `translate(${round(x - 18)}px, ${round(y - 18)}px) rotate(${round(angle)}deg) scale(${round(scaleX)}, ${round(scaleY)})`;
+    const frames: Keyframe[] = [];
+    const shadowFrames: Keyframe[] = [];
+    for (let index = 0; index <= TRAJECTORY_SAMPLES; index += 1) {
+      const t = index / TRAJECTORY_SAMPLES;
+      const point = pathAt(t);
+      const release = t < RELEASE_FRACTION ? 0.72 + (t / RELEASE_FRACTION) * 0.28 : 1;
+      const tw = warp(t);
+      const lift = 4 * tw * (1 - tw);
+      frames.push({ offset: round(t * contactFraction), transform: transform(point.x, point.y, angleAt(t), release), opacity: index === 0 ? 0 : 1 });
+      shadowFrames.push({
+        offset: round(t * contactFraction),
+        transform: `translate(${round(from.x + dx * tw)}px, ${round(from.y + dy * tw)}px) scale(${round(1 - lift * 0.45)})`,
+        opacity: index === 0 ? 0 : round(0.5 * (1 - lift * 0.55)),
+      });
+    }
+    const endAngle = angleAt(1);
+    const after = (ms: number) => round((flightMs + ms) / total);
+    const floorY = to.y + radius + 14;
+    if (hit) {
+      if (type === "paper_ball") {
+        // Quica uma vez no avatar e rola para fora, pelo chão.
+        const roll = side;
+        frames.push(
+          { offset: after(50), transform: transform(to.x, to.y, endAngle, 1.18, 0.8), opacity: 1, easing: "cubic-bezier(0.2, 0.7, 0.4, 1)" },
+          { offset: after(280), transform: transform(to.x - ux * 14 + roll * 16, to.y - 38, endAngle + roll * 140), opacity: 1, easing: "cubic-bezier(0.55, 0, 0.85, 0.4)" },
+          { offset: after(460), transform: transform(to.x + roll * 34, floorY, endAngle + roll * 260, 1.08, 0.9), opacity: 1, easing: "ease-out" },
+          { offset: 1, transform: transform(to.x + roll * 96, floorY + 4, endAngle + roll * 560, 0.9), opacity: 0 },
+        );
+      } else if (type === "paper_plane") {
+        // Pousa espetado: o bico entra no anel e o aviãozinho vibra antes de cair.
+        const rad = endAngle * Math.PI / 180;
+        const stuck = { x: to.x - Math.cos(rad) * (radius + 6), y: to.y - Math.sin(rad) * (radius + 6) };
+        frames.push(
+          { offset: after(40), transform: transform(stuck.x, stuck.y, endAngle + 5, 0.94, 1), opacity: 1, easing: "ease-out" },
+          { offset: after(110), transform: transform(stuck.x, stuck.y, endAngle - 4), opacity: 1, easing: "ease-in-out" },
+          { offset: after(180), transform: transform(stuck.x, stuck.y, endAngle + 2), opacity: 1, easing: "ease-in-out" },
+          { offset: after(240), transform: transform(stuck.x, stuck.y, endAngle), opacity: 1 },
+          { offset: after(820), transform: transform(stuck.x, stuck.y, endAngle), opacity: 1, easing: "cubic-bezier(0.5, 0, 0.9, 0.5)" },
+          { offset: 1, transform: transform(stuck.x - side * 8, floorY + 10, endAngle + side * 50, 0.9), opacity: 0 },
+        );
+      } else if (type === "rock") {
+        // Queda seca: rebote curto e cai no chão.
+        frames.push(
+          { offset: after(40), transform: transform(to.x, to.y - 2, endAngle, 1.05, 0.95), opacity: 1, easing: "ease-out" },
+          { offset: after(180), transform: transform(to.x - ux * 12, to.y - 16, endAngle + side * 40), opacity: 1, easing: "ease-in" },
+          { offset: after(400), transform: transform(to.x - ux * 18, floorY + 6, endAngle + side * 90, 0.9), opacity: 1 },
+          { offset: after(560), transform: transform(to.x - ux * 18, floorY + 6, endAngle + side * 90, 0.9), opacity: 0 },
+          { offset: 1, transform: transform(to.x - ux * 18, floorY + 6, endAngle + side * 90, 0.9), opacity: 0 },
+        );
+      } else if (type === "brick") {
+        // O mais pesado: crava, inclina e despenca.
+        frames.push(
+          { offset: after(90), transform: transform(to.x - ux * 4, to.y - uy * 4, endAngle, 1), opacity: 1, easing: "ease-in-out" },
+          { offset: after(220), transform: transform(to.x - ux * 8, to.y - 6, endAngle + side * 18), opacity: 1, easing: "cubic-bezier(0.6, 0, 1, 0.6)" },
+          { offset: after(420), transform: transform(to.x - ux * 10, floorY + 10, endAngle + side * 70), opacity: 1 },
+          { offset: after(640), transform: transform(to.x - ux * 10, floorY + 10, endAngle + side * 70), opacity: 0 },
+          { offset: 1, transform: transform(to.x - ux * 10, floorY + 10, endAngle + side * 70), opacity: 0 },
+        );
+      } else {
+        // Tomate: o corpo vira splat na hora; a mancha (no impacto) escorre.
+        frames.push(
+          { offset: after(40), transform: transform(to.x, to.y, endAngle, 1.45, 0.45), opacity: 1, easing: "ease-out" },
+          { offset: after(140), transform: transform(to.x, to.y + 4, endAngle, 1.7, 0.2), opacity: 0 },
+          { offset: 1, transform: transform(to.x, to.y + 4, endAngle, 1.7, 0.2), opacity: 0 },
+        );
+      }
+      shadowFrames.push({ offset: after(120), transform: `translate(${round(to.x)}px, ${round(to.y)}px) scale(0.82)`, opacity: 0 }, { offset: 1, opacity: 0 });
+    } else {
+      const travel = event.outcome === "deflect" ? -90 : 65;
+      const exitX = to.x + ux * travel;
+      const exitY = to.y + uy * travel + 28;
+      frames.push({ offset: 1, transform: transform(exitX, exitY, endAngle + (plane ? 0 : -270), 0.65), opacity: 0 });
+      shadowFrames.push({ offset: 1, transform: `translate(${round(exitX)}px, ${round(exitY)}px) scale(0.7)`, opacity: 0 });
+    }
+
+    run(node, frames, { duration: total, fill: "both" });
+    // Eco/rastro: mesmos keyframes atrasados, colapsando sobre o líder no contato.
+    echoes.forEach((echoNode, index) => {
+      const base = ECHO_OPACITIES[index] ?? 0;
+      run(echoNode, frames.map((frame) => ({
+        ...frame,
+        opacity: round((typeof frame.opacity === "number" ? frame.opacity : 1) * base * Math.max(0, 1 - Number(frame.offset ?? 0) / contactFraction)),
+      })), { duration: total, delay: ECHO_DELAYS_MS[index] ?? 0, easing: "linear", fill: "both" });
+    });
+    run(shadow, shadowFrames, { duration: total, fill: "both" });
+
+    // Reação do alvo por desfecho e por item.
+    const reactionAt = event.outcome === "dodge" ? flightMs * 0.7 : flightMs;
+    const push = motion.weight === "heavy" ? 10 : type === "tomato" ? 6 : 3;
+    let reactionMs = 460;
+    let reaction: Keyframe[];
+    if (event.outcome === "dodge") {
+      reaction = [{ transform: "none" }, { transform: `translate(${round(-uy * 24)}px, ${round(ux * 24)}px)` }, { transform: "none" }];
+    } else if (event.outcome === "deflect") {
+      reaction = [{ transform: "none" }, { transform: `rotate(${-side * 16}deg) scale(1.08)` }, { transform: `rotate(${side * 6}deg) scale(1.02)` }, { transform: "none" }];
+    } else if (type === "rock") {
+      // O avatar afunda com o golpe e volta devagar.
+      reactionMs = 620;
+      reaction = [
+        { offset: 0, transform: "none" },
+        { offset: 0.08, transform: "translateY(8px) scale(1.06, 0.84)", easing: "cubic-bezier(0.2, 0.8, 0.4, 1)" },
+        { offset: 0.35, transform: "translateY(6px) scale(1.02, 0.92)", easing: "ease-in-out" },
+        { offset: 0.7, transform: "translateY(-2px) scale(0.98, 1.03)", easing: "ease-out" },
+        { offset: 1, transform: "none" },
       ];
     } else {
-      const motion = PROJECTILE_MOTION[type];
-      const arc = Math.min(motion.arcMax, Math.max(motion.arcMin, distance * motion.arcRatio));
-      const plane = type === "paper_plane";
-      const heavy = motion.weight === "heavy";
-      const tomato = type === "tomato";
-      const transform = (x: number, y: number, angle: number, scaleX = 1, scaleY = scaleX) =>
-        `translate(${x - 18}px, ${y - 18}px) rotate(${angle}deg) scale(${scaleX}, ${scaleY})`;
-      const angleAt = (t: number) => {
-        if (!plane) return t * motion.spin;
-        const angle = Math.atan2(dy - 4 * arc * (1 - 2 * t), dx) * 180 / Math.PI;
-        // Mantém a tangente contínua ao cruzar ±180° em voos para a esquerda.
-        return dx < 0 && angle < 0 ? angle + 360 : angle;
-      };
-      // X linear (velocidade de arremesso) + arco parabólico em Y; sai da mão
-      // com escala menor por ~6% do voo em vez de nascer colado no centro.
-      frames = Array.from({ length: TRAJECTORY_SAMPLES + 1 }, (_, index) => {
-        const progress = index / TRAJECTORY_SAMPLES;
-        const t = progress;
-        const release = progress < RELEASE_FRACTION ? 0.72 + (progress / RELEASE_FRACTION) * 0.28 : 1;
-        return {
-          offset: progress * motion.contact,
-          transform: transform(from.x + dx * t, from.y + dy * t - 4 * arc * t * (1 - t), angleAt(t), release, release),
-          opacity: index === 0 ? 0 : 1,
-        };
-      });
-      // Sombra de contato: segue a linha do chão e encolhe/clareia com a altura.
-      shadowFrames = Array.from({ length: TRAJECTORY_SAMPLES + 1 }, (_, index) => {
-        const progress = index / TRAJECTORY_SAMPLES;
-        const t = progress;
-        const lift = (4 * arc * t * (1 - t)) / arc;
-        return {
-          offset: progress * motion.contact,
-          transform: `translate(${from.x + dx * t}px, ${from.y + dy * t}px) scale(${1 - lift * 0.45})`,
-          opacity: index === 0 ? 0 : 0.5 * (1 - lift * 0.55),
-        };
-      });
-      const angle = angleAt(1);
-      if (event.outcome === "hit") {
-        if (tomato) {
-          frames.push(
-            { offset: motion.contact + 0.025, transform: transform(to.x, to.y, angle, 1.45, 0.45), opacity: 1, easing: "ease-out" },
-            { offset: 0.84, transform: transform(to.x, to.y + 5, angle, 1.65, 0.2), opacity: 0 },
-            { offset: 1, transform: transform(to.x, to.y + 5, angle, 1.65, 0.2), opacity: 0 },
-          );
-        } else {
-          const rebound = heavy ? 14 : 24;
-          frames.push(
-            { offset: motion.contact + 0.025, transform: transform(to.x, to.y, angle, heavy ? 1 : plane ? 0.6 : 0.85, heavy ? 1 : 1.12), opacity: 1, easing: "ease-out" },
-            { offset: 0.82, transform: transform(to.x - ux * rebound, to.y - uy * rebound - 10, angle + side * (plane ? 12 : 28), 0.95), opacity: 1, easing: "ease-in" },
-            { offset: 1, transform: transform(to.x - ux * rebound * 1.5, to.y + 32, angle + side * (plane ? 24 : 75), 0.75), opacity: 0 },
-          );
-        }
-        shadowFrames.push({ offset: 1, transform: `translate(${to.x}px, ${to.y}px) scale(0.82)`, opacity: 0 });
-      } else {
-        const travel = event.outcome === "deflect" ? -90 : 65;
-        const exitX = to.x + ux * travel;
-        const exitY = to.y + uy * travel + 28;
-        frames.push({ offset: 1, transform: transform(exitX, exitY, angle + (plane ? 0 : -270), 0.65), opacity: 0 });
-        shadowFrames.push({ offset: 1, transform: `translate(${exitX}px, ${exitY}px) scale(0.7)`, opacity: 0 });
-      }
+      reaction = [
+        { offset: 0, transform: "none" },
+        { offset: 0.1, transform: `translate(${round(ux * push)}px, ${round(uy * push)}px) rotate(${side * push}deg) scale(${motion.weight === "heavy" ? 0.88 : 0.96})` },
+        { offset: 0.24, transform: `translate(${round(ux * push)}px, ${round(uy * push)}px) rotate(${side * push}deg) scale(${motion.weight === "heavy" ? 0.88 : 0.96})` },
+        { offset: 0.6, transform: `translate(${round(-ux * push * 0.25)}px, ${round(-uy * push * 0.25)}px) rotate(${round(-side * push * 0.3)}deg)` },
+        { offset: 1, transform: "none" },
+      ];
+      if (motion.weight === "heavy") reactionMs = 560;
     }
+    run(target, reaction, { duration: reactionMs, delay: reactionAt, easing: "ease-out" });
 
-    // Sem Web Animations API, o voo some e o alvo não reage — sem quebrar.
-    if (typeof node.animate === "function") {
-      animations.push(node.animate(frames, { duration, fill: "both" }));
-      // Eco/rastro atrás do projétil rápido: mesmos keyframes, atraso crescente
-      // e opacidade que colapsa sobre o líder perto do contato (pico = velocidade).
-      if (type !== "chair") {
-        echoes.forEach((echoNode, index) => {
-          if (!echoNode || typeof echoNode.animate !== "function") return;
-          const base = ECHO_OPACITIES[index] ?? 0;
-          const echoFrames = frames.map((frame) => ({
-            ...frame,
-            opacity: (typeof frame.opacity === "number" ? frame.opacity : 1)
-              * base
-              * Math.max(0, 1 - Number(frame.offset ?? 0) / contactFraction),
-          }));
-          animations.push(echoNode.animate(echoFrames, {
-            duration,
-            delay: ECHO_DELAYS_MS[index] ?? 0,
-            easing: "linear",
-            fill: "both",
-          }));
+    if (impact && hit) {
+      impact.style.setProperty("--contact-delay", `${round(flightMs)}ms`);
+      impact.style.setProperty("--impact-duration", `${IMPACT_MS}ms`);
+      const seconds = IMPACT_MS / 1000;
+      const spray = directionalSpray(motion.weight, ux, uy, seconds);
+      impact.querySelectorAll<HTMLElement>(".projectile-particle").forEach((particle, index) => {
+        run(particle, particleFrames(spray[index % spray.length]!, seconds), { duration: IMPACT_MS, delay: flightMs, easing: "linear", fill: "both" });
+      });
+      if (type === "rock") {
+        // "Galo" no topo da cabeça por ~1s.
+        run(impact.querySelector(".projectile-bump"), [
+          { offset: 0, transform: `translate(${round(radius * 0.3)}px, ${round(-radius + 2)}px) scale(0)`, opacity: 1, easing: "cubic-bezier(0.2, 1.6, 0.4, 1)" },
+          { offset: 0.14, transform: `translate(${round(radius * 0.3)}px, ${round(-radius + 2)}px) scale(1.15)`, opacity: 1, easing: "ease-out" },
+          { offset: 0.24, transform: `translate(${round(radius * 0.3)}px, ${round(-radius + 2)}px) scale(1)`, opacity: 1 },
+          { offset: 0.86, transform: `translate(${round(radius * 0.3)}px, ${round(-radius + 2)}px) scale(1)`, opacity: 1, easing: "ease-in" },
+          { offset: 1, transform: `translate(${round(radius * 0.3)}px, ${round(-radius + 2)}px) scale(0.5)`, opacity: 0 },
+        ], { duration: 1250, delay: flightMs + 40, fill: "both" });
+      } else if (type === "brick") {
+        // Rachadura no anel, do lado de onde o tijolo veio.
+        const hitAngle = round(Math.atan2(-uy, -ux) * 180 / Math.PI);
+        const crack = (scale: number) => `rotate(${hitAngle}deg) scale(${scale})`;
+        run(impact.querySelector(".projectile-crack"), [
+          { offset: 0, transform: crack(1.12), opacity: 1, easing: "ease-out" },
+          { offset: 0.08, transform: crack(1), opacity: 1 },
+          { offset: 0.82, transform: crack(1), opacity: 1, easing: "ease-in" },
+          { offset: 1, transform: crack(1), opacity: 0 },
+        ], { duration: 1600, delay: flightMs, fill: "both" });
+      } else if (type === "tomato") {
+        const splatMs = motion.afterMs;
+        run(impact.querySelector(".projectile-splat"), [
+          { offset: 0, transform: "scale(0.3, 0.2)", opacity: 1, easing: "cubic-bezier(0.2, 0.8, 0.3, 1.2)" },
+          { offset: 0.07, transform: "scale(1.12, 0.94)", opacity: 1, easing: "ease-out" },
+          { offset: 0.14, transform: "scale(1)", opacity: 0.95 },
+          { offset: 0.85, transform: "translateY(3px) scale(0.98, 1.02)", opacity: 0.9, easing: "ease-in" },
+          { offset: 1, transform: "translateY(5px) scale(0.96, 1.04)", opacity: 0 },
+        ], { duration: splatMs, delay: flightMs, fill: "both" });
+        impact.querySelectorAll<HTMLElement>(".projectile-drip").forEach((drip, index) => {
+          const length = 5 + index * 3;
+          run(drip, [
+            { offset: 0, transform: "translateY(0) scaleY(0.1)", opacity: 0 },
+            { offset: 0.08, transform: "translateY(0) scaleY(0.4)", opacity: 1, easing: "cubic-bezier(0.5, 0, 0.8, 0.6)" },
+            { offset: 0.75, transform: `translateY(${length}px) scaleY(1)`, opacity: 1, easing: "ease-in" },
+            { offset: 1, transform: `translateY(${length + 6}px) scaleY(0.9)`, opacity: 0 },
+          ], { duration: splatMs - 200 - index * 120, delay: flightMs + 180 + index * 160, fill: "both" });
         });
       }
-      // Mãos soltam o encosto no contato; a cadeira segue sozinha.
-      if (chair && grip && typeof grip.animate === "function") {
-        animations.push(grip.animate(
-          [{ opacity: 1 }, { opacity: 1 }, { opacity: 0 }],
-          { duration: GRIP_RELEASE_MS, delay: contactAt + CHAIR_HIT_STOP_MS, easing: "ease-out", fill: "both" },
-        ));
-      }
-      // Impacto da cadeirada empurra a mesa no eixo do golpe e assenta com wobble.
-      if (chair) {
-        const table = arena.querySelector<HTMLElement>(".poker-table");
-        if (table) {
-          animations.push(table.animate([
-            { transform: "none" },
-            { offset: 0.12, transform: `translate(${ux * 6}px, ${uy * 4}px) rotate(${side * 0.6}deg)`, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
-            { offset: 0.42, transform: `translate(${-side * 1.6}px, -0.6px) rotate(${-side * 0.24}deg)`, easing: "ease-in-out" },
-            { offset: 0.7, transform: `translate(${side * 0.7}px, 0.2px) rotate(${side * 0.1}deg)`, easing: "ease-in-out" },
-            { transform: "none" },
-          ], { duration: CHAIR_SHAKE_MS, delay: contactAt + CHAIR_HIT_STOP_MS, fill: "none" }));
-        }
-      }
-      if (shadow && shadowFrames) {
-        animations.push(shadow.animate(shadowFrames, { duration, fill: "both" }));
-      }
-      // Reação do alvo por desfecho: squash+shake no hit, passo lateral no
-      // dodge, tilt no deflect — e tilt+shake forte no smash da cadeirada.
-      const heavyHit = type !== "chair" && PROJECTILE_MOTION[type].weight === "heavy";
-      const push = type === "chair" ? 0 : heavyHit ? 10 : type === "tomato" ? 6 : 3;
-      const reaction: Keyframe[] = type === "chair"
-        ? [
-          { offset: 0, transform: `translate(${ux * 18}px, ${uy * 18}px) rotate(${side * 18}deg) scale(0.88, 0.78)` },
-          { offset: CHAIR_HIT_STOP_MS / reactionMs, transform: `translate(${ux * 18}px, ${uy * 18}px) rotate(${side * 18}deg) scale(0.88, 0.78)`, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
-          { offset: 0.48, transform: `translate(${-ux * 4}px, ${-uy * 4}px) rotate(${-side * 6}deg) scale(1.04, 1.06)`, easing: "ease-in-out" },
-          { offset: 0.75, transform: `translate(${ux * 2}px, ${uy * 2}px) rotate(${side * 3}deg)`, easing: "ease-out" },
-          { offset: 1, transform: "none" },
-        ]
-        : event.outcome === "dodge"
-          ? [
-            { transform: "none" },
-            { transform: `translate(${-dy / distance * 24}px, ${dx / distance * 24}px)` },
-            { transform: "none" },
-          ]
-          : event.outcome === "deflect"
-            ? [
-              { transform: "none" },
-              { transform: `rotate(${-side * 16}deg) scale(1.08)` },
-              { transform: `rotate(${side * 6}deg) scale(1.02)` },
-              { transform: "none" },
-            ]
-            : [
-              { offset: 0, transform: "none" },
-              { offset: 0.1, transform: `translate(${ux * push}px, ${uy * push}px) rotate(${side * push}deg) scale(${heavyHit ? 0.88 : 0.96})` },
-              { offset: 0.24, transform: `translate(${ux * push}px, ${uy * push}px) rotate(${side * push}deg) scale(${heavyHit ? 0.88 : 0.96})` },
-              { offset: 0.6, transform: `translate(${-ux * push * 0.25}px, ${-uy * push * 0.25}px) rotate(${-side * push * 0.3}deg)` },
-              { offset: 1, transform: "none" },
-            ];
-      animations.push(target.animate(reaction, {
-        duration: reactionMs,
-        delay: reactionAt,
-        easing: chair ? "linear" : "ease-out",
-      }));
-      // Explosão de partículas no ponto de contato (cor por tipo, via CSS).
-      if (impact) {
-        impact.style.left = `${contact.x}px`;
-        impact.style.top = `${contact.y}px`;
-        impact.style.setProperty("--contact-delay", `${contactAt}ms`);
-        impact.style.setProperty("--impact-duration", `${impactMs}ms`);
-        impact.style.setProperty("--star-offset", `${Math.max(0, 64 - bounds.top - contact.y)}px`);
-        // Spray balístico: posição como função pura de t (sobe, trava e cai).
-        const seconds = impactMs / 1000;
-        const spray = type === "chair"
-          ? radialSpray(seconds)
-          : directionalSpray(PROJECTILE_MOTION[type].weight, ux, uy, seconds);
-        if (hasImpact) {
-          impact.querySelectorAll<HTMLElement>(".projectile-particle").forEach((particle, index) => {
-            const shot = spray[index % spray.length] ?? spray[0]!;
-            animations.push(particle.animate(particleFrames(shot, seconds), {
-              duration: impactMs,
-              delay: contactAt,
-              easing: "linear",
-              fill: "both",
-            }));
-          });
-          animations.push(impact.animate(
-            [{ opacity: 1 }, { opacity: 1 }],
-            { duration: impactMs + (type === "chair" ? STAR_STAGGER_MS * 2 : 0), delay: contactAt },
-          ));
-        }
-      }
+      run(impact, [{ opacity: 1 }, { opacity: 1 }], { duration: Math.max(IMPACT_MS, total - flightMs), delay: flightMs });
     }
-    watchLifetime(lifetime);
+    watchLifetime(Math.max(lifetime, total + ECHO_DELAYS_MS[ECHO_DELAYS_MS.length - 1]!));
     return cleanup;
-  }, [event, arenaRef, onDone]);
+  }, [event, arenaRef, onDone, hit, type, chair]);
+
+  const label = PROJECTILE_CATALOG.find((entry) => entry.type === type)?.label[lang] ?? "";
   return (
     <>
       {chair ? null : <span ref={shadowRef} className="projectile-shadow" data-testid="projectile-shadow" aria-hidden="true" />}
@@ -521,25 +662,13 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
           data-testid="projectile-echo"
           aria-hidden="true"
         >
-          <ProjectileIcon type={event.projectileType} />
+          <ProjectileIcon type={type} />
         </span>
       ))}
-      <span ref={flightRef} className={chair ? "projectile-flight projectile-flight--chair" : "projectile-flight"} data-testid="projectile-flight" data-target={event.targetPlayerId} data-outcome={event.outcome} data-projectile={event.projectileType} aria-hidden="true">
-        <ProjectileIcon type={event.projectileType} />
-        {chair ? (
-          <svg ref={gripRef} className="projectile-grip" viewBox="0 0 80 88" fill="none" aria-hidden="true">
-            {["translate(15 7)", "translate(40 1)"].map((position) => (
-              <g key={position} transform={position} stroke="#79543d" strokeWidth="0.7" strokeLinejoin="round">
-                <path d="m-6 0 7 2-1 5-7-2Z" fill="#303d47" stroke="#a8b5bf" />
-                <path d="m-1 1 3 1-1 5-3-1Z" fill="#e4e9e9" stroke="none" />
-                <path d="M2 1q1-2 2 0 1-2 2 0 2-1 2 1v5q0 2-2 2H3Q0 8 0 6V4q0-1 1-1l2 1Z" fill="#e8b48d" />
-                <path d="M4 2v3m2-3v3M1 4l3 1" stroke="#a67148" strokeLinecap="round" />
-              </g>
-            ))}
-          </svg>
-        ) : null}
+      <span ref={flightRef} className={chair ? "projectile-flight projectile-flight--chair" : "projectile-flight"} data-testid="projectile-flight" data-target={event.targetPlayerId} data-outcome={event.outcome} data-projectile={type} aria-hidden="true">
+        <ProjectileIcon type={type} />
       </span>
-      <span ref={impactRef} className={`projectile-impact projectile-impact--${event.projectileType} projectile-impact--${event.outcome}`} data-testid="projectile-impact" aria-hidden="true" style={{ "--contact-delay": "0ms", "--impact-duration": `${IMPACT_MS}ms`, "--star-stagger": `${STAR_STAGGER_MS}ms` } as CSSProperties}>
+      <span ref={impactRef} className={`projectile-impact projectile-impact--${type} projectile-impact--${event.outcome}`} data-testid="projectile-impact" aria-hidden="true" style={{ "--contact-delay": "0ms", "--impact-duration": `${IMPACT_MS}ms`, "--star-stagger": `${STAR_STAGGER_MS}ms` } as CSSProperties}>
         {chair ? <i className="projectile-ripple" aria-hidden="true" /> : null}
         <i className="projectile-ring" aria-hidden="true" />
         {Array.from({ length: IMPACT_PARTICLES }, (_, index) => (
@@ -547,11 +676,32 @@ export function ProjectileFlight({ event, arenaRef, onDone }: {
         ))}
         {chair ? (
           <>
-            <i className="projectile-star projectile-star--1" aria-hidden="true">★</i>
-            <i className="projectile-star projectile-star--2" aria-hidden="true">★</i>
-            <i className="projectile-star projectile-star--3" aria-hidden="true">★</i>
+            {Array.from({ length: CHAIR_STARS }, (_, index) => (
+              <i key={index} className="projectile-star" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7L12 17.3 5.8 21l1.6-7L2 9.2l7.1-.6Z" /></svg>
+              </i>
+            ))}
+            <b className="projectile-stamp" data-testid="projectile-stamp">{STAMP_TEXT[lang]}</b>
           </>
         ) : null}
+        {type === "rock" && hit ? <i className="projectile-bump" data-testid="projectile-bump" aria-hidden="true" /> : null}
+        {type === "brick" && hit ? (
+          <svg className="projectile-crack" data-testid="projectile-crack" viewBox="-30 -30 60 60" aria-hidden="true">
+            <path d="M25 -3 18 -1 21 4 14 3 11 8M18 -1 15 -7 10 -6M21 4 26 8" />
+          </svg>
+        ) : null}
+        {type === "tomato" && hit ? (
+          <>
+            <i className="projectile-splat" data-testid="projectile-splat" aria-hidden="true" />
+            {Array.from({ length: TOMATO_DRIPS }, (_, index) => (
+              <i key={index} className={`projectile-drip projectile-drip--${index + 1}`} data-testid="projectile-drip" aria-hidden="true" />
+            ))}
+          </>
+        ) : null}
+      </span>
+      <span ref={staticRef} className="projectile-static" data-testid="projectile-static" aria-hidden="true">
+        <ProjectileIcon type={type} />
+        <span>{chair ? STAMP_TEXT[lang] : label}</span>
       </span>
     </>
   );
