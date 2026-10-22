@@ -1,0 +1,1346 @@
+$ bun run typecheck && bun run test && bun run build:web
+$ bun --filter pointly-web typecheck && bun --filter server typecheck && bun --filter @planning-poker/shared typecheck
+pointly-web typecheck: Exited with code 0
+server typecheck: Exited with code 0
+@planning-poker/shared typecheck: Exited with code 0
+$ node --test scripts/serve-web.test.mjs && bun --filter pointly-web test && bun --filter server test && bun --filter @planning-poker/shared test
+TAP version 13
+# Subtest: serve-web: headers de segurança
+    # Subtest: toda resposta leva CSP, nosniff, frame DENY, Referrer e Permissions
+    ok 1 - toda resposta leva CSP, nosniff, frame DENY, Referrer e Permissions
+      ---
+      duration_ms: 14.075118
+      type: 'test'
+      ...
+    # Subtest: CSP do HTML inclui hash sha256 do <script> inline (e ignora src/vazio)
+    ok 2 - CSP do HTML inclui hash sha256 do <script> inline (e ignora src/vazio)
+      ---
+      duration_ms: 2.522356
+      type: 'test'
+      ...
+    1..2
+ok 1 - serve-web: headers de segurança
+  ---
+  duration_ms: 17.342645
+  type: 'suite'
+  ...
+# Subtest: serve-web: negociação de entrega
+    # Subtest: prefere Brotli e aceita parâmetros de qualidade
+    ok 1 - prefere Brotli e aceita parâmetros de qualidade
+      ---
+      duration_ms: 0.280601
+      type: 'test'
+      ...
+    # Subtest: ETag acompanha o arquivo e valida If-None-Match
+    ok 2 - ETag acompanha o arquivo e valida If-None-Match
+      ---
+      duration_ms: 0.704449
+      type: 'test'
+      ...
+    # Subtest: comprime texto e ignora binário
+    ok 3 - comprime texto e ignora binário
+      ---
+      duration_ms: 2.592274
+      type: 'test'
+      ...
+    # Subtest: cache separa asset com hash de HTML e HSTS só sobre HTTPS
+    ok 4 - cache separa asset com hash de HTML e HSTS só sobre HTTPS
+      ---
+      duration_ms: 0.49641
+      type: 'test'
+      ...
+    # Subtest: resposta comprimível manda Vary: Accept-Encoding
+    ok 5 - resposta comprimível manda Vary: Accept-Encoding
+      ---
+      duration_ms: 1.441206
+      type: 'test'
+      ...
+    # Subtest: 404 nunca vira 304 e o 304 preserva X-Robots-Tag
+    ok 6 - 404 nunca vira 304 e o 304 preserva X-Robots-Tag
+      ---
+      duration_ms: 0.728688
+      type: 'test'
+      ...
+    1..6
+ok 2 - serve-web: negociação de entrega
+  ---
+  duration_ms: 6.618372
+  type: 'suite'
+  ...
+1..2
+# tests 8
+# suites 2
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 77.765007
+pointly-web test: bun test v1.4.2 (744846f84)
+pointly-web test: 
+pointly-web test: src/App.test.tsx:
+pointly-web test: ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+pointly-web test: ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+pointly-web test: (pass) App (issue #158 — polimento e auditoria) > uma nova tela começa no topo e recebe o foco no conteúdo [171.61ms]
+pointly-web test: (pass) App (issue #158 — polimento e auditoria) > navegação para entrar com código atualiza o formulário já aberto [47.31ms]
+pointly-web test: (pass) App (issue #158 — polimento e auditoria) > skip link leva ao conteúdo principal [44.16ms]
+pointly-web test: (pass) App (issue #158 — polimento e auditoria) > marcos de navegação presentes nas duas superfícies [13.67ms]
+pointly-web test: (pass) App (15.T8 — seleção de idioma) > seletor na home pt leva para /en e registra a escolha [46.11ms]
+pointly-web test: (pass) App (15.T8 — seleção de idioma) > seletor na home EN leva de volta para / [27.02ms]
+pointly-web test: (pass) App (15.T8 — seleção de idioma) > seletor em rota do app (/join) alterna EN/PT na hora [21.73ms]
+pointly-web test: (pass) App (15.T8 — seleção de idioma) > preferência EN leva /join para inglês [14.61ms]
+pointly-web test: (pass) App (15.T8 — seleção de idioma) > navegador EN sem preferência vê /join em inglês [11.73ms]
+pointly-web test: (pass) App (15.T8 — seleção de idioma) > preferência EN não muda as rotas públicas (path manda) [17.67ms]
+pointly-web test: (pass) App (15.T8 — seleção de idioma) > 1ª visita na raiz com navegador em inglês vai para /en sem gravar preferência [13.70ms]
+pointly-web test: (pass) App (15.T8 — seleção de idioma) > preferência salva suprime o redirect da raiz [9.15ms]
+pointly-web test: (pass) App (15.T8 — seleção de idioma) > navegador pt nunca é redirecionado a partir de /en [7.85ms]
+pointly-web test: (pass) App (higiene GSC — redirect de locale e robots por rota) > Googlebot em inglês fica na home pt (sem redirect client-side) [10.75ms]
+pointly-web test: (pass) App (higiene GSC — redirect de locale e robots por rota) > navegador EN comum segue indo para /en [13.27ms]
+pointly-web test: (pass) App (higiene GSC — redirect de locale e robots por rota) > /join e /s/* recebem noindex em runtime [10.73ms]
+pointly-web test: (pass) App (higiene GSC — redirect de locale e robots por rota) > rota pública não herda noindex do shell/404 [16.68ms]
+pointly-web test: (pass) App com analytics desativado > /join?code=ABCD&mode=join não inicializa analytics nem envia eventos [12.17ms]
+pointly-web test: (pass) App com analytics desativado > /s/ABCD não inicializa analytics nem envia eventos [2.56ms]
+pointly-web test: 
+pointly-web test: src/components/poker-table.test.tsx:
+pointly-web test: (pass) PokerTable avatar (AV-04) > com avatar renderiza img no círculo em vez das iniciais [8.06ms]
+pointly-web test: (pass) PokerTable avatar (AV-04) > sem avatar exibe as iniciais [1.38ms]
+pointly-web test: (pass) PokerTable avatar (AV-04) > avatar null exibe as iniciais [1.09ms]
+pointly-web test: (pass) PokerTable avatar (AV-04) > erro de load volta para as iniciais sem círculo vazio [3.47ms]
+pointly-web test: (pass) PokerTable avatar (AV-04) > âncora de projéteis inalterada com avatar [1.50ms]
+pointly-web test: (pass) PokerTable cartas na mesa > voto pré-reveal mostra a carta à frente do assento com verso [1.37ms]
+pointly-web test: (pass) PokerTable cartas na mesa > sem voto não há carta [0.87ms]
+pointly-web test: (pass) PokerTable cartas na mesa > pós-reveal a carta vira face e mostra o valor [0.98ms]
+pointly-web test: (pass) PokerTable carta votada (14.2) > voto entra com flip de meia-volta, sem voo [0.11ms]
+pointly-web test: (pass) PokerTable carta votada (14.2) > reduced motion desliga o flip do voto [0.02ms]
+pointly-web test: (pass) PokerTable dado da mesa (14.6) > assento sorteado ganha a pill 'Justifica' [1.27ms]
+pointly-web test: (pass) PokerTable dado da mesa (14.6) > sem sorteio (null) nenhum assento recebe a pill [0.96ms]
+pointly-web test: 
+pointly-web test: src/components/deck.test.tsx:
+pointly-web test: Warning: A suspended resource finished loading inside a test, but the event was not wrapped in act(...).
+pointly-web test: 
+pointly-web test: When testing, code that resolves suspended data should be wrapped into act(...):
+pointly-web test: 
+pointly-web test: act(() => {
+pointly-web test:   /* finish loading suspended data */
+pointly-web test: });
+pointly-web test: /* assert on the output */
+pointly-web test: 
+pointly-web test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+pointly-web test: Warning: A suspended resource finished loading inside a test, but the event was not wrapped in act(...).
+pointly-web test: 
+pointly-web test: When testing, code that resolves suspended data should be wrapped into act(...):
+pointly-web test: 
+pointly-web test: act(() => {
+pointly-web test:   /* finish loading suspended data */
+pointly-web test: });
+pointly-web test: /* assert on the output */
+pointly-web test: 
+pointly-web test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+pointly-web test: (pass) Deck (ticket 05 — Votar) > renderiza o deck completo com 9 cartas [2.34ms]
+pointly-web test: (pass) Deck (ticket 05 — Votar) > aria-pressed reflete a escolha atual sem desabilitar cartas [2.15ms]
+pointly-web test: (pass) Deck (ticket 05 — Votar) > clique seleciona a carta e pausa tem rótulo acessível [1.99ms]
+pointly-web test: (pass) Deck (ticket 05 — Votar) > seleção tem indicador estático e elevação só com movimento (issue #158) [1.70ms]
+pointly-web test: 
+pointly-web test: src/components/unanimous-celebration.test.tsx:
+pointly-web test: (pass) UnanimousCelebration (14.3) > celebrateKey > 0 monta a camada decorativa com 14 peças [1.86ms]
+pointly-web test: (pass) UnanimousCelebration (14.3) > sem celebrateKey a camada não existe [1.16ms]
+pointly-web test: (pass) UnanimousCelebration (14.3) > incrementar o celebrateKey remonta a camada (replay) [2.16ms]
+pointly-web test: 
+pointly-web test: src/components/projectile-flight.test.tsx:
+pointly-web test: (pass) chair só é removido depois da reação e de todas as partículas [9.75ms]
+pointly-web test: (pass) tomato só é removido depois da reação e de todas as partículas [3.89ms]
+pointly-web test: (pass) rock só é removido depois da reação e de todas as partículas [2.66ms]
+pointly-web test: (pass) brick só é removido depois da reação e de todas as partículas [2.84ms]
+pointly-web test: (pass) paper_ball só é removido depois da reação e de todas as partículas [2.55ms]
+pointly-web test: (pass) paper_plane só é removido depois da reação e de todas as partículas [2.46ms]
+pointly-web test: (pass) cadeirada fica tombada por 2-3s e termina uma única vez [3.36ms]
+pointly-web test: (pass) dodge não produz impacto e cancela as animações no resize [2.57ms]
+pointly-web test: (pass) deflect não produz impacto e cancela as animações no resize [2.38ms]
+pointly-web test: (pass) paper_ball usa arte SVG própria no voo [2.46ms]
+pointly-web test: (pass) paper_plane usa arte SVG própria no voo [2.43ms]
+pointly-web test: (pass) rock usa arte SVG própria no voo [2.51ms]
+pointly-web test: (pass) brick usa arte SVG própria no voo [3.24ms]
+pointly-web test: (pass) tomato usa arte SVG própria no voo [3.11ms]
+pointly-web test: (pass) chair usa arte SVG própria no voo [4.22ms]
+pointly-web test: (pass) sombra de contato acompanha o voo e as partículas ganham animação própria [3.30ms]
+pointly-web test: (pass) cadeirada dispensa sombra de contato [4.12ms]
+pointly-web test: (pass) paper_ball deixa dois ecos que colapsam sobre o líder [2.63ms]
+pointly-web test: (pass) paper_plane deixa dois ecos que colapsam sobre o líder [2.46ms]
+pointly-web test: (pass) rock deixa dois ecos que colapsam sobre o líder [2.40ms]
+pointly-web test: (pass) brick deixa dois ecos que colapsam sobre o líder [2.67ms]
+pointly-web test: (pass) tomato deixa dois ecos que colapsam sobre o líder [2.72ms]
+pointly-web test: (pass) partículas seguem arco balístico em keyframes lineares [2.75ms]
+pointly-web test: (pass) ripple do feltro aparece só na cadeirada [11.80ms]
+pointly-web test: (pass) cadeirada entra de fora da tela, girando, opaca [3.51ms]
+pointly-web test: (pass) cadeirada sacode a mesa 3px por 150ms, balança o assento e carimba CADEIRADA! [3.95ms]
+pointly-web test: (pass) rock tem batida própria (projectile-bump) [2.39ms]
+pointly-web test: (pass) brick tem batida própria (projectile-crack) [2.55ms]
+pointly-web test: (pass) tomato tem batida própria (projectile-splat) [2.77ms]
+pointly-web test: (pass) tomate escorre e dura 2-3s [3.36ms]
+pointly-web test: (pass) aviãozinho faz voo em S e fica espetado [3.80ms]
+pointly-web test: (pass) projétil comum não sacode a mesa [2.88ms]
+pointly-web test: (pass) cadeirada sincroniza contato e pausa de 60ms [3.36ms]
+pointly-web test: (pass) movimento reduzido (chair) mostra ícone + rótulo estáticos, sem animação [2.67ms]
+pointly-web test: (pass) movimento reduzido (rock) mostra ícone + rótulo estáticos, sem animação [2.18ms]
+pointly-web test: (pass) cancelamento repetido conclui uma única vez [3.21ms]
+pointly-web test: (pass) saída do alvo encerra a cadeirada, cancela seus efeitos e restaura o alvo [58.01ms]
+pointly-web test: (pass) cadeirada voa no assento do alvo e tomba na camada sob os assentos [7.33ms]
+pointly-web test: 
+pointly-web test: src/components/avatar-picker.test.tsx:
+pointly-web test: (pass) AvatarPicker (AV-05) > com valor mostra preview circular imediato [10.97ms]
+pointly-web test: (pass) AvatarPicker (AV-05) > sem valor mostra escolher e sem preview [4.15ms]
+pointly-web test: (pass) AvatarPicker (AV-05) > arquivo válido normaliza e chama onChange com dataURL [7.13ms]
+pointly-web test: (pass) AvatarPicker (AV-05) > durante o processamento mantém preview anterior e desabilita controles [11.84ms]
+pointly-web test: (pass) AvatarPicker (AV-05) > formato inválido mostra erro inline sem chamar onChange [9.04ms]
+pointly-web test: (pass) AvatarPicker (AV-05) > arquivo acima de 5MB mostra erro inline sem chamar onChange [7.02ms]
+pointly-web test: (pass) AvatarPicker (AV-05) > remover limpa e volta a iniciais [5.33ms]
+pointly-web test: (pass) AvatarPicker (AV-05) > microcopy de privacidade acompanha o picker [2.01ms]
+pointly-web test: (pass) AvatarPicker (AV-05) > input aceita só png/jpeg/webp [1.80ms]
+pointly-web test: 
+pointly-web test: src/seo/routes.test.ts:
+pointly-web test: (pass) Registro SEO (15.T6 — hreflang, sitemap e schema) > toda alternativa hreflang existe no registro e é recíproca [0.19ms]
+pointly-web test: (pass) Registro SEO (15.T6 — hreflang, sitemap e schema) > sitemap lista as rotas indexáveis com alternates [0.19ms]
+pointly-web test: (pass) Registro SEO (15.T6 — hreflang, sitemap e schema) > sitemap é apex-only e bate exatamente com o canonical de cada rota [0.33ms]
+pointly-web test: (pass) Registro SEO (15.T6 — hreflang, sitemap e schema) > todo guia do registro tem uma rota indexável e uma URL no sitemap [0.25ms]
+pointly-web test: (pass) Registro SEO (15.T6 — hreflang, sitemap e schema) > FAQPage espelha o FAQ visível de landings e guias [0.67ms]
+pointly-web test: (pass) Registro SEO (15.T6 — hreflang, sitemap e schema) > guias publicam Article com headline, idioma e datas [0.11ms]
+pointly-web test: (pass) Registro SEO (15.T6 — hreflang, sitemap e schema) > guias levam lastmod real; demais rotas não inventam data [0.25ms]
+pointly-web test: (pass) Registro SEO (15.T6 — hreflang, sitemap e schema) > head tem OG completo, locale e datas de artigo [0.43ms]
+pointly-web test: (pass) Registro SEO (15.T6 — hreflang, sitemap e schema) > guias publicam BreadcrumbList até a raiz [0.21ms]
+pointly-web test: (pass) Registro SEO (15.T6 — hreflang, sitemap e schema) > /guias publica CollectionPage com ItemList espelhando os cards [0.10ms]
+pointly-web test: (pass) Registro SEO (15.T6 — hreflang, sitemap e schema) > titles e descriptions ficam em faixas de SERP [0.05ms]
+pointly-web test: (pass) Registro SEO (15.T6 — hreflang, sitemap e schema) > toda rota indexável aparece no llms.txt [0.16ms]
+pointly-web test: (pass) Registro SEO (15.T6 — hreflang, sitemap e schema) > PUBLIC_PATHS reflete o registro indexável (mesmo path, lang e alternates) [0.22ms]
+pointly-web test: 
+pointly-web test: src/seo/robots.test.ts:
+pointly-web test: (pass) meta robots em runtime (higiene GSC) > rota não indexável ganha noindex, sem duplicar [0.43ms]
+pointly-web test: (pass) meta robots em runtime (higiene GSC) > rota indexável remove o noindex herdado [0.33ms]
+pointly-web test: (pass) meta robots em runtime (higiene GSC) > rota indexável sem meta não cria nada [0.06ms]
+pointly-web test: 
+pointly-web test: src/lib/pauta.test.ts:
+pointly-web test: (pass) pauta helpers — ordenação (#164) > sortPauta ordena por ordem sem mutar a entrada [0.13ms]
+pointly-web test: (pass) pauta helpers — ordenação (#164) > sortPauta é empty-safe (ausente/nula/vazia → []) [0.02ms]
+pointly-web test: (pass) pauta helpers — ordenação (#164) > getHistoriaAtiva resolve a ativa e é null-safe [0.07ms]
+pointly-web test: (pass) pauta helpers — ordenação (#164) > isPautaVazia cobre ausente/nula/vazia/cheia [0.03ms]
+pointly-web test: (pass) pauta helpers — Pontuação tabular mono (#164) > formatPontos: inteiro puro, decimal 1 casa, null → — [0.05ms]
+pointly-web test: (pass) pauta helpers — Pontuação tabular mono (#164) > formatPontuacao: mediana + N×V com mapa de votos [0.14ms]
+pointly-web test: (pass) pauta helpers — Pontuação tabular mono (#164) > formatPontuacao: array de votos e ½/☕ ordenados (☕ por último) [0.02ms]
+pointly-web test: (pass) pauta helpers — Pontuação tabular mono (#164) > formatPontuacao não quebra com vazia (só mediana ou —) [0.04ms]
+pointly-web test: (pass) pauta helpers — Pontuação tabular mono (#164) > formatPontuacao sem mediana mostra só o breakdown [0.02ms]
+pointly-web test: 
+pointly-web test: src/lib/ws-pauta.test.ts:
+pointly-web test: (pass) ws-client pauta — hello + eventos tipados (#164) > connect/hello recebe pauta + historiaAtualId [9.94ms]
+pointly-web test: (pass) ws-client pauta — hello + eventos tipados (#164) > add/update/move/remove/select enviam o evento tipado [201.64ms]
+pointly-web test: (pass) ws-client pauta — hello + eventos tipados (#164) > payload inválido nunca trafega (false, sem throw) [152.16ms]
+pointly-web test: (pass) ws-client pauta — erros sem crash (#164) > pauta_cheia / historia_nao_encontrada / invalid_phase / role_denied chegam no onError e o socket segue pronto [406.63ms]
+pointly-web test: (pass) ws-client pauta — erros sem crash (#164) > lixo e error malformado não derrubam o socket [101.69ms]
+pointly-web test: 
+pointly-web test: src/lib/analytics.test.ts:
+pointly-web test: (pass) analytics (sem Measurement ID) > initAnalytics não injeta script nem cria dataLayer [0.60ms]
+pointly-web test: (pass) analytics (sem Measurement ID) > track* são no-op sem rede / sem gtag [0.20ms]
+pointly-web test: (pass) analytics desativado por política de privacidade > ID preenchido não permite carregar o SDK [0.13ms]
+pointly-web test: (pass) analytics desativado por política de privacidade > nenhum evento usa um gtag preexistente [0.11ms]
+pointly-web test: (pass) sanitizePagePath (privacidade: sem código de sala no GA4) > mascara /s/:code e variantes com prefixo de locale [0.05ms]
+pointly-web test: (pass) sanitizePagePath (privacidade: sem código de sala no GA4) > mantém rotas públicas/canônicas como estão [0.11ms]
+pointly-web test: (pass) sanitizePagePath (privacidade: sem código de sala no GA4) > é idempotente (placeholder não é re-mascarado de outro jeito) [0.03ms]
+pointly-web test: (pass) sanitizePagePath (privacidade: sem código de sala no GA4) > nunca retorna código de sala cru em lote de paths reais [0.17ms]
+pointly-web test: 
+pointly-web test: src/lib/stats.test.ts:
+pointly-web test: (pass) useConsensusStats — sinais de consenso (14.1) > unânime: ≥2 numéricos iguais (pausa fora) [0.26ms]
+pointly-web test: (pass) useConsensusStats — sinais de consenso (14.1) > divergente: ≥2 numéricos distintos [0.06ms]
+pointly-web test: (pass) useConsensusStats — sinais de consenso (14.1) > sem sinal: voto único, só ☕ ou vazio [0.08ms]
+pointly-web test: (pass) useConsensusStats — sinais de consenso (14.1) > rótulos existentes seguem iguais (badge/aria) [0.14ms]
+pointly-web test: 
+pointly-web test: src/lib/deck.test.ts:
+pointly-web test: (pass) deck (ticket 05 — Votar) > deck completo com 9 cartas na ordem do contrato [0.02ms]
+pointly-web test: (pass) deck (ticket 05 — Votar) > ½ vale 0,5 e zero é voto válido [0.02ms]
+pointly-web test: (pass) deck (ticket 05 — Votar) > pausa marca participação mas fica fora dos cálculos [0.10ms]
+pointly-web test: (pass) consenso (ticket 07 — Resultados) > ½ computa como 0,5 e 0 é voto válido [0.05ms]
+pointly-web test: (pass) consenso (ticket 07 — Resultados) > média, mediana e intervalo de [5, 8] [0.05ms]
+pointly-web test: (pass) consenso (ticket 07 — Resultados) > mediana ímpar pega o centro [0.01ms]
+pointly-web test: (pass) consenso (ticket 07 — Resultados) > pausa e ausência ficam fora dos cálculos [0.04ms]
+pointly-web test: (pass) consenso (ticket 07 — Resultados) > unanimidade exige ≥2 numéricos iguais (pausa ignorada) [0.05ms]
+pointly-web test: (pass) consenso (ticket 07 — Resultados) > agrupamento preserva a ordem do deck com a pausa por último [0.02ms]
+pointly-web test: (pass) consenso (ticket 07 — Resultados) > formatos: mediana inteira sem decimais, média 1dp, intervalo com en-dash [0.03ms]
+pointly-web test: (pass) sinais de consenso (14.1 — espelho do shared) > consensusSignal: unânime / divergente / sem sinal [0.07ms]
+pointly-web test: (pass) sinais de consenso (14.1 — espelho do shared) > divergenceMagnitude: delta max−min (null sem numéricos) [0.04ms]
+pointly-web test: (pass) dado da mesa (14.6 — espelho do shared) > vetores fixos idênticos ao shared (paridade shared ↔ web) [0.11ms]
+pointly-web test: (pass) dado da mesa (14.6 — espelho do shared) > determinístico e independente da ordem do pool [0.03ms]
+pointly-web test: (pass) dado da mesa (14.6 — espelho do shared) > pool vazio → null; pool unitário → o próprio assento [0.01ms]
+pointly-web test: 
+pointly-web test: src/lib/api.test.ts:
+pointly-web test: (pass) checkSala > 200 retorna existência com contagem e fase [0.28ms]
+pointly-web test: (pass) checkSala > 200 sem campos usa padrões [0.05ms]
+pointly-web test: (pass) checkSala > 404 retorna missing [0.04ms]
+pointly-web test: (pass) checkSala > 400 retorna invalid [0.03ms]
+pointly-web test: (pass) checkSala > falha de rede vira JoinError de conexão [0.16ms]
+pointly-web test: 
+pointly-web test: src/lib/avatar.test.ts:
+pointly-web test: (pass) normalizeAvatar > png normaliza para dataURL jpeg 128px [0.79ms]
+pointly-web test: (pass) normalizeAvatar > jpeg normaliza para dataURL jpeg 128px [0.14ms]
+pointly-web test: (pass) normalizeAvatar > webp normaliza para dataURL jpeg 128px [0.08ms]
+pointly-web test: (pass) normalizeAvatar > ancora 128x128 jpeg q0.8 e crop central (P1-AC1) [0.20ms]
+pointly-web test: (pass) normalizeAvatar > formato inválido rejeita com erro tipado sem throw cru [0.12ms]
+pointly-web test: (pass) normalizeAvatar > arquivo acima de 5MB rejeita com erro tipado [0.10ms]
+pointly-web test: (pass) normalizeAvatar > sem canvas cria erro tipado unsupported em vez de throw cru [0.10ms]
+pointly-web test: (pass) avatarErrorMessage > mensagens em pt-BR por código [0.02ms]
+pointly-web test: (pass) avatarErrorMessage > mensagens em EN por código [0.10ms]
+pointly-web test: (pass) loadAvatar/saveAvatar/clearAvatar > roundtrip persiste o dataURL na chave pointly-avatar [0.08ms]
+pointly-web test: (pass) loadAvatar/saveAvatar/clearAvatar > sem avatar retorna null [0.01ms]
+pointly-web test: (pass) loadAvatar/saveAvatar/clearAvatar > clear apaga e volta a null [0.03ms]
+pointly-web test: (pass) loadAvatar/saveAvatar/clearAvatar > localStorage indisponível cai no fallback em memória sem quebrar [0.19ms]
+pointly-web test: 
+pointly-web test: src/lib/ws-client.test.ts:
+pointly-web test: (pass) PointlySocket > hello resolve com welcome [3.77ms]
+pointly-web test: (pass) PointlySocket > erro do servidor rejeita com o código [0.50ms]
+pointly-web test: (pass) PointlySocket > lixo antes do welcome é ignorado [0.43ms]
+pointly-web test: (pass) PointlySocket > room_state pós-welcome chega no onRoomState (presença ao vivo) [200.89ms]
+pointly-web test: (pass) PointlySocket > cliente não envia ping app-level (liveness é do servidor) [251.28ms]
+pointly-web test: (pass) PointlySocket > cast_vote envia o valor e erro pós-ready chega no onError [152.17ms]
+pointly-web test: (pass) PointlySocket > reveal_votes envia payload vazio após ready [151.28ms]
+pointly-web test: (pass) PointlySocket > start_new_round envia payload vazio após ready [153.82ms]
+pointly-web test: (pass) PointlySocket > leave_room envia payload vazio após ready (saída voluntária) [151.42ms]
+pointly-web test: (pass) PointlySocket > hello inclui avatar quando presente [51.22ms]
+pointly-web test: (pass) PointlySocket > hello omite avatar quando ausente [50.98ms]
+pointly-web test: (pass) PointlySocket > updateAvatar envia set e clear após ready [151.13ms]
+pointly-web test: (pass) PointlySocket > throw_projectile envia alvo+tipo e broadcast chega no onProjectileThrown [151.56ms]
+pointly-web test: (pass) PointlySocket > send_nudge envia alvo+id e broadcast chega no onNudgeSent [151.40ms]
+pointly-web test: (pass) PointlySocket > hello sem resposta rejeita por timeout [101.19ms]
+pointly-web test: (pass) PointlySocket — auto-reconnect (morte real) > queda real agenda retry com o mesmo hello e avisa onReconnected [29.09ms]
+pointly-web test: (pass) PointlySocket — auto-reconnect (morte real) > sala sumida no retry falha rápido sem retentar [27.92ms]
+pointly-web test: (pass) PointlySocket — auto-reconnect (morte real) > retryNow antecipa a tentativa sem esperar o backoff [54.83ms]
+pointly-web test: 
+pointly-web test: src/lib/ws-client-ended.test.ts:
+pointly-web test: (pass) encerramento server_restart é terminal [2.26ms]
+pointly-web test: (pass) encerramento replaced é terminal [2.61ms]
+pointly-web test: (pass) encerramento last_left é terminal [2.44ms]
+pointly-web test: (pass) encerramento missing é terminal [12.76ms]
+pointly-web test: (pass) terminal antes do welcome em conexão inicial não reanima o cliente [2.50ms]
+pointly-web test: (pass) terminal antes do welcome em conexão recuperada não reanima o cliente [11.55ms]
+pointly-web test: 
+pointly-web test: src/lib/language.test.ts:
+pointly-web test: (pass) seleção de idioma (15.T8) > troca aponta para o alternate da mesma página [0.17ms]
+pointly-web test: (pass) seleção de idioma (15.T8) > barra final é normalizada [0.07ms]
+pointly-web test: (pass) seleção de idioma (15.T8) > sem alternate cai na home do idioma [0.07ms]
+pointly-web test: (pass) seleção de idioma (15.T8) > seletor só aparece em rota pública indexável [0.08ms]
+pointly-web test: (pass) seleção de idioma (15.T8) > preferência só é lida quando válida [0.10ms]
+pointly-web test: (pass) seleção de idioma (15.T8) > detecção do navegador: só o idioma primário conta [0.10ms]
+pointly-web test: (pass) seleção de idioma (15.T8) > rotas internas: preferência salva → navegador → pt-BR [0.09ms]
+pointly-web test: (pass) seleção de idioma (15.T8) > mudança de preferência notifica os observadores [0.06ms]
+pointly-web test: (pass) higiene GSC — crawler não segue o redirect de locale > UAs de buscadores são reconhecidos; navegador comum não [0.06ms]
+pointly-web test: (pass) higiene GSC — crawler não segue o redirect de locale > bot em inglês fica na raiz; usuário EN sem preferência ainda vai para /en [0.03ms]
+pointly-web test: (pass) higiene GSC — crawler não segue o redirect de locale > redirect exige raiz, sem preferência e navegador em inglês [0.04ms]
+pointly-web test: 
+pointly-web test: src/lib/utils.test.ts:
+pointly-web test: (pass) middleTruncate > texto curto passa intacto [0.09ms]
+pointly-web test: (pass) middleTruncate > texto longo corta o meio e preserva o fim com o código [0.07ms]
+pointly-web test: (pass) middleTruncate > respeita o limite pedido [0.02ms]
+pointly-web test: (pass) middleTruncate > limite mínimo devolve só a reticência [0.03ms]
+pointly-web test: (pass) middleTruncate > não parte emoji ao meio [0.03ms]
+pointly-web test: 
+pointly-web test: src/lib/identity.test.ts:
+pointly-web test: (pass) normalizeCode > converte para maiúsculas [0.05ms]
+pointly-web test: (pass) normalizeCode > remove separadores e espaços [0.03ms]
+pointly-web test: (pass) normalizeCode > limita a 4 caracteres [0.02ms]
+pointly-web test: (pass) normalizeCode > é idempotente [0.03ms]
+pointly-web test: (pass) normalizeCode > vazio continua vazio [0.01ms]
+pointly-web test: (pass) isValidCode > aceita 4 alfanuméricos maiúsculos [0.04ms]
+pointly-web test: (pass) isValidCode > rejeita minúsculas, tamanho errado e símbolos [0.05ms]
+pointly-web test: (pass) CodeSchema > aceita código válido e rejeita inválido [0.11ms]
+pointly-web test: (pass) NickSchema > aceita apelidos válidos [0.19ms]
+pointly-web test: (pass) NickSchema > rejeita curto, longo e espaços irregulares [0.14ms]
+pointly-web test: (pass) NickSchema > mensagens em pt-BR [0.27ms]
+pointly-web test: (pass) NickSchema > fábrica EN traduz as mensagens [0.36ms]
+pointly-web test: (pass) getOrCreateUuid > não reutiliza identidade legada e preserva sessão e preferências [0.29ms]
+pointly-web test: (pass) getOrCreateUuid > é estável entre chamadas e tem formato UUID [0.04ms]
+pointly-web test: (pass) saveSession/loadSession/clearSession (ticket 09) > salva e recupera código normalizado + apelido [0.03ms]
+pointly-web test: (pass) saveSession/loadSession/clearSession (ticket 09) > sem sessão retorna null [0.01ms]
+pointly-web test: (pass) saveSession/loadSession/clearSession (ticket 09) > clearSession apaga sem erro [0.06ms]
+pointly-web test: (pass) saveSession/loadSession/clearSession (ticket 09) > código inválido não persiste [0.02ms]
+pointly-web test: (pass) saveSession/loadSession/clearSession (ticket 09) > apelido curto não persiste [0.03ms]
+pointly-web test: (pass) saveSession/loadSession/clearSession (ticket 09) > JSON corrompido retorna null sem lançar [0.04ms]
+pointly-web test: 
+pointly-web test: src/pages/arena.test.tsx:
+pointly-web test: (pass) ArenaPage (ticket 04) > identifica sala, rodada, eu e host com 12 assentos [35.41ms]
+pointly-web test: (pass) ArenaPage (ticket 04) > renderiza a mesa em inglês quando lang=en [20.73ms]
+pointly-web test: (pass) ArenaPage (ticket 04) > segundo navegador aparece ao vivo com assento e votos corretos [21.06ms]
+pointly-web test: (pass) ArenaPage (ticket 04) > copiar o convite mostra confirmação e o link entra direto na sala [28.77ms]
+pointly-web test: (pass) ArenaPage (ticket 04) > copiar convite pela toolbar fica no topo, troca o rótulo e anuncia [19.78ms]
+pointly-web test: (pass) ArenaPage (ticket 04) > falha ao copiar pela toolbar avisa sem depender do card do convite [27.27ms]
+pointly-web test: (pass) ArenaPage (ticket 04) > link do convite mostra os dois extremos e a URL inteira no foco [16.34ms]
+pointly-web test: (pass) ArenaPage (ticket 04) > convite é ocultável quando solo e volta com mostrar [38.79ms]
+pointly-web test: (pass) ArenaPage (ticket 04) > com companhia o convite fica sempre visível [19.98ms]
+pointly-web test: (pass) ArenaPage (ticket 04) > entrada tardia com rodada em andamento mostra fase e votos [30.56ms]
+pointly-web test: (pass) ArenaPage (ticket 04) > sem sessão redireciona para a entrada com o código [3.51ms]
+pointly-web test: (pass) ArenaPage (ticket 05 — Votar) > deck completo com 9 cartas e seleção inicial vazia [16.03ms]
+pointly-web test: (pass) ArenaPage (ticket 05 — Votar) > clicar numa carta envia cast_vote uma vez [10.29ms]
+pointly-web test: (pass) ArenaPage (ticket 05 — Votar) > duplo clique na mesma carta não perde nem duplica o voto [13.56ms]
+pointly-web test: (pass) ArenaPage (ticket 05 — Votar) > substituir estimativa envia o novo valor [10.94ms]
+pointly-web test: (pass) ArenaPage (ticket 05 — Votar) > segundo navegador vê só Aguardando/Votou antes do reveal, nunca valores [13.30ms]
+pointly-web test: (pass) ArenaPage (ticket 05 — Votar) > pausa conta presença e mostra seleção própria sem vazar valor alheio [10.16ms]
+pointly-web test: (pass) ArenaPage (ticket 05 — Votar) > erro do servidor ao votar mostra alerta sem quebrar a mesa [12.95ms]
+pointly-web test: (pass) ArenaPage (ticket 06 — Reveal) > sem nenhum voto o reveal fica indisponível (botão e R) [9.15ms]
+pointly-web test: (pass) ArenaPage (ticket 06 — Reveal) > com voto na mesa o botão revela e o R revela [8.57ms]
+pointly-web test: Warning: An update to ArenaPage inside a test was not wrapped in act(...).
+pointly-web test: 
+pointly-web test: When testing, code that causes React state updates should be wrapped into act(...):
+pointly-web test: 
+pointly-web test: act(() => {
+pointly-web test:   /* fire events that update state */
+pointly-web test: });
+pointly-web test: /* assert on the output */
+pointly-web test: 
+pointly-web test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+pointly-web test:     at ArenaPage (/workspace/pointly-hel72fix3/apps/web/src/pages/arena.tsx:189:3)
+pointly-web test:     at RenderedRoute (/workspace/pointly-hel72fix3/node_modules/react-router/dist/umd/react-router.development.js:538:9)
+pointly-web test:     at Routes (/workspace/pointly-hel72fix3/node_modules/react-router/dist/umd/react-router.development.js:1271:9)
+pointly-web test:     at Router (/workspace/pointly-hel72fix3/node_modules/react-router/dist/umd/react-router.development.js:1210:9)
+pointly-web test:     at MemoryRouter (/workspace/pointly-hel72fix3/node_modules/react-router/dist/umd/react-router.development.js:1102:9)
+pointly-web test: Warning: An update to ArenaPage inside a test was not wrapped in act(...).
+pointly-web test: 
+pointly-web test: When testing, code that causes React state updates should be wrapped into act(...):
+pointly-web test: 
+pointly-web test: act(() => {
+pointly-web test:   /* fire events that update state */
+pointly-web test: });
+pointly-web test: /* assert on the output */
+pointly-web test: 
+pointly-web test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+pointly-web test:     at ArenaPage (/workspace/pointly-hel72fix3/apps/web/src/pages/arena.tsx:189:3)
+pointly-web test:     at RenderedRoute (/workspace/pointly-hel72fix3/node_modules/react-router/dist/umd/react-router.development.js:538:9)
+pointly-web test:     at Routes (/workspace/pointly-hel72fix3/node_modules/react-router/dist/umd/react-router.development.js:1271:9)
+pointly-web test:     at Router (/workspace/pointly-hel72fix3/node_modules/react-router/dist/umd/react-router.development.js:1210:9)
+pointly-web test:     at MemoryRouter (/workspace/pointly-hel72fix3/node_modules/react-router/dist/umd/react-router.development.js:1102:9)
+pointly-web test: (pass) ArenaPage (ticket 06 — Reveal) > R maiúsculo/minúsculo revela; repeat, modificadores e inputs ignoram [13.51ms]
+pointly-web test: (pass) ArenaPage (ticket 06 — Reveal) > todos-votaram informa prontidão sem auto-revelar [22.75ms]
+pointly-web test: (pass) ArenaPage (ticket 06 — Reveal) > com um votante só o time não é quem votou: sem Todos votaram [9.49ms]
+pointly-web test: (pass) ArenaPage (ticket 06 — Reveal) > reveal manual chega via room_state [17.37ms]
+pointly-web test: (pass) ArenaPage (ticket 06 — Reveal) > sem votos a sala aguarda o primeiro voto sem contagem [12.70ms]
+pointly-web test: (pass) ArenaPage (ticket 06 — Reveal) > erro de reveal mostra alerta próprio sem quebrar a mesa [11.53ms]
+pointly-web test: (pass) ArenaPage (ticket 07 — Resultados) > ½ vale 0,5 e 0 é válido; pausa e ausência fora dos cálculos [16.35ms]
+pointly-web test: (pass) ArenaPage (ticket 07 — Resultados) > a notação 1×3 é explicada na tela e no nome acessível [9.98ms]
+pointly-web test: (pass) ArenaPage (ticket 07 — Resultados) > unanimidade é sinalizada de relance [10.09ms]
+pointly-web test: (pass) ArenaPage (ticket 07 — Resultados) > voto único é sinalizado de relance [8.94ms]
+pointly-web test: (pass) ArenaPage (ticket 07 — Resultados) > só pausa informa ausência de numéricos sem média nem intervalo [9.88ms]
+pointly-web test: (pass) ArenaPage (ticket 07 — Resultados) > reveal sem nenhum voto informa ausência de numéricos [14.32ms]
+pointly-web test: (pass) ArenaPage (ticket 07 — Resultados) > pré-reveal não mostra estatísticas [9.14ms]
+pointly-web test: (pass) ArenaPage (ticket 07 — Resultados) > alterar o voto após o reveal recalcula para todos [15.64ms]
+pointly-web test: (pass) ArenaPage (ticket 07 — Resultados) > deck segue enabled após o reveal e envia a troca [8.55ms]
+pointly-web test: (pass) ArenaPage (16.C — Copiar resultado #201) > clique copia a string exata PT sem ☕ e em ordem ascendente [26.20ms]
+pointly-web test: (pass) ArenaPage (16.C — Copiar resultado #201) > EN copia `Median: … — votes: …` [20.61ms]
+pointly-web test: (pass) ArenaPage (16.C — Copiar resultado #201) > voto único copia `Mediana: 5 — votos: 5` [18.22ms]
+pointly-web test: (pass) ArenaPage (16.C — Copiar resultado #201) > pré-reveal oculta o botão (não desabilita) [9.38ms]
+pointly-web test: (pass) ArenaPage (16.C — Copiar resultado #201) > noNumerics mantém o botão desabilitado com a nota e aria-live [18.66ms]
+pointly-web test: (pass) ArenaPage (ticket 08 — Nova Rodada) > pré-reveal não mostra nova rodada e N é ignorado [8.71ms]
+pointly-web test: (pass) ArenaPage (ticket 08 — Nova Rodada) > um clique único não abre nova rodada (arma confirmação) [13.59ms]
+pointly-web test: (pass) ArenaPage (ticket 08 — Nova Rodada) > armação mostra Cancelar visível e não expira por contagem [5427.29ms]
+pointly-web test: (pass) ArenaPage (ticket 08 — Nova Rodada) > Cancelar desarma a confirmação sem enviar nada [25.94ms]
+pointly-web test: (pass) ArenaPage (ticket 08 — Nova Rodada) > segundo clique confirma e envia start_new_round uma vez [18.72ms]
+pointly-web test: (pass) ArenaPage (ticket 08 — Nova Rodada) > atalho N exige a mesma confirmação dupla [20.42ms]
+pointly-web test: Warning: An update to ArenaPage inside a test was not wrapped in act(...).
+pointly-web test: 
+pointly-web test: When testing, code that causes React state updates should be wrapped into act(...):
+pointly-web test: 
+pointly-web test: act(() => {
+pointly-web test:   /* fire events that update state */
+pointly-web test: });
+pointly-web test: /* assert on the output */
+pointly-web test: 
+pointly-web test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+pointly-web test:     at ArenaPage (/workspace/pointly-hel72fix3/apps/web/src/pages/arena.tsx:189:3)
+pointly-web test:     at RenderedRoute (/workspace/pointly-hel72fix3/node_modules/react-router/dist/umd/react-router.development.js:538:9)
+pointly-web test:     at Routes (/workspace/pointly-hel72fix3/node_modules/react-router/dist/umd/react-router.development.js:1271:9)
+pointly-web test:     at Router (/workspace/pointly-hel72fix3/node_modules/react-router/dist/umd/react-router.development.js:1210:9)
+pointly-web test:     at MemoryRouter (/workspace/pointly-hel72fix3/node_modules/react-router/dist/umd/react-router.development.js:1102:9)
+pointly-web test: Warning: An update to ArenaPage inside a test was not wrapped in act(...).
+pointly-web test: 
+pointly-web test: When testing, code that causes React state updates should be wrapped into act(...):
+pointly-web test: 
+pointly-web test: act(() => {
+pointly-web test:   /* fire events that update state */
+pointly-web test: });
+pointly-web test: /* assert on the output */
+pointly-web test: 
+pointly-web test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+pointly-web test:     at ArenaPage (/workspace/pointly-hel72fix3/apps/web/src/pages/arena.tsx:189:3)
+pointly-web test:     at RenderedRoute (/workspace/pointly-hel72fix3/node_modules/react-router/dist/umd/react-router.development.js:538:9)
+pointly-web test:     at Routes (/workspace/pointly-hel72fix3/node_modules/react-router/dist/umd/react-router.development.js:1271:9)
+pointly-web test:     at Router (/workspace/pointly-hel72fix3/node_modules/react-router/dist/umd/react-router.development.js:1210:9)
+pointly-web test:     at MemoryRouter (/workspace/pointly-hel72fix3/node_modules/react-router/dist/umd/react-router.development.js:1102:9)
+pointly-web test: (pass) ArenaPage (ticket 08 — Nova Rodada) > N ignora repeat, modificadores e inputs [22.40ms]
+pointly-web test: (pass) ArenaPage (ticket 08 — Nova Rodada) > após a troca: número incrementado, votos zerados, mesmos players [33.13ms]
+pointly-web test: (pass) ArenaPage (ticket 08 — Nova Rodada) > erro de nova rodada mostra alerta próprio sem quebrar a mesa [15.70ms]
+pointly-web test: (pass) ArenaPage (ticket 08 — Nova Rodada) > nova rodada fica no centro da mesa e some fora do reveal [32.98ms]
+pointly-web test: (pass) ArenaPage (ticket 08 — Nova Rodada) > reveal mostra resultados antes do convite na sidebar [13.85ms]
+pointly-web test: (pass) ArenaPage (ticket 09 — Sessão e continuidade) > F5 no meio da votação recupera voto, assento e fase sem duplicar o Player [21.44ms]
+pointly-web test: (pass) ArenaPage (ticket 09 — Sessão e continuidade) > F5 mantém pauta, ativa e Pontuações do snapshot do servidor [35.19ms]
+pointly-web test: (pass) ArenaPage (ticket 09 — Sessão e continuidade) > sala encerrada substitui a arena e retorna à entrada [11.79ms]
+pointly-web test: (pass) ArenaPage (ticket 09 — Sessão e continuidade) > sala inexistente no rejoin mostra encerramento e volta à entrada sem código morto [10.80ms]
+pointly-web test: (pass) ArenaPage (ticket 09 — Sessão e continuidade) > término do rejoin antes do welcome mostra o motivo terminal [4.89ms]
+pointly-web test: (pass) ArenaPage (ticket 09 — Sessão e continuidade) > término atrasado do rejoin desmontado preserva a sessão seguinte [2.96ms]
+pointly-web test: (pass) ArenaPage (ticket 09 — Sessão e continuidade) > host confirma a saída: avisa que a sala encerra e só sai ao confirmar [26.34ms]
+pointly-web test: (pass) ArenaPage (ticket 09 — Sessão e continuidade) > Cancelar na saída mantém a sessão e a sala [24.77ms]
+pointly-web test: (pass) ArenaPage (ticket 09 — Sessão e continuidade) > host com companhia avisa quem assume antes de sair [24.23ms]
+pointly-web test: (pass) ArenaPage (ticket 09 — Sessão e continuidade) > não-host com voto é perguntado e vê que os votos ficam [22.66ms]
+pointly-web test: (pass) ArenaPage (ticket 09 — Sessão e continuidade) > não-host sem votos sai direto, sem confirmação [32.61ms]
+pointly-web test: (pass) ArenaPage (ticket 09 — Sessão e continuidade) > saída voluntária envia leave_room e limpa a sessão [22.53ms]
+pointly-web test: (pass) ArenaPage (ticket 09 — Sessão e continuidade) > saída do Host promove o mais antigo sem travar a rodada [14.46ms]
+pointly-web test: (pass) ArenaPage (reconnect em aba inativa) > queda mostra Reconectando com Tentar agora; volta limpa o alerta [14.79ms]
+pointly-web test: (pass) ArenaPage (reconnect em aba inativa) > reconexão reidrata pauta, ativa e Pontuações do welcome [17.04ms]
+pointly-web test: (pass) ArenaPage (reconnect em aba inativa) > falha após a janela mostra Conexão perdida com Tentar de novo [24.36ms]
+pointly-web test: (pass) ArenaPage (issue #157 — Projéteis) > durante a votação permite arremessar no participante sem revelar ou alterar votos [85.49ms]
+pointly-web test: (pass) ArenaPage (issue #157 — Projéteis) > pós-reveal lista os 6 projéteis com alvo e envia ao clicar [63.63ms]
+pointly-web test: (pass) ArenaPage (issue #157 — Projéteis) > menu aberto por clique permanece ao sair do alvo e permite arremessar [120.35ms]
+pointly-web test: (pass) ArenaPage (issue #157 — Projéteis) > Escape fecha o menu de projéteis e devolve o foco ao alvo [65.58ms]
+pointly-web test: (pass) ArenaPage (issue #157 — Projéteis) > segundo envio no cooldown fica desabilitado com contagem no menu [119.37ms]
+pointly-web test: (pass) ArenaPage (issue #157 — Projéteis) > libera novo envio após 1s, compartilhado entre projéteis e alvos [1088.84ms]
+pointly-web test: (pass) ArenaPage (issue #157 — Projéteis) > falha de envio mostra erro sem inventar voo ou bloquear nova tentativa [104.74ms]
+pointly-web test: (pass) ArenaPage (issue #157 — Projéteis) > sala vê só o voo anônimo, sem origem e sem lista de arremessos [18.97ms]
+pointly-web test: (pass) ArenaPage (issue #157 — Projéteis) > cadeirada parte do centro da mesa com impacto épico no alvo [20.19ms]
+pointly-web test: (pass) ArenaPage (issue #157 — Projéteis) > voos simultâneos aparecem e são removidos ao terminar [915.58ms]
+pointly-web test: (pass) ArenaPage (issue #157 — Projéteis) > movimento reduzido troca o voo por ícone + rótulo estáticos (HEL-72) [15.57ms]
+pointly-web test: (pass) ArenaPage (issue #157 — Projéteis) > erro de cooldown do servidor vira feedback sem quebrar [15.69ms]
+pointly-web test: (pass) ArenaPage (issue #172 — Cutucadas) > menu do alvo lista as 4 cutucadas e envia ao clicar [82.89ms]
+pointly-web test: (pass) ArenaPage (issue #172 — Cutucadas) > broadcast desenha o balão sobre o alvo e ele some sozinho [3331.87ms]
+pointly-web test: (pass) ArenaPage (issue #172 — Cutucadas) > cooldown compartilhado bloqueia arremesso logo após a cutucada [149.13ms]
+pointly-web test: (pass) ArenaPage (issue #172 — Cutucadas) > erro de cooldown de cutucada vira feedback sem quebrar [18.94ms]
+pointly-web test: (pass) ArenaPage (issue #158 — polimento e auditoria) > atalho R é descobrível por tecnologia assistiva [9.49ms]
+pointly-web test: (pass) ArenaPage (issue #158 — polimento e auditoria) > atalho N é descobrível por tecnologia assistiva [9.74ms]
+pointly-web test: (pass) ArenaPage (issue #158 — polimento e auditoria) > menu no participante tem nome acessível e não existe no próprio usuário [87.64ms]
+pointly-web test: (pass) ArenaPage (issue #158 — polimento e auditoria) > EN: a mesa não usa jargão de throw/cooldown/seat [51.92ms]
+pointly-web test: (pass) ArenaPage (issue #158 — polimento e auditoria) > convite usa o mesmo verbo da landing: compartilhar o código [11.76ms]
+pointly-web test: (pass) ArenaPage (espectador) > espectador vê deck desabilitado e presença separada [10.64ms]
+pointly-web test: (pass) ArenaPage (espectador) > espectador sem história ativa vê o motivo, não um convite para votar [10.30ms]
+pointly-web test: (pass) ArenaPage (espectador) > clique no deck como espectador mostra alerta sem enviar voto [8.62ms]
+pointly-web test: (pass) ArenaPage (espectador) > arena troca avatar via update_avatar sem reload [18.36ms]
+pointly-web test: (pass) ArenaPage (espectador) > remover avatar envia null e broadcast volta a iniciais [23.75ms]
+pointly-web test: (pass) ArenaPage (espectador) > espectador com avatar aparece com foto na lista [9.34ms]
+pointly-web test: (pass) ArenaPage (espectador) > erro de load no avatar do espectador volta para as iniciais [9.42ms]
+pointly-web test: (pass) ArenaPage (espectador) > espectador sem avatar mostra iniciais na lista [9.45ms]
+pointly-web test: (pass) ArenaPage (14.3 — Celebração de Unânime) > transição ao vivo para revealed unânime celebra [27.86ms]
+pointly-web test: (pass) ArenaPage (14.3 — Celebração de Unânime) > reveal divergente não celebra [16.10ms]
+pointly-web test: (pass) ArenaPage (14.3 — Celebração de Unânime) > já revealed na montagem (reload/join) não replaya [10.09ms]
+pointly-web test: (pass) ArenaPage (14.3 — Celebração de Unânime) > edição pós-reveal para unânime atualiza o badge sem celebrar [14.54ms]
+pointly-web test: (pass) ArenaPage (14.3 — Celebração de Unânime) > nova rodada unânime re-arma (remonta) a celebração [25.92ms]
+pointly-web test: (pass) Card Pauta (#165) > sala vazia: empty state + deck desabilitado; primeira história auto-seleciona e libera o deck [32.75ms]
+pointly-web test: (pass) Card Pauta (#165) > título vazio mostra historia-error inline e não envia [14.71ms]
+pointly-web test: (pass) Card Pauta (#165) > a Pauta é o único caminho de criação e o critério nasce opcional [16.87ms]
+pointly-web test: (pass) Card Pauta (#165) > critério colapsável envia junto quando preenchido [24.78ms]
+pointly-web test: (pass) Card Pauta (#165) > editar, mover e selecionar refletem na lista [45.31ms]
+pointly-web test: (pass) Card Pauta (#165) > apagar sem pontos envia direto, sem confirmação [13.63ms]
+pointly-web test: (pass) Card Pauta (#165) > apagar pontuada exige confirmação dupla; timeout volta ao estado inicial [5434.48ms]
+pointly-web test: (pass) Card Pauta (#165) > lista e Pontuação anunciam em aria-live com número mono tabular [16.61ms]
+pointly-web test: (pass) Card Pauta (#165) > espectador vê a pauta sem editar [12.24ms]
+pointly-web test: (pass) Card Pauta (#165) > erro do servidor da pauta cai inline no card, sem alerta de voto [15.42ms]
+pointly-web test: (pass) Card Pauta — ciclo #166 (dois navegadores) > entrada tardia recebe 3 histórias, ativa e Pontuações sem quebrar [22.94ms]
+pointly-web test: (pass) Card Pauta — ciclo #166 (dois navegadores) > revelar na A carimba a Pontuação no card do B [18.93ms]
+pointly-web test: (pass) Card Pauta — ciclo #166 (dois navegadores) > Nova Rodada na A avança a ativa e zera o voto no B [18.99ms]
+pointly-web test: (pass) Card Pauta — ciclo #166 (dois navegadores) > editar o voto pós-reveal move a Pontuação no card do B [15.88ms]
+pointly-web test: (pass) Card Pauta — ciclo #166 (dois navegadores) > espectador tentando editar recebe erro inline com a pauta intacta [12.72ms]
+pointly-web test: (pass) História ativa no centro da mesa (#211) > título da ativa aparece no centro em votando e revelado [16.07ms]
+pointly-web test: (pass) História ativa no centro da mesa (#211) > critério abre colapsado e não esconde Revelar / Nova Rodada [32.05ms]
+pointly-web test: (pass) História ativa no centro da mesa (#211) > trocar a ativa atualiza o centro e o aria-live anuncia [46.93ms]
+pointly-web test: (pass) História ativa no centro da mesa (#211) > sem pauta o centro mantém a copy atual [9.99ms]
+pointly-web test: (pass) História ativa no centro da mesa (#211) > pauta sem ativa troca a copy do centro e mantém o deck bloqueado [16.56ms]
+pointly-web test: (pass) História ativa no centro da mesa (#211) > EN: rótulos e anúncio da história ativa [17.60ms]
+pointly-web test: 
+pointly-web test: src/pages/home.test.tsx:
+pointly-web test: (pass) HomePage (ticket 10 — Inicial com demonstração) > proposta de valor e CTAs visíveis no topo sem rolagem [9.29ms]
+pointly-web test: (pass) HomePage (ticket 10 — Inicial com demonstração) > hero tem um único CTA primário e a rodada fica como link discreto [23.03ms]
+pointly-web test: (pass) HomePage (ticket 10 — Inicial com demonstração) > seção Guias liga todos os guias e o comparativo com âncoras descritivas [13.49ms]
+pointly-web test: (pass) HomePage (ticket 10 — Inicial com demonstração) > hero tem copy + visual estático, sem rodada interativa duplicada [7.69ms]
+pointly-web test: (pass) HomePage (ticket 10 — Inicial com demonstração) > estado inicial: deck presente, reveal bloqueado, sem stats [8.96ms]
+pointly-web test: (pass) HomePage (ticket 10 — Inicial com demonstração) > demo completa sem socket: escolher, revelar e ver stats [16.78ms]
+pointly-web test: (pass) HomePage (ticket 10 — Inicial com demonstração) > duplo clique na mesma carta mantém o voto [15.34ms]
+pointly-web test: (pass) HomePage (ticket 10 — Inicial com demonstração) > pausa conta presença mas fica fora dos cálculos [15.59ms]
+pointly-web test: (pass) HomePage (ticket 10 — Inicial com demonstração) > trocar a carta após o reveal recalcula ao vivo [17.37ms]
+pointly-web test: (pass) HomePage (ticket 10 — Inicial com demonstração) > tentar de novo reseta estimativa, simulados e stats [32.36ms]
+pointly-web test: (pass) HomePage EN (15.T7 — /en) > hero, CTAs e passos em inglês [27.17ms]
+pointly-web test: (pass) HomePage EN (15.T7 — /en) > bloco de leitura em inglês aponta para as rotas /en [6.66ms]
+pointly-web test: (pass) HomePage EN (15.T7 — /en) > demo completa em inglês: escolher, revelar e ver stats [16.48ms]
+pointly-web test: 
+pointly-web test: src/pages/not-found.test.tsx:
+pointly-web test: (pass) NotFoundPage > preserva o código de /en/s/ABXD no link de entrar [4.44ms]
+pointly-web test: (pass) NotFoundPage > preserva o ?code= da URL atual [2.89ms]
+pointly-web test: (pass) NotFoundPage > sem código detectado, o link vai ao join genérico [2.87ms]
+pointly-web test: 
+pointly-web test: src/pages/guide-registry.pt.test.ts:
+pointly-web test: (pass) Registro de guias PT (SSOT) > ids e paths espelham o conteúdo publicado [0.18ms]
+pointly-web test: (pass) Registro de guias PT (SSOT) > hub e mapa projetam o registro sem lista paralela [0.06ms]
+pointly-web test: (pass) Registro de guias PT (SSOT) > cada guia tem 3–4 relacionados válidos, sem auto-link [0.18ms]
+pointly-web test: (pass) Registro de guias PT (SSOT) > âncoras são descritivas, têm a palavra-chave e nunca são genéricas [0.31ms]
+pointly-web test: 
+pointly-web test: src/pages/join.test.tsx:
+pointly-web test: (pass) JoinPage > mantém os dados e o modo bloqueados enquanto a sala é criada [25.46ms]
+pointly-web test: (pass) JoinPage > mostra o ritual em 3 passos sem imagem de cartas [6.99ms]
+pointly-web test: (pass) JoinPage > renderiza em inglês quando lang=en (inclui validação) [30.48ms]
+pointly-web test: (pass) JoinPage > título e meta description seguem o idioma da rota [8.01ms]
+pointly-web test: (pass) JoinPage > foto vira opção secundária com o rótulo opcional [4.80ms]
+pointly-web test: (pass) JoinPage > /join abre no modo criar sala [11.21ms]
+pointly-web test: (pass) JoinPage > apelido fora de 2–20 caracteres erra no campo sem chamar rede [22.69ms]
+pointly-web test: (pass) JoinPage > bloqueia envio com apelido inválido sem chamar rede [10.22ms]
+pointly-web test: (pass) JoinPage > trocar de modo limpa o erro de apelido [19.26ms]
+pointly-web test: (pass) JoinPage > converte código digitado para maiúsculas [16.20ms]
+pointly-web test: (pass) JoinPage > modo join na query abre o campo de código [11.57ms]
+pointly-web test: (pass) JoinPage > link de convite preenche o código e entrar navega para a arena [80.06ms]
+pointly-web test: (pass) JoinPage > código inexistente mostra Sala não encontrada sem abrir socket [27.53ms]
+pointly-web test: (pass) JoinPage > reload na entrada mantém o apelido digitado [11.45ms]
+pointly-web test: (pass) JoinPage > modo join mostra entrar como espectador e envia spectate no hello [93.48ms]
+pointly-web test: (pass) JoinPage > modo create não oferece entrar como espectador [5.04ms]
+pointly-web test: (pass) JoinPage > join com avatar envia no hello e persiste no dispositivo [30.30ms]
+pointly-web test: (pass) JoinPage > erro de arquivo não bloqueia o join [25.87ms]
+pointly-web test: (pass) JoinPage > convite válido preenche o código e mantém as opções visíveis [15.83ms]
+pointly-web test: (pass) JoinPage > opções de entrada ficam visíveis sem expandir nada [9.43ms]
+pointly-web test: 
+pointly-web test: src/pages/support-text-contrast.test.ts:
+pointly-web test: (pass) contraste do texto de apoio > parágrafo do hero fica em 18px com cor AA nos dois temas [3.01ms]
+pointly-web test: (pass) contraste do texto de apoio > dicas do formulário mantêm 4.5:1 nos dois temas [1.15ms]
+pointly-web test: (pass) contraste do texto de apoio > rótulo da foto opcional perde peso sem sair da paleta [0.62ms]
+pointly-web test: 
+pointly-web test: src/pages/landing.test.tsx:
+pointly-web test: (pass) Landings de aquisição (15.T5/T6 — pt + EN) > /planning-poker: H1 com keyword, passos, FAQ visível e CTAs [21.75ms]
+pointly-web test: (pass) Landings de aquisição (15.T5/T6 — pt + EN) > /scrum-poker: H1 com keyword, passos, FAQ visível e CTAs [20.86ms]
+pointly-web test: (pass) Landings de aquisição (15.T5/T6 — pt + EN) > /en/planning-poker: H1 com keyword, passos, FAQ visível e CTAs [17.59ms]
+pointly-web test: (pass) Landings de aquisição (15.T5/T6 — pt + EN) > /en/scrum-poker: H1 com keyword, passos, FAQ visível e CTAs [16.76ms]
+pointly-web test: 
+pointly-web test: src/pages/guide.test.tsx:
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /guias/como-jogar-planning-poker: H2s com âncora, TOC, FAQ visível e CTA [40.33ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /guias/o-que-e-planning-poker: H2s com âncora, TOC, FAQ visível e CTA [36.80ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /guias/story-points: H2s com âncora, TOC, FAQ visível e CTA [48.81ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /guias/planning-poker-remoto: H2s com âncora, TOC, FAQ visível e CTA [40.42ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /guias/story-points-vs-horas: H2s com âncora, TOC, FAQ visível e CTA [37.76ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /guias/fibonacci-estimativa-agil: H2s com âncora, TOC, FAQ visível e CTA [37.00ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /guias/t-shirt-sizing: H2s com âncora, TOC, FAQ visível e CTA [49.28ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /planning-poker-online-gratis-comparativo: H2s com âncora, TOC, FAQ visível e CTA [45.64ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /guias/estimativa-agil: H2s com âncora, TOC, FAQ visível e CTA [46.12ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /guias/votos-divergentes-planning-poker: H2s com âncora, TOC, FAQ visível e CTA [36.95ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /guias/planning-poker-para-devs: H2s com âncora, TOC, FAQ visível e CTA [43.48ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /guias/agenda-sessao-planning-poker: H2s com âncora, TOC, FAQ visível e CTA [36.85ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /guias/scrum-poker-vs-planning-poker: H2s com âncora, TOC, FAQ visível e CTA [32.65ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /en/guides/how-to-play-planning-poker: H2s com âncora, TOC, FAQ visível e CTA [36.01ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /en/guides/what-is-planning-poker: H2s com âncora, TOC, FAQ visível e CTA [35.02ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /en/guides/story-points: H2s com âncora, TOC, FAQ visível e CTA [46.83ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /guias: intro + cards do conteúdo + CTA [24.88ms]
+pointly-web test: (pass) Guias (15.T6 — pt + EN) > /en/guides: intro + cards do conteúdo + CTA [8.43ms]
+pointly-web test: 
+pointly-web test:  407 pass
+pointly-web test:  0 fail
+pointly-web test:  4275 expect() calls
+pointly-web test: Ran 407 tests across 28 files. [24.60s]
+pointly-web test: Exited with code 0
+server test: bun test v1.4.2 (744846f84)
+server test: 
+server test: src/sala-properties.test.ts:
+server test: (pass) qualquer sequência aleatória de ações mantém o estado válido [23.05ms]
+server test: (pass) Sala — propriedades > antes do reveal nenhum voto de outro jogador vaza na visão projetada [14.88ms]
+server test: (pass) Sala — propriedades > reveal é idempotente: segundo reveal é rejeitado sem mutar o estado [6.88ms]
+server test: (pass) Sala — propriedades > nova rodada limpa todos os votos e incrementa round [3.52ms]
+server test: (pass) Sala — propriedades > espectador nunca vota, nunca ocupa assento e nunca vira host [18.16ms]
+server test: (pass) Sala — propriedades > sala criada por espectador fica sem host até o primeiro votante assumir [0.14ms]
+server test: (pass) Sala — propriedades > contagem de votos nunca excede o número de jogadores votantes [8.04ms]
+server test: (pass) Sala — propriedades > troca de pauta respeita fases: livre em idle/revealed, bloqueada em voting sem invalidar votos [19.87ms]
+server test: (pass) Sala — propriedades > saída do host promove votante mais antigo; espectador nunca assume [1.11ms]
+server test: (pass) Sala — propriedades > voto fora do deck e un-vote são rejeitados sem mutar o estado [3.40ms]
+server test: (pass) reconectar votante sem voto em revealable rebaixa a fase para voting [0.14ms]
+server test: 
+server test: src/ws-pauta.test.ts:
+server test: (pass) WS Pauta — bullet 1: válido atualiza + broadcast room_state > historia_add broadcast room_state com pauta + historiaAtualId pros dois [3.30ms]
+server test: (pass) WS Pauta — bullet 1: válido atualiza + broadcast room_state > historia_update broadcast room_state com texto novo [0.81ms]
+server test: (pass) WS Pauta — bullet 1: válido atualiza + broadcast room_state > historia_move broadcast room_state reordenado [0.92ms]
+server test: (pass) WS Pauta — bullet 1: válido atualiza + broadcast room_state > historia_remove broadcast room_state sem a removida [0.67ms]
+server test: (pass) WS Pauta — bullet 1: válido atualiza + broadcast room_state > historia_select broadcast room_state com nova ativa [0.45ms]
+server test: (pass) WS Pauta — bullet 2: espectador / fase / pauta cheia > spectator editando recebe role_denied sem broadcast [0.49ms]
+server test: (pass) WS Pauta — bullet 2: espectador / fase / pauta cheia > troca de ativa em voting recebe invalid_phase sem invalidar votos [0.87ms]
+server test: (pass) WS Pauta — bullet 2: espectador / fase / pauta cheia > 51ª recebe pauta_cheia [0.51ms]
+server test: (pass) WS Pauta — bullet 3: payload inválido não derruba o socket > título vazio retorna erro sem broadcast e socket segue up [0.55ms]
+server test: (pass) WS Pauta — bullet 3: payload inválido não derruba o socket > historia_update sem campo editável retorna erro sem broadcast [0.28ms]
+server test: 
+server test: src/sala-privacy.test.ts:
+server test: (pass) snapshot privado > omite UUID em todas as fases e visões [0.22ms]
+server test: (pass) snapshot privado > mantém somente o próprio voto sem mutar domínio ou snapshots [0.08ms]
+server test: (pass) snapshot privado > revealable não revela; jogador comum revela e nova rodada limpa [0.09ms]
+server test: 
+server test: src/ws-pauta-ciclo.test.ts:
+server test: (pass) WS Pauta #166 — ciclo a dois clientes > A cria 3 e B recebe pauta + ativa em <1s [0.67ms]
+server test: (pass) WS Pauta #166 — ciclo a dois clientes > votar + revelar na A carimba a Pontuação na B [1.07ms]
+server test: (pass) WS Pauta #166 — ciclo a dois clientes > Nova Rodada na A avança a ativa e limpa votos nas duas [1.05ms]
+server test: (pass) WS Pauta #166 — ciclo a dois clientes > segundo ciclo: Pontuação avança com o time (h1 → h2 → h3) [1.05ms]
+server test: (pass) WS Pauta #166 — entrada tardia e F5 > Carol entra com rodada em andamento e recebe pauta + ativa + Pontuações [1.11ms]
+server test: (pass) WS Pauta #166 — entrada tardia e F5 > F5 (hello com o mesmo UUID) mantém pauta, ativa e Pontuações [2.54ms]
+server test: (pass) WS Pauta #166 — pós-reveal, espectador e efêmero > editar o voto pós-reveal atualiza a Pontuação no outro cliente [0.88ms]
+server test: (pass) WS Pauta #166 — pós-reveal, espectador e efêmero > espectador tentando editar recebe role_denied sem efeito [0.54ms]
+server test: (pass) WS Pauta #166 — pós-reveal, espectador e efêmero > último a sair apaga a pauta e a sala (efêmero natural) [0.77ms]
+server test: 
+server test: src/sala.test.ts:
+server test: (pass) Sala — constructor > cria sala com host e estado idle [0.06ms]
+server test: (pass) Sala — constructor > rejeita primeiro player sem role host [0.08ms]
+server test: (pass) Sala — addPlayer > atribui seatIndex no primeiro livre (F-027) [0.02ms]
+server test: (pass) Sala — addPlayer > rejeita player 13 (sala_cheia) [0.10ms]
+server test: (pass) Sala — castVote > primeiro voto: idle → voting (ou revealable, se 1 só player) (F-013) [0.02ms]
+server test: (pass) Sala — castVote > change vote in-place (idempotência F-011) [0.02ms]
+server test: (pass) Sala — castVote > rejeita un-vote (invalid_vote) [0.03ms]
+server test: (pass) Sala — castVote > rejeita valor fora do deck (invalid_vote) [0.01ms]
+server test: (pass) Sala — castVote > permite cast_vote em fase revealed [0.04ms]
+server test: (pass) Sala — castVote > rejeita player que não está na sala [0.02ms]
+server test: (pass) Sala — castVote > todos conectados votaram → voting → revealable [0.02ms]
+server test: (pass) Sala — castVote > espectador não conta para o quórum do revealable [0.02ms]
+server test: (pass) Sala — castVote > voto de espectador é rejeitado com role_denied [0.03ms]
+server test: (pass) Sala — reveal > calcula stats e phase → revealed (F-020) [0.03ms]
+server test: (pass) Sala — reveal > qualquer player pode revelar (sem role check — ADR-0002) [0.03ms]
+server test: (pass) Sala — reveal > rejeita reveal em fase idle (invalid_phase) [0.03ms]
+server test: (pass) Sala — startNewRound > limpa votes e incrementa round (F-026) [0.03ms]
+server test: (pass) Sala — startNewRound > qualquer player pode iniciar nova rodada (sem role check) [0.02ms]
+server test: (pass) Sala — startNewRound > rejeita start_new_round fora de revealed [0.01ms]
+server test: (pass) Sala — sendNudge > libera em 1s e rejeita dentro do cooldown [0.09ms]
+server test: (pass) Sala — sendNudge > cutucada e arremesso competem pelo mesmo portão [0.08ms]
+server test: (pass) Sala — sendNudge > cadeirada segura a cutucada por 8s [0.03ms]
+server test: (pass) Sala — sendNudge > players diferentes têm recargas independentes [0.03ms]
+server test: (pass) Sala — toState > snapshot inclui players, phase, votes [0.05ms]
+server test: (pass) Sala — post-reveal edit > EVR-01: castVote em revealed mantém phase revealed [0.03ms]
+server test: (pass) Sala — post-reveal edit > EVR-14: castVote em revealed com mesmo valor retorna { changed: false } sem mutação [0.03ms]
+server test: (pass) Sala — post-reveal edit > EVR-04: castVote em revealed com valor diferente retorna { changed: true } e marca consensusDirty [0.02ms]
+server test: (pass) Sala — post-reveal edit > EVR-06: recomputeConsensus reflete unanimidade quebrada após edição [0.03ms]
+server test: (pass) Sala — post-reveal edit > edit pós-reveal mantém phase revealed [0.02ms]
+server test: (pass) Constantes exportadas > SALA_SEAT_COUNT = 12
+server test: (pass) Constantes exportadas > SALA_DISCONNECT_GRACE_MS = 360_000 (cobre backoff 5min)
+server test: 
+server test: src/validators.test.ts:
+server test: (pass) NickSchema — boundary conditions (F-001, F-002) > rejeita nick vazio [0.10ms]
+server test: (pass) NickSchema — boundary conditions (F-001, F-002) > rejeita nick com 1 char (boundary: abaixo do mínimo 2) [0.03ms]
+server test: (pass) NickSchema — boundary conditions (F-001, F-002) > aceita nick com exatamente 2 chars (boundary: mínimo válido) [0.01ms]
+server test: (pass) NickSchema — boundary conditions (F-001, F-002) > aceita nick com exatamente 20 chars (boundary: máximo válido) [0.02ms]
+server test: (pass) NickSchema — boundary conditions (F-001, F-002) > rejeita nick com 21 chars (boundary: acima do máximo 20) [0.05ms]
+server test: (pass) NickSchema — boundary conditions (F-001, F-002) > rejeita nick com espaço duplo interno (F-002) [0.05ms]
+server test: (pass) NickSchema — boundary conditions (F-001, F-002) > rejeita nick com espaço na ponta esquerda (F-002) [0.03ms]
+server test: (pass) NickSchema — boundary conditions (F-001, F-002) > rejeita nick com espaço na ponta direita (F-002) [0.02ms]
+server test: (pass) NickSchema — boundary conditions (F-001, F-002) > aceita nick com espaço único interno (válido) [0.01ms]
+server test: (pass) NickSchema — boundary conditions (F-001, F-002) > aceita nick com emoji e charset estendido (sem validação de charset no v1) [0.02ms]
+server test: (pass) handleHello — nick validation end-to-end > hello com nick vazio retorna invalid_nick [0.03ms]
+server test: (pass) handleHello — nick validation end-to-end > hello com nick de 1 char retorna invalid_nick [0.02ms]
+server test: (pass) handleHello — nick validation end-to-end > hello com nick de 21 chars retorna invalid_nick [0.03ms]
+server test: (pass) handleHello — nick validation end-to-end > hello com nick de espaço duplo retorna invalid_nick [0.02ms]
+server test: (pass) handleHello — nick validation end-to-end > hello com nick de espaço na ponta retorna invalid_nick [0.02ms]
+server test: (pass) RoomCodeSchema — formato do código > aceita código 4-char alfanumérico maiúsculo [0.05ms]
+server test: (pass) RoomCodeSchema — formato do código > rejeita código com char minúsculo [0.03ms]
+server test: (pass) RoomCodeSchema — formato do código > rejeita código com tamanho errado [0.02ms]
+server test: (pass) RoomCodeSchema — formato do código > rejeita código com char especial [0.02ms]
+server test: (pass) handleHello — código de sala (F-004, F-005, F-006) > join com código válido em sala existente retorna ok [0.10ms]
+server test: (pass) handleHello — código de sala (F-004, F-005, F-006) > join com código inexistente retorna sala_nao_encontrada (F-006) [0.04ms]
+server test: (pass) handleHello — código de sala (F-004, F-005, F-006) > join em sala cheia (12/12) retorna sala_cheia (F-005) [0.18ms]
+server test: (pass) handleHello — código de sala (F-004, F-005, F-006) > join com código de formato inválido (3 chars) retorna internal_error [0.02ms]
+server test: (pass) handleHello — código de sala (F-004, F-005, F-006) > join com código malformado (chars inválidos) retorna sala_nao_encontrada [0.03ms]
+server test: (pass) handleHello — UUID > aceita UUID v4 válido [0.02ms]
+server test: (pass) handleHello — UUID > UUID é propagado ao player criado [0.06ms]
+server test: (pass) handleHello — UUID > typecheck: Nick inferido corretamente
+server test: 
+server test: src/sala-integration.test.ts:
+server test: (pass) T19 — happy path: criar → join → vote → reveal > criar sala → 2 players entram → 1º vota → 2º vota → reveal → todos veem stats [0.21ms]
+server test: (pass) T19 — votação parcial aguarda reveal manual > votos parciais ficam em voting até reveal manual [0.16ms]
+server test: (pass) T19 — votação parcial aguarda reveal manual > sala idle permanece idle sem votos [0.05ms]
+server test: (pass) T19 — start_new_round reseta estado > new round limpa votes, incrementa round, phase volta para voting [0.16ms]
+server test: (pass) T19 — start_new_round reseta estado > new round NÃO pode ser chamado durante voting (F-026) [0.09ms]
+server test: (pass) T19 — invariantes do state machine > primeiro voto da rodada transiciona idle → voting [0.07ms]
+server test: (pass) T19 — invariantes do state machine > change vote não é novo first vote [0.06ms]
+server test: (pass) T19 — invariantes do state machine > todos os conectados votam → voting → revealable (F-014 prep) [0.10ms]
+server test: (pass) T19 — invariantes do state machine > voto de player disconnected NÃO conta pra allConnectedVoted [0.08ms]
+server test: (pass) T19 — invariantes do state machine > snapshot tem formato SalaState válido (validado por Zod) [0.23ms]
+server test: (pass) T19 — invariantes do state machine > UUIDs gerados pelo servidor seguem padrão p_xxxxxxxxxxxx [0.15ms]
+server test: (pass) T19 — invariantes do state machine > round 1 inicial; só incrementa via start_new_round [0.10ms]
+server test: 
+server test: src/sala-pauta.test.ts:
+server test: (pass) Pauta — add + primeira auto-seleciona > sala nova começa com pauta vazia e sem ativa [0.07ms]
+server test: (pass) Pauta — add + primeira auto-seleciona > primeira criada auto-seleciona [0.03ms]
+server test: (pass) Pauta — add + primeira auto-seleciona > segunda criada não rouba a ativa [0.02ms]
+server test: (pass) Pauta — add + primeira auto-seleciona > toState carrega pauta + historiaAtualId (seleção tardia recebe tudo) [0.04ms]
+server test: (pass) Pauta — add + primeira auto-seleciona > player (não host) pode criar — democratizado [0.02ms]
+server test: (pass) Pauta — add + primeira auto-seleciona > espectador não cria → role_denied [0.05ms]
+server test: (pass) Pauta — add + primeira auto-seleciona > 51ª rejeita com pauta_cheia [0.13ms]
+server test: (pass) Pauta — add + primeira auto-seleciona > id ausente em update/move/remove/select → historia_nao_encontrada [0.05ms]
+server test: (pass) Pauta — update last-write-wins > edita título e critério; pontos e ordem intactos [0.03ms]
+server test: (pass) Pauta — update last-write-wins > criterio null limpa; última escrita vence [0.04ms]
+server test: (pass) Pauta — update last-write-wins > texto de pontuada continua editável sem mexer nos pontos [0.03ms]
+server test: (pass) Pauta — update last-write-wins > espectador não edita → role_denied [0.03ms]
+server test: (pass) Pauta — update last-write-wins > update da ativa em voting é permitido (só texto, não invalida voto) [0.02ms]
+server test: (pass) Pauta — move > reordena e reindexa ordem 0..n-1 [0.05ms]
+server test: (pass) Pauta — move > toIndex fora da pauta real → historia_nao_encontrada [0.03ms]
+server test: (pass) Pauta — move > espectador não reordena → role_denied [0.02ms]
+server test: (pass) Pauta — remove > remove sem pontos com gesto simples e reindexa [0.04ms]
+server test: (pass) Pauta — remove > remover a ativa limpa historiaAtualId [0.02ms]
+server test: (pass) Pauta — remove > apagar pontuada sem flag nega com invalid_phase [0.04ms]
+server test: (pass) Pauta — remove > apagar pontuada com confirmScored remove [0.02ms]
+server test: (pass) Pauta — remove > espectador não apaga → role_denied [0.02ms]
+server test: (pass) Pauta — select > troca a ativa em idle [0.02ms]
+server test: (pass) Pauta — select > limpar com null em idle [0.03ms]
+server test: (pass) Pauta — select > espectador não seleciona → role_denied [0.02ms]
+server test: (pass) Pauta — bloqueio por fase (ativa em voting/revealable) > apagar a ativa em voting nega invalid_phase e rodada intacta [0.06ms]
+server test: (pass) Pauta — bloqueio por fase (ativa em voting/revealable) > mover a ativa em voting nega invalid_phase [0.05ms]
+server test: (pass) Pauta — bloqueio por fase (ativa em voting/revealable) > mover NÃO-ativa em voting é permitido [0.03ms]
+server test: (pass) Pauta — bloqueio por fase (ativa em voting/revealable) > selecionar outra em voting nega invalid_phase e rodada intacta [0.06ms]
+server test: (pass) Pauta — bloqueio por fase (ativa em voting/revealable) > bloqueio também vale em revealable [0.04ms]
+server test: (pass) Pauta — fluxo Nova Rodada auto-avança > criar 3, votar #1, revelar, Nova Rodada cai na #2 sozinha [0.03ms]
+server test: (pass) Pauta — fluxo Nova Rodada auto-avança > última pontuada → Nova Rodada fica sem ativa [0.02ms]
+server test: (pass) Pauta — fluxo Nova Rodada auto-avança > pula pontuadas e para na próxima não-pontuada [0.04ms]
+server test: (pass) Pauta — Pontuação segue voto pós-reveal > trocar voto pós-reveal move a Pontuação da ativa junto [0.04ms]
+server test: (pass) Pauta — Pontuação segue voto pós-reveal > reveal sem ativa não quebra (sala legada) [0.02ms]
+server test: 
+server test: src/sala-reconnect.test.ts:
+server test: (pass) Sala — findByUUID > retorna player cujo uuid está na sala [0.07ms]
+server test: (pass) Sala — findByUUID > retorna null quando uuid não está na sala [0.01ms]
+server test: (pass) Sala — markDisconnected/markConnected > markDisconnected seta status='disconnected' e mantém voto/seat [0.03ms]
+server test: (pass) Sala — markDisconnected/markConnected > markConnected por UUID reativa player [0.02ms]
+server test: (pass) Sala — markDisconnected/markConnected > markDisconnected em ID inexistente retorna null
+server test: (pass) Sala — markDisconnected/markConnected > markConnected em UUID inexistente retorna null
+server test: (pass) Sala — tickGracePeriod > remove player disconnected após o grace period [0.03ms]
+server test: (pass) Sala — tickGracePeriod > NÃO remove player ainda dentro do grace period [0.02ms]
+server test: (pass) Sala — tickGracePeriod > NÃO remove player conectado [0.01ms]
+server test: (pass) Sala — promoteOldestPlayer > promove player com menor joinedAt (3 players) [0.02ms]
+server test: (pass) Sala — promoteOldestPlayer > com 1 só player após host sair, sala fica vazia (remove do Map) [0.01ms]
+server test: (pass) Sala — promoteOldestPlayer > sala vazia: promoteOldestPlayer retorna null
+server test: (pass) Sala — promoteOldestPlayer > se host ainda é válido, promoteOldestPlayer é idempotente [0.02ms]
+server test: (pass) Sala — disconnect+reconnect preserva voto > disconnect+reconnect mantém hasVoted e value inalterados [0.03ms]
+server test: 
+server test: src/ws-privacy.test.ts:
+server test: (pass) WIRE projeta voting, pauta, revealable, revealed e nova rodada por destinatário [3.64ms]
+server test: (pass) WIRE welcome de join e reconexão não revela outros votos e preserva identidade legítima [3.67ms]
+server test: (pass) WIRE rejeita versão undefined sem criar sala [0.30ms]
+server test: (pass) WIRE rejeita versão 1 sem criar sala [0.11ms]
+server test: (pass) WIRE rejeita versão 3 sem criar sala [0.04ms]
+server test: (pass) WIRE rejeita versão 2 sem criar sala [0.03ms]
+server test: (pass) WIRE rejeita versão null sem criar sala [0.02ms]
+server test: 
+server test: src/cleanup.test.ts:
+server test: (pass) CleanupService — sala removida quando vazia (F-036) > remove sala do Map após todos desconectarem + grace expiry [0.28ms]
+server test: (pass) CleanupService — sala removida quando vazia (F-036) > host sai com 2+ players → promote + sala continua [0.16ms]
+server test: (pass) CleanupService — sala removida quando vazia (F-036) > shutdown chama callback sala_ended com reason=server_restart para todas salas [0.09ms]
+server test: 
+server test: src/hub.test.ts:
+server test: (pass) Hub — lifecycle > createSala registra sala e roteia por playerId [0.10ms]
+server test: (pass) Hub — lifecycle > addPlayer entra em sala existente [0.04ms]
+server test: (pass) Hub — lifecycle > removePlayer esvazia e remove sala do Map [0.03ms]
+server test: (pass) Hub — lifecycle > salas independentes sem cross-talk [0.04ms]
+server test: (pass) Hub — lifecycle > voto parcial não revela sozinho (reveal só manual) [0.03ms]
+server test: 
+server test: src/_smoke.test.ts:
+server test: (pass) server ↔ @planning-poker/shared workspace > importa schemas e tipos [0.03ms]
+server test: 
+server test: src/ws-rate-limit.test.ts:
+server test: (pass) RateLimiter > aceita até maxPerSecond conexões/s por IP [0.03ms]
+server test: (pass) RateLimiter > rejeita 6ª conexão na mesma janela [0.05ms]
+server test: (pass) RateLimiter > IPs independentes não compartilham limite [0.02ms]
+server test: (pass) RateLimiter > tick limpa IPs inativos [0.08ms]
+server test: (pass) Logger — MemorySink > registra connect event [0.05ms]
+server test: (pass) Logger — MemorySink > registra c2s event com payload summary [0.02ms]
+server test: (pass) Logger — MemorySink > registra error e ratelimit com level apropriado [0.04ms]
+server test: (pass) Logger — MemorySink > registra shutdown [0.03ms]
+server test: 
+server test: src/security.test.ts:
+server test: (pass) clientIpFrom > com proxy confiável usa o hop mais à direita [0.06ms]
+server test: (pass) clientIpFrom > sem proxy confiável ignora X-Forwarded-For (forjável) [0.02ms]
+server test: (pass) clientIpFrom > sem header cai no IP do socket
+server test: (pass) isOriginAllowed > aceita produção e dev [0.02ms]
+server test: (pass) isOriginAllowed > recusa origem de outro site
+server test: (pass) isOriginAllowed > sem Origin (cliente não-browser) passa
+server test: (pass) isOriginAllowed > ALLOWED_ORIGINS sobrescreve o default [0.02ms]
+server test: (pass) TokenBucket / WindowLimiter > bucket esgota na rajada e repõe com o tempo [0.03ms]
+server test: (pass) TokenBucket / WindowLimiter > janela bloqueia acima do máximo e reabre depois [0.06ms]
+server test: (pass) WSService — limites de abuso > flood de mensagens fecha a conexão com 1008 [0.22ms]
+server test: (pass) WSService — limites de abuso > usa o IP do upgrade (data.ip) e não o do socket do proxy [0.05ms]
+server test: (pass) WSService — limites de abuso > limite de criação de salas por IP [0.26ms]
+server test: (pass) WSService — limites de abuso > teto global de salas [0.09ms]
+server test: (pass) WSService — limites de abuso > hello com código inexistente é limitado por IP [0.13ms]
+server test: (pass) WSService — limites de abuso > payload inválido devolve mensagem genérica (sem detalhe do Zod) [0.28ms]
+server test: 
+server test: src/index.test.ts:
+server test: (pass) GET /api/v1/salas/:code > 200 quando sala existe — payload só code + exists (sem playerCount/phase) [1.54ms]
+server test: (pass) GET /api/v1/salas/:code > 429 acima do limite de lookups por IP [0.41ms]
+server test: (pass) GET /api/v1/salas/:code > 404 quando sala não existe [0.09ms]
+server test: (pass) GET /api/v1/salas/:code > 400 quando code tem shape inválido (curto) [0.11ms]
+server test: (pass) GET /api/v1/salas/:code > 400 quando code tem chars não-alfanum [0.20ms]
+server test: (pass) GET /api/v1/salas/:code > code lowercase na URL é normalizado pra UPPERCASE antes do lookup [0.16ms]
+server test: 
+server test: src/ws.test.ts:
+server test: (pass) WSService — onOpen > registra conexão e metadata [0.12ms]
+server test: (pass) WSService — onOpen > fecha conexão se rate limit excedido [0.13ms]
+server test: (pass) WSService — onMessage (hello + cast_vote + reveal + new_round) > hello cria sala e envia welcome + broadcast room_state [0.21ms]
+server test: (pass) WSService — onMessage (hello + cast_vote + reveal + new_round) > hello inválido (nick ruim) envia error [0.09ms]
+server test: (pass) WSService — onMessage (hello + cast_vote + reveal + new_round) > cast_vote → vote_cast + room_state broadcast [0.15ms]
+server test: (pass) WSService — onMessage (hello + cast_vote + reveal + new_round) > send_nudge → nudge_sent broadcast para a sala, sem room_state novo [0.25ms]
+server test: (pass) WSService — onMessage (hello + cast_vote + reveal + new_round) > reveal_votes → votes_revealed broadcast [0.17ms]
+server test: (pass) WSService — onMessage (hello + cast_vote + reveal + new_round) > ping app-level responde pong (compat) [0.05ms]
+server test: (pass) WSService — onMessage (hello + cast_vote + reveal + new_round) > onPong de protocolo renova o liveness [0.04ms]
+server test: (pass) WSService — onMessage (hello + cast_vote + reveal + new_round) > onPong ignora conexão desconhecida [0.03ms]
+server test: (pass) WSService — onMessage (hello + cast_vote + reveal + new_round) > reveal e nova rodada enviam o estado atualizado também a quem acionou [0.21ms]
+server test: (pass) WSService — onMessage (hello + cast_vote + reveal + new_round) > EVR-03: cast_vote em revealed com mesmo valor NÃO envia nenhum broadcast [0.32ms]
+server test: (pass) WSService — gracefulShutdown > broadcasts sala_ended com reason=server_restart e fecha conexões [0.15ms]
+server test: (pass) WSService — wire format validation > toda mensagem enviada passa pelo ServerToClientEventSchema [0.09ms]
+server test: (pass) WSService — tick heartbeat + grace period > tolera 60s sem pong (aba oculta) e fecha após 90s (morte real) [0.11ms]
+server test: (pass) WSService — tick heartbeat + grace period > tick pinga conexão com hello após 25s, mas não antes nem pré-hello [0.12ms]
+server test: (pass) WSService — tick heartbeat + grace period > tick sozinho não broadcasta room_state (só eventos disparam) [0.23ms]
+server test: (pass) WSService — tick heartbeat + grace period > NÃO broadcasta para sala em fase 'idle' via tick [0.08ms]
+server test: 
+server test: src/handlers/throw-projectile.test.ts:
+server test: (pass) handleThrowProjectile > arremesso com sucesso e sorteia desfecho válido [0.18ms]
+server test: (pass) handleThrowProjectile > cooldown é compartilhado entre tipos e libera exatamente em 1s [0.15ms]
+server test: (pass) handleThrowProjectile > os seis tipos funcionam em qualquer fase, incluindo espectadores [0.26ms]
+server test: (pass) handleThrowProjectile > recusa autoarremesso, alvo de outra sala e desconectado sem consumir cooldown [0.12ms]
+server test: (pass) handleThrowProjectile > cadeirada épica sempre acerta e tem cooldown longo [0.10ms]
+server test: (pass) handleThrowProjectile > arremesso para jogador não existente na sala [0.04ms]
+server test: 
+server test: src/handlers/update-avatar.test.ts:
+server test: (pass) handleUpdateAvatar > set com avatar válido atualiza Player e aparece no toState [0.28ms]
+server test: (pass) handleUpdateAvatar > avatar null limpa e volta a iniciais no snapshot [0.08ms]
+server test: (pass) handleUpdateAvatar > sem playerId retorna invalid_phase [0.03ms]
+server test: (pass) handleUpdateAvatar > avatar acima do teto aceita sem aplicar (changed false) [0.11ms]
+server test: (pass) handleUpdateAvatar > formato fora do v1 aceita sem aplicar (changed false) [0.03ms]
+server test: (pass) handleUpdateAvatar > mesmo apelido não mistura avatar entre players (edge E2) [0.08ms]
+server test: (pass) WSService update_avatar dispatch > válido atualiza e broadcast room_state com novo avatar p/ sala [0.32ms]
+server test: (pass) WSService update_avatar dispatch > sem playerId retorna invalid_phase sem broadcast [0.06ms]
+server test: 
+server test: src/handlers/cast-vote.test.ts:
+server test: (pass) handleCastVote — voto normal (F-009, F-013) > registra voto e marca hasVoted=true [0.10ms]
+server test: (pass) handleCastVote — voto normal (F-009, F-013) > primeiro voto: isFirstVoteOfRound=true e sai de idle [0.04ms]
+server test: (pass) handleCastVote — change vote idempotente (F-011) > trocar voto atualiza in-place [0.03ms]
+server test: (pass) handleCastVote — change vote idempotente (F-011) > trocar voto NÃO é 'first vote of round' [0.03ms]
+server test: (pass) handleCastVote — rejeições > rejeita un-vote (invalid_vote) — value=null [0.02ms]
+server test: (pass) handleCastVote — rejeições > rejeita valor fora do deck (invalid_vote) [0.04ms]
+server test: (pass) handleCastVote — rejeições > permite vote em fase revealed e atualiza o voto [0.04ms]
+server test: (pass) handleCastVote — rejeições > rejeita vote de player não em sala alguma (invalid_vote) [0.02ms]
+server test: (pass) handleCastVote — rejeições > rejeita voto de espectador com role_denied [0.05ms]
+server test: (pass) handleCastVote — pós-reveal idempotente (EVR-14) > cast_vote idempotente pós-reveal retorna changed=false sem mutação [0.03ms]
+server test: 
+server test: src/handlers/start-new-round.test.ts:
+server test: (pass) handleStartNewRound — new round normal > limpa votes, incrementa round, fase → voting [0.15ms]
+server test: (pass) handleStartNewRound — new round normal > qualquer player (não host) pode iniciar nova rodada [0.05ms]
+server test: (pass) handleStartNewRound — rejeições > rejeita fora de phase=revealed [0.03ms]
+server test: (pass) handleStartNewRound — rejeições > rejeita player não em sala [0.01ms]
+server test: 
+server test: src/handlers/send-nudge.test.ts:
+server test: (pass) handleSendNudge > cutucada com sucesso entre player e espectador [0.11ms]
+server test: (pass) handleSendNudge > recusa auto-cutucada, alvo de outra sala e desconectado sem consumir cooldown [0.09ms]
+server test: (pass) handleSendNudge > cooldown compartilhado bloqueia arremesso logo após a cutucada [0.06ms]
+server test: 
+server test: src/handlers/reveal-votes.test.ts:
+server test: (pass) handleRevealVotes — reveal normal (F-015, F-019, F-020, F-021) > calcula stats a partir dos votos [0.14ms]
+server test: (pass) handleRevealVotes — reveal normal (F-015, F-019, F-020, F-021) > detecta unanimous quando todos os votos são iguais [0.05ms]
+server test: (pass) handleRevealVotes — reveal normal (F-015, F-019, F-020, F-021) > qualquer player (não host) pode revelar — ADR-0002 [0.03ms]
+server test: (pass) handleRevealVotes — rejeições > rejeita reveal em fase idle (invalid_phase) [0.04ms]
+server test: (pass) handleRevealVotes — rejeições > rejeita reveal de player não em sala [0.01ms]
+server test: (pass) handleRevealVotes — rejeições > rejeita segundo reveal (fase=revealed) [0.04ms]
+server test: 
+server test: src/handlers/historia-handlers.test.ts:
+server test: (pass) handleHistoriaAdd > válido cria no fim e auto-seleciona a primeira [0.10ms]
+server test: (pass) handleHistoriaAdd > espectador recebe role_denied [0.06ms]
+server test: (pass) handleHistoriaAdd > 51ª recebe pauta_cheia [0.17ms]
+server test: (pass) handleHistoriaAdd > caller fora da sala recebe historia_nao_encontrada [0.02ms]
+server test: (pass) handleHistoriaAdd > título vazio (chamada direta) retorna erro legível sem lançar [0.09ms]
+server test: (pass) handleHistoriaUpdate > válido edita título last-write-wins [0.05ms]
+server test: (pass) handleHistoriaUpdate > criterio null limpa o critério [0.06ms]
+server test: (pass) handleHistoriaUpdate > espectador recebe role_denied [0.05ms]
+server test: (pass) handleHistoriaUpdate > id ausente recebe historia_nao_encontrada [0.03ms]
+server test: (pass) handleHistoriaMove > válido reordena e reindexa [0.07ms]
+server test: (pass) handleHistoriaMove > mover a ativa em voting recebe invalid_phase [0.10ms]
+server test: (pass) handleHistoriaMove > espectador recebe role_denied [0.05ms]
+server test: (pass) handleHistoriaRemove > válido remove e reindexa [0.06ms]
+server test: (pass) handleHistoriaRemove > apagar pontuada exige confirmScored; com o segundo toque remove [0.08ms]
+server test: (pass) handleHistoriaRemove > apagar a ativa em voting recebe invalid_phase [0.07ms]
+server test: (pass) handleHistoriaRemove > espectador recebe role_denied [0.07ms]
+server test: (pass) handleHistoriaSelect > válido troca a ativa em idle [0.05ms]
+server test: (pass) handleHistoriaSelect > troca em voting recebe invalid_phase [0.06ms]
+server test: (pass) handleHistoriaSelect > espectador recebe role_denied [0.03ms]
+server test: (pass) handleHistoriaSelect > id ausente recebe historia_nao_encontrada [0.02ms]
+server test: 
+server test: src/handlers/hello.test.ts:
+server test: (pass) handleHello — nick validation (F-001, F-002) > rejeita nick < 2 chars [0.06ms]
+server test: (pass) handleHello — nick validation (F-001, F-002) > rejeita nick com espaços duplos [0.02ms]
+server test: (pass) handleHello — nick validation (F-001, F-002) > rejeita nick > 20 chars [0.02ms]
+server test: (pass) handleHello — criar sala (F-003) > cria sala e atribui role host [0.05ms]
+server test: (pass) handleHello — criar sala (F-003) > código gerado é 4-char alfanumérico [0.03ms]
+server test: (pass) handleHello — join com code (F-004, F-005, F-006) > join em sala existente atribui role player [0.08ms]
+server test: (pass) handleHello — join com code (F-004, F-005, F-006) > rejeita código inexistente (sala_nao_encontrada) [0.02ms]
+server test: (pass) handleHello — join com code (F-004, F-005, F-006) > rejeita 13º player com sala_cheia (F-005) [0.14ms]
+server test: (pass) handleHello — join com code (F-004, F-005, F-006) > UUID duplicado em sala cheia é rejeitado com internal_error [0.04ms]
+server test: (pass) handleHello — reconnect (T13a, F-037/F-038) > mesmo UUID em sala existente → reidrata sem nova atribuição [0.11ms]
+server test: (pass) handleHello — reconnect (T13a, F-037/F-038) > UUID conhecida mas sala não existe mais → cria nova sala [0.05ms]
+server test: (pass) handleHello — reconnect (T13a, F-037/F-038) > UUID conhecida + join com code inexistente → sala_nao_encontrada (prioriza code sobre UUID) [0.04ms]
+server test: (pass) handleHello — reconnect (T13a, F-037/F-038) > reconnect preserva voto já feito (F-038) [0.06ms]
+server test: (pass) handleHello — reconnect (T13a, F-037/F-038) > reconnect em sala cheia reusa assento (sem contar novo) [0.17ms]
+server test: (pass) handleHello — espectador > join com spectate atribui role spectator e seat -1 [0.07ms]
+server test: (pass) handleHello — espectador > espectador não consome assento nem entra no limite de 12 [0.14ms]
+server test: (pass) handleHello — espectador > spectate sem code cria a sala como espectador sem host [0.04ms]
+server test: (pass) handleHello — espectador > primeiro votante assume o host em sala criada por espectador [0.05ms]
+server test: (pass) handleHello — avatar > hello com avatar válido persiste no Player e aparece no toState [0.06ms]
+server test: (pass) handleHello — avatar > hello com avatar acima do teto aceita o join com avatar ignorado [0.08ms]
+server test: (pass) handleHello — avatar > hello com avatar de formato inválido aceita o join com avatar ignorado [0.05ms]
+server test: (pass) handleHello — avatar > hello sem avatar entra com avatar ausente (iniciais) [0.03ms]
+server test: (pass) handleHello — avatar > reconnect reidrata avatar junto com assento e voto [0.10ms]
+server test: 
+server test:  294 pass
+server test:  0 fail
+server test:  20750 expect() calls
+server test: Ran 294 tests across 25 files. [189.00ms]
+server test: Exited with code 0
+@planning-poker/shared test: bun test v1.4.2 (744846f84)
+@planning-poker/shared test: 
+@planning-poker/shared test: src/smoke.test.ts:
+@planning-poker/shared test: (pass) Barrel `@planning-poker/shared` smoke test > exporta SHARED_SCHEMA_VERSION [0.02ms]
+@planning-poker/shared test: (pass) Barrel `@planning-poker/shared` smoke test > exporta schemas Zod principais [0.05ms]
+@planning-poker/shared test: (pass) Barrel `@planning-poker/shared` smoke test > exporta funções puras [0.03ms]
+@planning-poker/shared test: (pass) Barrel `@planning-poker/shared` smoke test > exporta utilitários de código [0.01ms]
+@planning-poker/shared test: (pass) Barrel `@planning-poker/shared` smoke test > end-to-end: valida um SalaState real [2.01ms]
+@planning-poker/shared test: 
+@planning-poker/shared test: src/protocol.test.ts:
+@planning-poker/shared test: (pass) protocol — projéteis (issue #157) > isProjectileType aceita os 6 tipos e rejeita desconhecidos e removidos [0.41ms]
+@planning-poker/shared test: (pass) protocol — projéteis (issue #157) > isProjectileOutcome aceita hit/dodge/deflect [0.04ms]
+@planning-poker/shared test: (pass) protocol — projéteis (issue #157) > buildThrowProjectileMessage monta o evento C→S [0.03ms]
+@planning-poker/shared test: (pass) protocol — projéteis (issue #157) > buildUpdateAvatarMessage monta set com o dataURL [0.01ms]
+@planning-poker/shared test: (pass) protocol — projéteis (issue #157) > buildUpdateAvatarMessage monta clear com null
+@planning-poker/shared test: (pass) protocol — projéteis (issue #157) > parseServerEvent aceita projectile_thrown válido [0.20ms]
+@planning-poker/shared test: (pass) protocol — projéteis (issue #157) > parseServerEvent rejeita projectile_thrown malformado [0.09ms]
+@planning-poker/shared test: (pass) protocol — cutucadas (issue #172) > isNudgeId aceita os 4 ids fixos e rejeita o resto [0.07ms]
+@planning-poker/shared test: (pass) protocol — cutucadas (issue #172) > buildSendNudgeMessage monta o evento C→S [0.02ms]
+@planning-poker/shared test: (pass) protocol — cutucadas (issue #172) > parseServerEvent aceita nudge_sent válido [0.05ms]
+@planning-poker/shared test: (pass) protocol — cutucadas (issue #172) > parseServerEvent rejeita nudge_sent malformado [0.09ms]
+@planning-poker/shared test: (pass) protocol — parse S→C via schemas (issue #147) > parseServerEvent ignora lixo e tipos futuros [0.14ms]
+@planning-poker/shared test: (pass) protocol — parse S→C via schemas (issue #147) > parseServerEvent aceita welcome/room_state/pong/error do contrato [0.33ms]
+@planning-poker/shared test: 
+@planning-poker/shared test: src/schemas/pauta.test.ts:
+@planning-poker/shared test: (pass) HistoriaSchema > aceita história válida (título + pontos null + ordem) [0.15ms]
+@planning-poker/shared test: (pass) HistoriaSchema > aceita critério ≤1000 ou ausente [0.19ms]
+@planning-poker/shared test: (pass) HistoriaSchema > aceita pontos numéricos (mediana pós-reveal) ou null [0.05ms]
+@planning-poker/shared test: (pass) HistoriaSchema > rejeita título vazio / só-espaços / longo [0.19ms]
+@planning-poker/shared test: (pass) HistoriaSchema > aceita título no limite 1–120 [0.06ms]
+@planning-poker/shared test: (pass) HistoriaSchema > rejeita critério >1000 [0.03ms]
+@planning-poker/shared test: (pass) PautaSchema (lista ≤50) > limite SSOT é 50
+@planning-poker/shared test: (pass) PautaSchema (lista ≤50) > aceita pauta com 50 [0.52ms]
+@planning-poker/shared test: (pass) PautaSchema (lista ≤50) > rejeita 51ª (pauta_cheia no domínio) [0.33ms]
+@planning-poker/shared test: (pass) HistoriaAtualIdSchema > aceita id non-empty ou null [0.03ms]
+@planning-poker/shared test: (pass) HistoriaAtualIdSchema > rejeita string vazia [0.03ms]
+@planning-poker/shared test: (pass) 5 eventos finos C→S na união discriminada > historia_add válido [0.08ms]
+@planning-poker/shared test: (pass) 5 eventos finos C→S na união discriminada > historia_add com criterio válido [0.03ms]
+@planning-poker/shared test: (pass) 5 eventos finos C→S na união discriminada > historia_add rejeita título vazio [0.04ms]
+@planning-poker/shared test: (pass) 5 eventos finos C→S na união discriminada > historia_update parcial (titulo ou criterio) [0.08ms]
+@planning-poker/shared test: (pass) 5 eventos finos C→S na união discriminada > historia_update rejeita sem campo editável [0.03ms]
+@planning-poker/shared test: (pass) 5 eventos finos C→S na união discriminada > historia_move com toIndex 0..49 [0.07ms]
+@planning-poker/shared test: (pass) 5 eventos finos C→S na união discriminada > historia_remove com id [0.03ms]
+@planning-poker/shared test: (pass) 5 eventos finos C→S na união discriminada > historia_remove aceita confirmScored opcional (#165) [0.04ms]
+@planning-poker/shared test: (pass) 5 eventos finos C→S na união discriminada > historia_select com id ou null (limpa ativa) [0.04ms]
+@planning-poker/shared test: (pass) 5 eventos finos C→S na união discriminada > payloads estritos rejeitam campo extra [0.08ms]
+@planning-poker/shared test: (pass) SalaState carrega pauta + historiaAtualId > aceita sala legada sem pauta (compat retroativa) [0.05ms]
+@planning-poker/shared test: (pass) SalaState carrega pauta + historiaAtualId > aceita sala com pauta + historiaAtualId [0.08ms]
+@planning-poker/shared test: (pass) SalaState carrega pauta + historiaAtualId > aceita historiaAtualId null (nenhuma ativa) [0.05ms]
+@planning-poker/shared test: (pass) SalaState carrega pauta + historiaAtualId > rejeita pauta com 51 na SalaState [0.33ms]
+@planning-poker/shared test: (pass) Error codes da Pauta > cobre pauta_cheia + historia_nao_encontrada (novos #161) [0.02ms]
+@planning-poker/shared test: (pass) Error codes da Pauta > reusa invalid_phase + role_denied (select em voting / espectador)
+@planning-poker/shared test: 
+@planning-poker/shared test: src/schemas/sala.test.ts:
+@planning-poker/shared test: (pass) DECK_VALUES > tem exatamente 9 cartas na sequência Fibonacci + ☕ [0.02ms]
+@planning-poker/shared test: (pass) DECK_VALUES > VoteSchema aceita cada valor do deck [0.04ms]
+@planning-poker/shared test: (pass) DECK_VALUES > VoteSchema rejeita valor fora do deck [0.06ms]
+@planning-poker/shared test: (pass) RoomCodeSchema > aceita código 4-char alfanumérico válido [0.04ms]
+@planning-poker/shared test: (pass) RoomCodeSchema > rejeita código com tamanho errado [0.05ms]
+@planning-poker/shared test: (pass) RoomCodeSchema > rejeita código com chars lowercase ou símbolos [0.05ms]
+@planning-poker/shared test: (pass) NickSchema > aceita nick 2–20 chars alfanumérico/acentos/espaços simples [0.03ms]
+@planning-poker/shared test: (pass) NickSchema > rejeita nick < 2 chars [0.02ms]
+@planning-poker/shared test: (pass) NickSchema > rejeita nick > 20 chars [0.02ms]
+@planning-poker/shared test: (pass) NickSchema > rejeita nick com espaços duplos [0.02ms]
+@planning-poker/shared test: (pass) NickSchema > rejeita nick com espaço nas pontas [0.02ms]
+@planning-poker/shared test: (pass) PhaseSchema > aceita as 4 fases [0.05ms]
+@planning-poker/shared test: (pass) PhaseSchema > rejeita fase desconhecida [0.03ms]
+@planning-poker/shared test: (pass) PlayerSchema > contrato público omite uuid e rejeita credencial extra [0.14ms]
+@planning-poker/shared test: (pass) PlayerSchema > aceita player válido completo [0.06ms]
+@planning-poker/shared test: (pass) PlayerSchema > aceita player com vote preenchido [0.03ms]
+@planning-poker/shared test: (pass) PlayerSchema > rejeita seatIndex fora de -1..11 [0.07ms]
+@planning-poker/shared test: (pass) PlayerSchema > aceita seatIndex -1 para espectador [0.03ms]
+@planning-poker/shared test: (pass) PlayerSchema > rejeita status desconhecido [0.02ms]
+@planning-poker/shared test: (pass) PlayerSchema > rejeita uuid inválido [0.03ms]
+@planning-poker/shared test: (pass) SalaStateSchema > aceita sala válida (idle, 1 player) [0.03ms]
+@planning-poker/shared test: (pass) SalaStateSchema > rejeita sala com mais de 12 jogadores (capacidade) [0.13ms]
+@planning-poker/shared test: (pass) SalaStateSchema > rejeita sala sem votes [0.05ms]
+@planning-poker/shared test: (pass) SalaStateSchema > aceita votes parcial (apenas quem votou) [0.04ms]
+@planning-poker/shared test: (pass) SalaStateSchema > hostId nullable durante cleanup (T18) [0.02ms]
+@planning-poker/shared test: 
+@planning-poker/shared test: src/schemas/avatar.test.ts:
+@planning-poker/shared test: (pass) AvatarSchema > aceita dataURL jpeg válida [0.04ms]
+@planning-poker/shared test: (pass) AvatarSchema > aceita dataURL png válida
+@planning-poker/shared test: (pass) AvatarSchema > aceita dataURL webp válida
+@planning-poker/shared test: (pass) AvatarSchema > rejeita gif (formato fora do v1) [0.02ms]
+@planning-poker/shared test: (pass) AvatarSchema > rejeita svg (formato fora do v1)
+@planning-poker/shared test: (pass) AvatarSchema > rejeita string sem prefixo dataURL [0.02ms]
+@planning-poker/shared test: (pass) AvatarSchema > rejeita dataURL acima do teto ~40KB [0.05ms]
+@planning-poker/shared test: (pass) PlayerSchema avatar > aceita player sem avatar (fallback iniciais) [0.04ms]
+@planning-poker/shared test: (pass) PlayerSchema avatar > aceita avatar null (removido) [0.03ms]
+@planning-poker/shared test: (pass) PlayerSchema avatar > aceita avatar jpeg válido e preserva o valor [0.03ms]
+@planning-poker/shared test: (pass) PlayerSchema avatar > rejeita avatar acima do teto [0.07ms]
+@planning-poker/shared test: 
+@planning-poker/shared test: src/schemas/events.test.ts:
+@planning-poker/shared test: (pass) HelloPayloadSchema > exige versão literal 2 sem default [0.23ms]
+@planning-poker/shared test: (pass) HelloPayloadSchema > aceita hello com code (join) [0.03ms]
+@planning-poker/shared test: (pass) HelloPayloadSchema > aceita hello sem code (criar sala) [0.03ms]
+@planning-poker/shared test: (pass) HelloPayloadSchema > rejeita uuid malformado [0.05ms]
+@planning-poker/shared test: (pass) HelloPayloadSchema > rejeita nick inválido (espaço duplo) [0.03ms]
+@planning-poker/shared test: (pass) CastVotePayloadSchema > aceita votos válidos [0.20ms]
+@planning-poker/shared test: (pass) CastVotePayloadSchema > aceita value: null (change-vote to nil — server rejeita depois via business rule) [0.10ms]
+@planning-poker/shared test: (pass) CastVotePayloadSchema > rejeita valor fora do deck [0.11ms]
+@planning-poker/shared test: (pass) CastVotePayloadSchema > rejeita payload extra (strict) [0.03ms]
+@planning-poker/shared test: (pass) Payloads sem campos extras (strict) > RevealVotesPayload aceita {} [0.02ms]
+@planning-poker/shared test: (pass) Payloads sem campos extras (strict) > StartNewRoundPayload aceita {} [0.02ms]
+@planning-poker/shared test: (pass) Payloads sem campos extras (strict) > LeaveRoomPayload aceita {}
+@planning-poker/shared test: (pass) Payloads sem campos extras (strict) > PingPayload aceita {}
+@planning-poker/shared test: (pass) WelcomeResponseSchema > aceita welcome host [0.07ms]
+@planning-poker/shared test: (pass) WelcomeResponseSchema > aceita welcome player (joining existing sala) [0.03ms]
+@planning-poker/shared test: (pass) WelcomeResponseSchema > rejeita role inválida [0.03ms]
+@planning-poker/shared test: (pass) PlayerJoinedEventSchema + PlayerLeftEventSchema > PlayerJoined aceita payload novo [0.14ms]
+@planning-poker/shared test: (pass) PlayerJoinedEventSchema + PlayerLeftEventSchema > PlayerLeft aceita { playerId } [0.01ms]
+@planning-poker/shared test: (pass) VoteCastEventSchema (discriminated union) > aceita kind: 'individual' [0.04ms]
+@planning-poker/shared test: (pass) VoteCastEventSchema (discriminated union) > aceita kind: 'aggregate' com count > 0 [0.02ms]
+@planning-poker/shared test: (pass) VoteCastEventSchema (discriminated union) > rejeita kind: 'aggregate' com count <= 0 [0.06ms]
+@planning-poker/shared test: (pass) VoteCastEventSchema (discriminated union) > rejeita kind desconhecido [0.03ms]
+@planning-poker/shared test: (pass) VotesRevealedEventSchema > aceita payload com range tuple [0.15ms]
+@planning-poker/shared test: (pass) VotesRevealedEventSchema > aceita median/mean/range null (sem votos numéricos) [0.03ms]
+@planning-poker/shared test: (pass) VotesRevealedEventSchema > rejeita range com tamanho errado [0.03ms]
+@planning-poker/shared test: (pass) RoundStartedEventSchema + SalaEndedEventSchema > RoundStarted aceita round positivo [0.02ms]
+@planning-poker/shared test: (pass) RoundStartedEventSchema + SalaEndedEventSchema > SalaEnded aceita reasons conhecidos [0.03ms]
+@planning-poker/shared test: (pass) RoundStartedEventSchema + SalaEndedEventSchema > SalaEnded rejeita reason desconhecido [0.02ms]
+@planning-poker/shared test: (pass) RoundStartedEventSchema + SalaEndedEventSchema > SalaEndedReasonSchema é enum estrito [0.01ms]
+@planning-poker/shared test: (pass) ErrorEventSchema > ErrorCodeSchema cobre todos os códigos documentados [0.02ms]
+@planning-poker/shared test: (pass) ErrorEventSchema > ErrorEvent aceita code conhecido sem message [0.01ms]
+@planning-poker/shared test: (pass) ErrorEventSchema > ErrorEvent aceita message opcional [0.01ms]
+@planning-poker/shared test: (pass) ErrorEventSchema > ErrorEvent rejeita code desconhecido [0.02ms]
+@planning-poker/shared test: (pass) PongPayloadSchema > aceita {} [0.03ms]
+@planning-poker/shared test: (pass) ClientToServerEventSchema (discriminated union) > aceita cada um dos 6 tipos [0.09ms]
+@planning-poker/shared test: (pass) ClientToServerEventSchema (discriminated union) > rejeita type desconhecido [0.03ms]
+@planning-poker/shared test: (pass) ServerToClientEventSchema (discriminated union) > aceita welcome válido [0.06ms]
+@planning-poker/shared test: (pass) ServerToClientEventSchema (discriminated union) > aceita room_state válido [0.04ms]
+@planning-poker/shared test: (pass) ServerToClientEventSchema (discriminated union) > aceita vote_cast individual [0.04ms]
+@planning-poker/shared test: (pass) ServerToClientEventSchema (discriminated union) > aceita votes_revealed com unanimous true [0.03ms]
+@planning-poker/shared test: (pass) ServerToClientEventSchema (discriminated union) > aceita round_started [0.01ms]
+@planning-poker/shared test: (pass) ServerToClientEventSchema (discriminated union) > aceita sala_ended server_restart [0.02ms]
+@planning-poker/shared test: (pass) ServerToClientEventSchema (discriminated union) > aceita error com code conhecido [0.02ms]
+@planning-poker/shared test: (pass) ServerToClientEventSchema (discriminated union) > aceita pong [0.01ms]
+@planning-poker/shared test: (pass) NudgeIdSchema + SendNudgePayloadSchema > cobre exatamente as 4 cutucadas fixas
+@planning-poker/shared test: (pass) NudgeIdSchema + SendNudgePayloadSchema > aceita send_nudge válido [0.02ms]
+@planning-poker/shared test: (pass) NudgeIdSchema + SendNudgePayloadSchema > rejeita nudgeId fora do catálogo [0.02ms]
+@planning-poker/shared test: (pass) NudgeIdSchema + SendNudgePayloadSchema > rejeita targetPlayerId vazio [0.01ms]
+@planning-poker/shared test: (pass) NudgeIdSchema + SendNudgePayloadSchema > rejeita payload extra (strict) [0.02ms]
+@planning-poker/shared test: (pass) NudgeSentEventSchema > aceita nudge_sent válido com sender + target [0.01ms]
+@planning-poker/shared test: (pass) NudgeSentEventSchema > rejeita nudgeId desconhecido [0.01ms]
+@planning-poker/shared test: (pass) Discriminated unions com send_nudge/nudge_sent > ClientToServerEventSchema dispatch send_nudge [0.01ms]
+@planning-poker/shared test: (pass) Discriminated unions com send_nudge/nudge_sent > ServerToClientEventSchema aceita nudge_sent [0.02ms]
+@planning-poker/shared test: (pass) HelloPayloadSchema avatar > aceita hello com avatar válido [0.02ms]
+@planning-poker/shared test: (pass) HelloPayloadSchema avatar > aceita hello sem avatar (fallback iniciais) [0.01ms]
+@planning-poker/shared test: (pass) HelloPayloadSchema avatar > rejeita hello com avatar acima do teto [0.06ms]
+@planning-poker/shared test: (pass) UpdateAvatarPayloadSchema > aceita set com dataURL válida [0.01ms]
+@planning-poker/shared test: (pass) UpdateAvatarPayloadSchema > aceita clear com avatar null [0.01ms]
+@planning-poker/shared test: (pass) UpdateAvatarPayloadSchema > rejeita avatar acima do teto [0.04ms]
+@planning-poker/shared test: (pass) UpdateAvatarPayloadSchema > rejeita formato fora do v1 (gif) [0.01ms]
+@planning-poker/shared test: (pass) ClientToServerEventSchema update_avatar > dispatch update_avatar set via união [0.01ms]
+@planning-poker/shared test: (pass) ClientToServerEventSchema update_avatar > dispatch update_avatar clear via união [0.01ms]
+@planning-poker/shared test: (pass) PlayerJoinedEventSchema avatar > aceita player_joined sem avatar [0.09ms]
+@planning-poker/shared test: (pass) PlayerJoinedEventSchema avatar > aceita player_joined com avatar [0.05ms]
+@planning-poker/shared test: 
+@planning-poker/shared test: src/compute/consensus.test.ts:
+@planning-poker/shared test: (pass) voteToNumber > converte cada deck value corretamente [0.02ms]
+@planning-poker/shared test: (pass) voteToNumber > ☕ → null (sempre)
+@planning-poker/shared test: (pass) computeConsensus > count ímpar: mediana é o valor central [0.03ms]
+@planning-poker/shared test: (pass) computeConsensus > count par: mediana é média dos dois centrais [0.01ms]
+@planning-poker/shared test: (pass) computeConsensus > cluster em 5 (todos iguais) [0.02ms]
+@planning-poker/shared test: (pass) computeConsensus > ☕ excluído do cálculo [0.02ms]
+@planning-poker/shared test: (pass) computeConsensus > todos ☕ → null em todos os campos [0.01ms]
+@planning-poker/shared test: (pass) computeConsensus > array vazio → null em todos os campos (não throw)
+@planning-poker/shared test: (pass) computeConsensus > ½ conta como 0.5 nas stats [0.01ms]
+@planning-poker/shared test: (pass) isUnanimous > cluster em 5 → true [0.08ms]
+@planning-poker/shared test: (pass) isUnanimous > incluindo ☕ em cluster → true (☕ ignorado) [0.02ms]
+@planning-poker/shared test: (pass) isUnanimous > valores diferentes → false
+@planning-poker/shared test: (pass) isUnanimous > voto único (1 numérico + ☕) → false (não há acordo entre votantes) [0.01ms]
+@planning-poker/shared test: (pass) isUnanimous > só ☕ → false (sem votos numéricos, não há unanimidade)
+@planning-poker/shared test: (pass) isUnanimous > vazio → false
+@planning-poker/shared test: (pass) consensusSignal > ≥2 numéricos iguais → unanimous (☕ ignorado) [0.02ms]
+@planning-poker/shared test: (pass) consensusSignal > ≥2 numéricos distintos → divergent [0.02ms]
+@planning-poker/shared test: (pass) consensusSignal > <2 numéricos → none (voto único, só ☕, vazio) [0.01ms]
+@planning-poker/shared test: (pass) divergenceMagnitude > delta entre maior e menor voto numérico [0.03ms]
+@planning-poker/shared test: (pass) divergenceMagnitude > 0 quando todos os numéricos são iguais (inclusive voto único) [0.01ms]
+@planning-poker/shared test: (pass) divergenceMagnitude > null sem votos numéricos
+@planning-poker/shared test: (pass) computeConsensus — 12 votos (sala cheia) > 12 votos idênticos em 5 — mediana/média/range = 5 [0.04ms]
+@planning-poker/shared test: (pass) computeConsensus — 12 votos (sala cheia) > 12 votos idênticos em 13 — mediana/média/range = 13 [0.04ms]
+@planning-poker/shared test: (pass) computeConsensus — 12 votos (sala cheia) > 12 votos com 4 ☕ intercalados — exclui do cálculo [0.03ms]
+@planning-poker/shared test: (pass) computeConsensus — 12 votos (sala cheia) > 12 votos com maioria em 5 (unanimous-like com outlier 13) → mediana=5 [0.02ms]
+@planning-poker/shared test: (pass) computeConsensus — paridade (par vs ímpar) > count par (4 votos distintos): mediana é média dos dois centrais [0.01ms]
+@planning-poker/shared test: (pass) computeConsensus — paridade (par vs ímpar) > count ímpar (5 votos distintos): mediana é o valor central [0.02ms]
+@planning-poker/shared test: (pass) computeConsensus — paridade (par vs ímpar) > count par com ½ no centro
+@planning-poker/shared test: (pass) computeConsensus — paridade (par vs ímpar) > count ímpar com ½ isolado [0.01ms]
+@planning-poker/shared test: (pass) computeConsensus — ½ (meio) edge cases > ½ + ½ → mean/median = 0.5 [0.01ms]
+@planning-poker/shared test: (pass) computeConsensus — ½ (meio) edge cases > ½ + 1 → mediana = 0.75 (count par) [0.04ms]
+@planning-poker/shared test: (pass) computeConsensus — ½ (meio) edge cases > ½ não afeta cálculo como 0.5 (NÃO como ½ string) [0.02ms]
+@planning-poker/shared test: (pass) computeConsensus — ☕ pesado (mais da metade) > 6 ☕ + 3 votos numéricos → calcula com 3 [0.02ms]
+@planning-poker/shared test: (pass) computeConsensus — ☕ pesado (mais da metade) > 11 ☕ + 1 voto numérico → calcula com 1 [0.03ms]
+@planning-poker/shared test: (pass) computeConsensus — ☕ pesado (mais da metade) > 12 ☕ → todos null (não unanimous) [0.02ms]
+@planning-poker/shared test: (pass) computeConsensus — casos extremos de range > min = 0 e max = 13 — extremidades do deck [0.03ms]
+@planning-poker/shared test: (pass) computeConsensus — casos extremos de range > todos 0 — cluster na extremidade baixa [0.01ms]
+@planning-poker/shared test: (pass) computeConsensus — casos extremos de range > todos 13 — cluster na extremidade alta [0.02ms]
+@planning-poker/shared test: (pass) computeConsensus — casos extremos de range > imutabilidade: input não é mutado [0.02ms]
+@planning-poker/shared test: 
+@planning-poker/shared test: src/compute/justify.test.ts:
+@planning-poker/shared test: (pass) pickJustifySeat > determinístico: mesma semente + mesmo pool → mesmo assento [0.12ms]
+@planning-poker/shared test: (pass) pickJustifySeat > independe da ordem de entrada do pool [0.02ms]
+@planning-poker/shared test: (pass) pickJustifySeat > vetores fixos (paridade shared ↔ web) [0.02ms]
+@planning-poker/shared test: (pass) pickJustifySeat > nova rodada pode trocar o assento [0.04ms]
+@planning-poker/shared test: (pass) pickJustifySeat > pool vazio → null
+@planning-poker/shared test: (pass) pickJustifySeat > pool unitário → o próprio assento
+@planning-poker/shared test: (pass) pickJustifySeat > resultado pertence ao pool [0.02ms]
+@planning-poker/shared test: 
+@planning-poker/shared test: src/utils/code.test.ts:
+@planning-poker/shared test: (pass) randomCode > gera string de exatamente 4 caracteres [0.02ms]
+@planning-poker/shared test: (pass) randomCode > só usa chars do alfabeto [A-Z0-9] [0.13ms]
+@planning-poker/shared test: (pass) generateUniqueCode > gera código único quando existingCodes vazio [0.02ms]
+@planning-poker/shared test: (pass) generateUniqueCode > evita código em existingCodes (1 colisão resolve) [0.05ms]
+@planning-poker/shared test: (pass) generateUniqueCode > retorna código ainda único após adicionar à existingCodes [0.02ms]
+@planning-poker/shared test: (pass) generateUniqueCode > lança CodeCollisionError quando todas as tentativas colidem [0.06ms]
+@planning-poker/shared test: (pass) generateUniqueCode > CodeCollisionError carrega número de tentativas [0.03ms]
+@planning-poker/shared test: (pass) CodeCollisionError > mensagem inclui tentativas [0.01ms]
+@planning-poker/shared test: 
+@planning-poker/shared test:  199 pass
+@planning-poker/shared test:  0 fail
+@planning-poker/shared test:  473 expect() calls
+@planning-poker/shared test: Ran 199 tests across 9 files. [27.00ms]
+@planning-poker/shared test: Exited with code 0
+$ bun --filter pointly-web build
+pointly-web build: vite v6.4.5 building for production...
+pointly-web build: transforming...
+pointly-web build: ✓ 1954 modules transformed.
+pointly-web build: rendering chunks...
+pointly-web build: computing gzip size...
+pointly-web build: dist/shell.html                                               1.91 kB │ gzip:  0.82 kB
+pointly-web build: dist/assets/geist-vietnamese-600-normal-BFUgqsz8.woff2        4.16 kB
+pointly-web build: dist/assets/geist-cyrillic-ext-400-normal-ChfpGzr5.woff       4.29 kB
+pointly-web build: dist/assets/geist-cyrillic-ext-700-normal-CBIC21Ex.woff       4.32 kB
+pointly-web build: dist/assets/geist-cyrillic-ext-600-normal-PR76dHFV.woff       4.33 kB
+pointly-web build: dist/assets/geist-cyrillic-ext-500-normal-BXrH8YSv.woff       4.33 kB
+pointly-web build: dist/assets/geist-mono-symbols2-700-normal-u0VYbY0I.woff      4.92 kB
+pointly-web build: dist/assets/geist-mono-symbols2-600-normal-D7I4D0GJ.woff      4.95 kB
+pointly-web build: dist/assets/geist-mono-symbols2-500-normal-CmnCPGa0.woff      4.99 kB
+pointly-web build: dist/assets/geist-mono-symbols2-400-normal-DjbiTEEA.woff      5.01 kB
+pointly-web build: dist/assets/geist-mono-vietnamese-400-normal-CZEPLOgu.woff    5.31 kB
+pointly-web build: dist/assets/geist-mono-vietnamese-500-normal-Dx9-epDo.woff    5.39 kB
+pointly-web build: dist/assets/geist-mono-vietnamese-700-normal-B0ZVBxuA.woff    5.41 kB
+pointly-web build: dist/assets/geist-mono-vietnamese-600-normal-BLL01lwa.woff    5.42 kB
+pointly-web build: dist/assets/geist-mono-cyrillic-400-normal-C51Di1Mf.woff2     5.56 kB
+pointly-web build: dist/assets/geist-vietnamese-400-normal-C8xY9-dI.woff         5.66 kB
+pointly-web build: dist/assets/geist-mono-cyrillic-700-normal-DIjif5V2.woff2     5.71 kB
+pointly-web build: dist/assets/geist-mono-cyrillic-500-normal-D2cXvDHF.woff2     5.72 kB
+pointly-web build: dist/assets/geist-vietnamese-500-normal-_b1ojCbH.woff         5.72 kB
+pointly-web build: dist/assets/geist-mono-cyrillic-600-normal-Dfv53e6N.woff2     5.72 kB
+pointly-web build: dist/assets/geist-vietnamese-700-normal-Dm6ODIDG.woff         5.75 kB
+pointly-web build: dist/assets/geist-vietnamese-600-normal-B5MZcNo4.woff         5.76 kB
+pointly-web build: dist/assets/geist-cyrillic-400-normal-DXusLSnH.woff2          6.12 kB
+pointly-web build: dist/assets/geist-cyrillic-700-normal-BSHy2ewF.woff2          6.33 kB
+pointly-web build: dist/assets/geist-cyrillic-500-normal-NWpm63d5.woff2          6.33 kB
+pointly-web build: dist/assets/geist-cyrillic-600-normal-BeW5VFD_.woff2          6.36 kB
+pointly-web build: dist/sitemap.xml                                              6.71 kB │ gzip:  0.64 kB
+pointly-web build: dist/assets/geist-mono-latin-ext-400-normal-DI-rJ0UV.woff2    7.01 kB
+pointly-web build: dist/assets/geist-mono-cyrillic-400-normal-CPJFfJgk.woff      7.10 kB
+pointly-web build: dist/assets/geist-mono-latin-ext-700-normal-Dk9F-MRR.woff2    7.12 kB
+pointly-web build: dist/assets/geist-mono-latin-ext-500-normal-Buglb9-a.woff2    7.16 kB
+pointly-web build: dist/assets/geist-mono-latin-ext-600-normal-TphwrhF8.woff2    7.18 kB
+pointly-web build: dist/assets/geist-mono-cyrillic-700-normal-BfmS5dzu.woff      7.29 kB
+pointly-web build: dist/assets/geist-mono-cyrillic-600-normal-DzvMIgFZ.woff      7.30 kB
+pointly-web build: dist/assets/geist-mono-cyrillic-500-normal-DfuvdVgn.woff      7.30 kB
+pointly-web build: dist/assets/geist-latin-ext-400-normal-CND6cjiG.woff2         7.83 kB
+pointly-web build: dist/assets/geist-cyrillic-400-normal-DkrqoNl2.woff           7.92 kB
+pointly-web build: dist/assets/geist-latin-ext-500-normal-BovoTgeE.woff2         7.94 kB
+pointly-web build: dist/assets/geist-latin-ext-700-normal-BnofTsEi.woff2         7.98 kB
+pointly-web build: dist/assets/geist-latin-ext-600-normal-CVFbg5dS.woff2         8.00 kB
+pointly-web build: dist/assets/geist-cyrillic-500-normal-BboVsk8R.woff           8.08 kB
+pointly-web build: dist/assets/geist-cyrillic-700-normal-BH7gZKkM.woff           8.09 kB
+pointly-web build: dist/assets/geist-cyrillic-600-normal-CnEeIcMC.woff           8.10 kB
+pointly-web build: dist/assets/geist-mono-latin-ext-400-normal-CfzLURNc.woff     9.67 kB
+pointly-web build: dist/assets/geist-mono-latin-ext-500-normal-CrWEgvU_.woff     9.80 kB
+pointly-web build: dist/assets/geist-mono-latin-ext-700-normal-6Jom6Uax.woff     9.82 kB
+pointly-web build: dist/assets/geist-mono-latin-ext-600-normal-B7ybHiTt.woff     9.85 kB
+pointly-web build: dist/assets/geist-mono-latin-400-normal-DTRLJnHl.woff2        9.86 kB
+pointly-web build: dist/assets/geist-mono-latin-500-normal-YINYabwD.woff2       10.12 kB
+pointly-web build: dist/assets/geist-mono-latin-600-normal-V-KvD_pi.woff2       10.14 kB
+pointly-web build: dist/assets/geist-mono-latin-700-normal-DDxuFlf6.woff2       10.18 kB
+pointly-web build: dist/assets/geist-latin-ext-400-normal-Bz1pQMyt.woff         10.68 kB
+pointly-web build: dist/assets/geist-latin-ext-500-normal-C9fx-R30.woff         10.80 kB
+pointly-web build: dist/assets/geist-latin-ext-700-normal-DKAtFBEc.woff         10.81 kB
+pointly-web build: dist/assets/geist-latin-ext-600-normal-TmIUreF9.woff         10.87 kB
+pointly-web build: dist/404/index.html                                          11.56 kB │ gzip:  3.12 kB
+pointly-web build: dist/assets/geist-latin-400-normal-B40WzpMT.woff2            12.96 kB
+pointly-web build: dist/assets/geist-mono-latin-400-normal-B2yvC1Cq.woff        13.04 kB
+pointly-web build: dist/assets/geist-latin-500-normal-CTWBw9NS.woff2            13.30 kB
+pointly-web build: dist/assets/geist-mono-latin-600-normal-bZn07FKM.woff        13.33 kB
+pointly-web build: dist/assets/geist-mono-latin-500-normal-D-GG86Jb.woff        13.34 kB
+pointly-web build: dist/assets/geist-mono-latin-700-normal-BRX2CzoE.woff        13.34 kB
+pointly-web build: dist/assets/geist-latin-700-normal-CFi8mLqe.woff2            13.36 kB
+pointly-web build: dist/assets/geist-latin-600-normal-CSETrqM2.woff2            13.37 kB
+pointly-web build: dist/en/guides/index.html                                    14.72 kB │ gzip:  3.81 kB
+pointly-web build: dist/assets/geist-latin-400-normal-akEymXtG.woff             16.76 kB
+pointly-web build: dist/assets/geist-latin-500-normal-BDXIbFrL.woff             17.10 kB
+pointly-web build: dist/assets/geist-latin-700-normal-Bod5GerT.woff             17.14 kB
+pointly-web build: dist/assets/geist-latin-600-normal-DsPlZH-9.woff             17.15 kB
+pointly-web build: dist/en/scrum-poker/index.html                               23.04 kB │ gzip:  6.11 kB
+pointly-web build: dist/en/guides/what-is-planning-poker/index.html             23.15 kB │ gzip:  6.81 kB
+pointly-web build: dist/scrum-poker/index.html                                  23.17 kB │ gzip:  6.22 kB
+pointly-web build: dist/en/planning-poker/index.html                            23.23 kB │ gzip:  6.25 kB
+pointly-web build: dist/planning-poker/index.html                               23.27 kB │ gzip:  6.33 kB
+pointly-web build: dist/guias/o-que-e-planning-poker/index.html                 23.47 kB │ gzip:  6.96 kB
+pointly-web build: dist/en/guides/how-to-play-planning-poker/index.html         23.74 kB │ gzip:  6.82 kB
+pointly-web build: dist/guias/scrum-poker-vs-planning-poker/index.html          23.93 kB │ gzip:  6.53 kB
+pointly-web build: dist/guias/como-jogar-planning-poker/index.html              24.19 kB │ gzip:  7.11 kB
+pointly-web build: dist/en/guides/story-points/index.html                       24.50 kB │ gzip:  7.00 kB
+pointly-web build: dist/guias/story-points/index.html                           24.68 kB │ gzip:  7.10 kB
+pointly-web build: dist/guias/agenda-sessao-planning-poker/index.html           25.52 kB │ gzip:  7.05 kB
+pointly-web build: dist/guias/index.html                                        26.11 kB │ gzip:  4.93 kB
+pointly-web build: dist/guias/fibonacci-estimativa-agil/index.html              26.39 kB │ gzip:  7.56 kB
+pointly-web build: dist/guias/story-points-vs-horas/index.html                  26.68 kB │ gzip:  7.64 kB
+pointly-web build: dist/guias/votos-divergentes-planning-poker/index.html       27.04 kB │ gzip:  7.41 kB
+pointly-web build: dist/guias/planning-poker-para-devs/index.html               27.12 kB │ gzip:  7.77 kB
+pointly-web build: dist/guias/t-shirt-sizing/index.html                         27.86 kB │ gzip:  7.87 kB
+pointly-web build: dist/guias/planning-poker-remoto/index.html                  28.67 kB │ gzip:  8.08 kB
+pointly-web build: dist/planning-poker-online-gratis-comparativo/index.html     29.52 kB │ gzip:  8.22 kB
+pointly-web build: dist/en/index.html                                           30.71 kB │ gzip:  5.59 kB
+pointly-web build: dist/guias/estimativa-agil/index.html                        31.86 kB │ gzip:  8.54 kB
+pointly-web build: dist/index.html                                              40.72 kB │ gzip:  6.81 kB
+pointly-web build: dist/assets/session-CxRaUO3b.css                              0.88 kB │ gzip:  0.37 kB
+pointly-web build: dist/assets/arena-DT8FPu0O.css                               14.02 kB │ gzip:  3.28 kB
+pointly-web build: dist/assets/App-Dm7xG9Ab.css                                 50.81 kB │ gzip:  9.91 kB
+pointly-web build: dist/assets/index-QZVeCX6w.css                              203.06 kB │ gzip: 93.20 kB
+pointly-web build: dist/assets/index-BF9HN1oY.js                                 0.53 kB │ gzip:  0.35 kB
+pointly-web build: dist/assets/server-BIZ0OiWL.js                                4.70 kB │ gzip:  1.84 kB
+pointly-web build: dist/assets/prerender-C-CMD7rW.js                            10.61 kB │ gzip:  4.29 kB
+pointly-web build: dist/assets/routes-3I7LOtEv.js                               17.26 kB │ gzip:  5.15 kB
+pointly-web build: dist/assets/join-BtCAvTu_.js                                 19.87 kB │ gzip:  7.74 kB
+pointly-web build: dist/assets/session-DCbQB17z.js                              36.20 kB │ gzip: 13.09 kB
+pointly-web build: dist/assets/arena-Am_o2sOm.js                                62.75 kB │ gzip: 18.93 kB
+pointly-web build: dist/assets/server.browser-vQ8rOzwY.js                       70.60 kB │ gzip: 23.14 kB
+pointly-web build: dist/assets/index-CXkUveL9.js                               172.28 kB │ gzip: 56.61 kB
+pointly-web build: dist/assets/landing-content-Bo_vyRWz.js                     180.71 kB │ gzip: 54.15 kB
+pointly-web build: dist/assets/App-CJ3pFaE1.js                                 305.43 kB │ gzip: 95.10 kB
+pointly-web build: ✓ built in 3.07s
+pointly-web build: Prerendered 25 pages:
+pointly-web build:   /
+pointly-web build:   /en
+pointly-web build:   /planning-poker
+pointly-web build:   /scrum-poker
+pointly-web build:   /guias
+pointly-web build:   /guias/como-jogar-planning-poker
+pointly-web build:   /guias/o-que-e-planning-poker
+pointly-web build:   /guias/story-points
+pointly-web build:   /guias/planning-poker-remoto
+pointly-web build:   /guias/story-points-vs-horas
+pointly-web build:   /guias/fibonacci-estimativa-agil
+pointly-web build:   /guias/t-shirt-sizing
+pointly-web build:   /planning-poker-online-gratis-comparativo
+pointly-web build:   /guias/estimativa-agil
+pointly-web build:   /guias/votos-divergentes-planning-poker
+pointly-web build:   /guias/planning-poker-para-devs
+pointly-web build:   /guias/agenda-sessao-planning-poker
+pointly-web build:   /guias/scrum-poker-vs-planning-poker
+pointly-web build:   /en/planning-poker
+pointly-web build:   /en/scrum-poker
+pointly-web build:   /en/guides
+pointly-web build:   /en/guides/how-to-play-planning-poker
+pointly-web build:   /en/guides/what-is-planning-poker
+pointly-web build:   /en/guides/story-points
+pointly-web build:   /404
+pointly-web build: Exited with code 0

@@ -1,0 +1,42 @@
+import { chromium } from "/workspace/pointly-hel72fix3/node_modules/playwright/index.mjs";
+import fs from "node:fs";
+const BASE = "http://localhost:5191";
+const [, , vp, theme] = process.argv;
+const tag = `${vp}-${theme}`; const out = `/workspace/hel72-fix3-verify/${tag}`;
+fs.rmSync(out, { recursive: true, force: true }); fs.mkdirSync(out, { recursive: true });
+const size = vp === "mobile" ? { width: 390, height: 844 } : { width: 1280, height: 800 };
+const browser = await chromium.launch();
+const mk = async () => { const ctx = await browser.newContext({ viewport: size, isMobile: vp === "mobile", hasTouch: vp === "mobile", locale: "pt-BR" });
+  await ctx.addInitScript((t) => localStorage.setItem("pointly-theme", t), theme); const page = await ctx.newPage(); const errors = []; page.on("pageerror", (e) => errors.push(String(e))); return { page, errors }; };
+const A = await mk(), B = await mk();
+await A.page.goto(BASE + "/join"); await A.page.fill("#nick", "Ana"); await A.page.click('button[type="submit"]'); await A.page.waitForURL(/\/s\//);
+const code = A.page.url().split("/s/")[1].slice(0, 4);
+await B.page.goto(BASE + "/join?code=" + code); await B.page.fill("#nick", "Beto"); await B.page.click('button[type="submit"]'); await B.page.waitForURL(/\/s\//);
+await A.page.fill("#pauta-novo-titulo", "Checkout PIX"); await A.page.click('[data-testid="pauta-add-button"]');
+await B.page.waitForSelector('[data-testid="deck-card-5"]:not([disabled])');
+await B.page.click('[data-testid="deck-card-5"]'); await B.page.evaluate(() => window.scrollTo(0, 0));
+await A.page.waitForSelector("button.poker-seat-target"); await A.page.waitForTimeout(800);
+const check = (p) => p.evaluate(() => new Promise((res) => {
+  const o = { fps: 0, longFrames: 0, cls: 0, stampSeen: false, stampOutside: false, stampOverChair: false, stampOverChips: [], placement: null, hScroll: false };
+  const ov = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+  const po = new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) o.cls += e.value; }); po.observe({ type: "layout-shift" });
+  const t0 = performance.now(); let last = t0; let n = 0;
+  const tick = (now) => { if (now - last > 34) o.longFrames++; last = now; n++;
+    if (document.documentElement.scrollWidth > document.documentElement.clientWidth) o.hScroll = true;
+    const st = document.querySelector(".projectile-stamp");
+    if (st && +getComputedStyle(st).opacity > 0.9) { o.stampSeen = true; o.placement = st.dataset.placement; const r = st.getBoundingClientRect(); const tb = document.querySelector(".arena-toolbar").getBoundingClientRect().bottom;
+      if (r.left < 0 || r.right > document.documentElement.clientWidth || r.top < tb || r.bottom > innerHeight) o.stampOutside = true;
+      const rest = document.querySelector(".projectile-flight--rest"); if (rest && +getComputedStyle(rest).opacity > 0.5 && ov(r, rest.getBoundingClientRect())) o.stampOverChair = true;
+      for (const c of document.querySelectorAll(".poker-status, .poker-name")) if (ov(r, c.getBoundingClientRect())) { const t = c.textContent.trim(); if (!o.stampOverChips.includes(t)) o.stampOverChips.push(t); } }
+    if (now - t0 < 3400) requestAnimationFrame(tick); else { po.disconnect(); o.fps = Math.round(n / 3.4); o.cls = Math.round(o.cls * 10000) / 10000; res(o); } };
+  requestAnimationFrame(tick); }));
+await A.page.locator("button.poker-seat-target").first().click(); await A.page.waitForSelector('[data-testid="projectile-chair"]');
+await A.page.click('[data-testid="projectile-chair"]'); const t = Date.now();
+const checks = Promise.all([check(B.page), check(A.page)]);
+for (const ms of [450, 1000, 1350, 2300]) { const w = ms - (Date.now() - t); if (w > 0) await B.page.waitForTimeout(w);
+  await B.page.screenshot({ path: `${out}/alvo-beto-cadeirada-${String(ms).padStart(4, "0")}ms.png` }); }
+const [beto, ana] = await checks;
+await B.page.click('[data-testid="deck-card-8"]');
+const vote = await B.page.waitForSelector('[data-testid="deck-card-8"][aria-pressed="true"]', { timeout: 1500 }).then(() => true).catch(() => false);
+const r = { tag, alvoBeto: beto, jogadorAna: ana, votoDepoisDaCadeirada: vote, erros: { ana: A.errors, beto: B.errors } };
+fs.writeFileSync(`${out}/resumo.json`, JSON.stringify(r, null, 2)); console.log(JSON.stringify(r)); await browser.close();

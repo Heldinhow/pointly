@@ -1,0 +1,30 @@
+{
+  "tag": "desktop-dark",
+  "alvoBeto": {
+    "fps": 60,
+    "longFrames": 0,
+    "cls": 0,
+    "stampSeen": true,
+    "stampOutside": false,
+    "stampOverChair": false,
+    "stampOverChips": [],
+    "placement": "3",
+    "hScroll": false
+  },
+  "jogadorAna": {
+    "fps": 61,
+    "longFrames": 0,
+    "cls": 0,
+    "stampSeen": true,
+    "stampOutside": false,
+    "stampOverChair": false,
+    "stampOverChips": [],
+    "placement": "3",
+    "hScroll": false
+  },
+  "votoDepoisDaCadeirada": true,
+  "erros": {
+    "ana": [],
+    "beto": []
+  }
+}
