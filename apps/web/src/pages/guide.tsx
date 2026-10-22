@@ -186,18 +186,19 @@ export function GuidePage({
         <section className="pt-guide__closing">
           <h2>{content.closing.title}</h2>
           <p>{content.closing.body}</p>
+          <section className="pt-guide__related" data-testid="guide-related">
+            <h2>{content.closing.relatedLabel}</h2>
+            <ul className="pt-guide__related-list" role="list">
+              {content.closing.related.map((link) => (
+                <li key={link.to}>
+                  <Link to={link.to}>{link.label}</Link>
+                </li>
+              ))}
+            </ul>
+          </section>
           <Button size="xl" render={<Link to="/join" />}>
             {content.closing.cta} <ArrowRightIcon aria-hidden="true" />
           </Button>
-          <p className="pt-guide__related">
-            {content.closing.relatedLabel}:{" "}
-            {content.closing.related.map((link, index) => (
-              <span key={link.to}>
-                {index > 0 && " · "}
-                <Link to={link.to}>{link.label}</Link>
-              </span>
-            ))}
-          </p>
         </section>
       </article>
     </div>

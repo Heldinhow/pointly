@@ -307,15 +307,32 @@
   min-height: 44px;
 }
 .pt-guide__related {
-  margin-top: 24px !important;
-  font-size: 14px !important;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
 }
-.pt-guide__related a {
+.pt-guide__related h2 {
+  font-size: 20px;
+}
+.pt-guide__related-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 24px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.pt-guide__related-list a {
   color: var(--primary);
+  font-size: 15px;
   font-weight: 650;
+  line-height: 1.5;
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 4px;
+}
+.pt-guide__related-list a:hover {
+  text-decoration-thickness: 2px;
 }
 
 /* ---------- Hub /guias ---------- */
@@ -428,7 +445,8 @@
   }
 }
 @media (max-width: 760px) {
-  .pt-guide__toc ol {
+  .pt-guide__toc ol,
+  .pt-guide__related-list {
     grid-template-columns: 1fr;
   }
   .pt-guide__section {

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { GUIDE_REGISTRY_PT } from "./guide-registry.pt";
 import { HomePage } from "./home";
 
 afterEach(() => {
@@ -61,22 +62,33 @@ describe("HomePage (ticket 10 — Inicial com demonstração)", () => {
 		expect(tryRound.getAttribute("data-slot")).toBeNull();
 	});
 
-	test("bloco de leitura liga os guias no corpo", () => {
+	test("seção Guias liga todos os guias e o comparativo com âncoras descritivas", () => {
 		renderHome();
 
 		const learn = screen.getByTestId("home-learn");
-		const hrefs = Array.from(learn.querySelectorAll("a")).map((link) =>
-			link.getAttribute("href"),
+		expect(
+			screen.getByRole("heading", { name: "Guias", level: 2 }),
+		).toBeTruthy();
+		const links = Array.from(learn.querySelectorAll("a"));
+		expect(links.map((link) => link.getAttribute("href"))).toEqual(
+			GUIDE_REGISTRY_PT.map((guide) => guide.path),
 		);
-		expect(hrefs).toEqual(
-			expect.arrayContaining([
-				"/guias/como-jogar-planning-poker",
-				"/guias/o-que-e-planning-poker",
-				"/guias/story-points",
-				"/planning-poker-online-gratis-comparativo",
-			]),
-		);
-		// Ordem no documento: demo antes de "como funciona", que vem antes do bloco de leitura.
+		expect(links).toHaveLength(GUIDE_REGISTRY_PT.length);
+		for (const [index, link] of links.entries()) {
+			const guide = GUIDE_REGISTRY_PT[index];
+			expect(link.textContent?.toLowerCase()).toContain(
+				guide.keyword.toLowerCase(),
+			);
+			expect(link.textContent).not.toMatch(/clique aqui/i);
+		}
+		expect(
+			links.some(
+				(link) =>
+					link.getAttribute("href") ===
+					"/planning-poker-online-gratis-comparativo",
+			),
+		).toBe(true);
+		// Ordem no documento: demo antes de "como funciona", que vem antes do bloco de guias.
 		const demo = screen.getByTestId("demo");
 		const how = document.getElementById("como-funciona");
 		if (!how) throw new Error("seção como funciona ausente");

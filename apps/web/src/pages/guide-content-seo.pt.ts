@@ -1,4 +1,5 @@
-import type { GuideCopy } from "./guide-content";
+import type { GuideCopySource } from "./guide-content";
+import { GUIDE_REGISTRY_PT } from "./guide-registry.pt";
 
 const META_OUT_2026 = "Pointly · atualizado em outubro de 2026";
 
@@ -6,70 +7,11 @@ export const GUIA_MAPA_PT: readonly {
 	to: string;
 	title: string;
 	body: string;
-}[] = [
-	{
-		to: "/guias/como-jogar-planning-poker",
-		title: "Como jogar planning poker",
-		body: "O roteiro completo de uma sessão: papéis, rodada a rodada e o que fazer quando os votos divergem.",
-	},
-	{
-		to: "/guias/o-que-e-planning-poker",
-		title: "O que é planning poker?",
-		body: "De onde veio, por que o voto simultâneo funciona e quando usar o ritual.",
-	},
-	{
-		to: "/guias/story-points",
-		title: "Story points",
-		body: "A escala relativa, o Fibonacci e a calibração com uma história de referência.",
-	},
-	{
-		to: "/guias/planning-poker-remoto",
-		title: "Planning poker remoto",
-		body: "Como rodar a sessão com time distribuído, sem ancoragem no chat.",
-	},
-	{
-		to: "/guias/story-points-vs-horas",
-		title: "Story points vs horas",
-		body: "Por que não converter ponto em hora e como prever prazo com a velocidade do time.",
-	},
-	{
-		to: "/guias/fibonacci-estimativa-agil",
-		title: "Fibonacci na estimativa ágil",
-		body: "O que cada faixa de valor significa e o que fazer quando a história chega a 13.",
-	},
-	{
-		to: "/guias/t-shirt-sizing",
-		title: "T-shirt sizing",
-		body: "A escala PP-GG para triagem de backlog e a conversão para story points.",
-	},
-	{
-		to: "/guias/votos-divergentes-planning-poker",
-		title: "Votos divergentes no planning poker",
-		body: "O roteiro de facilitação para conduzir a discussão e reestimar.",
-	},
-	{
-		to: "/guias/planning-poker-para-devs",
-		title: "Planning poker para devs",
-		body: "Como estimar bugs, spikes e tarefas técnicas, com opções em vez de regra.",
-	},
-	{
-		to: "/guias/agenda-sessao-planning-poker",
-		title: "Agenda de sessão de planning poker",
-		body: "O modelo de 45 minutos em blocos, com papéis e checklist.",
-	},
-	{
-		to: "/guias/scrum-poker-vs-planning-poker",
-		title: "Scrum poker x planning poker",
-		body: "Por que os nomes descrevem a mesma técnica e qual usar no seu time.",
-	},
-	{
-		to: "/planning-poker-online-gratis-comparativo",
-		title: "Comparativo de ferramentas grátis",
-		body: "Pointly e outras quatro ferramentas lado a lado, com a fonte de cada dado.",
-	},
-];
+}[] = GUIDE_REGISTRY_PT.filter((guide) => guide.id !== "estimativa-agil").map(
+	(guide) => ({ to: guide.path, title: guide.title, body: guide.description }),
+);
 
-export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
+export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopySource> = {
 	"planning-poker-remoto": {
 		lang: "pt-BR",
 		path: "/guias/planning-poker-remoto",
@@ -376,16 +318,6 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 		closing: {
 			title: "Comece agora",
 			body: "Crie uma sala grátis, mande o código no chat da chamada e rode a primeira história remota hoje.",
-			cta: "Criar sala",
-			relatedLabel: "Continue",
-			related: [
-				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
-				{ to: "/guias/story-points", label: "Story points na prática" },
-				{
-					to: "/planning-poker-online-gratis-comparativo",
-					label: "Comparativo de ferramentas grátis",
-				},
-			],
 		},
 	},
 	"story-points-vs-horas": {
@@ -630,13 +562,6 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 		closing: {
 			title: "Estime com o time no Pointly",
 			body: "Crie uma sala grátis e responda a próxima pergunta de prazo com uma faixa baseada em velocidade, não com conversão.",
-			cta: "Criar sala",
-			relatedLabel: "Continue",
-			related: [
-				{ to: "/guias/story-points", label: "Story points na prática" },
-				{ to: "/guias/fibonacci-estimativa-agil", label: "Fibonacci na estimativa" },
-				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
-			],
 		},
 	},
 	"fibonacci-estimativa-agil": {
@@ -857,13 +782,6 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 		closing: {
 			title: "Teste o baralho numa sala",
 			body: "Crie uma sala grátis, vote uma história com o Fibonacci e veja como o reveal muda a conversa.",
-			cta: "Criar sala",
-			relatedLabel: "Continue",
-			related: [
-				{ to: "/guias/story-points", label: "Story points na prática" },
-				{ to: "/guias/t-shirt-sizing", label: "T-shirt sizing" },
-				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
-			],
 		},
 	},
 	"t-shirt-sizing": {
@@ -1163,16 +1081,6 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 		closing: {
 			title: "Estime com seu time",
 			body: "O Pointly usa baralho Fibonacci, não cartas de camiseta. Se o time já mapeou os tamanhos para pontos, crie a sala e estime nos pontos.",
-			cta: "Criar sala",
-			relatedLabel: "Continue",
-			related: [
-				{ to: "/guias/story-points", label: "Story points na prática" },
-				{ to: "/guias/fibonacci-estimativa-agil", label: "Fibonacci na estimativa" },
-				{
-					to: "/planning-poker-online-gratis-comparativo",
-					label: "Comparativo de ferramentas grátis",
-				},
-			],
 		},
 	},
 	"comparativo-ferramentas": {
@@ -1484,13 +1392,6 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 		closing: {
 			title: "Teste o Pointly em 1 minuto",
 			body: "Crie uma sala grátis, sem cadastro, e sinta o fluxo: apelido, código de 4 caracteres e a primeira rodada.",
-			cta: "Criar sala",
-			relatedLabel: "Continue",
-			related: [
-				{ to: "/planning-poker", label: "Planning poker online grátis" },
-				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
-				{ to: "/guias/planning-poker-remoto", label: "Planning poker remoto" },
-			],
 		},
 	},
 	"estimativa-agil": {
@@ -1742,16 +1643,6 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 		closing: {
 			title: "Faça a primeira estimativa com seu time",
 			body: "Crie uma sala grátis, escolha uma história de referência e rode uma rodada agora.",
-			cta: "Criar sala",
-			relatedLabel: "Continue",
-			related: [
-				{ to: "/guias/story-points", label: "Story points na prática" },
-				{
-					to: "/guias/votos-divergentes-planning-poker",
-					label: "Votos divergentes, o que fazer",
-				},
-				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
-			],
 		},
 	},
 	"votos-divergentes-planning-poker": {
@@ -2006,13 +1897,6 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 		closing: {
 			title: "Pratique numa sala",
 			body: "Crie uma sala grátis e conduza a próxima divergência com o roteiro na mão.",
-			cta: "Criar sala",
-			relatedLabel: "Continue",
-			related: [
-				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
-				{ to: "/guias/planning-poker-remoto", label: "Planning poker remoto" },
-				{ to: "/guias/planning-poker-para-devs", label: "Planning poker para devs" },
-			],
 		},
 	},
 	"planning-poker-para-devs": {
@@ -2262,16 +2146,6 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 		closing: {
 			title: "Estime o próximo refinamento",
 			body: "Crie uma sala grátis e leve a fila de bugs, spikes e tarefas técnicas para a mesa.",
-			cta: "Criar sala",
-			relatedLabel: "Continue",
-			related: [
-				{
-					to: "/guias/votos-divergentes-planning-poker",
-					label: "Votos divergentes, o que fazer",
-				},
-				{ to: "/guias/story-points", label: "Story points na prática" },
-				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
-			],
 		},
 	},
 	"agenda-sessao-planning-poker": {
@@ -2550,16 +2424,6 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 		closing: {
 			title: "Monte a sala e rode a pauta",
 			body: "Crie uma sala grátis, compartilhe o código e siga o modelo de 45 minutos com o time.",
-			cta: "Criar sala",
-			relatedLabel: "Continue",
-			related: [
-				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
-				{ to: "/guias/planning-poker-remoto", label: "Planning poker remoto" },
-				{
-					to: "/guias/votos-divergentes-planning-poker",
-					label: "Votos divergentes, o que fazer",
-				},
-			],
 		},
 	},
 	"scrum-poker-vs-planning-poker": {
@@ -2753,13 +2617,6 @@ export const SITE_GUIDE_CONTENT_PT: Record<string, GuideCopy> = {
 		closing: {
 			title: "Teste o ritual numa sala",
 			body: "Crie uma sala grátis e jogue uma rodada. O nome é o de menos.",
-			cta: "Criar sala",
-			relatedLabel: "Continue",
-			related: [
-				{ to: "/planning-poker", label: "Planning poker" },
-				{ to: "/scrum-poker", label: "Scrum poker" },
-				{ to: "/guias/como-jogar-planning-poker", label: "Como jogar, passo a passo" },
-			],
 		},
 	},
 };
