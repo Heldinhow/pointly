@@ -117,6 +117,8 @@ const WEIGHT_WARP: Record<ProjectileWeight, (t: number) => number> = {
 export const CHAIR_TIMELINE = {
   contact: 900,
   hitStop: 60,
+  /** Após o impacto a cadeira troca de camada (assento → sob os assentos). */
+  swapAfterImpact: 180,
   landed: 1460,
   restUntil: 3100,
   end: 3400,
@@ -212,8 +214,14 @@ export function ProjectileFlight({ event, arenaRef, onDone, lang = "pt-BR" }: {
   const hit = event.outcome === "hit" || chair;
   // A cadeira voa na camada sob os assentos (dentro da mesa): nomes e avatares
   // ficam sempre por cima dela; carimbo/estrelas seguem na camada de cima.
-  const [chairHost] = useState<HTMLElement | null>(() =>
-    chair ? arenaRef.current?.querySelector<HTMLElement>(".projectile-layer-under") ?? null : null);
+  // Voo e impacto no assento do alvo (acima do avatar, abaixo dos chips);
+  // repouso na camada sob os assentos. Carimbo/estrelas na camada de cima.
+  const restRef = useRef<HTMLSpanElement>(null);
+  const [hosts] = useState<{ seat: HTMLElement | null; under: HTMLElement | null }>(() => {
+    const arena = chair ? arenaRef.current : null;
+    const seat = arena?.querySelector<HTMLElement>(`[data-projectile-player="${event.targetPlayerId}"]`)?.closest<HTMLElement>(".poker-seat") ?? null;
+    return { seat, under: arena?.querySelector<HTMLElement>(".projectile-layer-under") ?? null };
+  });
 
   useLayoutEffect(() => {
     const node = flightRef.current;
@@ -301,7 +309,7 @@ export function ProjectileFlight({ event, arenaRef, onDone, lang = "pt-BR" }: {
       ? { x: originRect.left + originRect.width / 2 - bounds.left, y: originRect.top + originRect.height / 2 - bounds.top }
       : { x: bounds.width / 2, y: bounds.height / 2 };
     const sideOf = (x: number) => (to.x - x < 0 ? -1 : 1);
-    const at = (ms: number, total: number) => round(ms / total);
+    const at = (ms: number, total: number) => Math.round((ms / total) * 10000) / 10000;
 
     if (impact) {
       impact.style.left = `${round(to.x)}px`;
@@ -317,9 +325,10 @@ export function ProjectileFlight({ event, arenaRef, onDone, lang = "pt-BR" }: {
         return;
       }
       const side = sideOf(center.x);
-      const mobile = window.matchMedia("(max-width: 700px)").matches;
-      const size = mobile ? 1 : 1.25;
-      const restScale = mobile ? 0.62 : 0.72;
+      // Escala relativa ao desenho (80×88): ~2× o avatar no impacto, ~1,2× tombada.
+      const chairH = 88;
+      const size = (radius * 2 * 2) / chairH;
+      const restScale = (radius * 2 * 1.2) / chairH;
       // Entra de fora da tela, pelo alto e do lado de dentro da mesa.
       const from = {
         x: Math.min(bounds.width - 40, Math.max(40, to.x - side * Math.min(170, bounds.width * 0.3))),
@@ -330,42 +339,101 @@ export function ProjectileFlight({ event, arenaRef, onDone, lang = "pt-BR" }: {
       const distance = Math.hypot(dx, dy) || 1;
       const ux = dx / distance;
       const uy = dy / distance;
-      const contact = { x: to.x - ux * (radius + 22), y: to.y - uy * (radius + 22) };
-      // Tombada ao lado do avatar, na altura do rosto: nunca sobre o nome.
-      const restOffset = radius + 30 * (restScale / 0.62) + 8;
-      const restSide = to.x + side * (restOffset + 34) > bounds.width || to.x + side * (restOffset + 34) < 0 ? -side : side;
-      const rest = { x: to.x + restSide * restOffset, y: to.y - 10 };
+      const contact = { x: to.x - ux * (radius + 14), y: to.y - uy * (radius + 14) };
+      // Lado livre: o que tem mais espaço até a borda ou até o avatar vizinho
+      // na mesma faixa de altura. Sem espaço dos dois lados → à frente (rumo ao centro).
+      const viewportW = document.documentElement.clientWidth || window.innerWidth;
+      const restOffset = radius + 36;
+      const neighbors = [...arena.querySelectorAll<HTMLElement>("[data-projectile-player]")]
+        .filter((element) => element !== target)
+        .map((element) => {
+          const rect = element.getBoundingClientRect();
+          return { x: rect.left + rect.width / 2 - bounds.left, y: rect.top + rect.height / 2 - bounds.top };
+        })
+        .filter((point) => Math.abs(point.y - to.y) < radius * 3);
+      const spaceOn = (dir: number) => {
+        const edge = dir > 0 ? viewportW - bounds.left - to.x : to.x + bounds.left;
+        const near = neighbors
+          .filter((point) => Math.sign(point.x - to.x) === dir)
+          .map((point) => Math.abs(point.x - to.x) - radius * 2.2);
+        return Math.min(edge, ...near);
+      };
+      const need = restOffset + 34;
+      const left = spaceOn(-1);
+      const right = spaceOn(1);
+      let rest: { x: number; y: number };
+      let restSide: number;
+      if (Math.max(left, right) >= need) {
+        restSide = right >= left ? 1 : -1;
+        rest = { x: to.x + restSide * restOffset, y: to.y - 10 };
+      } else {
+        const cx = center.x - to.x;
+        const cy = center.y - to.y;
+        const len = Math.hypot(cx, cy) || 1;
+        restSide = cx < 0 ? -1 : 1;
+        rest = { x: to.x + (cx / len) * (radius + 52), y: to.y + (cy / len) * (radius + 52) };
+      }
       const strikeRot = -side * 24;
       const restRot = restSide * 96;
-      node.style.setProperty("--chair-facing", String(side));
-      // Coordenadas da arena → coordenadas da camada onde a cadeira foi montada.
-      const hostRect = chairHost?.getBoundingClientRect();
-      const shiftX = hostRect ? hostRect.left - bounds.left : 0;
-      const shiftY = hostRect ? hostRect.top - bounds.top : 0;
-      const pose = (x: number, y: number, rotation: number, scale: number) =>
-        `translate(${round(x - 40 - shiftX)}px, ${round(y - 44 - shiftY)}px) rotate(${round(rotation)}deg) scale(${round(scale)})`;
-      const frames: Keyframe[] = [];
-      const samples = 24;
-      for (let index = 0; index <= samples; index += 1) {
-        const t = index / samples;
-        const fall = t ** 1.6;
-        frames.push({
-          offset: at(t * T.contact, total),
-          transform: pose(from.x + (contact.x - from.x) * t, from.y + (contact.y - from.y) * fall, strikeRot - side * 720 * (1 - t) ** 1.3, size),
-          opacity: 1,
-        });
+      const flightChair = node;
+      const restChair = restRef.current;
+      flightChair.style.setProperty("--chair-facing", String(side));
+      restChair?.style.setProperty("--chair-facing", String(side));
+      // Coordenadas da arena → coordenadas da camada onde cada cadeira foi montada.
+      const shiftOf = (element: HTMLElement | null | undefined) => {
+        const host = element?.parentElement;
+        if (!host || host === arena || !host.closest(".poker-table")) return { x: 0, y: 0 };
+        const rect = host.getBoundingClientRect();
+        return { x: rect.left - bounds.left, y: rect.top - bounds.top };
+      };
+      const switchAt = T.contact + T.swapAfterImpact;
+      const timeline = (shift: { x: number; y: number }, visible: (ms: number) => number): Keyframe[] => {
+        const pose = (x: number, y: number, rotation: number, sx: number, sy = sx) =>
+          `translate(${round(x - 40 - shift.x)}px, ${round(y - 44 - shift.y)}px) rotate(${round(rotation)}deg) scale(${round(sx)}, ${round(sy)})`;
+        const frames: Keyframe[] = [];
+        const samples = 24;
+        for (let index = 0; index < samples; index += 1) {
+          const t = index / samples;
+          const fall = t ** 1.6;
+          const ms = t * T.contact;
+          frames.push({
+            offset: at(ms, total),
+            transform: pose(from.x + (contact.x - from.x) * t, from.y + (contact.y - from.y) * fall, strikeRot - side * 720 * (1 - t) ** 1.3, size),
+            opacity: visible(ms),
+          });
+        }
+        const squash = pose(contact.x, contact.y, strikeRot, size * 1.1, size * 0.86);
+        const apex = { x: (contact.x + rest.x) / 2, y: Math.min(contact.y, rest.y) - 34 };
+        const recoil = { x: contact.x + (apex.x - contact.x) * 0.3, y: contact.y + (apex.y - contact.y) * 0.3 };
+        const recoilPose = pose(recoil.x, recoil.y, strikeRot + (restRot - strikeRot) * 0.15, size * 0.92);
+        frames.push(
+          { offset: at(T.contact, total), transform: squash, opacity: visible(T.contact) },
+          { offset: at(T.contact + T.hitStop, total), transform: squash, opacity: visible(T.contact), easing: "cubic-bezier(0.2, 0.8, 0.4, 1)" },
+          { offset: at(switchAt, total), transform: recoilPose, opacity: visible(switchAt - 1) },
+          { offset: at(switchAt + 1, total), transform: recoilPose, opacity: visible(switchAt + 1), easing: "cubic-bezier(0.2, 0.7, 0.4, 1)" },
+          { offset: at(1260, total), transform: pose(apex.x, apex.y, (strikeRot + restRot) / 2, (size + restScale) / 2), opacity: visible(1260), easing: "cubic-bezier(0.6, 0, 0.9, 0.5)" },
+          { offset: at(T.landed, total), transform: pose(rest.x, rest.y, restRot + restSide * 10, restScale), opacity: visible(T.landed), easing: "ease-out" },
+          { offset: at(T.landed + 110, total), transform: pose(rest.x, rest.y, restRot - restSide * 4, restScale), opacity: visible(T.landed), easing: "ease-in-out" },
+          { offset: at(T.landed + 200, total), transform: pose(rest.x, rest.y, restRot, restScale), opacity: visible(T.landed) },
+          { offset: at(T.restUntil, total), transform: pose(rest.x, rest.y, restRot, restScale), opacity: visible(T.restUntil), easing: "ease-in" },
+          { offset: 1, transform: pose(rest.x, rest.y + 6, restRot, restScale * 0.96), opacity: 0 },
+        );
+        return frames;
+      };
+      if (restChair) {
+        // Voo + impacto: no assento do alvo (acima do avatar, abaixo dos chips);
+        // depois troca para a camada sob os assentos e tomba ao lado.
+        run(flightChair, timeline(shiftOf(flightChair), (ms) => (ms < switchAt ? 1 : 0)), { duration: total, fill: "both" });
+        run(restChair, timeline(shiftOf(restChair), (ms) => (ms < switchAt ? 0 : 1)), { duration: total, fill: "both" });
+      } else {
+        run(flightChair, timeline(shiftOf(flightChair), () => 1), { duration: total, fill: "both" });
       }
-      const apex = { x: (contact.x + rest.x) / 2, y: Math.min(contact.y, rest.y) - 38 };
-      frames.push(
-        { offset: at(T.contact + T.hitStop, total), transform: pose(contact.x, contact.y, strikeRot, size), opacity: 1, easing: "cubic-bezier(0.2, 0.8, 0.4, 1)" },
-        { offset: at(1240, total), transform: pose(apex.x, apex.y, (strikeRot + restRot) / 2, (size + restScale) / 2), opacity: 1, easing: "cubic-bezier(0.6, 0, 0.9, 0.5)" },
-        { offset: at(T.landed, total), transform: pose(rest.x, rest.y, restRot + restSide * 10, restScale), opacity: 1, easing: "ease-out" },
-        { offset: at(T.landed + 110, total), transform: pose(rest.x, rest.y, restRot - restSide * 4, restScale), opacity: 1, easing: "ease-in-out" },
-        { offset: at(T.landed + 200, total), transform: pose(rest.x, rest.y, restRot, restScale), opacity: 1 },
-        { offset: at(T.restUntil, total), transform: pose(rest.x, rest.y, restRot, restScale), opacity: 1, easing: "ease-in" },
-        { offset: 1, transform: pose(rest.x, rest.y + 6, restRot, restScale * 0.96), opacity: 0 },
-      );
-      run(node, frames, { duration: total, fill: "both" });
+      // O assento do alvo desce abaixo dos vizinhos durante o voo: a cadeira
+      // passa por baixo dos nomes alheios (z-index discreto, sem layout).
+      const seat = target.closest<HTMLElement>(".poker-seat");
+      if (seat && flightChair.parentElement === seat) {
+        run(seat, [{ zIndex: 0 }, { zIndex: 0 }], { duration: switchAt + 1, fill: "none" });
+      }
 
       // Tremor curto da mesa: 3px por 150ms.
       const table = arena.querySelector<HTMLElement>(".poker-table");
@@ -382,7 +450,7 @@ export function ProjectileFlight({ event, arenaRef, onDone, lang = "pt-BR" }: {
       const previousOrigin = target.style.transformOrigin;
       target.style.transformOrigin = "50% 100%";
       restoreTarget = () => { target.style.transformOrigin = previousOrigin; };
-      const squash = `translate(${round(ux * 4)}px, ${round(uy * 4)}px) rotate(${side * 14}deg) scale(1.08, 0.78)`;
+      const squash = `translate(${round(ux * 4)}px, ${round(uy * 4 + 6)}px) rotate(${side * 14}deg) scale(1.08, 0.78)`;
       const reactionMs = 1000;
       run(target, [
         { offset: 0, transform: squash },
@@ -420,14 +488,23 @@ export function ProjectileFlight({ event, arenaRef, onDone, lang = "pt-BR" }: {
         });
         // Carimbo junto do alvo: acima do avatar, ou abaixo do nome se a barra fixa cobrir.
         const stamp = impact.querySelector<HTMLElement>(".projectile-stamp");
+        // Nunca recortado: centro do carimbo preso dentro da viewport e abaixo da barra fixa.
         const toolbarBottom = document.querySelector(".arena-toolbar")?.getBoundingClientRect().bottom ?? 0;
+        // Margem cobre a entrada (escala até ~1,3 enquanto já visível) e o giro de -8°.
+        const halfW = ((stamp?.offsetWidth ?? 120) / 2) * 1.3 + 8;
+        const halfH = ((stamp?.offsetHeight ?? 26) / 2) * 1.3 + 12;
+        const viewportH = window.innerHeight || 800;
+        const vw = document.documentElement.clientWidth || window.innerWidth;
+        const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), Math.max(min, max));
         const above = -radius - 30;
-        const stampY = to.y + above + bounds.top - 16 < toolbarBottom ? radius + 52 : above;
-        const stampX = Math.min(bounds.width - 64 - to.x, Math.max(64 - to.x, -restSide * 10));
+        const absY = (y: number) => bounds.top + to.y + y;
+        const stampY = absY(above) - halfH < toolbarBottom ? radius + 52 : above;
+        const stampYClamped = clamp(stampY, toolbarBottom + halfH - bounds.top - to.y, viewportH - halfH - bounds.top - to.y);
+        const stampX = clamp(-restSide * 10, halfW - bounds.left - to.x, vw - halfW - bounds.left - to.x);
         const stampAt = (scale: number, rotation: number) =>
-          `translate(${round(stampX)}px, ${round(stampY)}px) translate(-50%, -50%) rotate(${rotation}deg) scale(${scale})`;
+          `translate(${round(stampX)}px, ${round(stampYClamped)}px) translate(-50%, -50%) rotate(${rotation}deg) scale(${scale})`;
         run(stamp, [
-          { offset: 0, transform: stampAt(2.4, -18), opacity: 0, easing: "cubic-bezier(0.5, 0, 0.75, 0)" },
+          { offset: 0, transform: stampAt(1.9, -16), opacity: 0, easing: "cubic-bezier(0.5, 0, 0.75, 0)" },
           { offset: 0.1, transform: stampAt(0.92, -8), opacity: 1, easing: "ease-out" },
           { offset: 0.17, transform: stampAt(1.05, -9), opacity: 1, easing: "ease-in-out" },
           { offset: 0.24, transform: stampAt(1, -8), opacity: 1 },
@@ -656,7 +733,7 @@ export function ProjectileFlight({ event, arenaRef, onDone, lang = "pt-BR" }: {
     }
     watchLifetime(Math.max(lifetime, total + ECHO_DELAYS_MS[ECHO_DELAYS_MS.length - 1]!));
     return cleanup;
-  }, [event, arenaRef, onDone, hit, type, chair, chairHost]);
+  }, [event, arenaRef, onDone, hit, type, chair, hosts]);
 
   const flight = (
     <span ref={flightRef} className={chair ? "projectile-flight projectile-flight--chair" : "projectile-flight"} data-testid="projectile-flight" data-target={event.targetPlayerId} data-outcome={event.outcome} data-projectile={type} aria-hidden="true">
@@ -679,7 +756,13 @@ export function ProjectileFlight({ event, arenaRef, onDone, lang = "pt-BR" }: {
           <ProjectileIcon type={type} />
         </span>
       ))}
-      {chairHost ? createPortal(flight, chairHost) : flight}
+      {hosts.seat ? createPortal(flight, hosts.seat) : flight}
+      {chair && hosts.under ? createPortal(
+        <span ref={restRef} className="projectile-flight projectile-flight--chair projectile-flight--rest" data-testid="projectile-chair-rest" aria-hidden="true">
+          <ProjectileIcon type={type} />
+        </span>,
+        hosts.under,
+      ) : null}
       <span ref={impactRef} className={`projectile-impact projectile-impact--${type} projectile-impact--${event.outcome}`} data-testid="projectile-impact" aria-hidden="true" style={{ "--contact-delay": "0ms", "--impact-duration": `${IMPACT_MS}ms`, "--star-stagger": `${STAR_STAGGER_MS}ms` } as CSSProperties}>
         {chair ? <i className="projectile-ripple" aria-hidden="true" /> : null}
         <i className="projectile-ring" aria-hidden="true" />

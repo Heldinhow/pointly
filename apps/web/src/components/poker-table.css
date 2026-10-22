@@ -165,6 +165,9 @@ button.poker-seat-target .poker-avatar {
   overflow: hidden;
 }
 .poker-status {
+  /* Chip acima da cadeira que acerta o assento (HEL-72). */
+  position: relative;
+  z-index: 3;
   display: flex;
   align-items: center;
   gap: 2px;

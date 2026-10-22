@@ -16,14 +16,19 @@
   overflow: clip;
   pointer-events: none;
 }
-.projectile-layer:has(.projectile-flight--chair) {
-  /* A cadeira entra de fora da tela (pelo alto); só o eixo X é recortado,
-     então não surge rolagem lateral no celular. */
-  overflow-x: clip;
-  overflow-y: visible;
+.projectile-layer:has(.projectile-impact--chair) {
+  /* Carimbo/estrelas da cadeirada nunca são recortados; o carimbo é preso
+     dentro da viewport no JS, então não surge rolagem lateral. */
+  overflow: visible;
+}
+/* Cadeira no assento do alvo (voo + impacto): acima do avatar e da carta,
+   abaixo do nome e do status (z-index 3). */
+.poker-seat > .projectile-flight--chair {
+  z-index: 2;
 }
 .projectile-flight {
   position: absolute;
+  pointer-events: none;
   left: 0;
   top: 0;
   width: 36px;
@@ -205,6 +210,11 @@
   height: 18px;
   opacity: 0;
   will-change: transform, opacity;
+}
+.dark .projectile-star svg {
+  /* Tema escuro: contorno claro + brilho, para não sumir no fundo. */
+  stroke: #fffbeb;
+  filter: drop-shadow(0 0 3px rgb(250 204 21 / 85%)) drop-shadow(0 0 1px rgb(0 0 0 / 60%));
 }
 .projectile-star svg {
   width: 100%;
