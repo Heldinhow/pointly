@@ -55,7 +55,13 @@ export default defineConfig({
 			reuseExistingServer: false,
 			stdout: "pipe",
 			stderr: "pipe",
-			env: { PORT: "3001" },
+			// Suite cria dezenas de salas do mesmo IP: relaxa os limites anti-abuso.
+			env: {
+				PORT: "3001",
+				ROOM_CREATE_PER_MIN: "100000",
+				UNKNOWN_CODE_PER_MIN: "100000",
+				LOOKUP_PER_MIN: "100000",
+			},
 		},
 		{
 			command: "bunx vite --port 5179 --strictPort",

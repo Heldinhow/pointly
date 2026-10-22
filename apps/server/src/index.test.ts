@@ -26,7 +26,7 @@ beforeEach(() => {
 });
 
 describe("GET /api/v1/salas/:code", () => {
-	test("200 quando sala existe — payload inclui code, playerCount, phase", async () => {
+	test("200 quando sala existe — payload só code + exists (sem playerCount/phase)", async () => {
 		const { sala } = hub.createSala(makeHost("p1", "Ana"));
 		const res = await app.fetch(
 			new Request(`http://test.local/api/v1/salas/${sala.code}`),
@@ -35,8 +35,26 @@ describe("GET /api/v1/salas/:code", () => {
 		const body = await res.json();
 		expect(body.code).toBe(sala.code);
 		expect(body.exists).toBe(true);
-		expect(body.playerCount).toBe(1);
-		expect(body.phase).toBe("idle");
+		expect(body.playerCount).toBeUndefined();
+		expect(body.phase).toBeUndefined();
+	});
+
+	test("429 acima do limite de lookups por IP", async () => {
+		let last = 0;
+		for (let i = 0; i < 31; i++) {
+			const res = await app.fetch(
+				new Request("http://test.local/api/v1/salas/ZZZZ"),
+				{ ip: "203.0.113.9" },
+			);
+			last = res.status;
+		}
+		expect(last).toBe(429);
+		// Outro IP não é afetado.
+		const other = await app.fetch(
+			new Request("http://test.local/api/v1/salas/ZZZZ"),
+			{ ip: "203.0.113.10" },
+		);
+		expect(other.status).toBe(404);
 	});
 
 	test("404 quando sala não existe", async () => {

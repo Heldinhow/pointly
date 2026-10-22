@@ -46,6 +46,17 @@ import { handleThrowProjectile } from "./handlers/throw-projectile";
 import { handleUpdateAvatar } from "./handlers/update-avatar";
 import { Logger } from "./ws-logger";
 import { RateLimiter } from "./ws-rate-limit";
+import { LIMITS, TokenBucket, WindowLimiter } from "./security";
+
+/** Limites de abuso do WS (defaults em `LIMITS`). */
+export type WSSecurityOptions = {
+	wsMsgBurst: number;
+	wsMsgPerSec: number;
+	roomCreatePerMin: number;
+	maxSalas: number;
+	unknownCodePerMin: number;
+	maxPayloadBytes: number;
+};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -61,6 +72,8 @@ export type WSContext = {
 	ip: string;
 	lastPongAt: number;
 	lastPingAt: number;
+	/** Token bucket de mensagens desta conexão (criado no onOpen). */
+	bucket?: TokenBucket;
 };
 
 /**
@@ -92,15 +105,28 @@ export class WSService {
 	private readonly rateLimiter: RateLimiter;
 	private readonly connections: Set<BunWS> = new Set();
 	private readonly byIP: Map<BunWS, string> = new Map();
+	private readonly security: WSSecurityOptions;
+	private readonly roomCreateLimiter: WindowLimiter;
+	private readonly unknownCodeLimiter: WindowLimiter;
 
 	constructor(
 		hub: Hub,
 		logger: Logger = new Logger(),
 		rateLimiter: RateLimiter = new RateLimiter(5),
+		security: Partial<WSSecurityOptions> = {},
 	) {
 		this.hub = hub;
 		this.logger = logger;
 		this.rateLimiter = rateLimiter;
+		this.security = { ...LIMITS, ...security };
+		this.roomCreateLimiter = new WindowLimiter(
+			this.security.roomCreatePerMin,
+			60_000,
+		);
+		this.unknownCodeLimiter = new WindowLimiter(
+			this.security.unknownCodePerMin,
+			60_000,
+		);
 	}
 
 	// -----------------------------------------------------------------------
@@ -112,7 +138,8 @@ export class WSService {
 	 * Aplica rate limit — se rejeitado, fecha conexão.
 	 */
 	onOpen(ws: BunWS): void {
-		const ip = ws.remoteAddress || "unknown";
+		// IP real vem do upgrade (X-Forwarded-For confiável); fallback no socket.
+		const ip = ws.data?.ip || ws.remoteAddress || "unknown";
 		this.byIP.set(ws, ip);
 		const allowed = this.rateLimiter.check(ip);
 		if (!allowed) {
@@ -129,6 +156,11 @@ export class WSService {
 			ip,
 			lastPongAt: now,
 			lastPingAt: now,
+			bucket: new TokenBucket(
+				this.security.wsMsgBurst,
+				this.security.wsMsgPerSec,
+				now,
+			),
 		};
 		this.connections.add(ws);
 		this.logger.connect(ip);
@@ -147,20 +179,35 @@ export class WSService {
 	 * Mensagem recebida do cliente. Valida com Zod, dispatch handler, broadcast.
 	 */
 	onMessage(ws: BunWS, raw: string | Buffer): void {
+		if (!this.connections.has(ws)) return;
+		// Flood por conexão: estourou o bucket → fecha com 1008 (policy).
+		if (ws.data.bucket && !ws.data.bucket.take()) {
+			this.logger.ratelimit(ws.data.ip, true);
+			ws.close(1008, "rate_limited");
+			return;
+		}
 		const text = typeof raw === "string" ? raw : raw.toString("utf-8");
+		// Defesa em profundidade além do `maxPayloadLength` do Bun.serve.
+		if (text.length > this.security.maxPayloadBytes) {
+			ws.close(1009, "message_too_big");
+			return;
+		}
 		let parsed: ClientToServerEvent;
 		try {
 			const json = JSON.parse(text);
 			parsed = ClientToServerEventSchema.parse(json);
 		} catch (e) {
-			// Tenta distinguir entre erro de JSON e erro de schema Zod.
+			// Detalhe do Zod só no log do servidor; cliente recebe msg genérica.
 			const msg = e instanceof Error ? e.message : String(e);
 			this.logger.error("invalid_payload", msg, ws.data.playerId ?? undefined);
 			// Se for problema de nick, propaga como invalid_nick (F-001, F-002).
-			const code = /nick|apelido/i.test(msg)
-				? "invalid_nick"
-				: "internal_error";
-			this.sendEvent(ws, { type: "error", payload: { code, message: msg } });
+			const isNick = /nick|apelido/i.test(msg);
+			this.sendEvent(ws, {
+				type: "error",
+				payload: isNick
+					? { code: "invalid_nick", message: "Apelido inválido." }
+					: { code: "internal_error", message: "Mensagem inválida." },
+			});
 			return;
 		}
 
@@ -225,7 +272,10 @@ export class WSService {
 				}
 			}
 		}
-		// 2. Grace period cleanup (T18)
+		// 2. Limpa janelas de rate limit expiradas
+		this.roomCreateLimiter.prune(now);
+		this.unknownCodeLimiter.prune(now);
+		// 3. Grace period cleanup (T18)
 		const removed = this.hub.tickGracePeriod(now);
 		for (const { code, playerId } of removed) {
 			this.broadcastMembershipChange(code, playerId);
@@ -294,6 +344,27 @@ export class WSService {
 		ws: BunWS,
 		payload: HelloPayload,
 	): void {
+		const ip = ws.data.ip;
+		if (payload.code) {
+			// Enumeração de códigos: limita tentativas com código inexistente.
+			if (
+				!this.hub.getSala(payload.code) &&
+				!this.unknownCodeLimiter.hit(ip)
+			) {
+				this.sendError(ws, "rate_limited", "Muitas tentativas. Aguarde.");
+				return;
+			}
+		} else if (!this.hub.hasUUID(payload.uuid)) {
+			// Criação de sala (não é reconnect): teto global + limite por IP.
+			if (this.hub.salas.size >= this.security.maxSalas) {
+				this.sendError(ws, "rate_limited", "Servidor cheio. Tente mais tarde.");
+				return;
+			}
+			if (!this.roomCreateLimiter.hit(ip)) {
+				this.sendError(ws, "rate_limited", "Muitas salas criadas. Aguarde.");
+				return;
+			}
+		}
 		const outcome = handleHello(this.hub, payload);
 		if (!outcome.ok) {
 			this.sendError(ws, outcome.code, outcome.message);

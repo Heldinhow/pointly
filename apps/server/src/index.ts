@@ -26,6 +26,14 @@ import { Hub } from "./hub";
 import { WSService } from "./ws";
 import { Logger } from "./ws-logger";
 import { CleanupService, installSignalHandlers } from "./cleanup";
+import {
+	LIMITS,
+	WindowLimiter,
+	clientIpFrom,
+	envInt,
+	isOriginAllowed,
+	parseAllowedOrigins,
+} from "./security";
 
 // ---------------------------------------------------------------------------
 // HTTP (Hono)
@@ -48,9 +56,17 @@ export const hub = new Hub();
  */
 export function __resetHubForTests(): void {
 	hub.shutdown();
+	lookupLimiter = new WindowLimiter(LOOKUP_PER_MIN, 60_000);
 }
 
-export const app = new Hono();
+/** Bindings que o entrypoint passa para o Hono (IP real do cliente). */
+type Bindings = { ip?: string };
+
+const LOOKUP_PER_MIN = envInt(process.env.LOOKUP_PER_MIN, LIMITS.lookupPerMin);
+/** Anti-enumeração do código de sala (por IP, janela de 1min). */
+let lookupLimiter = new WindowLimiter(LOOKUP_PER_MIN, 60_000);
+
+export const app = new Hono<{ Bindings: Bindings }>();
 
 app.get("/health", (c) =>
 	c.json({
@@ -72,7 +88,8 @@ app.get("/api/v1/health", (c) =>
 /**
  * `GET /api/v1/salas/:code` — pre-check de existência pra tela Join.
  *
- *  - 200 `{ code, exists: true, playerCount, phase }` quando a sala existe.
+ *  - 200 `{ code, exists: true }` quando a sala existe.
+ *  - 429 `{ error: 'rate_limited' }` acima de LOOKUP_PER_MIN por IP.
  *  - 404 `{ code, exists: false }` quando não existe.
  *  - 400 `{ error: 'invalid_code' }` quando code não bate `[A-Z0-9]{4}`.
  *
@@ -84,6 +101,11 @@ app.get("/api/v1/health", (c) =>
  * @see .specs/features/validate-room-existence/spec.md AC-1..AC-3
  */
 app.get("/api/v1/salas/:code", (c) => {
+	const ip = c.env?.ip ?? "unknown";
+	if (!lookupLimiter.hit(ip)) {
+		c.header("Retry-After", "60");
+		return c.json({ error: "rate_limited" }, 429);
+	}
 	const code = c.req.param("code").toUpperCase();
 	// SSOT: mesmo RoomCodeSchema do contrato compartilhado (antes regex duplicado).
 	if (!RoomCodeSchema.safeParse(code).success) {
@@ -93,13 +115,9 @@ app.get("/api/v1/salas/:code", (c) => {
 	if (!sala) {
 		return c.json({ code, exists: false }, 404);
 	}
-	const state = sala.toState();
-	return c.json({
-		code,
-		exists: true,
-		playerCount: state.players.length,
-		phase: state.phase,
-	});
+	// Só existência: contagem/fase não são necessárias pro Join e ajudavam
+	// a mapear salas ativas.
+	return c.json({ code, exists: true });
 });
 
 app.notFound((c) => c.json({ error: "not_found" }, 404));
@@ -114,10 +132,23 @@ app.onError((err, c) => {
 // ---------------------------------------------------------------------------
 
 const PORT = Number(process.env.PORT ?? 3001);
+/** Atrás do Traefik: confiar no hop mais à direita do X-Forwarded-For. */
+const TRUST_PROXY = process.env.TRUST_PROXY === "1";
+const ALLOWED_ORIGINS = parseAllowedOrigins(process.env.ALLOWED_ORIGINS);
 
 if (import.meta.main) {
 	const logger = new Logger();
-	const wsService = new WSService(hub, logger);
+	const wsService = new WSService(hub, logger, undefined, {
+		maxSalas: envInt(process.env.MAX_SALAS, LIMITS.maxSalas),
+		roomCreatePerMin: envInt(
+			process.env.ROOM_CREATE_PER_MIN,
+			LIMITS.roomCreatePerMin,
+		),
+		unknownCodePerMin: envInt(
+			process.env.UNKNOWN_CODE_PER_MIN,
+			LIMITS.unknownCodePerMin,
+		),
+	});
 
 	// Cleanup: job periódico + SIGTERM handler
 	const cleanup = new CleanupService(hub, logger, () => {
@@ -136,7 +167,7 @@ if (import.meta.main) {
 		wsService.gracefulShutdown();
 	});
 
-	Bun.serve({
+	Bun.serve<{ ip: string }>({
 		port: PORT,
 		fetch(req, srv) {
 			let url: URL;
@@ -146,23 +177,30 @@ if (import.meta.main) {
 				return new Response("Bad Request", { status: 400 });
 			}
 
+			const ip = clientIpFrom(
+				req.headers.get("x-forwarded-for"),
+				srv.requestIP(req)?.address,
+				TRUST_PROXY,
+			);
+
 			// WebSocket upgrade em /ws
 			if (url.pathname === "/ws") {
-				const ip = srv.requestIP(req)?.address ?? "unknown";
-				// data do WS é inicializado no `open` (Bun não aceita `data` em upgrade)
-				const ok = srv.upgrade(req);
-				if (ok) {
-					// IP é resolvido depois via onOpen (sem data pré-set)
-					void ip; // disponível via srv.requestIP em onOpen se necessário
-					return undefined;
+				// Anti-CSWSH: browser de outro site não abre WS no nosso backend.
+				if (!isOriginAllowed(req.headers.get("origin"), ALLOWED_ORIGINS)) {
+					return new Response("Forbidden origin", { status: 403 });
 				}
+				// IP real segue no `data`; o resto do contexto nasce no onOpen.
+				const ok = srv.upgrade(req, { data: { ip } });
+				if (ok) return undefined;
 				return new Response("WebSocket upgrade failed", { status: 400 });
 			}
 
 			// HTTP via Hono
-			return app.fetch(req);
+			return app.fetch(req, { ip });
 		},
 		websocket: {
+			// Frame maior que isso é recusado pelo Bun (avatar ≤40KB + folga).
+			maxPayloadLength: LIMITS.maxPayloadBytes,
 			open(ws) {
 				wsService.onOpen(ws as unknown as import("./ws").BunWS);
 			},
