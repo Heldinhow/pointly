@@ -246,3 +246,58 @@ test("saída do alvo encerra a cadeirada, cancela seus efeitos e restaura o alvo
   unmount();
   for (const animation of animations) expect(animation.cancel).toHaveBeenCalledTimes(1);
 });
+
+test("cadeirada voa no assento do alvo e tomba na camada sob os assentos", () => {
+  Object.defineProperty(Element.prototype, "animate", {
+    configurable: true,
+    value(this: Element, frames: Keyframe[], timing: KeyframeAnimationOptions) {
+      const cancel = mock(() => {});
+      animations.push({ target: this, frames, timing, cancel });
+      return { cancel };
+    },
+  });
+  const arena = document.createElement("div");
+  const table = document.createElement("div");
+  table.className = "poker-table";
+  const under = document.createElement("div");
+  under.className = "projectile-layer-under";
+  const seat = document.createElement("li");
+  seat.className = "poker-seat";
+  const target = document.createElement("span");
+  target.dataset.projectilePlayer = "p_target";
+  seat.append(target);
+  table.append(under, seat);
+  arena.append(table);
+  document.body.append(arena);
+  const view = render(<ProjectileFlight
+    event={{ key: 1, receivedAt: Date.now(), senderPlayerId: "p_sender", targetPlayerId: "p_target", projectileType: "chair", outcome: "hit" }}
+    arenaRef={{ current: arena }}
+    onDone={mock(() => {})}
+  />);
+  const flight = seat.querySelector<HTMLElement>('[data-testid="projectile-flight"]')!;
+  const rest = under.querySelector<HTMLElement>('[data-testid="projectile-chair-rest"]')!;
+  expect(flight).toBeTruthy();
+  expect(rest).toBeTruthy();
+  const swap = CHAIR_TIMELINE.contact + CHAIR_TIMELINE.swapAfterImpact;
+  const opacityAt = (element: Element, ms: number) => {
+    const frames = animations.find((animation) => animation.target === element)!.frames;
+    return Number([...frames].reverse().find((frame) => Number(frame.offset) * CHAIR_TIMELINE.end <= ms + 0.5)!.opacity);
+  };
+  // Voo e impacto no assento; depois do impacto, só a cadeira de baixo aparece.
+  expect(opacityAt(flight, CHAIR_TIMELINE.contact)).toBe(1);
+  expect(opacityAt(rest, CHAIR_TIMELINE.contact)).toBe(0);
+  expect(opacityAt(flight, swap + 2)).toBe(0);
+  expect(opacityAt(rest, swap + 2)).toBe(1);
+  // O assento do alvo desce abaixo dos vizinhos até a troca.
+  const seatAnimation = animations.find((animation) => animation.target === seat)!;
+  expect(seatAnimation.frames.every((frame) => frame.zIndex === 0)).toBe(true);
+  // Só transform/opacity (e o z-index discreto do assento).
+  for (const { frames } of animations) for (const frame of frames) {
+    for (const key of Object.keys(frame)) expect(["offset", "easing", "transform", "opacity", "zIndex"]).toContain(key);
+  }
+  expect(view.container.querySelector('[data-testid="projectile-stamp"]')).toBeTruthy();
+  view.unmount();
+  expect(seat.querySelector('[data-testid="projectile-flight"]')).toBeNull();
+  expect(under.querySelector('[data-testid="projectile-chair-rest"]')).toBeNull();
+  arena.remove();
+});

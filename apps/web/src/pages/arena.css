@@ -135,6 +135,17 @@
   max-width: 290px;
   margin: 7px auto 0;
 }
+/* HEL-72: a copy de "aguardando" (3 linhas no celular) troca por "já temos
+   votos" (2 linhas) quando outra pessoa vota — reserva a altura para o
+   centro da mesa não pular (CLS) na tela de quem não interagiu. */
+.arena-reveal[data-story="true"][data-revealed="false"] [data-slot="card-description"] {
+  min-height: calc(1.6em * 2);
+}
+@media (max-width: 700px) {
+  .arena-reveal[data-story="true"][data-revealed="false"] [data-slot="card-description"] {
+    min-height: calc(1.6em * 3);
+  }
+}
 .arena-reveal [data-slot="card-panel"] > div {
   justify-content: center;
 }

@@ -152,6 +152,8 @@ export function PokerTable({
         {celebrateKey > 0 && <UnanimousCelebration key={celebrateKey} />}
         <div className="poker-center">{children}</div>
       </div>
+      {/* Camada da cadeirada: acima do feltro, abaixo dos assentos — a cadeira nunca cobre nomes (HEL-72). */}
+      <div className="projectile-layer-under" aria-hidden="true" />
       <ul
         className="poker-seats"
         aria-label={compact ? labels.demoSeatsAria : labels.seatsAria}
