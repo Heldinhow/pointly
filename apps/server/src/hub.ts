@@ -49,6 +49,11 @@ export class Hub {
 	/**
 	 * @returns Sala por código. Null se não existe.
 	 */
+	/** UUID já está em alguma sala? (hello sem code = reconnect, não criação) */
+	hasUUID(uuid: string): boolean {
+		return this.byUUID.has(uuid);
+	}
+
 	getSala(code: string): Sala | null {
 		return this.salas.get(code) ?? null;
 	}
