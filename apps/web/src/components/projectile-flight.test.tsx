@@ -246,3 +246,34 @@ test("saída do alvo encerra a cadeirada, cancela seus efeitos e restaura o alvo
   unmount();
   for (const animation of animations) expect(animation.cancel).toHaveBeenCalledTimes(1);
 });
+
+test("cadeirada voa na camada sob os assentos quando a mesa a oferece (nunca cobre nomes)", () => {
+  Object.defineProperty(Element.prototype, "animate", {
+    configurable: true,
+    value(this: Element, frames: Keyframe[], timing: KeyframeAnimationOptions) {
+      const cancel = mock(() => {});
+      animations.push({ target: this, frames, timing, cancel });
+      return { cancel };
+    },
+  });
+  const arena = document.createElement("div");
+  const under = document.createElement("div");
+  under.className = "projectile-layer-under";
+  const target = document.createElement("span");
+  target.dataset.projectilePlayer = "p_target";
+  arena.append(under, target);
+  document.body.append(arena);
+  const view = render(<ProjectileFlight
+    event={{ key: 1, receivedAt: Date.now(), senderPlayerId: "p_sender", targetPlayerId: "p_target", projectileType: "chair", outcome: "hit" }}
+    arenaRef={{ current: arena }}
+    onDone={mock(() => {})}
+  />);
+  const flight = under.querySelector('[data-testid="projectile-flight"]');
+  expect(flight).toBeTruthy();
+  expect(animations.some((animation) => animation.target === flight)).toBe(true);
+  // Carimbo e estrelas continuam na camada de cima.
+  expect(view.container.querySelector('[data-testid="projectile-stamp"]')).toBeTruthy();
+  view.unmount();
+  expect(under.querySelector('[data-testid="projectile-flight"]')).toBeNull();
+  arena.remove();
+});

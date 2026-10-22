@@ -1,4 +1,5 @@
-import { useLayoutEffect, useRef, type CSSProperties, type RefObject } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import type { ProjectileThrownPayload, ProjectileType } from "@planning-poker/shared";
 import { PROJECTILE_CATALOG } from "@/lib/projectiles";
 import type { Lang } from "@/lib/i18n";
@@ -209,6 +210,10 @@ export function ProjectileFlight({ event, arenaRef, onDone, lang = "pt-BR" }: {
   const chair = event.projectileType === "chair";
   const type = event.projectileType;
   const hit = event.outcome === "hit" || chair;
+  // A cadeira voa na camada sob os assentos (dentro da mesa): nomes e avatares
+  // ficam sempre por cima dela; carimbo/estrelas seguem na camada de cima.
+  const [chairHost] = useState<HTMLElement | null>(() =>
+    chair ? arenaRef.current?.querySelector<HTMLElement>(".projectile-layer-under") ?? null : null);
 
   useLayoutEffect(() => {
     const node = flightRef.current;
@@ -333,8 +338,12 @@ export function ProjectileFlight({ event, arenaRef, onDone, lang = "pt-BR" }: {
       const strikeRot = -side * 24;
       const restRot = restSide * 96;
       node.style.setProperty("--chair-facing", String(side));
+      // Coordenadas da arena → coordenadas da camada onde a cadeira foi montada.
+      const hostRect = chairHost?.getBoundingClientRect();
+      const shiftX = hostRect ? hostRect.left - bounds.left : 0;
+      const shiftY = hostRect ? hostRect.top - bounds.top : 0;
       const pose = (x: number, y: number, rotation: number, scale: number) =>
-        `translate(${round(x - 40)}px, ${round(y - 44)}px) rotate(${round(rotation)}deg) scale(${round(scale)})`;
+        `translate(${round(x - 40 - shiftX)}px, ${round(y - 44 - shiftY)}px) rotate(${round(rotation)}deg) scale(${round(scale)})`;
       const frames: Keyframe[] = [];
       const samples = 24;
       for (let index = 0; index <= samples; index += 1) {
@@ -647,8 +656,13 @@ export function ProjectileFlight({ event, arenaRef, onDone, lang = "pt-BR" }: {
     }
     watchLifetime(Math.max(lifetime, total + ECHO_DELAYS_MS[ECHO_DELAYS_MS.length - 1]!));
     return cleanup;
-  }, [event, arenaRef, onDone, hit, type, chair]);
+  }, [event, arenaRef, onDone, hit, type, chair, chairHost]);
 
+  const flight = (
+    <span ref={flightRef} className={chair ? "projectile-flight projectile-flight--chair" : "projectile-flight"} data-testid="projectile-flight" data-target={event.targetPlayerId} data-outcome={event.outcome} data-projectile={type} aria-hidden="true">
+      <ProjectileIcon type={type} />
+    </span>
+  );
   const label = PROJECTILE_CATALOG.find((entry) => entry.type === type)?.label[lang] ?? "";
   return (
     <>
@@ -665,9 +679,7 @@ export function ProjectileFlight({ event, arenaRef, onDone, lang = "pt-BR" }: {
           <ProjectileIcon type={type} />
         </span>
       ))}
-      <span ref={flightRef} className={chair ? "projectile-flight projectile-flight--chair" : "projectile-flight"} data-testid="projectile-flight" data-target={event.targetPlayerId} data-outcome={event.outcome} data-projectile={type} aria-hidden="true">
-        <ProjectileIcon type={type} />
-      </span>
+      {chairHost ? createPortal(flight, chairHost) : flight}
       <span ref={impactRef} className={`projectile-impact projectile-impact--${type} projectile-impact--${event.outcome}`} data-testid="projectile-impact" aria-hidden="true" style={{ "--contact-delay": "0ms", "--impact-duration": `${IMPACT_MS}ms`, "--star-stagger": `${STAR_STAGGER_MS}ms` } as CSSProperties}>
         {chair ? <i className="projectile-ripple" aria-hidden="true" /> : null}
         <i className="projectile-ring" aria-hidden="true" />

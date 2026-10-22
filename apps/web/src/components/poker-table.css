@@ -36,6 +36,15 @@
   text-align: center;
   color: #f2f7f3;
 }
+.projectile-layer-under {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* Entra pelo alto (fora da tela) sem criar rolagem lateral. */
+  overflow-x: clip;
+  overflow-y: visible;
+}
 .poker-seats {
   position: absolute;
   inset: 0;
