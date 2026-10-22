@@ -1,4 +1,5 @@
 import { strict as assert } from "node:assert";
+import { createHash } from "node:crypto";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -8,6 +9,7 @@ process.env.SERVE_WEB_NO_LISTEN = "1";
 const {
 	cacheControlFor,
 	compressedFor,
+	inlineScriptHashes,
 	decide,
 	etagFor,
 	headersFor,
@@ -26,6 +28,43 @@ function tempFile(name, content) {
 function request(headers = {}) {
 	return { headers: new Headers(headers) };
 }
+
+describe("serve-web: headers de segurança", () => {
+	it("toda resposta leva CSP, nosniff, frame DENY, Referrer e Permissions", () => {
+		const h = headersFor({ status: 404, text: "x" }, undefined, request());
+		assert.equal(h["X-Content-Type-Options"], "nosniff");
+		assert.equal(h["X-Frame-Options"], "DENY");
+		assert.equal(h["Referrer-Policy"], "strict-origin-when-cross-origin");
+		assert.match(h["Permissions-Policy"], /camera=\(\)/);
+		const csp = h["Content-Security-Policy"];
+		assert.match(csp, /frame-ancestors 'none'/);
+		assert.match(csp, /script-src 'self'[^;]*https:\/\/www\.googletagmanager\.com/);
+		assert.match(csp, /img-src 'self' data: blob:/);
+		assert.match(csp, /connect-src 'self' wss:\/\/pointly\.space/);
+		assert.match(csp, /google-analytics\.com/);
+		assert.doesNotMatch(csp, /script-src[^;]*'unsafe-inline'/);
+	});
+
+	it("CSP do HTML inclui hash sha256 do <script> inline (e ignora src/vazio)", () => {
+		const body = "document.documentElement.classList.add('dark')";
+		const { dir, file } = tempFile(
+			"index.html",
+			`<html><head><script>${body}</script><script type="module" src="/a.js"></script></head></html>`,
+		);
+		try {
+			const hashes = inlineScriptHashes(file);
+			assert.deepEqual(hashes, [
+				createHash("sha256").update(body).digest("base64"),
+			]);
+			const csp = headersFor({ status: 200 }, file, request())[
+				"Content-Security-Policy"
+			];
+			assert.ok(csp.includes(`'sha256-${hashes[0]}'`));
+		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
+	});
+});
 
 describe("serve-web: negociação de entrega", () => {
 	it("prefere Brotli e aceita parâmetros de qualidade", () => {
@@ -82,7 +121,7 @@ describe("serve-web: negociação de entrega", () => {
 			const http = { headers: {} };
 			assert.equal(
 				headersFor({ status: 200 }, html, https)["Strict-Transport-Security"],
-				"max-age=86400",
+				"max-age=31536000; includeSubDomains",
 			);
 			assert.equal(
 				headersFor({ status: 200 }, html, http)["Strict-Transport-Security"],

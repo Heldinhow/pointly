@@ -9,9 +9,13 @@
  * - /caminho/ → 301 para /caminho (forma canônica sem barra final).
  * - cache: `/assets/*` imutável por 1 ano; estáticos públicos por 1 dia; HTML
  *   e erros sem cache. `ETag` fraco + 304; Brotli/gzip só para texto, com
- *   `Vary` implícito pela negociação de `Accept-Encoding`. HSTS curto apenas
- *   quando `X-Forwarded-Proto: https`.
+ *   `Vary` implícito pela negociação de `Accept-Encoding`. HSTS (1 ano,
+ *   includeSubDomains) apenas quando `X-Forwarded-Proto: https`.
+ * - segurança: CSP (self + GA, hashes dos <script> inline de cada HTML),
+ *   frame-ancestors none, nosniff, Referrer-Policy e Permissions-Policy em
+ *   toda resposta.
  */
+import { createHash } from "node:crypto";
 import { createReadStream, readFileSync, statSync } from "node:fs";
 import { join, normalize } from "node:path";
 import { brotliCompressSync, gzipSync } from "node:zlib";
@@ -23,7 +27,80 @@ const HOST = process.env.HOST ?? "0.0.0.0";
 const CACHE_IMMUTABLE = "public, max-age=31536000, immutable";
 const CACHE_SHORT = "public, max-age=86400";
 const CACHE_NONE = "no-cache";
-const HSTS_MAX_AGE = 86400;
+const HSTS_MAX_AGE = 31536000;
+
+// GA4 (ADR-0012): gtag.js + coleta. Hosts oficiais da doc de CSP do Google.
+const GA_SCRIPT = "https://www.googletagmanager.com";
+const GA_CONNECT =
+	"https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com";
+const GA_IMG = "https://*.google-analytics.com https://*.googletagmanager.com";
+const WS_ORIGINS = "wss://pointly.space wss://www.pointly.space";
+
+const SECURITY_HEADERS = {
+	"X-Content-Type-Options": "nosniff",
+	"X-Frame-Options": "DENY",
+	"Referrer-Policy": "strict-origin-when-cross-origin",
+	"Permissions-Policy":
+		"camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+	"Cross-Origin-Opener-Policy": "same-origin",
+};
+
+/**
+ * CSP. `scriptHashes` cobre os <script> inline (bootstrap de tema) do HTML
+ * servido; JSON-LD não executa e não precisa de hash, mas entra junto sem
+ * prejuízo. Estilos inline (atributos `style` do prerender) exigem
+ * 'unsafe-inline' em style-src.
+ */
+function cspFor(scriptHashes = []) {
+	const hashes = scriptHashes.map((h) => `'sha256-${h}'`).join(" ");
+	return [
+		"default-src 'self'",
+		`script-src 'self' ${hashes} ${GA_SCRIPT}`.replace(/\s+/g, " "),
+		"style-src 'self' 'unsafe-inline'",
+		`img-src 'self' data: blob: ${GA_IMG}`,
+		"font-src 'self' data:",
+		`connect-src 'self' ${WS_ORIGINS} ${GA_CONNECT}`,
+		"manifest-src 'self'",
+		"object-src 'none'",
+		"base-uri 'self'",
+		"form-action 'self'",
+		"frame-ancestors 'none'",
+		"upgrade-insecure-requests",
+	].join("; ");
+}
+
+const inlineHashCache = new Map();
+
+/** sha256 (base64) de cada <script> inline sem `src` do HTML. */
+function inlineScriptHashes(file) {
+	if (!file?.endsWith(".html")) return [];
+	let stat;
+	try {
+		stat = statSync(file);
+	} catch {
+		return [];
+	}
+	const cached = inlineHashCache.get(file);
+	if (cached && cached.mtimeMs === stat.mtimeMs) return cached.hashes;
+	let html;
+	try {
+		html = readFileSync(file, "utf8");
+	} catch {
+		return [];
+	}
+	const hashes = [];
+	const re = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi;
+	for (const match of html.matchAll(re)) {
+		const body = match[1] ?? "";
+		if (!body.trim()) continue;
+		hashes.push(createHash("sha256").update(body, "utf8").digest("base64"));
+	}
+	const unique = [...new Set(hashes)];
+	if (inlineHashCache.size < 500) {
+		inlineHashCache.set(file, { mtimeMs: stat.mtimeMs, hashes: unique });
+	}
+	return unique;
+}
 // Só texto comprime bem; imagens/fontes já são comprimidas.
 const COMPRESSIBLE = new Set([
 	".html",
@@ -146,6 +223,8 @@ function decide(rawUrl) {
 function headersFor(decision, file, request) {
 	const headers = {
 		"Cache-Control": file ? cacheControlFor(file) : CACHE_NONE,
+		...SECURITY_HEADERS,
+		"Content-Security-Policy": cspFor(inlineScriptHashes(file)),
 	};
 	if (decision.location) headers.Location = decision.location;
 	if (file) {
@@ -160,9 +239,12 @@ function headersFor(decision, file, request) {
 
 function hstsHeader(request) {
 	// HSTS só faz sentido sobre HTTPS; o protocolo chega no X-Forwarded-Proto
-	// setado pelo Traefik (único caminho até este servidor). Rampa: 1 dia.
+	// setado pelo Traefik (único caminho até este servidor). 1 ano; sem
+	// `preload` até o domínio ser submetido manualmente em hstspreload.org.
 	if (requestProto(request) !== "https") return {};
-	return { "Strict-Transport-Security": `max-age=${HSTS_MAX_AGE}` };
+	return {
+		"Strict-Transport-Security": `max-age=${HSTS_MAX_AGE}; includeSubDomains`,
+	};
 }
 
 function extOf(pathname) {
@@ -320,6 +402,8 @@ function requestProto(request) {
 }
 
 export {
+	cspFor,
+	inlineScriptHashes,
 	cacheControlFor,
 	compressedFor,
 	decide,
