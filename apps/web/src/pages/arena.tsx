@@ -1173,7 +1173,7 @@ export function ArenaPage({
       <div className="arena-workspace" ref={arenaRef}>
         <div className="projectile-layer" aria-hidden="true">
           {projectileFlights.map((event) => (
-            <ProjectileFlight key={event.key} event={event} arenaRef={arenaRef} onDone={removeProjectileFlight} />
+            <ProjectileFlight key={event.key} event={event} arenaRef={arenaRef} onDone={removeProjectileFlight} lang={lang} />
           ))}
         </div>
         <div className="nudge-layer">

@@ -2283,14 +2283,18 @@ describe("ArenaPage (issue #157 — Projéteis)", () => {
 		await waitFor(() => expect(screen.queryByTestId("projectile-flight")).toBeNull(), { timeout: 2000 });
 	});
 
-	test("movimento reduzido não cria voo", () => {
+	test("movimento reduzido troca o voo por ícone + rótulo estáticos (HEL-72)", () => {
 		const matchMedia = window.matchMedia;
 		window.matchMedia = (query) => ({ ...matchMedia(query), matches: query.includes("prefers-reduced-motion") });
 		try {
 			const { socket, ana, beto } = revealedSalaWithPair();
 			renderArena();
 			act(() => socket.emitProjectile({ senderPlayerId: ana.id, targetPlayerId: beto.id, projectileType: "brick", outcome: "dodge" }));
-			expect(screen.queryByTestId("projectile-flight")).toBeNull();
+			const notice = screen.getByTestId("projectile-static");
+			expect(notice.dataset.visible).toBe("true");
+			expect(notice.textContent).toBe("Tijolo");
+			// O voo existe no DOM, mas o CSS o esconde e nenhuma animação roda.
+			expect(screen.getByTestId("projectile-flight").getAnimations?.().length ?? 0).toBe(0);
 		} finally {
 			window.matchMedia = matchMedia;
 		}
