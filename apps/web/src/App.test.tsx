@@ -410,7 +410,10 @@ describe("App com analytics e consentimento", () => {
       expect(calls).toContainEqual([
         "event",
         "page_view",
-        { page_path: "/join" },
+        {
+          page_path: "/join",
+          page_location: "http://localhost/join",
+        },
       ]);
     });
     expect(screen.queryByTestId("analytics-consent-banner")).toBeNull();

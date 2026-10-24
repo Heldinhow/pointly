@@ -15,7 +15,7 @@ export type AnalyticsEventName =
 	(typeof AnalyticsEvent)[keyof typeof AnalyticsEvent];
 
 /**
- * Sanitiza o path enviado ao GA4 como `page_path`.
+ * Sanitiza o path enviado ao GA4 (`page_path`/`page_location`).
  *
  * Privacidade: códigos de sala são identificadores compartilháveis e
  * roteáveis — nunca vão para terceiros.
@@ -73,8 +73,8 @@ export function initAnalytics(): void {
 	const id = measurementId();
 	window.dataLayer = window.dataLayer ?? [];
 	if (typeof window.gtag !== "function") {
-		window.gtag = function gtag(...args: unknown[]) {
-			window.dataLayer?.push(args);
+		window.gtag = function gtag() {
+			window.dataLayer?.push(arguments);
 		};
 	}
 
@@ -98,8 +98,11 @@ export function trackPageView(path: string, title?: string): void {
 	if (!enabled()) return;
 	const gtag = window.gtag;
 	if (typeof gtag !== "function") return;
+	const pagePath = sanitizePagePath(path);
+	const pageLocation = `${window.location.origin}${pagePath}`;
 	gtag("event", "page_view", {
-		page_path: sanitizePagePath(path),
+		page_path: pagePath,
+		page_location: pageLocation,
 		...(title !== undefined ? { page_title: title } : {}),
 	});
 }

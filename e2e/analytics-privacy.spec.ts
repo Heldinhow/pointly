@@ -80,9 +80,13 @@ test("Aceitar carrega gtag, envia page_view e Recusar depois interrompe a coleta
 		return page.evaluate(() => {
 			const layer =
 				(window as unknown as { dataLayer?: unknown[] }).dataLayer ?? [];
-			return layer.filter(
-				(entry: unknown) => Array.isArray(entry) && entry[1] === "page_view",
-			);
+			return layer
+				.filter(
+					(entry: unknown) =>
+						Object.prototype.toString.call(entry) === "[object Arguments]",
+				)
+				.map((entry: unknown) => Array.from(entry as ArrayLike<unknown>))
+				.filter((entry) => entry[1] === "page_view");
 		});
 	}
 
@@ -97,11 +101,32 @@ test("Aceitar carrega gtag, envia page_view e Recusar depois interrompe a coleta
 		expect(await page.evaluate(() => ("gtag" in window ? typeof window.gtag : "undefined"))).toBe("function");
 		expect(await page.evaluate((key) => window.localStorage.getItem(key), CONSENT_KEY)).toBe("granted");
 		await expect.poll(() => attempts.length).toBeGreaterThan(0);
-		await expect.poll(() => pageViews()).toContainEqual(["event", "page_view", { page_path: "/" }]);
+		await expect.poll(() => pageViews()).toContainEqual([
+			"event",
+			"page_view",
+			{
+				page_path: "/",
+				page_location: "http://localhost:5179/",
+			},
+		]);
+		const entryKinds = await page.evaluate(() =>
+			((window as unknown as { dataLayer?: unknown[] }).dataLayer ?? []).map(
+				(entry) => Object.prototype.toString.call(entry),
+			),
+		);
+		expect(entryKinds.length).toBeGreaterThan(0);
+		expect(entryKinds.every((kind) => kind === "[object Arguments]")).toBe(true);
 
 		await page.getByTestId("home-cta-join").click();
 		await expect(page.locator("#nick")).toBeVisible();
-		await expect.poll(() => pageViews()).toContainEqual(["event", "page_view", { page_path: "/join" }]);
+		await expect.poll(() => pageViews()).toContainEqual([
+			"event",
+			"page_view",
+			{
+				page_path: "/join",
+				page_location: "http://localhost:5179/join",
+			},
+		]);
 
 		await page.getByTestId("analytics-consent-open").click();
 		await expect(banner).toBeVisible();

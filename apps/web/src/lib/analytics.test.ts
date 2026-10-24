@@ -38,6 +38,12 @@ function removeGtagScripts(): void {
 	}
 }
 
+function dataLayerEntries(): unknown[][] {
+	return (window.dataLayer ?? []).map((entry) =>
+		Array.from(entry as ArrayLike<unknown>),
+	);
+}
+
 beforeEach(() => {
 	__resetAnalyticsForTests();
 	clearGaEnv();
@@ -131,11 +137,21 @@ describe("analytics com consentimento concedido", () => {
 		);
 		expect(scripts).toHaveLength(1);
 		expect(scripts[0]?.src).toContain(GA_ID);
-		expect(window.dataLayer).toEqual([
+		expect(dataLayerEntries()).toEqual([
 			["js", expect.any(Date)],
 			["config", GA_ID, { send_page_view: false }],
 		]);
 		expect(typeof window.gtag).toBe("function");
+	});
+
+	test("empurra Arguments para o dataLayer (contrato do gtag.js)", () => {
+		initAnalytics();
+		trackPageView("/join");
+		const layer = window.dataLayer ?? [];
+		expect(layer.length).toBeGreaterThan(0);
+		for (const entry of layer) {
+			expect(Object.prototype.toString.call(entry)).toBe("[object Arguments]");
+		}
 	});
 
 	test("page_view usa path sanitizado e eventos de produto disparam", () => {
@@ -143,8 +159,15 @@ describe("analytics com consentimento concedido", () => {
 		trackPageView("/s/ABCD");
 		trackEvent("custom", { source: "test" });
 		trackRoomCreated();
-		expect(window.dataLayer?.slice(-3)).toEqual([
-			["event", "page_view", { page_path: "/s/[room]" }],
+		expect(dataLayerEntries().slice(-3)).toEqual([
+			[
+				"event",
+				"page_view",
+				{
+					page_path: "/s/[room]",
+					page_location: "http://localhost/s/[room]",
+				},
+			],
 			["event", "custom", { source: "test" }],
 			["event", "room_created", {}],
 		]);
