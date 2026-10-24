@@ -61,6 +61,8 @@ export default defineConfig({
 				ROOM_CREATE_PER_MIN: "100000",
 				UNKNOWN_CODE_PER_MIN: "100000",
 				LOOKUP_PER_MIN: "100000",
+				PAGEVIEW_PER_MIN: "100000",
+				VISITS_GET_PER_MIN: "100000",
 			},
 		},
 		{
@@ -75,8 +77,9 @@ export default defineConfig({
 		{
 			// Build + servidor estático de produção: só este caminho entrega o
 			// HTML pré-renderizado e exercita hydrateRoot (o Vite dev usa createRoot).
+			// PROXY_API_TO simula o Traefik de prod, que roteia /api ao backend.
 			command:
-				"VITE_GA_MEASUREMENT_ID=G-POINTLY-E2E-DISABLED bun run build:web && PORT=5188 node scripts/serve-web.mjs",
+				"VITE_GA_MEASUREMENT_ID=G-POINTLY-E2E-DISABLED bun run build:web && PORT=5188 PROXY_API_TO=http://127.0.0.1:3001 node scripts/serve-web.mjs",
 			port: 5188,
 			reuseExistingServer: false,
 			timeout: 120_000,

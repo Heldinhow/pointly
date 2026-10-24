@@ -16,8 +16,14 @@ services:
     environment:
       PORT: "3001"
       NODE_ENV: "production"
+      # Contadores first-party (`GET /api/stats/visits`, ESP32): JSON com
+      # totais por dia. Volume nomeado persiste entre redeploys; sem ele,
+      # cada deploy zera `today`/`last7d` (live5m é memória de todo jeito).
+      VISITS_DATA_FILE: "/app/data/visits.json"
       # Só o Traefik fala com este container: IP real = hop mais à direita do XFF.
       TRUST_PROXY: "1"
+    volumes:
+      - pointly-visits:/app/data
       # Origens que podem abrir o WebSocket (anti-CSWSH). Vírgula separa.
       ALLOWED_ORIGINS: "https://pointly.space,https://www.pointly.space"
     healthcheck:
@@ -100,3 +106,8 @@ services:
 networks:
   dokploy-network:
     external: true
+
+# Contadores de visitas first-party (ESP32): sobrevive a redeploys.
+# Dokploy: nada a criar na UI — o volume nasce no primeiro deploy.
+volumes:
+  pointly-visits:

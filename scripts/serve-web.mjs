@@ -411,17 +411,99 @@ export {
 	headersFor,
 	isNotModified,
 	pickEncoding,
+	proxyTarget,
 	respond,
+	shouldProxyApi,
 };
 
 const server = globalThis.Bun?.serve ?? null;
 const listenEnabled = process.env.SERVE_WEB_NO_LISTEN !== "1";
+/**
+ * Harness e2e (e o `verify-pointly` manual) servem o estático sem o
+ * Traefik de prod — que rotearia `/api/*` ao backend. Com
+ * `PROXY_API_TO=http://127.0.0.1:3001`, o estático encaminha `/api/*`
+ * pra lá (ex.: o beacon first-party `POST /api/stats/pageview`).
+ * Em prod a variável não é setada: comportamento idêntico ao anterior.
+ */
+const PROXY_API_TO = (process.env.PROXY_API_TO ?? "").replace(/\/+$/, "");
+
+/** Alvo do proxy: mesmo path+query, outro host. */
+function proxyTarget(rawUrl) {
+	const incoming = new URL(rawUrl, "http://localhost");
+	return `${PROXY_API_TO}${incoming.pathname}${incoming.search}`;
+}
+
+function shouldProxyApi(rawUrl) {
+	if (!PROXY_API_TO) return false;
+	try {
+		return new URL(rawUrl, "http://localhost").pathname.startsWith("/api/");
+	} catch {
+		return false;
+	}
+}
+
+/** Encaminha ao backend e devolve status/headers/corpo como vieram. */
+async function proxyWeb(req) {
+	const headers = new Headers(req.headers);
+	headers.delete("host");
+	const init = { method: req.method, headers, redirect: "manual" };
+	if (req.method !== "GET" && req.method !== "HEAD" && req.body) {
+		init.body = req.body;
+		init.duplex = "half";
+	}
+	const upstream = await fetch(proxyTarget(req.url), init);
+	return new Response(upstream.body, {
+		status: upstream.status,
+		headers: upstream.headers,
+	});
+}
+
+/** Variante Node do proxy: acumula o corpo (teto 1MB) antes de encaminhar. */
+async function proxyNode(req, res) {
+	try {
+		const chunks = [];
+		let size = 0;
+		for await (const chunk of req) {
+			size += chunk.length;
+			if (size > 1024 * 1024) {
+				res.writeHead(413, { "Content-Type": "text/plain; charset=utf-8" });
+				return res.end("Payload Too Large");
+			}
+			chunks.push(chunk);
+		}
+		const headers = { ...req.headers };
+		delete headers.host;
+		const target = proxyTarget(req.url ?? "/");
+		const upstream = await fetch(target, {
+			method: req.method,
+			headers,
+			redirect: "manual",
+			body:
+				req.method === "GET" || req.method === "HEAD" || chunks.length === 0
+					? undefined
+					: Buffer.concat(chunks),
+		});
+		const body = Buffer.from(await upstream.arrayBuffer());
+		res.writeHead(upstream.status, Object.fromEntries(upstream.headers.entries()));
+		return res.end(req.method === "HEAD" ? undefined : body);
+	} catch {
+		res.writeHead(502, { "Content-Type": "text/plain; charset=utf-8" });
+		return res.end("Bad Gateway");
+	}
+}
 
 if (listenEnabled && server) {
 	const srv = server({
 		port: PORT,
 		hostname: HOST,
-		fetch(req) {
+		async fetch(req) {
+			if (shouldProxyApi(req.url)) {
+				try {
+					return await proxyWeb(req);
+				} catch {
+					return new Response("Bad Gateway", { status: 502 });
+				}
+			}
 			const decision = decide(req.url);
 			const result = respond(
 				decision,
@@ -460,6 +542,10 @@ if (listenEnabled && server) {
 	const http = await import("node:http");
 	http
 		.createServer((req, res) => {
+			if (shouldProxyApi(req.url ?? "/")) {
+				void proxyNode(req, res);
+				return;
+			}
 			const decision = decide(req.url ?? "/");
 			const result = respond(
 				decision,

@@ -136,6 +136,10 @@ export const LIMITS = {
 	lookupPerMin: 30,
 	/** `hello` com código inexistente por IP por minuto. */
 	unknownCodePerMin: 10,
+	/** Beacons `POST /api/stats/pageview` por IP por minuto. */
+	pageviewPerMin: 60,
+	/** Leituras `GET /api/stats/visits` por IP por minuto. */
+	visitsPerMin: 120,
 	/** Tamanho máximo de frame WS (bytes). Avatar ≤40KB + folga. */
 	maxPayloadBytes: 64 * 1024,
 } as const;
