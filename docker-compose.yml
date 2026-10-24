@@ -20,6 +20,9 @@ services:
       # totais por dia. Volume nomeado persiste entre redeploys; sem ele,
       # cada deploy zera `today`/`last7d` (live5m é memória de todo jeito).
       VISITS_DATA_FILE: "/app/data/visits.json"
+      # Segredo do `GET /api/stats/visits` (ESP32). Vazio = 503 fail closed:
+      # configure no Dokploy (Environment) antes de apontar o display.
+      STATS_API_TOKEN: "${STATS_API_TOKEN:-}"
       # Só o Traefik fala com este container: IP real = hop mais à direita do XFF.
       TRUST_PROXY: "1"
     volumes:

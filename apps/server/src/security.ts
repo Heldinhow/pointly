@@ -7,9 +7,13 @@
  *  - `TokenBucket`: limite de mensagens por conexão WS.
  *  - `WindowLimiter`: limite por chave (IP) em janela fixa (criação de sala,
  *    lookup de código, hello com código inexistente).
+ *  - `clientKey`: chave de rate limit derivada do IP (IP cru nunca é a chave).
+ *  - `constantTimeEquals`: comparação de segredos em tempo constante.
  *
  * Tudo em memória, coerente com ADR-0005 (processo único, sem Redis).
  */
+
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
 export const DEFAULT_ALLOWED_ORIGINS = [
 	"https://pointly.space",
@@ -121,6 +125,27 @@ export class WindowLimiter {
 	size(): number {
 		return this.hits.size;
 	}
+}
+
+/**
+ * Chave de rate limit derivada do IP — o IP cru nunca é guardado no Map.
+ * Salt por processo (só memória): restart invalida as chaves antigas.
+ */
+const CLIENT_KEY_SALT = randomBytes(16).toString("hex");
+
+export function clientKey(ip: string): string {
+	return createHash("sha256").update(CLIENT_KEY_SALT).update(ip).digest("hex");
+}
+
+/**
+ * Comparação de segredos em tempo constante. Digests SHA-256 têm tamanho
+ * fixo, então `timingSafeEqual` nunca lança por tamanhos diferentes (e o
+ * tamanho do segredo não vaza).
+ */
+export function constantTimeEquals(a: string, b: string): boolean {
+	const left = createHash("sha256").update(a).digest();
+	const right = createHash("sha256").update(b).digest();
+	return timingSafeEqual(left, right);
 }
 
 /** Limites padrão (sobrescrevíveis por env no entrypoint). */

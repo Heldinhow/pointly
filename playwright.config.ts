@@ -63,6 +63,8 @@ export default defineConfig({
 				LOOKUP_PER_MIN: "100000",
 				PAGEVIEW_PER_MIN: "100000",
 				VISITS_GET_PER_MIN: "100000",
+				// Mesmo literal em e2e/visits.spec.ts (fixture `request`).
+				STATS_API_TOKEN: "e2e-stats-token",
 			},
 		},
 		{

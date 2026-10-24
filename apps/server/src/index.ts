@@ -30,6 +30,8 @@ import {
 	LIMITS,
 	WindowLimiter,
 	clientIpFrom,
+	clientKey,
+	constantTimeEquals,
 	envInt,
 	isOriginAllowed,
 	parseAllowedOrigins,
@@ -156,11 +158,12 @@ app.notFound((c) => c.json({ error: "not_found" }, 404));
  *
  * - Corpo sempre ignorado (nunca contém — nem persistimos — códigos de sala).
  * - Bot por UA responde 204 sem contar (sem revelar a classificação).
- * - 429 acima de PAGEVIEW_PER_MIN por IP; 413 acima de 1KB.
+ * - 429 acima de PAGEVIEW_PER_MIN por chave derivada do IP (hash com salt,
+ *   nunca o IP cru); 413 acima de 1KB. Público por design (recebe beacon).
  */
 app.post("/api/stats/pageview", async (c) => {
 	const ip = c.env?.ip ?? "unknown";
-	if (!pageviewLimiter.hit(ip)) {
+	if (!pageviewLimiter.hit(clientKey(ip))) {
 		c.header("Retry-After", "60");
 		return c.json({ error: "rate_limited" }, 429);
 	}
@@ -180,19 +183,40 @@ app.post("/api/stats/pageview", async (c) => {
 	});
 });
 
+/** Segredo do GET: env lido a cada request (testável; sem restart). */
+function statsApiToken(): string {
+	return (process.env.STATS_API_TOKEN ?? "").trim();
+}
+
 /**
- * `GET /api/stats/visits` — resumo público pro display do ESP32
- * (`{"today","last7d","live5m","updatedAt"}`). Polling com
- * `Cache-Control: public, max-age=30`; CORS aberto (`*`).
+ * `GET /api/stats/visits` — resumo pro display do ESP32
+ * (`{"today","last7d","live5m","updatedAt"}`), protegido por token.
+ *
+ *  - `Authorization: Bearer <token>` OU `X-Stats-Key: <token>`, comparados
+ *    em tempo constante contra `STATS_API_TOKEN`.
+ *  - Sem segredo configurado → 503 (fail closed: nunca expõe contagem).
+ *  - Token ausente/errado → 401 `{ error: 'unauthorized' }`.
+ *  - Sem CORS: não é API de browser (ESP32 nem envia Origin).
+ *  - `private` no cache: resposta autenticada não pode ir a cache compartilhado.
  */
 app.get("/api/stats/visits", (c) => {
+	const token = statsApiToken();
+	if (!token) {
+		return c.json({ error: "stats_not_configured" }, 503);
+	}
+	const bearer = /^Bearer\s+(.+)$/i.exec(
+		c.req.header("authorization") ?? "",
+	)?.[1];
+	const provided = bearer?.trim() || c.req.header("x-stats-key")?.trim() || "";
+	if (!provided || !constantTimeEquals(provided, token)) {
+		return c.json({ error: "unauthorized" }, 401);
+	}
 	const ip = c.env?.ip ?? "unknown";
-	if (!visitsLimiter.hit(ip)) {
+	if (!visitsLimiter.hit(clientKey(ip))) {
 		c.header("Retry-After", "60");
 		return c.json({ error: "rate_limited" }, 429);
 	}
-	c.header("Access-Control-Allow-Origin", "*");
-	c.header("Cache-Control", "public, max-age=30");
+	c.header("Cache-Control", "private, max-age=30");
 	return c.json(visits.snapshot());
 });
 

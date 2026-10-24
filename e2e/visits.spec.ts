@@ -8,10 +8,21 @@ interface VisitsSnapshot {
 	updatedAt: string;
 }
 
+/** Igual ao `STATS_API_TOKEN` do webServer em playwright.config.ts. */
+const STATS_TOKEN = "e2e-stats-token";
+
 async function readVisits(request: {
-	get: (url: string) => Promise<{ json: () => Promise<VisitsSnapshot> }>;
+	get: (
+		url: string,
+		options: { headers: Record<string, string> },
+	) => Promise<{ json: () => Promise<VisitsSnapshot> }>;
 }): Promise<VisitsSnapshot> {
-	return (await request.get("/api/stats/visits")).json();
+	// GET protegido: sem token o server responde 401/503 (fail closed).
+	return (
+		await request.get("/api/stats/visits", {
+			headers: { authorization: `Bearer ${STATS_TOKEN}` },
+		})
+	).json();
 }
 
 /**

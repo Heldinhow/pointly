@@ -5,7 +5,8 @@
  *   (America/Sao_Paulo). Dedupe via hash(salt diário + IP + UA); IP e UA
  *   crus nunca são persistidos — só o digest em memória — e o salt é
  *   descartado na virada do dia.
- * - `GET /api/stats/visits` resume `{today, last7d, live5m}`.
+ * - `GET /api/stats/visits` (token `STATS_API_TOKEN`) resume
+ *   `{today, last7d, live5m}`.
  * - `live5m` = digests distintos vistos nos últimos 5 minutos (memória).
  * - Contadores por dia persistem em JSON (`VISITS_DATA_FILE`); o arquivo
  *   guarda só `{dia: total}` — nenhum identificador.

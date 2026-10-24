@@ -30,9 +30,23 @@ function counterAt(nowMs: number, dataFile?: string): { counter: VisitCounter; c
 	};
 }
 
+const STATS_TOKEN = "test-stats-token";
+
 beforeEach(() => {
 	__resetHubForTests();
+	process.env.STATS_API_TOKEN = STATS_TOKEN;
 });
+
+/** GET autenticado (Bearer por padrão) — o endpoint é token-only. */
+async function visitsGet(
+	ip = "203.0.113.20",
+	headers: Record<string, string> = { authorization: `Bearer ${STATS_TOKEN}` },
+): Promise<Response> {
+	return app.fetch(
+		new Request("http://test.local/api/stats/visits", { headers }),
+		{ ip },
+	);
+}
 
 describe("saoPauloDay", () => {
 	test("vira o dia às 03:00Z (= 00:00 em SP, UTC-3)", () => {
@@ -126,19 +140,20 @@ describe("POST /api/stats/pageview", () => {
 		);
 	}
 
+	/** Beacon sempre público: sem token, sem CORS e ainda contando. */
 	test("204 conta 1x por visitante/dia; repeat é dedupe silencioso", async () => {
 		expect((await beacon("203.0.113.1")).status).toBe(204);
 		expect((await beacon("203.0.113.1")).status).toBe(204);
-		const res = await app.fetch(new Request("http://test.local/api/stats/visits"));
+		const res = await visitsGet("203.0.113.1");
 		expect((await res.json()).today).toBe(1);
 	});
 
 	test("bot responde 204 mas não conta", async () => {
 		const res = await beacon("203.0.113.2", "Googlebot/2.1");
 		expect(res.status).toBe(204);
-		const snap = (await (
-			await app.fetch(new Request("http://test.local/api/stats/visits"))
-		).json()) as { today: number };
+		const snap = (await (await visitsGet("203.0.113.2")).json()) as {
+			today: number;
+		};
 		expect(snap.today).toBe(0);
 	});
 
@@ -147,7 +162,7 @@ describe("POST /api/stats/pageview", () => {
 		expect(res.status).toBe(413);
 	});
 
-	test("429 acima do limite por IP", async () => {
+	test("429 acima de ~60/min por chave derivada do IP (nunca o IP cru)", async () => {
 		let last = 0;
 		for (let i = 0; i < 61; i++) {
 			last = (await beacon("203.0.113.9")).status;
@@ -159,14 +174,11 @@ describe("POST /api/stats/pageview", () => {
 });
 
 describe("GET /api/stats/visits", () => {
-	test("shape público + CORS + cache de 30s", async () => {
-		const res = await app.fetch(
-			new Request("http://test.local/api/stats/visits"),
-			{ ip: "203.0.113.20" },
-		);
+	test("200 + shape com Authorization: Bearer; sem CORS; cache private 30s", async () => {
+		const res = await visitsGet();
 		expect(res.status).toBe(200);
-		expect(res.headers.get("access-control-allow-origin")).toBe("*");
-		expect(res.headers.get("cache-control")).toBe("public, max-age=30");
+		expect(res.headers.get("access-control-allow-origin")).toBeNull();
+		expect(res.headers.get("cache-control")).toBe("private, max-age=30");
 		const body = (await res.json()) as Record<string, unknown>;
 		expect(typeof body.today).toBe("number");
 		expect(typeof body.last7d).toBe("number");
@@ -174,14 +186,57 @@ describe("GET /api/stats/visits", () => {
 		expect(typeof body.updatedAt).toBe("string");
 	});
 
-	test("429 acima do limite por IP", async () => {
+	test("200 com X-Stats-Key (header alternativo)", async () => {
+		const res = await visitsGet("203.0.113.20", { "x-stats-key": STATS_TOKEN });
+		expect(res.status).toBe(200);
+		expect((await res.json()).today).toBe(0);
+	});
+
+	test("401 sem token e com token errado", async () => {
+		const missing = await visitsGet("203.0.113.20", {});
+		expect(missing.status).toBe(401);
+		expect((await missing.json()).error).toBe("unauthorized");
+
+		const wrong = await visitsGet("203.0.113.20", {
+			authorization: "Bearer nope",
+		});
+		expect(wrong.status).toBe(401);
+	});
+
+	test("401 também com X-Stats-Key errado e Authorization não-Bearer", async () => {
+		const wrongKey = await visitsGet("203.0.113.20", {
+			"x-stats-key": "nope",
+		});
+		expect(wrongKey.status).toBe(401);
+
+		const basic = await visitsGet("203.0.113.20", {
+			authorization: `Basic ${STATS_TOKEN}`,
+		});
+		expect(basic.status).toBe(401);
+	});
+
+	test("503 fail closed quando STATS_API_TOKEN não está configurado (mesmo com token)", async () => {
+		process.env.STATS_API_TOKEN = "";
+		expect((await visitsGet()).status).toBe(503);
+		delete process.env.STATS_API_TOKEN;
+		expect((await visitsGet()).status).toBe(503);
+	});
+
+	test("401 vem antes do rate limit: força bruta não consome a cota", async () => {
+		for (let i = 0; i < 130; i++) {
+			const res = await visitsGet("203.0.113.22", {
+				authorization: "Bearer nope",
+			});
+			expect(res.status).toBe(401);
+		}
+		const ok = await visitsGet("203.0.113.22");
+		expect(ok.status).toBe(200);
+	});
+
+	test("429 acima do limite por IP com token válido", async () => {
 		let last = 0;
 		for (let i = 0; i < 121; i++) {
-			last = (
-				await app.fetch(new Request("http://test.local/api/stats/visits"), {
-					ip: "203.0.113.21",
-				})
-			).status;
+			last = (await visitsGet("203.0.113.21")).status;
 		}
 		expect(last).toBe(429);
 	});
