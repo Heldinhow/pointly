@@ -72,5 +72,16 @@ export default defineConfig({
 			stderr: "pipe",
 			env: { VITE_GA_MEASUREMENT_ID: "G-POINTLY-E2E-DISABLED" },
 		},
+		{
+			// Build + servidor estático de produção: só este caminho entrega o
+			// HTML pré-renderizado e exercita hydrateRoot (o Vite dev usa createRoot).
+			command:
+				"VITE_GA_MEASUREMENT_ID=G-POINTLY-E2E-DISABLED bun run build:web && PORT=5188 node scripts/serve-web.mjs",
+			port: 5188,
+			reuseExistingServer: false,
+			timeout: 120_000,
+			stdout: "pipe",
+			stderr: "pipe",
+		},
 	],
 });

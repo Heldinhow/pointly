@@ -13,8 +13,11 @@ suite unitária) nem usa mocks de socket, rota ou store.
 - Chromium: o Playwright usa o bundle próprio por padrão. Neste ambiente
   RHEL9 (sem cache de browsers), exporte o Chromium do SO:
   `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser`
-- Portas livres: `3001` (backend) e `5179` (Vite). O `webServer` do
-  Playwright sobe e derruba os dois; `reuseExistingServer: false`.
+- Portas livres: `3001` (backend), `5179` (Vite dev) e `5188` (build de
+  produção). O `webServer` do Playwright sobe e derruba os três;
+  `reuseExistingServer: false`. O servidor de `:5188` roda
+  `bun run build:web` antes de servir `apps/web/dist` com
+  `scripts/serve-web.mjs` — só ele tem HTML pré-renderizado + `hydrateRoot`.
 
 ## Comandos
 
@@ -87,6 +90,11 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser bunx playwright te
    `/join?code=AB12`: sem scroll horizontal e sem seção recolhida; nos
    caminhos de join a opção `Entrar como espectador` (`#spectate`, com
    ícone e hint) fica visível de imediato, e no create ela não existe.
+8. `e2e/prod-hydration.spec.ts` — build de produção pré-renderizado em
+   `:5188`: `/` e `/guias/story-points` carregam e recarregam com zero
+   `pageerror`/`console.error` antes e depois de **Aceitar** o banner
+   (regressão do React #421, update de consentimento durante a
+   hidratação). Analytics hosts seguem stubbed.
 
 Projetos: `chromium-desktop` (1280×800) e `chromium-mobile`
 (390×844 com touch — Chromium com viewport de telefone, **não** iOS real).
