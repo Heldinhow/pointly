@@ -8,6 +8,7 @@
 - **Recusar** (`analytics-consent-reject`) grava `denied` e mantém zero requests a `googletagmanager.com`/`google-analytics.com`; após reload o banner não reaparece.
 - Link **Privacidade** (`analytics-consent-open`) no rodapé reabre o banner; com escolha salva aparece também **Fechar** (`analytics-consent-close`). Trocar para Recusar interrompe novos eventos.
 - Sem Measurement ID não há banner nem link (nada a consentir).
+- A escolha salva é lida **depois** do mount e a subscription entra em `useEffect`, nunca durante a hidratação. Com HTML pré-renderizado, ler o localStorage cedo demais agenda um update síncrono e derruba o `Suspense` (React #421).
 
 ## How to get to it (user POV)
 
@@ -32,6 +33,12 @@ bun run typecheck:e2e
 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser bun run test:e2e -- e2e/analytics-privacy.spec.ts
 ```
 
+Hydration proof against the **production build** (HTML pré-renderizado + `hydrateRoot`, servidor estático em `:5188`):
+
+```
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser bun run test:e2e -- e2e/prod-hydration.spec.ts
+```
+
 ## Evidence
 
 - `[data-testid="analytics-consent-banner"]` visible before any choice; absent after Accept/Decline.
@@ -41,10 +48,12 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser bun run test:e2e -
 - Entries pushed to `window.dataLayer` are `Arguments` objects (contract of gtag.js), not plain arrays.
 - `page_view` carries `page_path` and a sanitized `page_location` (origin + path, no room code/query), so the collect request never sees routeable identifiers.
 - `localStorage["pointly.analytics-consent"]` is exactly `granted` or `denied`.
+- `e2e/prod-hydration.spec.ts`: `/` e `/guias/story-points` pré-renderizados carregam/reloadam com zero `pageerror`/`console.error` antes e depois de **Aceitar** (regressão do React #421).
 
 ## Gotchas
 
 - The banner is rendered only after mount, so prerendered HTML stays clean (no hydration mismatch). It appears on `/`, `/join`, `/s/:code` and guides.
+- Consent must be read after hydration (`useState(null)` + `useEffect`), not with `useSyncExternalStore` during the first client render: any stored `granted`/`denied` then scheduled a sync update inside the `Suspense` boundary and React #421. The pre-fix failure is reproduced by loading a prerendered route with `pointly.analytics-consent` already set.
 - No Measurement ID (`VITE_GA_MEASUREMENT_ID` empty) means no banner; E2E forces a synthetic non-empty ID.
 - A choice is device-local (localStorage). Clearing site data brings the banner back.
 - Revoking stops new gtag calls immediately; it does not un-download an already loaded script until the next reload.

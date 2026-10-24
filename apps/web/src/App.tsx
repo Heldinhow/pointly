@@ -37,6 +37,7 @@ import {
   readAnalyticsConsent,
   subscribeAnalyticsConsent,
   writeAnalyticsConsent,
+  type AnalyticsConsent,
 } from "@/lib/consent";
 import { useTheme } from "@/lib/theme";
 import {
@@ -96,12 +97,19 @@ export default function App(): React.ReactElement {
   const showLanguageSwitch = !inArena && isPublic;
   const scrolled = useHeaderScrolled();
   const previousPath = useRef(pathname);
-  const analyticsConsent = useSyncExternalStore(
-    subscribeAnalyticsConsent,
-    readAnalyticsConsent,
-    () => null,
-  );
+  // Consentimento é client-only (localStorage). Ler via useSyncExternalStore
+  // ainda na hidratação agenda um update síncrono quando há escolha salva e
+  // derruba o Suspense com React #421; mount + subscribe no efeito é seguro.
+  const [analyticsConsent, setAnalyticsConsent] =
+    useState<AnalyticsConsent | null>(null);
   const [consentOpen, setConsentOpen] = useState(false);
+
+  useEffect(() => {
+    setAnalyticsConsent(readAnalyticsConsent());
+    return subscribeAnalyticsConsent(() => {
+      setAnalyticsConsent(readAnalyticsConsent());
+    });
+  }, []);
 
   useEffect(() => {
     document.documentElement.lang = isEn ? "en" : "pt-BR";

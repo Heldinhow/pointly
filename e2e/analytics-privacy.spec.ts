@@ -1,27 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { stubAnalyticsNetwork } from "./helpers/analytics";
 import { newPlayer, wirePlayer } from "./helpers/room";
 
 const CONSENT_KEY = "pointly.analytics-consent";
-
-function isAnalyticsHost(host: string): boolean {
-	return ["googletagmanager.com", "google-analytics.com", "doubleclick.net"]
-		.some((domain) => host === domain || host.endsWith(`.${domain}`));
-}
-
-/** Captura tentativas de rede para hosts de analytics sem sair para a internet. */
-async function stubAnalyticsNetwork(page: import("@playwright/test").Page): Promise<string[]> {
-	const attempts: string[] = [];
-	page.on("request", (request) => {
-		if (isAnalyticsHost(new URL(request.url()).hostname)) attempts.push(request.url());
-	});
-	await page.route("**/googletagmanager.com/**", (route) =>
-		route.fulfill({ status: 200, contentType: "application/javascript", body: "/* stub */" }),
-	);
-	await page.route("**/google-analytics.com/**", (route) =>
-		route.fulfill({ status: 204, body: "" }),
-	);
-	return attempts;
-}
 
 test("sem escolha ou após Recusar, zero requests a analytics e banner persistente", async ({ browser }, testInfo) => {
 	const { page, ctx } = await newPlayer(browser, testInfo);

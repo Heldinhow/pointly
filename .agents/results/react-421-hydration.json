@@ -1,0 +1,9 @@
+{
+  "gitSha": "ca820ef",
+  "commands": [
+    { "cmd": "bun run verify", "exitCode": 0 },
+    { "cmd": "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome bun run test:e2e", "exitCode": 0 },
+    { "cmd": "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome bunx playwright test e2e/prod-hydration.spec.ts --project=chromium-desktop", "exitCode": 0 }
+  ],
+  "notes": "Antes do fix, o mesmo e2e de producao falhou com pageerror Minified React error #421 (load de / com pointly.analytics-consent=granted). Causa confirmada em build NODE_ENV=development: 'This Suspense boundary received an update before it finished hydrating' disparado pelo useSyncExternalStore do consentimento. verify: 8 serve-web + 420 web + 294 server + 199 shared, 0 fail. e2e: 24 passed (2 projetos). Prova de red/green e repro em /tmp/opencode (untracked)."
+}
