@@ -144,6 +144,8 @@ summary:focus-visible {
   display: flex;
   align-items: center;
   gap: 18px;
+  flex-wrap: wrap;
+  row-gap: 5px;
 }
 .site-footer__nav a {
   color: var(--muted-foreground);
@@ -151,6 +153,20 @@ summary:focus-visible {
 }
 .site-footer__nav a:hover,
 .site-footer__nav a[aria-current="page"] {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.site-footer__nav button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+.site-footer__nav button:hover,
+.site-footer__nav button:focus-visible {
   color: var(--primary);
   text-decoration: underline;
   text-underline-offset: 4px;

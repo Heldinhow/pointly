@@ -104,8 +104,11 @@ Kill only the recorded sessions/PIDs from Launch (never by port or process name)
   `last_left`) and `missing` render the terminal `room-ended` card (no
   more votes, back to `/join` without recreating). A reason-less drop
   keeps the 5min backoff — don't disable reconnect for every failure.
-- **Analytics is policy-disabled:** even with a non-empty
+- **Analytics is consent-gated:** with a non-empty
   `VITE_GA_MEASUREMENT_ID` (E2E uses synthetic `G-POINTLY-E2E-DISABLED`)
-  no GA/GTM request may fire.
+  the banner `analytics-consent-banner` appears. No GA/GTM request may
+  fire before **Aceitar**/Accept or after **Recusar**/Decline; the choice
+  lives in `pointly.analytics-consent` and the footer **Privacidade**
+  link reopens it.
 - Don't claim iPhone-real, Safari, Docker, or server-restart E2E evidence
   that was never executed.
