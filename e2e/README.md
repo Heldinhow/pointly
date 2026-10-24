@@ -31,7 +31,7 @@ bun run test:e2e        # typecheck + executa a suíte (2 projetos × cenários)
 | `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | bundle Playwright | Chromium do SO neste ambiente |
 | `PLAYWRIGHT_OUTPUT_DIR` | `test-results/` (gitignored) | logs/traces/`report.json` |
 | `PLAYWRIGHT_HTML_REPORT` | `playwright-report/` (gitignored) | report HTML |
-| `VITE_GA_MEASUREMENT_ID` | `"G-POINTLY-E2E-DISABLED"` (forçado no webServer, sintético e não vazio) | analytics bloqueado por política nos testes — a proteção não depende de configuração vazia |
+| `VITE_GA_MEASUREMENT_ID` | `"G-POINTLY-E2E-DISABLED"` (forçado no webServer, sintético e não vazio) | com ID configurado, o banner de consentimento aparece; nenhum request a Google antes de Aceitar |
 
 A configuração retém screenshots e traces de falhas e não grava vídeo.
 O cenário de votação também anexa uma screenshot da rodada revelada
@@ -78,10 +78,11 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser bunx playwright te
    credencial de reconexão. Este cenário permite comparar a versão
    corrigida com o backend anterior sem depender da hidratação dos
    snapshots no helper.
-6. `e2e/analytics-privacy.spec.ts` — navegar (home → entrada → convite)
-   não tenta carregar GA/GTM mesmo com `VITE_GA_MEASUREMENT_ID`
-   sintético **não vazio** (`G-POINTLY-E2E-DISABLED`): zero requests
-   aos hosts de analytics, sem `script` injetado e sem `gtag`.
+6. `e2e/analytics-privacy.spec.ts` — banner LGPD com ID sintético não
+   vazio (`G-POINTLY-E2E-DISABLED`): sem escolha e após Recusar, zero
+   requests aos hosts de analytics, sem `script` injetado e sem `gtag`,
+   inclusive após reload; Aceitar injeta gtag, envia `page_view` (rota
+   inicial e SPA) e Recusar depois interrompe novos eventos.
 7. `e2e/join-usability.spec.ts` — `/join`, `/join?mode=join` e
    `/join?code=AB12`: sem scroll horizontal e sem seção recolhida; nos
    caminhos de join a opção `Entrar como espectador` (`#spectate`, com

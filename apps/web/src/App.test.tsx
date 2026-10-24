@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import App from "./App";
 import { __resetAnalyticsForTests } from "./lib/analytics";
+import { ANALYTICS_CONSENT_STORAGE_KEY } from "./lib/consent";
 import { LANG_STORAGE_KEY } from "./lib/language";
 
 function stubNavigatorLanguages(languages: readonly string[]): void {
@@ -326,7 +327,7 @@ describe("App (higiene GSC — redirect de locale e robots por rota)", () => {
   });
 });
 
-describe("App com analytics desativado", () => {
+describe("App com analytics e consentimento", () => {
   const GA_ID = "G-TESTAPP";
   let calls: unknown[][];
 
@@ -356,6 +357,7 @@ describe("App com analytics desativado", () => {
     removeGtagScripts();
     delete window.gtag;
     delete window.dataLayer;
+    window.localStorage.removeItem(ANALYTICS_CONSENT_STORAGE_KEY);
     window.scrollTo = (() => {}) as typeof window.scrollTo;
     setGaEnv(GA_ID);
     calls = [];
@@ -370,10 +372,11 @@ describe("App com analytics desativado", () => {
     removeGtagScripts();
     delete window.gtag;
     delete window.dataLayer;
+    window.localStorage.removeItem(ANALYTICS_CONSENT_STORAGE_KEY);
   });
 
   for (const route of ["/join?code=ABCD&mode=join", "/s/ABCD"]) {
-    test(`${route} não inicializa analytics nem envia eventos`, () => {
+    test(`${route} não inicializa analytics antes da escolha`, () => {
       render(
         <MemoryRouter initialEntries={[route]}>
           <App />
@@ -381,7 +384,76 @@ describe("App com analytics desativado", () => {
       );
       expect(calls).toEqual([]);
       expect(window.dataLayer).toBeUndefined();
-      expect(document.querySelectorAll('script[src*="googletagmanager.com"]')).toHaveLength(0);
+      expect(
+        document.querySelectorAll('script[src*="googletagmanager.com"]'),
+      ).toHaveLength(0);
+      expect(screen.getByTestId("analytics-consent-banner")).toBeTruthy();
     });
   }
+
+  test("Aceitar persiste a escolha, carrega o gtag e envia o page_view atual", async () => {
+    render(
+      <MemoryRouter initialEntries={["/join?code=ABCD&mode=join"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByTestId("analytics-consent-accept"));
+
+    expect(
+      window.localStorage.getItem(ANALYTICS_CONSENT_STORAGE_KEY),
+    ).toBe("granted");
+    expect(
+      document.querySelectorAll('script[src*="googletagmanager.com/gtag/js"]'),
+    ).toHaveLength(1);
+    await waitFor(() => {
+      expect(calls).toContainEqual([
+        "event",
+        "page_view",
+        { page_path: "/join" },
+      ]);
+    });
+    expect(screen.queryByTestId("analytics-consent-banner")).toBeNull();
+  });
+
+  test("Recusar persiste denied e mantém zero requests; dá para rever no rodapé", () => {
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByTestId("analytics-consent-reject"));
+
+    expect(
+      window.localStorage.getItem(ANALYTICS_CONSENT_STORAGE_KEY),
+    ).toBe("denied");
+    expect(calls).toEqual([]);
+    expect(
+      document.querySelectorAll('script[src*="googletagmanager.com"]'),
+    ).toHaveLength(0);
+    expect(screen.queryByTestId("analytics-consent-banner")).toBeNull();
+
+    fireEvent.click(screen.getByTestId("analytics-consent-open"));
+    expect(screen.getByTestId("analytics-consent-banner")).toBeTruthy();
+    expect(screen.getByTestId("analytics-consent-close")).toBeTruthy();
+    fireEvent.click(screen.getByTestId("analytics-consent-accept"));
+    expect(
+      window.localStorage.getItem(ANALYTICS_CONSENT_STORAGE_KEY),
+    ).toBe("granted");
+    expect(
+      document.querySelectorAll('script[src*="googletagmanager.com/gtag/js"]'),
+    ).toHaveLength(1);
+  });
+
+  test("sem Measurement ID não mostra banner de consentimento", () => {
+    clearGaEnv();
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByTestId("analytics-consent-banner")).toBeNull();
+    expect(screen.queryByTestId("analytics-consent-open")).toBeNull();
+  });
 });

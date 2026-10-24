@@ -11,6 +11,10 @@ import {
 	trackVoteCast,
 	trackVotesRevealed,
 } from "./analytics";
+import {
+	ANALYTICS_CONSENT_STORAGE_KEY,
+	writeAnalyticsConsent,
+} from "./consent";
 
 const GA_ID = "G-TESTMEASURE";
 
@@ -40,6 +44,7 @@ beforeEach(() => {
 	removeGtagScripts();
 	delete window.gtag;
 	delete window.dataLayer;
+	window.localStorage.removeItem(ANALYTICS_CONSENT_STORAGE_KEY);
 });
 
 afterEach(() => {
@@ -48,6 +53,7 @@ afterEach(() => {
 	removeGtagScripts();
 	delete window.gtag;
 	delete window.dataLayer;
+	window.localStorage.removeItem(ANALYTICS_CONSENT_STORAGE_KEY);
 });
 
 describe("analytics (sem Measurement ID)", () => {
@@ -76,20 +82,25 @@ describe("analytics (sem Measurement ID)", () => {
 	});
 });
 
-describe("analytics desativado por política de privacidade", () => {
+describe("analytics com ID, sem consentimento", () => {
 	beforeEach(() => setGaEnv(GA_ID));
 
-	test("ID preenchido não permite carregar o SDK", () => {
+	test("sem escolha salva, initAnalytics não carrega o SDK", () => {
 		initAnalytics();
 		initAnalytics();
-		expect(document.querySelectorAll('script[src*="googletagmanager.com"]')).toHaveLength(0);
+		expect(
+			document.querySelectorAll('script[src*="googletagmanager.com"]'),
+		).toHaveLength(0);
 		expect(window.dataLayer).toBeUndefined();
 		expect(window.gtag).toBeUndefined();
 	});
 
-	test("nenhum evento usa um gtag preexistente", () => {
+	test("Recusar mantém o SDK fora e nenhum evento usa gtag preexistente", () => {
+		writeAnalyticsConsent("denied");
 		const calls: unknown[][] = [];
-		window.gtag = (...args: unknown[]) => { calls.push(args); };
+		window.gtag = (...args: unknown[]) => {
+			calls.push(args);
+		};
 		initAnalytics();
 		trackPageView("/join?code=ABCD");
 		trackEvent("custom", { source: "test" });
@@ -99,6 +110,64 @@ describe("analytics desativado por política de privacidade", () => {
 		trackVotesRevealed();
 		trackNewRound();
 		expect(calls).toEqual([]);
+		expect(window.dataLayer).toBeUndefined();
+		expect(
+			document.querySelectorAll('script[src*="googletagmanager.com"]'),
+		).toHaveLength(0);
+	});
+});
+
+describe("analytics com consentimento concedido", () => {
+	beforeEach(() => {
+		setGaEnv(GA_ID);
+		writeAnalyticsConsent("granted");
+	});
+
+	test("carrega gtag.js uma vez com o Measurement ID", () => {
+		initAnalytics();
+		initAnalytics();
+		const scripts = document.querySelectorAll<HTMLScriptElement>(
+			'script[src*="googletagmanager.com/gtag/js"]',
+		);
+		expect(scripts).toHaveLength(1);
+		expect(scripts[0]?.src).toContain(GA_ID);
+		expect(window.dataLayer).toEqual([
+			["js", expect.any(Date)],
+			["config", GA_ID, { send_page_view: false }],
+		]);
+		expect(typeof window.gtag).toBe("function");
+	});
+
+	test("page_view usa path sanitizado e eventos de produto disparam", () => {
+		initAnalytics();
+		trackPageView("/s/ABCD");
+		trackEvent("custom", { source: "test" });
+		trackRoomCreated();
+		expect(window.dataLayer?.slice(-3)).toEqual([
+			["event", "page_view", { page_path: "/s/[room]" }],
+			["event", "custom", { source: "test" }],
+			["event", "room_created", {}],
+		]);
+	});
+
+	test("revogar depois de aceitar interrompe novos eventos", () => {
+		initAnalytics();
+		trackPageView("/join");
+		const before = window.dataLayer?.length ?? 0;
+		writeAnalyticsConsent("denied");
+		trackPageView("/guias");
+		trackRoomJoined();
+		expect(window.dataLayer?.length).toBe(before);
+	});
+});
+
+describe("analytics sem Measurement ID", () => {
+	test("consentimento concedido não carrega o SDK sem ID", () => {
+		writeAnalyticsConsent("granted");
+		initAnalytics();
+		expect(
+			document.querySelectorAll('script[src*="googletagmanager.com"]'),
+		).toHaveLength(0);
 		expect(window.dataLayer).toBeUndefined();
 	});
 });

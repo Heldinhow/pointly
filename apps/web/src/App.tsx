@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef, useSyncExternalStore } from "react";
+import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   Link,
   NavLink,
@@ -28,9 +28,16 @@ import { syncRobotsMeta } from "@/seo/robots";
 import type { Lang } from "@/lib/i18n";
 import {
   initAnalytics,
+  isAnalyticsConfigured,
   sanitizePagePath,
   trackPageView,
 } from "@/lib/analytics";
+import { AnalyticsConsentBanner } from "@/components/analytics-consent";
+import {
+  readAnalyticsConsent,
+  subscribeAnalyticsConsent,
+  writeAnalyticsConsent,
+} from "@/lib/consent";
 import { useTheme } from "@/lib/theme";
 import {
   GuidesHubEnPage,
@@ -89,15 +96,22 @@ export default function App(): React.ReactElement {
   const showLanguageSwitch = !inArena && isPublic;
   const scrolled = useHeaderScrolled();
   const previousPath = useRef(pathname);
+  const analyticsConsent = useSyncExternalStore(
+    subscribeAnalyticsConsent,
+    readAnalyticsConsent,
+    () => null,
+  );
+  const [consentOpen, setConsentOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.lang = isEn ? "en" : "pt-BR";
   }, [isEn]);
 
-  // GA4: init uma vez; pageviews em mudanças de rota (SPA).
+  // GA4: init uma vez; pageviews em mudanças de rota (SPA). O consentimento
+  // é dependência: aceitar carrega o gtag e dispara o page_view da rota atual.
   useEffect(() => {
     initAnalytics();
-  }, []);
+  }, [analyticsConsent]);
 
   useEffect(() => {
     // page_path sanitizado: `/s/:code` → `/s/[room]` e query nunca é
@@ -105,7 +119,7 @@ export default function App(): React.ReactElement {
     // vivem no prerender/HTML estático; `document.title` no momento da
     // troca de rota seria stale na maioria das rotas.
     trackPageView(sanitizePagePath(pathname));
-  }, [pathname]);
+  }, [pathname, analyticsConsent]);
 
   useEffect(() => {
     if (previousPath.current === pathname) return;
@@ -264,6 +278,15 @@ export default function App(): React.ReactElement {
             ) : (
               <LanguageToggle lang={lang} />
             )}
+            {isAnalyticsConfigured() && (
+              <button
+                type="button"
+                data-testid="analytics-consent-open"
+                onClick={() => setConsentOpen(true)}
+              >
+                {isEn ? "Privacy" : "Privacidade"}
+              </button>
+            )}
           </nav>
           <span>
             {isEn
@@ -272,6 +295,16 @@ export default function App(): React.ReactElement {
           </span>
         </footer>
       )}
+      <AnalyticsConsentBanner
+        lang={lang}
+        open={consentOpen}
+        choice={analyticsConsent}
+        onChoice={(choice) => {
+          writeAnalyticsConsent(choice);
+          setConsentOpen(false);
+        }}
+        onClose={() => setConsentOpen(false)}
+      />
     </div>
   );
 }

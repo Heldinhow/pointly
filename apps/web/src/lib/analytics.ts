@@ -1,3 +1,4 @@
+import { hasAnalyticsConsent } from "./consent";
 
 export type AnalyticsParams = Record<string, string | number | boolean | undefined>;
 
@@ -40,8 +41,17 @@ function measurementId(): string {
 	return typeof raw === "string" ? raw.trim() : "";
 }
 
+/** Analytics só existe com build ID configurado. Sem ID, nem banner aparece. */
+export function isAnalyticsConfigured(): boolean {
+	return measurementId().length > 0;
+}
+
+/**
+ * Gate único de coleta: ID de build presente E consentimento LGPD concedido.
+ * Recusar (ou ainda não escolher) mantém todos os exports em no-op.
+ */
 function enabled(): boolean {
-	return false;
+	return isAnalyticsConfigured() && hasAnalyticsConsent();
 }
 
 /** Reseta estado interno — SÓ para testes unitários (nunca importar em código de app). */
@@ -54,7 +64,7 @@ export function __resetAnalyticsForTests(): void {
 
 /**
  * Carrega gtag.js uma vez e configura o Measurement ID.
- * Idempotente; no-op sem ID.
+ * Idempotente; no-op sem ID ou sem consentimento.
  */
 export function initAnalytics(): void {
 	if (!enabled() || scriptInjected) return;
