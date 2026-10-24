@@ -53,7 +53,7 @@ COPY package.json bun.lock bunfig.toml ./
 COPY tsconfig.base.json ./
 COPY apps ./apps
 COPY packages ./packages
-RUN mkdir -p /app/logs
+RUN mkdir -p /app/logs /app/data
 
 # ----------------------------------------------------------------------------
 # server: Bun + Hono + WS on port 3001

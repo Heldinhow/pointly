@@ -30,10 +30,17 @@ import {
 	LIMITS,
 	WindowLimiter,
 	clientIpFrom,
+	clientKey,
+	constantTimeEquals,
 	envInt,
 	isOriginAllowed,
 	parseAllowedOrigins,
 } from "./security";
+import {
+	MAX_BEACON_BYTES,
+	VisitCounter,
+	visitsDataFile,
+} from "./visits";
 
 // ---------------------------------------------------------------------------
 // HTTP (Hono)
@@ -57,6 +64,7 @@ export const hub = new Hub();
 export function __resetHubForTests(): void {
 	hub.shutdown();
 	lookupLimiter = new WindowLimiter(LOOKUP_PER_MIN, 60_000);
+	__resetVisitsForTests();
 }
 
 /** Bindings que o entrypoint passa para o Hono (IP real do cliente). */
@@ -65,6 +73,28 @@ type Bindings = { ip?: string };
 const LOOKUP_PER_MIN = envInt(process.env.LOOKUP_PER_MIN, LIMITS.lookupPerMin);
 /** Anti-enumeração do código de sala (por IP, janela de 1min). */
 let lookupLimiter = new WindowLimiter(LOOKUP_PER_MIN, 60_000);
+
+const PAGEVIEW_PER_MIN = envInt(
+	process.env.PAGEVIEW_PER_MIN,
+	LIMITS.pageviewPerMin,
+);
+const VISITS_GET_PER_MIN = envInt(
+	process.env.VISITS_GET_PER_MIN,
+	LIMITS.visitsPerMin,
+);
+/** Beacon e leitura de stats (por IP, janela de 1min). */
+let pageviewLimiter = new WindowLimiter(PAGEVIEW_PER_MIN, 60_000);
+let visitsLimiter = new WindowLimiter(VISITS_GET_PER_MIN, 60_000);
+
+/** Contador first-party (dedupe em memória, totais em `VISITS_DATA_FILE`). */
+export let visits = new VisitCounter({ dataFile: visitsDataFile() });
+
+/** Recria o contador em modo memória (sem arquivo) — SÓ para testes. */
+export function __resetVisitsForTests(): void {
+	visits = new VisitCounter();
+	pageviewLimiter = new WindowLimiter(PAGEVIEW_PER_MIN, 60_000);
+	visitsLimiter = new WindowLimiter(VISITS_GET_PER_MIN, 60_000);
+}
 
 export const app = new Hono<{ Bindings: Bindings }>();
 
@@ -121,6 +151,74 @@ app.get("/api/v1/salas/:code", (c) => {
 });
 
 app.notFound((c) => c.json({ error: "not_found" }, 404));
+
+/**
+ * `POST /api/stats/pageview` — beacon first-party (sendBeacon no web,
+ * sem consentimento GA: nenhum dado pessoal é armazenado).
+ *
+ * - Corpo sempre ignorado (nunca contém — nem persistimos — códigos de sala).
+ * - Bot por UA responde 204 sem contar (sem revelar a classificação).
+ * - 429 acima de PAGEVIEW_PER_MIN por chave derivada do IP (hash com salt,
+ *   nunca o IP cru); 413 acima de 1KB. Público por design (recebe beacon).
+ */
+app.post("/api/stats/pageview", async (c) => {
+	const ip = c.env?.ip ?? "unknown";
+	if (!pageviewLimiter.hit(clientKey(ip))) {
+		c.header("Retry-After", "60");
+		return c.json({ error: "rate_limited" }, 429);
+	}
+	const ua = c.req.header("user-agent") ?? "";
+	const declared = Number(c.req.header("content-length") ?? "0");
+	if (Number.isFinite(declared) && declared > MAX_BEACON_BYTES) {
+		return c.json({ error: "payload_too_large" }, 413);
+	}
+	const body = await c.req.text();
+	if (body.length > MAX_BEACON_BYTES) {
+		return c.json({ error: "payload_too_large" }, 413);
+	}
+	visits.record(ip, ua);
+	return new Response(null, {
+		status: 204,
+		headers: { "Cache-Control": "no-store" },
+	});
+});
+
+/** Segredo do GET: env lido a cada request (testável; sem restart). */
+function statsApiToken(): string {
+	return (process.env.STATS_API_TOKEN ?? "").trim();
+}
+
+/**
+ * `GET /api/stats/visits` — resumo pro display do ESP32
+ * (`{"today","last7d","live5m","updatedAt"}`), protegido por token.
+ *
+ *  - `Authorization: Bearer <token>` OU `X-Stats-Key: <token>`, comparados
+ *    em tempo constante contra `STATS_API_TOKEN`.
+ *  - Sem segredo configurado → 503 (fail closed: nunca expõe contagem).
+ *  - Token ausente/errado → 401 `{ error: 'unauthorized' }`.
+ *  - Sem CORS: não é API de browser (ESP32 nem envia Origin).
+ *  - `private` no cache: resposta autenticada não pode ir a cache compartilhado.
+ */
+app.get("/api/stats/visits", (c) => {
+	const token = statsApiToken();
+	if (!token) {
+		return c.json({ error: "stats_not_configured" }, 503);
+	}
+	const bearer = /^Bearer\s+(.+)$/i.exec(
+		c.req.header("authorization") ?? "",
+	)?.[1];
+	const provided = bearer?.trim() || c.req.header("x-stats-key")?.trim() || "";
+	if (!provided || !constantTimeEquals(provided, token)) {
+		return c.json({ error: "unauthorized" }, 401);
+	}
+	const ip = c.env?.ip ?? "unknown";
+	if (!visitsLimiter.hit(clientKey(ip))) {
+		c.header("Retry-After", "60");
+		return c.json({ error: "rate_limited" }, 429);
+	}
+	c.header("Cache-Control", "private, max-age=30");
+	return c.json(visits.snapshot());
+});
 
 app.onError((err, c) => {
 	console.error("[server] unhandled error", err);

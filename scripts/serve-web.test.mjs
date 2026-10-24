@@ -175,3 +175,26 @@ describe("serve-web: negociação de entrega", () => {
 		}
 	});
 });
+
+describe("serve-web: proxy de /api (harness e2e)", () => {
+	it("sem PROXY_API_TO, nada é proxied; com ele, só /api/", async () => {
+		const base = await import("./serve-web.mjs?base=1");
+		assert.equal(base.shouldProxyApi("/api/stats/visits"), false);
+		assert.equal(base.shouldProxyApi("/"), false);
+
+		process.env.PROXY_API_TO = "http://127.0.0.1:3001/";
+		try {
+			const proxied = await import("./serve-web.mjs?proxy=1");
+			assert.equal(proxied.shouldProxyApi("/api/stats/visits"), true);
+			assert.equal(proxied.shouldProxyApi("/api/stats/pageview"), true);
+			assert.equal(proxied.shouldProxyApi("/join"), false);
+			assert.equal(proxied.shouldProxyApi("/"), false);
+			assert.equal(
+				proxied.proxyTarget("http://x:5188/api/stats/visits?r=1"),
+				"http://127.0.0.1:3001/api/stats/visits?r=1",
+			);
+		} finally {
+			delete process.env.PROXY_API_TO;
+		}
+	});
+});

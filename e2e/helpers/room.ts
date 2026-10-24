@@ -18,6 +18,7 @@ const EXPECTED_VIEWPORTS: Record<string, { width: number; height: number; touch:
 export async function newPlayer(
 	browser: Browser,
 	testInfo: TestInfo,
+	opts: { userAgent?: string } = {},
 ): Promise<{ page: Page; ctx: BrowserContext }> {
 	const use = testInfo.project.use;
 	const ctx = await browser.newContext({
@@ -27,6 +28,7 @@ export async function newPlayer(
 		baseURL: use.baseURL,
 		locale: use.locale ?? "pt-BR",
 		timezoneId: use.timezoneId,
+		...(opts.userAgent ? { userAgent: opts.userAgent } : {}),
 	});
 	const page = await ctx.newPage();
 	const expected = EXPECTED_VIEWPORTS[testInfo.project.name];

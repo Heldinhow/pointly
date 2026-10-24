@@ -9,5 +9,6 @@ Harness: `openchamber_web`. Evidence goes to `/tmp/pointly-verify/`.
 | [Entrada](entrada.md) | `/join` | create/join/spectate/avatar → `/s/<CODE>` |
 | [Mesa e votação](mesa-votacao.md) | `/s/<CODE>` | vote → reveal → results |
 | [Pauta](pauta.md) | `/s/<CODE>` agenda | story CRUD + deck gate |
+| [Visitas](visitas.md) | `/` (beacon) + `GET /api/stats/visits` (token) | first-party counting, dedupe/dia, ESP32 polling |
 | [Interações e convite](interacoes.md) | `/s/<CODE>` table | projectile/nudge reload, invite copy, leave confirmation, reconnect |
 | [Páginas públicas](paginas-publicas.md) | `/`, `/planning-poker`, `/guias` | content, i18n, theme |

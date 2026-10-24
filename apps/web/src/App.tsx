@@ -32,6 +32,7 @@ import {
   sanitizePagePath,
   trackPageView,
 } from "@/lib/analytics";
+import { sendPageviewBeacon } from "@/lib/visits";
 import { AnalyticsConsentBanner } from "@/components/analytics-consent";
 import {
   readAnalyticsConsent,
@@ -120,6 +121,12 @@ export default function App(): React.ReactElement {
   useEffect(() => {
     initAnalytics();
   }, [analyticsConsent]);
+
+  // First-party (sem consentimento): beacon próprio vazio em toda troca
+  // de rota — nenhum dado pessoal, path ou room code sai do device.
+  useEffect(() => {
+    sendPageviewBeacon();
+  }, [pathname]);
 
   useEffect(() => {
     // page_path sanitizado: `/s/:code` → `/s/[room]` e query nunca é
