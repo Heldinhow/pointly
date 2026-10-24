@@ -25,10 +25,10 @@ services:
       STATS_API_TOKEN: "${STATS_API_TOKEN:-}"
       # Só o Traefik fala com este container: IP real = hop mais à direita do XFF.
       TRUST_PROXY: "1"
-    volumes:
-      - pointly-visits:/app/data
       # Origens que podem abrir o WebSocket (anti-CSWSH). Vírgula separa.
       ALLOWED_ORIGINS: "https://pointly.space,https://www.pointly.space"
+    volumes:
+      - pointly-visits:/app/data
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3001/health >/dev/null 2>&1 || exit 1"]
       interval: 30s
