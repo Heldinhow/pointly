@@ -38,6 +38,8 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser bun run test:e2e -
 - `page.on("request")` filtered to `googletagmanager.com`, `google-analytics.com`, `doubleclick.net`: empty before choice and after Decline (including reload).
 - `document.querySelector('script[src*="googletagmanager.com/gtag/js"]')`: 0 before Accept/after Decline, 1 after Accept.
 - `window.dataLayer` page_view entries: `/` right after Accept, `/join` after SPA navigation; none added after switching to Decline.
+- Entries pushed to `window.dataLayer` are `Arguments` objects (contract of gtag.js), not plain arrays.
+- `page_view` carries `page_path` and a sanitized `page_location` (origin + path, no room code/query), so the collect request never sees routeable identifiers.
 - `localStorage["pointly.analytics-consent"]` is exactly `granted` or `denied`.
 
 ## Gotchas
@@ -46,4 +48,5 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser bun run test:e2e -
 - No Measurement ID (`VITE_GA_MEASUREMENT_ID` empty) means no banner; E2E forces a synthetic non-empty ID.
 - A choice is device-local (localStorage). Clearing site data brings the banner back.
 - Revoking stops new gtag calls immediately; it does not un-download an already loaded script until the next reload.
+- `config` uses `send_page_view: false` and the app sends `page_view` manually on every SPA route change (documented GA4 pattern). Keep Enhanced Measurement's "Page changes based on browser history events" off to avoid duplicate pageviews/raw URLs.
 - Do not test against the real Google endpoint: stub analytics hosts in Playwright and assert the request attempt, not a successful collect.
