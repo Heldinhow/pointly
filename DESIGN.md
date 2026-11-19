@@ -1,6 +1,6 @@
 ---
 name: Pointly
-description: Ritual rápido de planning poker — calmo, tátil, sem fricção. Dark-first, verde-pinheiro, feltro radial, números sempre mono tabulares.
+description: Ritual rápido de planning poker — calmo, tátil, sem fricção. Taste v2 V8/M6/D4 em todas as superfícies. Dark-first, verde-pinheiro, feltro radial, números sempre mono tabulares.
 colors:
   primary: "#17634F"
   on-primary: "#FFFFFF"
@@ -133,12 +133,78 @@ components:
     textColor: "{colors.on-primary}"
     rounded: 9px
     padding: 8px
+  button-primary-dark:
+    backgroundColor: "{colors.primary-dark}"
+    textColor: "{colors.on-primary-dark}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.lg}"
+    padding: 12px
+  button-secondary-dark:
+    backgroundColor: "{colors.secondary-dark}"
+    textColor: "{colors.on-primary-dark}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.lg}"
+    padding: 12px
+  surface-dark:
+    backgroundColor: "{colors.surface-dark}"
+    textColor: "{colors.on-surface-dark}"
+    rounded: "{rounded.lg}"
+    padding: 16px
+  canvas-dark:
+    backgroundColor: "{colors.background-dark}"
+    textColor: "{colors.on-surface-dark}"
+  canvas-neutral:
+    backgroundColor: "{colors.neutral}"
+    textColor: "{colors.on-surface}"
+  hairline:
+    backgroundColor: "{colors.border}"
+  hairline-dark:
+    backgroundColor: "{colors.border-dark}"
+  focus-ring:
+    backgroundColor: "{colors.ring}"
+  focus-ring-dark:
+    backgroundColor: "{colors.ring-dark}"
+  alert-error:
+    backgroundColor: "{colors.error}"
+    textColor: "{colors.on-primary}"
+    rounded: "{rounded.md}"
+    padding: 12px
+  alert-error-dark:
+    backgroundColor: "{colors.error-dark}"
+    textColor: "{colors.on-primary-dark}"
+  badge-success:
+    backgroundColor: "{colors.success}"
+    textColor: "{colors.on-primary}"
+    rounded: "{rounded.full}"
+  badge-success-dark:
+    backgroundColor: "{colors.success-dark}"
+    textColor: "{colors.on-primary-dark}"
+  felt-start:
+    backgroundColor: "{colors.felt-start}"
+    textColor: "{colors.felt-ink}"
+  felt-end:
+    backgroundColor: "{colors.felt-end}"
+    textColor: "{colors.felt-ink}"
+  card-face:
+    backgroundColor: "{colors.card-face}"
+    textColor: "{colors.on-surface}"
+    rounded: 9px
+  card-back:
+    backgroundColor: "{colors.card-back}"
+    textColor: "{colors.felt-ink}"
+    rounded: 9px
+  table-rail:
+    backgroundColor: "{colors.table-rail}"
+  table-rail-dark:
+    backgroundColor: "{colors.table-rail-dark}"
+  wordmark:
+    backgroundColor: "{colors.wordmark}"
 ---
 
 # Design System: Pointly
 
-**Skill:** stitch-design-taste (adaptado do padrão Google Stitch).
-**SSOT de código:** `apps/web/src/index.css` (`:root` / `.dark`) + `apps/web/src/brand.css` (`--header-h`, chrome do shell, geometria do deck) — este arquivo é camada semântica, não duplica tokens. Tokens acima são os valores normativos; a prosa explica como aplicá-los. Se mudar o CSS, este doc acompanha.
+**Skill:** `design-taste-frontend` v2 (tasteskill, redesign overhaul). Antes de gerar qualquer superfície, declarar uma linha de Design Read: "Lido como: [tipo de página] para [público], com linguagem [vibe], apoiado em React + Tailwind + coss e Taste v2 V8/M6/D4".
+**SSOT de código:** `apps/web/src/index.css` (`:root` / `.dark`, cores, fontes, radius e motion) + `apps/web/src/brand.css` (chrome do shell, geometria do deck) — este arquivo é camada semântica, não duplica valores. Tokens acima são os valores normativos; a prosa explica como aplicá-los. Se mudar o CSS, este doc acompanha.
 **Validar:** `npx @google/design.md lint DESIGN.md` · `diff DESIGN.md DESIGN-v2.md` · `export --format css-tailwind|dtcg`.
 
 ## Overview
@@ -149,21 +215,33 @@ Interface de ritual rápido: calma, tátil, sem fricção — cada carta ganha s
 
 **Key Characteristics:**
 
-- Uma única ação principal por tela, em verde-pinheiro; o resto é ghost/outline ou link.
-- Mesa e cartas são o vocabulário de domínio — o resto do chrome é neutro e contido.
-- Densidade calibrada por superfície: home respira, arena é densa e previsível no meio do voto.
-- Todo estado async é anunciado (`aria-live`); foco sempre visível em `var(--ring)`; `prefers-reduced-motion` respeitado.
+- Taste v2 V8/M6/D4 em **todas** as superfícies, inclusive arena e `/join`. Não existe dial de produto separado.
+- Uma única ação principal por tela, em verde-pinheiro; o resto é ghost/outline ou link. Mesa e cartas são o vocabulário de domínio; o chrome é neutro e contido.
+- Assimetria com colapso explícito para uma coluna abaixo de `768px`; sem hero centrado, sem três cards iguais, sem sobreposição de conteúdo.
+- Movimento motivado (hierarquia, feedback ou mudança de estado), nunca decoração. Toda animação nova deriva dos tokens de `motion` e tem ramo `prefers-reduced-motion`.
+- Todo estado async é anunciado (`aria-live`); foco sempre visível em `var(--ring)`; contraste WCAG AA. Legibilidade funcional da arena é critério de verificação, não dial.
 
-### Dials deste projeto (Stitch)
+### Dials deste projeto (Taste v2)
 
 | Dial | Level | Descrição |
 |------|-------|-------------|
-| **Creativity** | `5` | `1` = ultra-minimal suíço. `5` = limpo com personalidade (ferramenta real-time). `10` = editorial expressivo. Home pode ousar, arena deve ser previsível. |
-| **Density** | `6` | `1` = galeria arejada. `5` = app diário. `10` = cockpit denso. Home ~4, Arena ~7. Média 6. |
-| **Variance** | `5` | `1` = grids simétricos. `5` = offsets sutis. `10` = caótico artístico. Arena não pode ser caótica no meio do voto. |
-| **Motion Intent** | `5` | `1` = estático. `5` = hover/entrada sutil. `10` = coreografia cinemática. Respeita `prefers-reduced-motion` (já implementado). |
+| **DESIGN_VARIANCE** | `8` | `1` = simetria perfeita. `8` = composição assimétrica com grids fracionários e zonas de espaço intencionais. `10` = caos artístico. Colapsa para uma coluna `<768px`. |
+| **MOTION_INTENSITY** | `6` | `1` = estático. `6` = CSS fluido com transform/opacity, cascade de entrada e micro-interações motivadas. `10` = coreografia com scroll. Sem exceção de reduced-motion. |
+| **VISUAL_DENSITY** | `4` | `1` = galeria arejada. `4` = ritmo de app diário, com respiro e hierarquia por espaço negativo. `10` = cockpit. Números de votação continuam mono tabulares. |
 
-> **Como usar:** gere telas novas no Stitch com estes dials. Home/demo aceita Creativity até 6. Arena/sala aceita no máximo 4 — legibilidade > expressão durante votação.
+> **Como usar:** V8/M6/D4 é a linha de base global. O risco de aplicar uma skill de landing a UI de produto multi-etapas (arena) foi aceito: a detecção é feita por contraste/foco/reduced-motion e pela legibilidade funcional (números mono, uma ação principal, sem overlap), não por um dial separado.
+
+### Precedência, stack e bibliotecas declaradas
+
+O v2 substitui o sistema visual e as regras de composição anteriores, incluindo a anti-referência "sem AIDA/GSAP" do `PRODUCT.md`. Ele **não** substitui a stack: React, Tailwind v4 e coss permanecem; componentes de domínio assinados (deck, mesa, feltro) continuam custom.
+
+| Lib / técnica | Status | Onde é usada | Fallback `prefers-reduced-motion` |
+|---------------|--------|--------------|-----------------------------------|
+| GSAP + ScrollTrigger | Permitida, não adotada nesta entrega | Pin/scrub de rolagem em landing e guias, em folha isolada; nunca na arena | `useReducedMotion()` ou bloco `reduce` desliga pin, scrub e transforms; conteúdo fica no estado final |
+| Motion (`motion/react`) | Permitida, não adotada nesta entrega | Entradas de estado e micro-interações em componentes folha; não em laços de input | `useReducedMotion()` congela no estado final sem perder conteúdo ou foco |
+| Lib de ícones | Permitida, não adotada nesta entrega | `@phosphor-icons/react` primeiro, depois `hugeicons-react`; substitui SVG manual fora da marca/domínio | Ícone estático, mesma cor e contraste; nenhuma animação de ícone sem ramo `reduce` |
+
+Uma lib de animação por árvore de componentes: não misturar GSAP e Motion no mesmo componente. Nenhuma lib entra sem declaração nesta tabela e verificação de dependência em `package.json`.
 
 ### Shell e contenção (o chrome global)
 
@@ -225,7 +303,7 @@ Paleta enraizada em neutros de alto contraste com **um único acento verde por t
 ### Named Rules
 
 **The Mono Tabular Numbers Rule.** Todo número de votação/resultado é Geist Mono com `tabular-nums` — mediana `38–40px/600`, timer `14px/500`, pips `11px`. Números proporcionais na arena são falha.
-**The No Inter Rule.** `Inter` é banido (já conforme). Serifadas genéricas (`Times`, `Georgia`, `Garamond`, `Palatino`) são banidas — se serif um dia for preciso, só modernas distintivas (`Fraunces`, `Instrument Serif`); serif sempre banida na arena/dashboard.
+**The No Inter Rule.** `Inter` é banido como default (já conforme). Serifadas genéricas (`Times`, `Georgia`, `Garamond`, `Palatino`) são banidas; `Fraunces` e `Instrument Serif` também são banidos como default pelo v2. Se alguma serif for justificada no futuro, usar o pool do v2 e nunca na arena; ênfase em título usa itálico/negrito da mesma família, nunca troca de família.
 
 ## Elevation
 
@@ -239,16 +317,16 @@ Hierarquia por **camadas tonais e bordas**; sombra só quando comunica elevaçã
 - **Deck (`0 3px 0 var(--border)`; selecionada `0 5px 0 color-mix(primary 65%, background)` + cantoneiras `::before/::after 5px`):** a carta é tátil por construção, não por drop-shadow genérica.
 - **Sidebar fantasma:** cards transparentes, sem sombra, com `border-top` como separador.
 
-### Motion (intent de código — Stitch exporta estático)
+### Motion (M6, intenção de código)
 
-- **Física:** springs `stiffness:100, damping:20`, easings `--ease-out-quart/quint`, sem linear easing, sem bounce/elastic. Reveal de carta: `card-reveal 0.35s ease-out (rotateY 90°→0 + rotate 12°)`; voto no assento: `card-flip 0.35s ease-out (rotateY 180°→0 + rotate 12°)`. Ambas terminam no tilt fixo `12°` da carta no assento.
+- **Física:** springs `stiffness:100, damping:20`, easings `--ease-out-quart/quint/expo` e durações `motion.fast/base/slow/brand`, sem linear em interação, sem bounce/elastic. Reveal de carta: `card-reveal 0.35s ease-out (rotateY 90°→0 + rotate 12°)`; voto no assento: `card-flip 0.35s ease-out (rotateY 180°→0 + rotate 12°)`. Ambas terminam no tilt fixo `12°` da carta no assento.
+- **Movimento motivado:** antes de animar, dizer em uma frase o que a animação comunica (hierarquia, feedback ou mudança de estado). Se não houver resposta, não anima. GSAP só para pin/scrub de rolagem; Motion para estado e entradas; uma lib por árvore.
 - **Celebração de Unânime (14.3):** anel claro no contorno do feltro (`unanimous-ring 0.9s ease-out`) + 14 peças de confete determinísticas (`unanimous-confetti 0.95s cubic-bezier(0.17,0.67,0.35,1)`), só `transform/opacity`, sem glow; dispara uma vez na transição ao vivo para `revealed` unânime (edição pós-reveal atualiza o badge sem replayar); `reduced-motion` desliga.
-- **Confirmação de nova rodada:** barra de 2px que encolhe no ritmo exato de `NEW_ROUND_CONFIRM_TIMEOUT_MS` (duração via inline style, nunca hardcoded), só `transform` linear; o `reduced-motion` global já colapsa.
+- **Nova rodada:** uma ativação envia `start_new_round` em `revealed`. Sem estado armado, sem segundo toque, sem Cancelar e sem barra de contagem. A copy e o `aria-label` dizem que a ação limpa os votos.
 - **Micro-loops:** pulse no dot de presença/timer crítico, shimmer em skeleton, float sutil em ícones da home. Timer crítico (`≤30s`) com `aria-live=assertive` + borda destructive.
 - **Orquestra:** assentos/votos/feed montam em cascata (`delay: index*100ms`), nunca instantâneo.
-- **Hardware:** animar SÓ `transform` e `opacity`; nunca `top/left/width/height`. Grain só em pseudo fixo `pointer-events-none`. Isolar loops em leaf components, 60fps mínimo.
-- **Acessibilidade:** `@media (prefers-reduced-motion: reduce)` colapsa duração para `0.01ms` e atraso para `0ms` (global em `index.css` + animações de carta `none` em `poker-table.css`); preferir variantes `motion-safe:`. Wordmark sempre visível, sem entrada por letras; símbolo gira apenas em hover, sem loop permanente.
-- **Confirmações:** nova rodada exige duplo `N`/clique em janela de 5s — primeiro toque arma, segundo confirma, timeout desarma sem tráfego.
+- **Hardware:** animar SÓ `transform` e `opacity`; nunca `top/left/width/height`. Grain só em pseudo fixo `pointer-events-none`. Isolar loops em leaf components, 60fps mínimo. Proibido `window.addEventListener("scroll")` e progresso de scroll em `useState`; usar Motion, ScrollTrigger, IntersectionObserver ou CSS scroll-driven.
+- **Acessibilidade:** `@media (prefers-reduced-motion: reduce)` colapsa duração para `0.01ms` e atraso para `0ms` (global em `index.css` + animações de carta `none` em `poker-table.css`); preferir variantes `motion-safe:`. Cada lib declarada acima traz o ramo `reduce` na mesma mudança. Wordmark sempre visível, sem entrada por letras; símbolo gira apenas em hover, sem loop permanente.
 
 ### Named Rules
 
@@ -261,7 +339,7 @@ Hierarquia por **camadas tonais e bordas**; sombra só quando comunica elevaçã
 
 - **Character:** flat e tátil, sem outer glow. Hover = shift de background, nunca glow; active = `translateY(-1px)` ou `scale(0.98)`.
 - **Shape:** radius `lg` (`12px`); pills `999px` para tags.
-- **Primary:** acento (`button-primary` / `button-primary-hover`); Secondary = `secondary` fill; Outline/ghost para convite e ações terciárias; `link` para text-links sublinhados; `destructive-outline` para a confirmação de nova rodada.
+- **Primary:** acento (`button-primary` / `button-primary-hover`); Secondary = `secondary` fill; Outline/ghost para convite e ações terciárias; `link` para text-links sublinhados. `destructive-outline` fica reservado a ações destrutivas que ainda usam confirmação dupla (história pontuada e saída da sala), nunca à nova rodada.
 - **Sizes:** `xl` no CTA do hero; reveal `40px`, invite `37px`, new-round `38px/100% width` no desktop; touch/mobile mínimo `44px` (ponteiros coarse).
 - **States:** focus-visible em anel 2px + offset; `disabled` sem pointer events a 64%; loading preserva o nome acessível com `aria-busy` e `Spinner` decorativo absoluto.
 - **Atalhos:** sempre em `<kbd>` (R revela, N nova rodada) com `aria-keyshortcuts`.
@@ -320,10 +398,10 @@ Hierarquia por **camadas tonais e bordas**; sombra só quando comunica elevaçã
 - **Style:** `output[aria-live]` com mediana grande mono (`38–40px/600 tabular-nums`) + média/intervalo + pips `N×V` de `11px`.
 - **`Unânime`:** badge `success/12%`. `Só pausa/ausência`: mensagem explícita, sem média/mediana.
 
-### Confirmação de nova rodada
+### Nova rodada (confirmação simples)
 
-- **Style:** o botão arma no primeiro toque/clique ou `N`; a barra `arena-confirm-countdown` (2px, destructive, `border-radius 999px`) encolhe via `scaleX` linear com duração inline de `NEW_ROUND_CONFIRM_TIMEOUT_MS`.
-- **Behavior:** segundo toque confirma; timeout de 5s desarma sem tráfego. Duração nunca hardcoded no CSS.
+- **Style:** botão padrão no estado `revealed`, sem variante destructive, sem barra `arena-confirm-countdown`, sem `data-confirming` e sem botão Cancelar.
+- **Behavior:** um clique ou uma tecla `N` envia `start_new_round {}` uma única vez. O rótulo acessível e o hint dizem que os votos serão limpos. A guarda `isRevealed` e a exigência de `revealed` no servidor permanecem.
 
 ### Projéteis (domínio, qualquer fase)
 
@@ -348,7 +426,7 @@ Hierarquia por **camadas tonais e bordas**; sombra só quando comunica elevaçã
 - **Do** usar o primary para **uma única ação principal por tela**; o resto é ghost/outline/link.
 - **Do** manter contraste WCAG AA (4.5:1 texto normal, 3:1 texto grande); placeholders também batem 4.5:1.
 - **Do** derivar todo offset do header de `var(--header-h)` (`48px`) — nunca valor fixo.
-- **Do** passar a duração da confirmação via inline style de `NEW_ROUND_CONFIRM_TIMEOUT_MS`.
+- **Do** usar `CONFIRM_TIMEOUT_MS` apenas onde a confirmação dupla permanece (história pontuada e saída da sala); declarar nova lib de animação neste SSOT antes de importá-la.
 - **Do** calçar callouts com borda cheia + fill (como `solo-hint`); números de votação sempre mono tabulares.
 - **Do** alvos de toque ≥ `44px` e botões mobile full-width onde couber.
 - **Do** rotear erros ao alerta da superfície (`vote-error`, `reveal-error`, `new-round-error`, `projectile-error`, `rejoin-error`).
@@ -363,7 +441,7 @@ Hierarquia por **camadas tonais e bordas**; sombra só quando comunica elevaçã
 - **Don't** `gradiente-text` em header grande, cursor custom, `h-screen`, `z-index` spam, overlap texto-sobre-imagem.
 - **Don't** "3 cards iguais" para features — usar steps numerados / bento assimétrico / zig-zag 2-col.
 - **Don't** hero centrado, filler ("Scroll to explore", setas bounce, "Discover more", chevrons) ou 2 CTAs primários.
-- **Don't** landing cinematográfica, AIDA/GSAP, troca de biblioteca de ícones, sobreposição de conteúdo (anti-referências do PRODUCT.md, ipsis litteris).
+- **Don't** landing cinematográfica vazia, sobreposição de conteúdo, hero centrado com V8, três cards iguais, eyebrow em toda seção ou traço longo (em-dash) em copy visível. AIDA/GSAP, `motion/react` e troca de biblioteca de ícones são permitidos, desde que declarados na tabela acima; onde o v2 contradiz uma anti-referência antiga, esta tabela e a seção de dials substituem o texto anterior do `PRODUCT.md`.
 - **Don't** nomes genéricos ("John Doe", "Acme", "Nexus").
 - **Don't** números fake redondos (`99.99%`, `50%`).
 - **Don't** clichê AI ("Elevate", "Seamless", "Unleash", "Next-Gen", "Revolutionize" — nem traduzidos).

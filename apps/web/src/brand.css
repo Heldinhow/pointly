@@ -1,9 +1,6 @@
-/* Tokens de cor vivem em index.css (:root/.dark = SSOT). Este arquivo mantém
-   só layout/estrutura da marca para não duplicar :root. */
+/* Tokens de cor, duração e easing vivem em index.css (:root/.dark = SSOT).
+   Este arquivo mantém só layout/estrutura da marca para não duplicar :root. */
 :root {
-  /* Curvas de easing do sistema (saída exponencial, sem bounce/elastic). */
-  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
-  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
   /* Altura única do chrome global (header + offsets dependentes). */
   --header-h: 48px;
 }
@@ -34,19 +31,10 @@ summary:focus-visible {
   flex-shrink: 0;
   height: var(--header-h);
   border-bottom: 1px solid var(--border);
-  /* Navbar Origin do Coss, adaptado: header fixo com blur funcional no scroll. */
   position: sticky;
   top: 0;
   z-index: 30;
   background-color: var(--background);
-  transition:
-    background-color 200ms var(--ease-out-quart),
-    border-color 200ms var(--ease-out-quart);
-}
-.site-header[data-scrolled="true"] {
-  background-color: color-mix(in srgb, var(--background) 86%, transparent);
-  -webkit-backdrop-filter: blur(12px) saturate(1.25);
-  backdrop-filter: blur(12px) saturate(1.25);
 }
 .site-nav {
   display: flex;
@@ -54,11 +42,40 @@ summary:focus-visible {
   gap: 26px;
 }
 .site-nav nav {
+  position: relative;
   display: flex;
   gap: 26px;
+  padding-left: 22px;
   font-size: 14px;
   font-weight: 500;
   color: var(--muted-foreground);
+}
+/* V8: hairline vertical separa marca e navegação; some no colapso mobile. */
+.site-nav nav::before {
+  content: "";
+  position: absolute;
+  inset-block: 10px;
+  left: 0;
+  width: 1px;
+  background: var(--border);
+}
+/* M6: entrada em cascata, só transform/opacity. O ramo reduce vem de index.css. */
+@keyframes shell-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+.site-header .brand-lockup,
+.site-nav nav,
+.site-nav .lang-link {
+  animation: shell-in var(--motion-slow) var(--ease-out-expo) both;
+}
+.site-nav nav {
+  animation-delay: 60ms;
+}
+.site-nav .lang-link {
+  animation-delay: 120ms;
 }
 /* Underline deslizante (só transform): hover, foco e rota ativa. */
 .site-nav nav a {
@@ -66,7 +83,7 @@ summary:focus-visible {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  transition: color 150ms var(--ease-out-quart);
+  transition: color var(--motion-fast) var(--ease-out-quart);
 }
 .site-nav nav a::after {
   content: "";
@@ -78,7 +95,7 @@ summary:focus-visible {
   background-color: var(--primary);
   transform: scaleX(0);
   transform-origin: left center;
-  transition: transform 200ms var(--ease-out-quint);
+  transition: transform var(--motion-base) var(--ease-out-quint);
 }
 .site-nav nav a:hover::after,
 .site-nav nav a:focus-visible::after,
@@ -91,22 +108,34 @@ summary:focus-visible {
 .site-nav nav a[aria-current="page"] {
   color: var(--foreground);
 }
-/* Seletor de idioma (15.T8): código em mono, alvo de toque de 44px. */
+/* Seletor de idioma: pill em mono, alvo de toque de 44px. */
 .lang-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 44px;
   min-height: 44px;
+  padding-inline: 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.08em;
+  color: var(--foreground);
+  text-decoration: none;
+  transition:
+    border-color var(--motion-fast) var(--ease-out-quart),
+    color var(--motion-fast) var(--ease-out-quart);
+}
+.lang-link:hover {
+  border-color: var(--primary);
+  color: var(--primary);
 }
 /* Troca do ícone sol/lua: rotação + fade (só transform/opacity, 200ms). */
 .theme-toggle__icon {
   display: inline-flex;
-  animation: theme-toggle-in 200ms var(--ease-out-quint);
+  animation: theme-toggle-in var(--motion-base) var(--ease-out-quint);
 }
 @keyframes theme-toggle-in {
   from {
@@ -128,24 +157,38 @@ summary:focus-visible {
   padding: 48px 0;
   color: var(--muted-foreground);
 }
+/* V8/D4: três zonas fracionárias, respiro acima da hierarquia. */
 .site-footer {
   width: 100%;
   margin: 0 auto;
-  padding: 22px 32px;
+  padding: 40px 32px 32px;
   border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 32px;
   font-size: 14px;
   color: var(--muted-foreground);
 }
+.site-footer__statement {
+  margin: 0;
+  max-width: 24ch;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
 .site-footer__nav {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
-  row-gap: 5px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 24px;
+}
+.site-footer__note {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-align: right;
 }
 .site-footer__nav a {
   color: var(--muted-foreground);
@@ -227,13 +270,13 @@ summary:focus-visible {
 .brand-mark {
   display: inline-flex;
   color: var(--primary);
-  transition: transform 250ms var(--ease-out-quint);
+  transition: transform var(--motion-slow) var(--ease-out-quint);
 }
 a:hover .brand-mark {
   transform: scale(1.12) rotate(10deg);
 }
 .brand-mark__pop {
-  animation: brand-pop 0.6s var(--ease-out-quint);
+  animation: brand-pop var(--motion-brand) var(--ease-out-quint);
   transform-box: fill-box;
   transform-origin: center;
 }
@@ -247,7 +290,7 @@ a:hover .brand-mark {
   transform-origin: center;
 }
 a:hover .brand-mark__spin {
-  animation: brand-spin 600ms var(--ease-out-quint);
+  animation: brand-spin var(--motion-brand) var(--ease-out-quint);
 }
 @keyframes brand-spin {
   to {
@@ -257,30 +300,36 @@ a:hover .brand-mark__spin {
 .brand-word__letter {
   display: inline-block;
 }
-@media (pointer: coarse), (max-width: 700px) {
+@media (pointer: coarse), (max-width: 768px) {
   [data-slot="button"] {
     min-height: 44px;
     min-width: 44px;
   }
 }
-@media (max-width: 700px) {
+@media (max-width: 768px) {
 .site-main {
     padding-top: 24px;
   }
   .site-nav {
-    gap: 12px;
+    gap: 8px;
   }
   .site-nav nav {
-    gap: 15px;
+    gap: 12px;
+    padding-left: 0;
+  }
+  .site-nav nav::before {
+    display: none;
   }
   .site-nav nav a:first-child {
     display: none;
   }
   .site-footer {
-    padding: 20px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    padding: 32px 20px 24px;
+  }
+  .site-footer__note {
+    text-align: left;
   }
   [data-testid="deck"] > div {
     display: grid;

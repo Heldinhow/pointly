@@ -20,8 +20,9 @@
 ## UI — preferir coss (`https://coss.com/ui`) sempre que possível
 
 - Fonte canônica: `agent/skills/coss/` (demais paths são symlinks; editar só no canônico).
-- Fluxo padrão: Impeccable escopado + COSS, subordinado a `DESIGN.md`. Sem trocar libs, sem AIDA/GSAP, sem overlap — ver Do's and Don'ts.
-- Opt-in só por pedido explícito: `redesign-existing-projects`, `frontend-design`, `design-system` (slides fora de escopo), `taste-skill/*`, `gpt-taste`, `image-to-code`.
+- Fluxo padrão: Taste v2 (`design-taste-frontend`) com dials V8/M6/D4 em todas as superfícies, ao lado do COSS, subordinado a `DESIGN.md`. Sem dial de produto, sem overlap — ver Do's and Don'ts.
+- `taste-skill/*` é o fluxo visual padrão, não opt-in. Opt-in só por pedido explícito: `redesign-existing-projects`, `frontend-design`, `design-system` (slides fora de escopo), `gpt-taste`, `image-to-code`.
+- AIDA/GSAP, `motion/react` e troca de biblioteca de ícones são permitidos pela decisão 5, mas exigem declaração prévia em `DESIGN.md` (lib, onde é usada, fallback de `prefers-reduced-motion`) e verificação de dependência antes do import.
 - Reutilizar primeiro o que já existe em `apps/web/src/components/ui/*` (Button, Card, Input, Alert, Field, Progress, Separator, Spinner, OTP Field, etc.).
 - Se o primitivo não existir localmente, instalar via CLI (projeto usa Bun):
   `bunx --bun shadcn@latest add @coss/<componente>`
