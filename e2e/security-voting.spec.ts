@@ -165,10 +165,6 @@ test("fluxo completo com sigilo pré-reveal e nova rodada", async ({ browser }, 
 		const roundBefore =
 			ana.ws.lastRoomState?.payload.sala.round ?? 1;
 		await ana.page.locator('[data-testid="new-round-button"]').click();
-		await expect(ana.page.locator('[data-testid="new-round-hint"]')).toBeVisible();
-		expect(ana.ws.lastRoomState?.payload.sala.phase).toBe("revealed");
-
-		await ana.page.locator('[data-testid="new-round-button"]').click();
 		await expect
 			.poll(() => ana.ws.lastRoomState?.payload.sala.phase)
 			.toBe("voting");

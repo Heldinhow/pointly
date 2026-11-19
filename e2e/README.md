@@ -62,7 +62,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser bunx playwright te
    sigilo estrito WS (`votes` igual ao próprio voto e só ele,
    `players.value` de todos os demais `null`, espectadora fora dos dois
    canais, sem uuid), reveal por jogador normal (mediana 6.5), edição
-   pós-reveal recalcula, nova rodada com confirmação dupla limpa e
+   pós-reveal recalcula, nova rodada em 1 ativação limpa e
    avança a pauta. A espectadora não recebe o CTA de primeira história.
 2. `e2e/reload-rejoin.spec.ts` — reload espera um NOVO `welcome`
    pós-rejoin e afirma playerId/assento/papel/voto nele (nunca em
@@ -73,7 +73,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser bunx playwright te
 3. `e2e/round-hygiene.spec.ts` — higiene solo: deck travado sem pauta,
    CTA `Adicionar primeira história` visível no viewport foca o input
    real `#pauta-novo-titulo` e some após `addStory`; reveal exige voto,
-   1ª ativação da nova rodada só arma, 2ª confirma.
+   nova rodada limpa votos em 1 clique.
 4. `e2e/late-join.spec.ts` — late-join após o host votar: o `welcome` do
    jogador e o da espectadora chegam com `votes` vazio e todos os
    `players.value` nulos.

@@ -85,12 +85,8 @@ export type ArenaContent = {
 		revealHintReady: string;
 		revealHintWaiting: string;
 		newRound: string;
-		newRoundConfirm: string;
 		newRoundAria: string;
-		newRoundAriaConfirm: string;
 		newRoundHint: string;
-		newRoundHintConfirm: string;
-		newRoundCancel: string;
 		errorTitle: string;
 		newRoundErrorTitle: string;
 	};
