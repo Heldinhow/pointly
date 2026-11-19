@@ -15,6 +15,7 @@ import { LANDING_CONTENT } from "../pages/landing-content";
 import {
 	alternateVersions,
 	PATHS,
+	selfAlternates,
 	type SeoAlternate,
 } from "./paths";
 
@@ -318,7 +319,7 @@ const WHAT_IS_DESCRIPTION_EN =
 const STORY_POINTS_DESCRIPTION_EN =
 	"Story points made simple: the scale, the Fibonacci sequence, story points vs hours and how to calibrate your team's estimates with a reference story.";
 
-export const SEO_ROUTES: readonly SeoRoute[] = [
+const ROUTES: readonly SeoRoute[] = [
 	{
 		path: PATHS.homePt,
 		lang: "pt-BR",
@@ -816,6 +817,12 @@ export const SEO_ROUTES: readonly SeoRoute[] = [
 		description: "Este endereço não existe por aqui.",
 	},
 ];
+
+export const SEO_ROUTES: readonly SeoRoute[] = ROUTES.map((route) =>
+	route.indexable && !route.alternates
+		? { ...route, alternates: selfAlternates(route.path) }
+		: route,
+);
 
 export const FALLBACK_ROUTE = SEO_ROUTES.find(
 	(route) => route.path === "/404",

@@ -158,48 +158,50 @@ export function GuidePage({
           </ol>
         </nav>
 
-        {content.sections.map((section) => (
-          <section
-            key={section.id}
-            id={section.id}
-            className="pt-guide__section"
-            aria-labelledby={`${section.id}-title`}
-          >
-            <h2 id={`${section.id}-title`}>{section.title}</h2>
-            {section.blocks.length === 0 ? (
-              <div className="pt-guide__faq" data-testid="guide-faq">
-                {content.faq.items.map((item, itemIndex) => (
-                  <details key={item.question} open={itemIndex === 0}>
-                    <summary>{item.question}</summary>
-                    <p>{item.answer}</p>
-                  </details>
-                ))}
-              </div>
-            ) : (
-              section.blocks.map((block, blockIndex) => (
-                <GuideBlockView key={blockIndex} block={block} />
-              ))
-            )}
-          </section>
-        ))}
+        <div className="pt-guide__body">
+          {content.sections.map((section) => (
+            <section
+              key={section.id}
+              id={section.id}
+              className="pt-guide__section"
+              aria-labelledby={`${section.id}-title`}
+            >
+              <h2 id={`${section.id}-title`}>{section.title}</h2>
+              {section.blocks.length === 0 ? (
+                <div className="pt-guide__faq" data-testid="guide-faq">
+                  {content.faq.items.map((item, itemIndex) => (
+                    <details key={item.question} open={itemIndex === 0}>
+                      <summary>{item.question}</summary>
+                      <p>{item.answer}</p>
+                    </details>
+                  ))}
+                </div>
+              ) : (
+                section.blocks.map((block, blockIndex) => (
+                  <GuideBlockView key={blockIndex} block={block} />
+                ))
+              )}
+            </section>
+          ))}
 
-        <section className="pt-guide__closing">
-          <h2>{content.closing.title}</h2>
-          <p>{content.closing.body}</p>
-          <section className="pt-guide__related" data-testid="guide-related">
-            <h2>{content.closing.relatedLabel}</h2>
-            <ul className="pt-guide__related-list" role="list">
-              {content.closing.related.map((link) => (
-                <li key={link.to}>
-                  <Link to={link.to}>{link.label}</Link>
-                </li>
-              ))}
-            </ul>
+          <section className="pt-guide__closing">
+            <h2>{content.closing.title}</h2>
+            <p>{content.closing.body}</p>
+            <section className="pt-guide__related" data-testid="guide-related">
+              <h2>{content.closing.relatedLabel}</h2>
+              <ul className="pt-guide__related-list" role="list">
+                {content.closing.related.map((link) => (
+                  <li key={link.to}>
+                    <Link to={link.to}>{link.label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+            <Button size="xl" render={<Link to="/join" />}>
+              {content.closing.cta} <ArrowRightIcon aria-hidden="true" />
+            </Button>
           </section>
-          <Button size="xl" render={<Link to="/join" />}>
-            {content.closing.cta} <ArrowRightIcon aria-hidden="true" />
-          </Button>
-        </section>
+        </div>
       </article>
     </div>
   );
