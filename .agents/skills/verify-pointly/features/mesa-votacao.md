@@ -31,6 +31,13 @@ curl -s http://localhost:3001/api/v1/salas/<CODE>   // {"phase":"revealed",...}
 
 and the server log: `ws.event ... event":"cast_vote"` then `"votes_revealed"`.
 
+## Visual (V8/M6/D4)
+
+- Mesa como âncora central, toolbar e workspace em cascata de entrada; uma ação principal por estado (`Revelar` ou `Nova rodada`), sem painéis concorrentes ou sobreposição.
+- Números de voto e estatísticas em mono tabular; o valor revelado continua legível no assento e no stats pill, inclusive no compact/mobile.
+- Movimento novo só com `transform`/`opacity` e tokens `--motion-*` / `--ease-out-*`; `prefers-reduced-motion` colapsa pela rede global, sem exceção na arena.
+- Sem mudança de contrato em `/api` ou `/ws`. `/ws`, `/api` e a sala real dependem de validação manual após redeploy; manter pendência registrada até lá.
+
 ## Gotchas
 
 - Set the cursor for "1 in the room · 1 voted" in `[data-testid="presence-line"]` — the reveal button is disabled until at least one vote exists.
