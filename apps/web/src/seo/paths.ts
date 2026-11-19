@@ -83,8 +83,20 @@ function entry(
 	};
 }
 
+export function selfAlternates(path: string): readonly SeoAlternate[] {
+	return [
+		{ lang: "pt-BR", path },
+		{ lang: "x-default", path },
+	];
+}
+
 function ptOnly(path: string): SeoPathEntry {
-	return { path, lang: "pt-BR", indexable: true, alternates: [] };
+	return {
+		path,
+		lang: "pt-BR",
+		indexable: true,
+		alternates: selfAlternates(path),
+	};
 }
 
 /** Todas as rotas públicas indexáveis, nos dois idiomas (sem o 404). */

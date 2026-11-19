@@ -3,9 +3,21 @@
 /* ---------- Página de guia ---------- */
 
 .pt-guide__article {
-  max-width: 720px;
+  display: grid;
+  grid-template-columns: minmax(0, 200px) minmax(0, 1fr);
+  column-gap: 48px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: 8px 0 48px;
+}
+.pt-guide__back,
+.pt-guide__header {
+  grid-column: 1 / -1;
+}
+.pt-guide__body {
+  grid-column: 2;
+  grid-row: 3;
+  min-width: 0;
 }
 .pt-guide__back a {
   display: inline-flex;
@@ -26,7 +38,7 @@
 .pt-guide__header h1 {
   margin: 8px 0 0;
   font-size: clamp(32px, 3.6vw, 46px);
-  font-weight: 600;
+  font-weight: 650;
   letter-spacing: -0.04em;
   line-height: 1.1;
   text-wrap: balance;
@@ -46,6 +58,9 @@
 }
 
 .pt-guide__toc {
+  grid-column: 1;
+  grid-row: 3;
+  align-self: start;
   position: sticky;
   top: calc(var(--header-h) - 8px);
   /* Header sticky var(--header-h) menos 8px de respiro; altura limitada para o
@@ -70,8 +85,8 @@
 }
 .pt-guide__toc ol {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 32px;
+  grid-template-columns: 1fr;
+  gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -352,7 +367,7 @@
 .pt-guides-hub__header h1 {
   margin: 0;
   font-size: clamp(32px, 4vw, 46px);
-  font-weight: 600;
+  font-weight: 650;
   letter-spacing: -0.04em;
   line-height: 1.1;
   text-wrap: balance;
@@ -440,6 +455,18 @@
 }
 
 @media (max-width: 1000px) {
+  .pt-guide__article {
+    grid-template-columns: 1fr;
+    max-width: 720px;
+  }
+  .pt-guide__toc {
+    position: static;
+    max-height: none;
+  }
+  .pt-guide__body {
+    grid-column: 1;
+    grid-row: 4;
+  }
   .pt-guides-hub__list {
     grid-template-columns: 1fr;
   }
