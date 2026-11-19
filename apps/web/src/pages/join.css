@@ -5,7 +5,7 @@
   min-height: calc(100dvh - 180px);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(0, 0.86fr);
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
   align-items: center;
   gap: clamp(32px, 7vw, 96px);
   padding: 32px 0;
@@ -75,9 +75,9 @@
   min-width: 0;
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 18px;
+  border-radius: var(--radius-xl);
   background: var(--card);
-  box-shadow: 0 20px 60px rgb(28 57 45 / 8%);
+  box-shadow: 0 8px 20px -16px color-mix(in srgb, var(--foreground) 45%, transparent);
 }
 .join-card-header,
 .join-card-panel,
@@ -93,7 +93,7 @@
   color: var(--card-foreground);
   font-family: Geist, sans-serif;
   font-size: 1.75rem;
-  font-weight: 600;
+  font-weight: 650;
   letter-spacing: -0.035em;
   line-height: 1.1;
   text-wrap: balance;
@@ -123,7 +123,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 6px;
   padding: 5px;
-  border-radius: 13px;
+  border-radius: var(--radius-lg);
   background: var(--muted);
 }
 .join-mode-button {
@@ -132,13 +132,13 @@
   justify-content: center;
   min-height: 44px;
   border: 1px solid transparent;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   font-size: 14px;
   cursor: pointer;
   transition:
-    background-color 180ms ease-out,
-    border-color 180ms ease-out,
-    box-shadow 180ms ease-out;
+    background-color var(--motion-fast) var(--ease-out-quart),
+    border-color var(--motion-fast) var(--ease-out-quart),
+    box-shadow var(--motion-fast) var(--ease-out-quart);
 }
 .join-mode-button:has(input:checked) {
   background: var(--card);
@@ -167,7 +167,7 @@
 .join-input {
   min-height: 50px;
   align-items: center;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   font-size: 16px;
 }
 .join-input [data-slot="input"] {
@@ -222,7 +222,7 @@
 .join-otp input {
   width: 50px;
   min-height: 50px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   font-family: "Geist Mono", monospace;
   font-size: 20px;
 }
@@ -248,10 +248,10 @@
   min-height: 52px;
   font-size: 15px;
   transition:
-    background-color 180ms ease-out,
-    border-color 180ms ease-out,
-    box-shadow 180ms ease-out,
-    transform 180ms ease-out;
+    background-color var(--motion-fast) var(--ease-out-quart),
+    border-color var(--motion-fast) var(--ease-out-quart),
+    box-shadow var(--motion-fast) var(--ease-out-quart),
+    transform var(--motion-fast) var(--ease-out-quint);
 }
 .join-mode-button:focus-visible,
 .join-submit:focus-visible {
@@ -295,6 +295,25 @@
   font-family: var(--font-mono);
   font-size: 14px;
   color: var(--muted-foreground);
+}
+@keyframes pt-join-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .join-intro {
+    animation: pt-join-in var(--motion-slow) var(--ease-out-expo) both;
+  }
+  .join-card,
+  .not-found-card {
+    animation: pt-join-in var(--motion-slow) var(--ease-out-expo) 80ms both;
+  }
 }
 @media (max-width: 1000px) {
   .join-page {

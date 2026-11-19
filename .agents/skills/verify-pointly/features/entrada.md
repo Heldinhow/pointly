@@ -27,6 +27,13 @@ browser.type { selector: "#code", value: "<CODE>" }          // OTPField, 4 char
 
 Confirm navigation by URL changing to `http://localhost:5173/s/<CODE>` and `[data-testid="sala-code"]` showing the code.
 
+## Visual (V8/M6/D4)
+
+- Introdução mais estreita que o cartão, cartão com elevação baixa e cantos em `--radius-xl`, campos em `--radius-md`; sem hero centrado, sobreposição ou três cards iguais.
+- Entrada em cascata só com `transform`/`opacity`, durações `--motion-*` e easings `--ease-out-*`; `prefers-reduced-motion` colapsa tudo pela rede global de `index.css`.
+- `/404` reusa o mesmo cartão de baixa elevação, código mono, H1 e os dois CTA; continua fora do índice (`noindex`) sem canonical/hreflang/JSON-LD.
+- Erros inline (`Alert`), carregamento (`Button loading`) e progresso assíncrono (`role="status"`) mantêm semântica e contraste; nenhuma mudança de contrato em `/api` ou `/ws`.
+
 ## Gotchas
 
 - The mode switch labels ("Create room" / "Join with code") duplicate the submit button's text — click the submit by `selector: "button[type=\"submit\"]"`, not by text.
