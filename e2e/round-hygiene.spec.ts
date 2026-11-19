@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { addStory, createRoom, newPlayer, wirePlayer } from "./helpers/room";
 import { rawFramesContainUuid } from "./helpers/ws-capture";
 
-test("pauta destrava deck e nova rodada exige confirmação dupla", async ({
+test("pauta destrava deck e nova rodada limpa votos em 1 ativação", async ({
 	browser,
 }, testInfo) => {
 	const soloCtx = await newPlayer(browser, testInfo);
@@ -56,14 +56,11 @@ test("pauta destrava deck e nova rodada exige confirmação dupla", async ({
 			.poll(() => solo.ws.lastRoomState?.payload.sala.phase)
 			.toBe("revealed");
 
-		await solo.page.locator('[data-testid="new-round-button"]').click();
-		await expect(solo.page.locator('[data-testid="new-round-hint"]')).toBeVisible();
-		expect(solo.ws.lastRoomState?.payload.sala.phase).toBe("revealed");
+		const roundBefore = solo.ws.lastRoomState?.payload.sala.round ?? 1;
 		expect(
 			Object.keys(solo.ws.lastRoomState?.payload.sala.votes ?? {}).length,
 		).toBeGreaterThan(0);
 
-		const roundBefore = solo.ws.lastRoomState?.payload.sala.round ?? 1;
 		await solo.page.locator('[data-testid="new-round-button"]').click();
 		await expect
 			.poll(() => solo.ws.lastRoomState?.payload.sala.phase)

@@ -164,16 +164,6 @@
   font-size: 12px;
   color: #c3dbce;
 }
-/* Cancelar dentro do feltro: o outline padrão herda texto claro sobre o
-   fundo claro do popover, então usa a paleta da mesa. */
-.arena-reveal [data-slot="button"].arena-confirm-cancel {
-  border-color: #ffffff59;
-  background: transparent;
-  color: #f2f7f3;
-}
-.arena-reveal [data-slot="button"].arena-confirm-cancel:hover {
-  background: #ffffff14;
-}
 /* História ativa no centro da mesa (#211): contexto persistente e compacto
    acima da pergunta. Título clampado em 2 linhas; critério em disclosure
    secundário que nunca compete com Revelar / Nova Rodada. */
