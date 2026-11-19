@@ -65,9 +65,24 @@ function css(path: string): Promise<string> {
 }
 
 const HERO = [
-	{ file: "./home.css", selector: ".pt-home__hero-lede", bg: "--background" },
-	{ file: "./landing.css", selector: ".pt-landing__lede", bg: "--background" },
-	{ file: "./join.css", selector: ".join-intro-copy", bg: "--background" },
+	{
+		file: "./home.css",
+		selector: ".pt-home__hero-lede",
+		bg: "--background",
+		size: "17px",
+	},
+	{
+		file: "./landing.css",
+		selector: ".pt-landing__lede",
+		bg: "--background",
+		size: "17px",
+	},
+	{
+		file: "./join.css",
+		selector: ".join-intro-copy",
+		bg: "--background",
+		size: "18px",
+	},
 ] as const;
 
 const HINTS = [
@@ -88,10 +103,10 @@ async function themes(): Promise<Tokens[]> {
 }
 
 describe("contraste do texto de apoio", () => {
-	test("parágrafo do hero fica em 18px com cor AA nos dois temas", async () => {
-		for (const { file, selector, bg } of HERO) {
+	test("texto de apoio do hero usa o tamanho e cor AA nos dois temas", async () => {
+		for (const { file, selector, bg, size } of HERO) {
 			const decls = declarations(blockFor(await css(file), selector));
-			expect(value(decls, "font-size")).toBe("18px");
+			expect(value(decls, "font-size")).toBe(size);
 			for (const theme of await themes()) {
 				const ratio = contrast(resolve(theme, colorToken(decls)), resolve(theme, bg));
 				expect(ratio).toBeGreaterThanOrEqual(4.5);

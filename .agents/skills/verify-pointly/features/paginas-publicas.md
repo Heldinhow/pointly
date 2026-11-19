@@ -3,7 +3,7 @@
 ## Sub-features
 
 - Home PT (`/`) and EN (`/en`): "Create room" is the single primary hero CTA, "Enter with code" is the secondary link (`/join?mode=join`), and "Try a round" is a discreet link to the `#demo` section.
-- Hero paragraph (home/landing) renders at 18px with `--secondary-foreground`; join form hints use the same token, all ≥4.5:1 in light and dark.
+- Hero paragraph (home/landing/guide) renders at 17px with `--secondary-foreground`; join form hints use the same token, all ≥4.5:1 in light and dark. H1 is 650, stats are mono tabular 38px/600, and all motion uses `--motion-*` tokens (cascade in hero via transform/opacity only).
 - Landing pages: `/planning-poker`, `/scrum-poker` (+ `/en/...`), with FAQ.
 - Home PT (`/`) has a **Guias** section (`[data-testid="home-learn"]`) linking every PT guide in `apps/web/src/pages/guide-registry.pt.ts`, including `/planning-poker-online-gratis-comparativo`. Anchor text is the guide title and contains its keyword; `/guias/story-points` and `/guias/o-que-e-planning-poker` are priority entries.
 - Guides hub `/guias` derives its cards from the same registry (including the `estimativa-agil` pillar; EN mirror `/en/guides` is also indexable). Every PT guide page renders Article + FAQPage + BreadcrumbList; the pillar also carries an ItemList mapa derived from the registry.

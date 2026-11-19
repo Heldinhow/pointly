@@ -35,8 +35,8 @@
   max-width: 60ch;
   margin: 18px 0 0;
   color: var(--muted-foreground);
-  font-size: 18px;
-  line-height: 1.6;
+  font-size: 17px;
+  line-height: 1.65;
 }
 .pt-guide__meta {
   margin: 20px 0 0;
@@ -178,9 +178,9 @@
 .pt-guide__callout {
   margin: 20px 0 0;
   padding: 16px 20px;
-  border-left: 2px solid var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 32%, var(--border));
   border-radius: 12px;
-  background: var(--secondary);
+  background: color-mix(in srgb, var(--primary) 4%, var(--card));
 }
 .pt-guide__callout-label {
   margin: 0;
@@ -271,7 +271,7 @@
   color: var(--primary);
   font-family: var(--font-mono), monospace;
   font-weight: 500;
-  transition: transform 150ms ease-out;
+  transition: transform var(--motion-fast) var(--ease-out-quart);
 }
 .pt-guide__faq details[open] summary::before {
   transform: rotate(45deg);
@@ -375,7 +375,7 @@
 .pt-guides-hub__card {
   height: 100%;
   text-decoration: none;
-  transition: border-color 150ms ease;
+  transition: border-color var(--motion-fast) var(--ease-out-quart);
 }
 .pt-guides-hub__card:hover {
   border-color: color-mix(in srgb, var(--primary) 45%, var(--border));

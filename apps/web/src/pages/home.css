@@ -56,7 +56,7 @@
     radial-gradient(ellipse at 50% 28%, rgb(255 255 255 / 9%), transparent 55%),
     radial-gradient(ellipse at 50% 35%, #246951, #154634 78%);
   box-shadow:
-    0 20px 60px rgb(28 57 45 / 16%),
+    0 20px 60px rgb(28 57 45 / 8%),
     inset 0 0 0 2px rgb(255 255 255 / 7%),
     inset 0 6px 24px rgb(8 39 29 / 45%),
     inset 0 -28px 56px rgb(0 0 0 / 28%);
@@ -311,33 +311,42 @@
   font-weight: 700;
   letter-spacing: 0.02em;
 }
-/* Sua vez: anel pulsante no avatar — o status "falta você" já está na pílula. */
-.pt-home__seat--you i {
-  animation: pt-home-you-ring 2.4s ease-in-out infinite;
+/* Sua vez: anel no avatar comunica "falta você" (o status também está na pílula).
+   O ring vivo é um ::after em transform/opacity — o box-shadow do avatar fica estático. */
+.pt-home__seat--you i::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border: 2px solid color-mix(in srgb, var(--primary) 22%, transparent);
+  border-radius: 999px;
+  pointer-events: none;
+  animation: pt-home-you-ring 2.4s var(--ease-out-quart) infinite;
 }
 @keyframes pt-home-you-ring {
   0%,
   100% {
-    box-shadow: 0 0 0 2px var(--primary);
+    opacity: 0;
+    transform: scale(0.85);
   }
   50% {
-    box-shadow:
-      0 0 0 2px var(--primary),
-      0 0 0 7px color-mix(in srgb, var(--primary) 22%, transparent);
+    opacity: 1;
+    transform: scale(1);
   }
 }
 /* Distribuição em cascata + tilt: só transform/scale/translate, nunca
    opacity — o padrão visível continua intacto sem JS ou com motion off. */
 @media (prefers-reduced-motion: no-preference) {
   .pt-home__table-stage {
-    transition: transform 260ms var(--ease-out-quart, ease-out);
+    transition: transform var(--motion-slow) var(--ease-out-quart, ease-out);
   }
   .pt-home__mini-card {
-    animation: pt-home-deal 480ms var(--ease-out-quint, ease-out) backwards;
+    animation: pt-home-deal var(--motion-brand) var(--ease-out-quint, ease-out)
+      backwards;
     animation-delay: calc(var(--i, 0) * 95ms + 100ms);
   }
   .pt-home__seat {
-    animation: pt-home-seat-in 420ms var(--ease-out-quint, ease-out) backwards;
+    animation: pt-home-seat-in var(--motion-brand) var(--ease-out-quint, ease-out)
+      backwards;
     animation-delay: calc(var(--i, 0) * 80ms + 260ms);
   }
 }
@@ -360,7 +369,7 @@
 }
 .pt-home h1 {
   font-size: clamp(38px, 4.4vw, 58px);
-  font-weight: 600;
+  font-weight: 650;
   line-height: 1.08;
   letter-spacing: -0.04em;
   text-wrap: balance;
@@ -373,8 +382,8 @@
   max-width: 430px;
   margin: 28px 0 0;
   color: var(--secondary-foreground);
-  font-size: 18px;
-  line-height: 1.55;
+  font-size: 17px;
+  line-height: 1.65;
 }
 .pt-home__hero-actions {
   display: flex;
@@ -567,6 +576,8 @@
 .pt-home__stat-primary strong {
   font-family: var(--font-mono), monospace;
   font-size: 38px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 .pt-home__stat-detail {
@@ -677,7 +688,7 @@
   }
   .pt-home__hero-copy,
   .pt-home__hero-visual {
-    animation: pt-home-hero-in 240ms var(--ease-out-quint, ease-out);
+    animation: pt-home-hero-in var(--motion-slow) var(--ease-out-quint, ease-out);
   }
 }
 @keyframes pt-home-hero-in {
