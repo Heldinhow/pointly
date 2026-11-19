@@ -26,11 +26,11 @@ Calmo, tátil, direto. Tom pt-BR objetivo.
 
 ## Anti-references
 
-Landing cinematográfica, AIDA/GSAP, troca de biblioteca de ícones, sobreposição de conteúdo — ver `DESIGN.md` Do's and Don'ts.
+Landing cinematográfica vazia e sobreposição de conteúdo continuam fora. AIDA/GSAP e troca de biblioteca de ícones saem da lista: o Taste v2 permite ambos, desde que declarados em `DESIGN.md` com lib, uso e fallback de `prefers-reduced-motion`. Onde o v2 contradiz uma anti-referência antiga, o `DESIGN.md` diz qual regra substitui qual.
 
 ## Design Principles
 
-- Ritual rápido: legibilidade da arena acima de expressão.
+- Ritual rápido: legibilidade funcional em toda superfície, inclusive arena.
 - Uma ação principal por tela.
 - Números de votação sempre mono tabulares.
 

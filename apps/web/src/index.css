@@ -6,7 +6,14 @@
 	color-scheme: light;
 	--font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
 	--font-mono: "Geist Mono", ui-monospace, monospace;
-	/* SSOT de cor (ex-brand.css): paleta verde produto. Não duplicar em outro arquivo. */
+	/* SSOT de cor e movimento (ex-brand.css): paleta verde produto e curvas do Taste v2. Não duplicar em outro arquivo. */
+	--motion-fast: 150ms;
+	--motion-base: 200ms;
+	--motion-slow: 250ms;
+	--motion-brand: 600ms;
+	--ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+	--ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+	--ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 	--radius: 0.75rem;
 	--accent: #e4ece4;
 	--accent-foreground: #202b27;
