@@ -86,14 +86,8 @@ export const ARENA_CONTENT_EN: ArenaContent = {
 		revealHintReady: " · moves on to the discussion.",
 		revealHintWaiting: " · available after the first vote.",
 		newRound: "New round",
-		newRoundConfirm: "Confirm new round",
-		newRoundAria: "New round (shortcut N, needs confirmation)",
-		newRoundAriaConfirm: "Confirm new round (shortcut N)",
-		newRoundHint:
-			"Ready for the next estimate? Votes are cleared after your confirmation.",
-		newRoundHintConfirm:
-			"Confirm to clear the votes and estimate the next story. You can cancel without losing anything.",
-		newRoundCancel: "Cancel",
+		newRoundAria: "New round (shortcut N, clears votes)",
+		newRoundHint: "This clears the votes and starts the next round.",
 		errorTitle: "Couldn't reveal",
 		newRoundErrorTitle: "Couldn't start a new round",
 	},

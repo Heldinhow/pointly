@@ -91,14 +91,8 @@ export const ARENA_CONTENT_PT: ArenaContent = {
 		revealHintReady: " · vai à discussão.",
 		revealHintWaiting: " · disponível após o primeiro voto.",
 		newRound: "Nova rodada",
-		newRoundConfirm: "Confirmar nova rodada",
-		newRoundAria: "Nova rodada (atalho N, exige confirmação)",
-		newRoundAriaConfirm: "Confirmar nova rodada (atalho N)",
-		newRoundHint:
-			"Prontos para a próxima estimativa? Os votos serão limpos após sua confirmação.",
-		newRoundHintConfirm:
-			"Confirme para limpar os votos e votar a próxima história. Dá para cancelar sem perder nada.",
-		newRoundCancel: "Cancelar",
+		newRoundAria: "Nova rodada (atalho N, limpa os votos)",
+		newRoundHint: "Esta ação limpa os votos e abre a próxima rodada.",
 		errorTitle: "Não foi possível revelar",
 		newRoundErrorTitle: "Não foi possível abrir nova rodada",
 	},

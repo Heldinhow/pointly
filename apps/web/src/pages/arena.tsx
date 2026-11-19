@@ -216,7 +216,6 @@ export function ArenaPage({
   // Erros da Pauta (#165): roteados aqui pelo onError do socket e exibidos
   // inline no card (data-testid historia-error), sem quebrar a sala.
   const [historiaError, setHistoriaError] = useState<string | null>(null);
-  const [confirmingNewRound, setConfirmingNewRound] = useState(false);
   const [newRoundError, setNewRoundError] = useState<string | null>(null);
   const [confirmingLeave, setConfirmingLeave] = useState(false);
   // Projéteis em qualquer fase: cooldown de 1s e voos confirmados pelo servidor.
@@ -247,11 +246,6 @@ export function ArenaPage({
   const rejoinKeyRef = useRef<string | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resultsCopyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Espelho mutável do `confirmingNewRound` para os handlers de teclado
-  // (o listener lê o valor fresco sem re-subscrever a cada render).
-  const confirmingRef = useRef(false);
-  confirmingRef.current = confirmingNewRound;
-
   const routeCode = code.toUpperCase();
   const sessionCode = sala?.code ?? "";
   const hasSession =
@@ -268,11 +262,6 @@ export function ArenaPage({
         // limpa o erro de reveal pendente.
         if (next.phase === "revealed") {
           setRevealError(null);
-        } else if (confirmingRef.current) {
-          // Nova rodada confirmada (round incrementado, votos
-          // limpos): volta ao estado inicial.
-          setConfirmingNewRound(false);
-          setNewRoundError(null);
         }
       },
       onClose: () => {
@@ -346,7 +335,6 @@ export function ArenaPage({
           /new.?round|start_new|nova.?rodada/i.test(text) ||
           /new.?round|start_new/i.test(_code)
         ) {
-          setConfirmingNewRound(false);
           setNewRoundError(shown(content.errors.newRound));
         } else if (/reveal|revelar|revela/i.test(text) || /reveal/i.test(_code)) {
           // Erros de reveal (invalid_phase com "reveal") vão para o
@@ -433,11 +421,8 @@ export function ArenaPage({
     return () => window.removeEventListener("keydown", onKey);
   }, [errorCopy]);
 
-  // Atalho N pede/confirma nova rodada (qualquer Player, só após o
-  // reveal). Exige a mesma confirmação dupla do botão: a primeira
-  // ativação arma, a segunda envia; o Cancelar (ou o erro do servidor)
-  // desarma sem trafegar. Ignora inputs, repeat e modificadores · mesmo
-  // guard do botão.
+  // Atalho N abre nova rodada em 1 ativação (qualquer Player, só após o
+  // reveal). Mesmo guard do botão: ignora inputs, repeat e modificadores.
   useEffect(() => {
     function onKey(event: KeyboardEvent): void {
       if (event.repeat || event.metaKey || event.ctrlKey || event.altKey) {
@@ -448,12 +433,6 @@ export function ArenaPage({
       const current = useSession.getState().sala;
       if (!current || current.phase !== "revealed") return;
       event.preventDefault();
-      if (!confirmingRef.current) {
-        setNewRoundError(null);
-        setConfirmingNewRound(true);
-        return;
-      }
-      setConfirmingNewRound(false);
       setNewRoundError(null);
       const sent = sendNewRoundThroughSession();
       if (sent) trackNewRound();
@@ -796,27 +775,13 @@ export function ArenaPage({
     else setRevealError(errorCopy.reveal);
   }
 
-  // Nova rodada (issue 08): qualquer Player abre após o reveal, mas com
-  // segunda ativação de confirmação (botão ou N). A primeira ativação
-  // arma; a segunda envia; o Cancelar desarma sem trafegar nada e sem
-  // expiração por contagem.
+  // Nova rodada (#43): qualquer Player abre após o reveal com 1 ativação.
   function handleNewRoundRequest(): void {
     if (!isRevealed) return;
-    if (!confirmingNewRound) {
-      setNewRoundError(null);
-      setConfirmingNewRound(true);
-      return;
-    }
-    setConfirmingNewRound(false);
     setNewRoundError(null);
     const sent = sendNewRoundThroughSession();
     if (sent) trackNewRound();
     else setNewRoundError(errorCopy.newRound);
-  }
-
-  function handleNewRoundCancel(): void {
-    setConfirmingNewRound(false);
-    setNewRoundError(null);
   }
 
   function handleCardSelect(value: Vote): void {
@@ -1299,47 +1264,22 @@ export function ArenaPage({
                 ) : null}
                 {isRevealed && (
                   <div className="flex flex-col items-center gap-2">
-                    <div className="flex flex-wrap items-center justify-center gap-2">
-                      <Button
-                        type="button"
-                        data-testid="new-round-button"
-                        data-confirming={confirmingNewRound ? "true" : "false"}
-                        variant={
-                          confirmingNewRound ? "destructive-outline" : "default"
-                        }
-                        onClick={handleNewRoundRequest}
-                        aria-keyshortcuts="n"
-                        aria-label={
-                          confirmingNewRound
-                            ? content.reveal.newRoundAriaConfirm
-                            : content.reveal.newRoundAria
-                        }
-                      >
-                        <RotateCcwIcon aria-hidden="true" />
-                        {confirmingNewRound
-                          ? content.reveal.newRoundConfirm
-                          : content.reveal.newRound}
-                      </Button>
-                      {confirmingNewRound ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="arena-confirm-cancel"
-                          data-testid="new-round-cancel"
-                          onClick={handleNewRoundCancel}
-                        >
-                          {content.reveal.newRoundCancel}
-                        </Button>
-                      ) : null}
-                    </div>
+                    <Button
+                      type="button"
+                      data-testid="new-round-button"
+                      onClick={handleNewRoundRequest}
+                      aria-keyshortcuts="n"
+                      aria-label={content.reveal.newRoundAria}
+                    >
+                      <RotateCcwIcon aria-hidden="true" />
+                      {content.reveal.newRound}
+                    </Button>
                     <span
                       data-testid="new-round-hint"
                       aria-live="polite"
                       className="text-xs text-muted-foreground"
                     >
-                      {confirmingNewRound
-                        ? content.reveal.newRoundHintConfirm
-                        : content.reveal.newRoundHint}
+                      {content.reveal.newRoundHint}
                     </span>
                   </div>
                 )}
