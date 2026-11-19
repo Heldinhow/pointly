@@ -7,13 +7,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import {
-  Brand,
-  ShellHeader,
-  ShellMain,
-  SkipLink,
-  useHeaderScrolled,
-} from "@/components/shell";
+import { Brand, ShellHeader, ShellMain, SkipLink } from "@/components/shell";
 import { LanguageLink } from "@/components/language-link";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -96,7 +90,6 @@ export default function App(): React.ReactElement {
   const lang: Lang = pathLang ?? internalLang;
   const isEn = lang === "en";
   const showLanguageSwitch = !inArena && isPublic;
-  const scrolled = useHeaderScrolled();
   const previousPath = useRef(pathname);
   // Consentimento é client-only (localStorage). Ler via useSyncExternalStore
   // ainda na hidratação agenda um update síncrono quando há escolha salva e
@@ -162,7 +155,7 @@ export default function App(): React.ReactElement {
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
       <SkipLink label={isEn ? "Skip to content" : undefined} />
-      <ShellHeader data-scrolled={scrolled ? "true" : "false"}>
+      <ShellHeader>
         {inArena ? (
           <Brand />
         ) : (
@@ -267,9 +260,11 @@ export default function App(): React.ReactElement {
       </ShellMain>
       {!inArena && (
         <footer className="site-footer">
-          <span>
-            {isEn ? "Pointly · Planning poker, together." : "Pointly · Planning poker, juntos."}
-          </span>
+          <div className="site-footer__lead">
+            <p className="site-footer__statement">
+              {isEn ? "Pointly · Planning poker, together." : "Pointly · Planning poker, juntos."}
+            </p>
+          </div>
           <nav
             className="site-footer__nav"
             aria-label={isEn ? "Guides and tools" : "Guias e ferramentas"}
@@ -303,7 +298,7 @@ export default function App(): React.ReactElement {
               </button>
             )}
           </nav>
-          <span>
+          <span className="site-footer__note">
             {isEn
               ? "No signup. Straight to the conversation."
               : "Sem cadastro. Direto à conversa."}
