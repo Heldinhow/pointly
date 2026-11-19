@@ -58,7 +58,7 @@ Use the app's real handles (they are stable and test-anchored):
 - Join with a code: open `/join?code=<CODE>` (invite link shape) or pick the "Join with code" radio, then the 4-char `OTPField #code`.
 - Cast a vote: `button[data-testid="deck-card-<value>"]` where value ∈ `0, ½, 1, 2, 3, 5, 8, 13, ☕`.
 - Reveal: `button[data-testid="reveal-button"]` (shortcut `R`), enabled after the first vote.
-- New round: `button[data-testid="new-round-button"]` (shortcut `N`) — needs a **second** activation within the confirm window.
+- New round: `button[data-testid="new-round-button"]` (shortcut `N`) — one activation starts it; the copy warns that votes are cleared.
 - Room/round state readouts: `[data-testid="sala-code"]`, `[data-testid="round-label"]`, `[data-testid="presence-line"]`.
 - Agenda (pauta): `#pauta-novo-titulo` + `button[data-testid="pauta-add-button"]`; per-story `pauta-up-*`/`pauta-down-*`/`pauta-edit-*`/`pauta-remove-*`.
 

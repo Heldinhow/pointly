@@ -34,7 +34,7 @@
   place-items: center;
   width: 44px;
   height: 44px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   color: var(--primary);
   background: var(--secondary);
 }
@@ -164,16 +164,6 @@
   font-size: 12px;
   color: #c3dbce;
 }
-/* Cancelar dentro do feltro: o outline padrão herda texto claro sobre o
-   fundo claro do popover, então usa a paleta da mesa. */
-.arena-reveal [data-slot="button"].arena-confirm-cancel {
-  border-color: #ffffff59;
-  background: transparent;
-  color: #f2f7f3;
-}
-.arena-reveal [data-slot="button"].arena-confirm-cancel:hover {
-  background: #ffffff14;
-}
 /* História ativa no centro da mesa (#211): contexto persistente e compacto
    acima da pergunta. Título clampado em 2 linhas; critério em disclosure
    secundário que nunca compete com Revelar / Nova Rodada. */
@@ -233,7 +223,7 @@
   min-height: 28px;
   padding: 0 8px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--muted-foreground);
   font: inherit;
@@ -256,7 +246,7 @@
 .arena-story-criterion-toggle svg {
   width: 14px;
   height: 14px;
-  transition: transform 0.2s ease;
+  transition: transform var(--motion-fast) var(--ease-out-quart);
 }
 .arena-story-criterion-toggle[aria-expanded="true"] svg {
   transform: rotate(180deg);
@@ -452,7 +442,7 @@
   align-items: flex-start;
   padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: var(--secondary);
   color: var(--foreground);
   font-size: 14px;
@@ -525,6 +515,24 @@ img.arena-spectator-avatar {
 }
 .arena-results [data-testid="stats-no-numerics"] {
   font-size: 14px;
+}
+@keyframes pt-arena-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .arena-toolbar {
+    animation: pt-arena-in var(--motion-slow) var(--ease-out-expo) both;
+  }
+  .arena-workspace {
+    animation: pt-arena-in var(--motion-slow) var(--ease-out-expo) 80ms both;
+  }
 }
 @media (max-width: 1050px) {
   .arena-workspace {

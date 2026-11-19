@@ -1279,88 +1279,24 @@ describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 		expect(socket.sentNewRounds).toBe(0);
 	});
 
-	test("um clique único não abre nova rodada (arma confirmação)", () => {
+	test("1 clique envia start_new_round uma vez e avisa que limpa os votos", () => {
 		const { socket } = revealedTwoPlayer();
 
 		const button = screen.getByTestId("new-round-button");
-		expect(button.getAttribute("data-confirming")).toBe("false");
-		expect(button.getAttribute("aria-label")).toMatch(/exige confirmação/i);
+		expect(button.getAttribute("aria-label")).toMatch(/limpa os votos/i);
+		expect(screen.getByTestId("new-round-hint").textContent).toMatch(
+			/limpa os votos/i,
+		);
+		expect(screen.queryByTestId("new-round-cancel")).toBeNull();
 
 		fireEvent.click(button);
-		expect(socket.sentNewRounds).toBe(0);
-		expect(screen.getByTestId("new-round-button").getAttribute("data-confirming")).toBe(
-			"true",
-		);
-		expect(screen.getByTestId("new-round-hint").textContent).toMatch(
-			/Confirme para limpar os votos/,
-		);
-	});
-
-	test("armação mostra Cancelar visível e não expira por contagem", async () => {
-		const { socket } = revealedTwoPlayer();
-
-		expect(screen.queryByTestId("new-round-cancel")).toBeNull();
-		fireEvent.click(screen.getByTestId("new-round-button"));
-		expect(screen.getByTestId("new-round-cancel").textContent).toBe(
-			"Cancelar",
-		);
-		expect(screen.queryByTestId("new-round-countdown")).toBeNull();
-
-		await act(async () => {
-			await new Promise((resolve) =>
-				setTimeout(resolve, CONFIRM_TIMEOUT_MS + 400),
-			);
-		});
-
-		// Sem janela de expiração: a confirmação continua armada e o
-		// próximo clique envia de verdade.
-		expect(screen.getByTestId("new-round-button").getAttribute("data-confirming")).toBe(
-			"true",
-		);
-		fireEvent.click(screen.getByTestId("new-round-button"));
-		expect(socket.sentNewRounds).toBe(1);
-	}, 15000);
-
-	test("Cancelar desarma a confirmação sem enviar nada", () => {
-		const { socket } = revealedTwoPlayer();
-
-		fireEvent.click(screen.getByTestId("new-round-button"));
-		expect(screen.getByTestId("new-round-cancel")).toBeTruthy();
-
-		fireEvent.click(screen.getByTestId("new-round-cancel"));
-		expect(socket.sentNewRounds).toBe(0);
-		expect(screen.getByTestId("new-round-button").getAttribute("data-confirming")).toBe(
-			"false",
-		);
-		expect(screen.queryByTestId("new-round-cancel")).toBeNull();
-		expect(screen.getByTestId("new-round-hint").textContent).toMatch(
-			/Prontos para a próxima estimativa/,
-		);
-
-		// Depois de cancelar, o próximo clique só arma de novo.
-		fireEvent.click(screen.getByTestId("new-round-button"));
-		expect(socket.sentNewRounds).toBe(0);
-	});
-
-	test("segundo clique confirma e envia start_new_round uma vez", () => {
-		const { socket } = revealedTwoPlayer();
-
-		fireEvent.click(screen.getByTestId("new-round-button"));
-		expect(socket.sentNewRounds).toBe(0);
-		fireEvent.click(screen.getByTestId("new-round-button"));
 		expect(socket.sentNewRounds).toBe(1);
 	});
 
-	test("atalho N exige a mesma confirmação dupla", () => {
+	test("1 tecla N envia start_new_round uma vez", () => {
 		const { socket } = revealedTwoPlayer();
 
 		fireEvent.keyDown(window, { key: "n" });
-		expect(socket.sentNewRounds).toBe(0);
-		expect(screen.getByTestId("new-round-button").getAttribute("data-confirming")).toBe(
-			"true",
-		);
-
-		fireEvent.keyDown(window, { key: "N" });
 		expect(socket.sentNewRounds).toBe(1);
 	});
 
@@ -1372,9 +1308,6 @@ describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 		fireEvent.keyDown(window, { key: "n", metaKey: true });
 		fireEvent.keyDown(window, { key: "n", altKey: true });
 		expect(socket.sentNewRounds).toBe(0);
-		expect(screen.getByTestId("new-round-button").getAttribute("data-confirming")).toBe(
-			"false",
-		);
 
 		const invite = screen.getByLabelText("Link de convite");
 		invite.focus();
@@ -1382,9 +1315,6 @@ describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 		expect(socket.sentNewRounds).toBe(0);
 		(document.activeElement as HTMLElement | null)?.blur?.();
 
-		// Botão e teclado compartilham o armar: clique arma, N confirma.
-		fireEvent.click(screen.getByTestId("new-round-button"));
-		expect(socket.sentNewRounds).toBe(0);
 		fireEvent.keyDown(window, { key: "n" });
 		expect(socket.sentNewRounds).toBe(1);
 	});
@@ -1395,7 +1325,6 @@ describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 			screen.getByLabelText("Link de convite") as HTMLInputElement
 		).value;
 
-		fireEvent.click(screen.getByTestId("new-round-button"));
 		fireEvent.click(screen.getByTestId("new-round-button"));
 		expect(socket.sentNewRounds).toBe(1);
 
@@ -1457,7 +1386,6 @@ describe("ArenaPage (ticket 08 — Nova Rodada)", () => {
 		expect(center?.contains(screen.getByTestId("new-round-button"))).toBe(true);
 		expect(center?.contains(screen.getByTestId("new-round-hint"))).toBe(true);
 
-		fireEvent.click(screen.getByTestId("new-round-button"));
 		fireEvent.click(screen.getByTestId("new-round-button"));
 		await act(async () => {
 			socket.emitRoomState(sala({ phase: "voting", round: 2, votes: {} }));
@@ -2502,7 +2430,7 @@ describe("ArenaPage (issue #158 — polimento e auditoria)", () => {
 		expect(screen.getAllByRole("menuitem")).toHaveLength(10);
 		// Typeahead do menu não pode disparar atalhos de rodada.
 		fireEvent.keyDown(screen.getByRole("menu"), { key: "n" });
-		expect(screen.getByTestId("new-round-button").getAttribute("data-confirming")).toBe("false");
+		expect(socket.sentNewRounds).toBe(0);
 		act(() => socket.emitRoomState(sala({ players: [ana, { ...beto, status: "disconnected" }], phase: "revealed" })));
 		expect(screen.queryByRole("button", { name: "Interagir com Beto" })).toBeNull();
 		expect(screen.queryByRole("menu")).toBeNull();
